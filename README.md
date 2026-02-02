@@ -23,6 +23,17 @@ npm run build
   and any remaining obligations are resolved: `SUPPORT` falls (logging a `fall`
   event and restoring focus), and `MEM_ZONE` closes silently.
 
+## Spaces Are Operators
+
+Whitespace is not just formatting: it compiles to the `□` operator. This means
+space inserts a **boundary** that can discharge obligations before the next
+letter runs.
+
+Examples:
+
+* `"נ ס"` inserts `□` between letters, so the `SUPPORT` from `נ` falls **before** `ס`.
+* `"נס"` keeps them in the same word, so `ס` can discharge the support.
+
 ## Notes
 
 See `docs/semantics-notes.md` for what is implemented versus stubbed.
