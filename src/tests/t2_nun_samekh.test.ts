@@ -10,4 +10,10 @@ describe("T2 nun stabilized by samekh", () => {
     const focus = state.handles.get(state.vm.F);
     expect(focus?.policy).toBe("framed_lock");
   });
+
+  it("falls when a boundary is inserted between letters", () => {
+    const state = runProgram("נ ס", createInitialState());
+    const falls = state.vm.H.filter((event) => event.type === "fall");
+    expect(falls.length).toBe(1);
+  });
 });
