@@ -12,7 +12,7 @@
 * All other letters are no-ops (select + seal focus unchanged).
 * Diacritic wrappers are parsed but only `dagesh/shuruk` harden policy (no-op elsewhere).
 * Selection policy uses only basic deterministic sourcing; distinctness/type checks omitted.
-* `ב` opens a `BOUNDARY` obligation; `ד` closes it into a boundary handle/record.
+* `ב` opens a `BOUNDARY` obligation; `ד` closes it into a boundary handle/record (or opens+closes immediately if none is pending).
 * `ג` creates a link handle and records a `links` entry.
 * `ה` seals a `final` artifact handle.
 * GC, rules, and extended classroom relations are placeholders.
