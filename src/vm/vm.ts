@@ -30,6 +30,9 @@ function applyTochWrappers(token: Token, cons: Construction): Construction {
   if (token.meta?.traceOrder) {
     token.meta.traceOrder.push("toch");
   }
+  if (token.inside_dot_kind === "shuruk") {
+    return { ...cons, meta: { ...cons.meta, carrier_active: true } };
+  }
   return cons;
 }
 
@@ -60,7 +63,7 @@ function executeLetter(state: State, token: Token): void {
   if (shouldHarden) {
     hardenHandle(sealResult.S, sealed);
   }
-  if (hasShuruk) {
+  if (hasShuruk && cons.meta?.carrier_active) {
     const handle = sealResult.S.handles.get(sealed);
     if (handle) {
       handle.meta = { ...handle.meta, carrier_active: true };
