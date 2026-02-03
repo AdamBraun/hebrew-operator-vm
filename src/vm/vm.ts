@@ -26,18 +26,9 @@ function applyRoshWrappers(token: Token, ops: SelectOperands): SelectOperands {
   return ops;
 }
 
-function applyTochWrappers(state: State, token: Token, cons: Construction): Construction {
+function applyTochWrappers(token: Token, cons: Construction): Construction {
   if (token.meta?.traceOrder) {
     token.meta.traceOrder.push("toch");
-  }
-  if (token.inside_dot_kind === "dagesh" || token.inside_dot_kind === "shuruk") {
-    hardenHandle(state, cons.base);
-  }
-  if (token.inside_dot_kind === "shuruk") {
-    const handle = state.handles.get(cons.base);
-    if (handle) {
-      handle.meta = { ...handle.meta, carrier_active: true };
-    }
   }
   return cons;
 }
@@ -59,10 +50,22 @@ function executeLetter(state: State, token: Token): void {
   const ops = applyRoshWrappers(token, selectResult.ops);
 
   const boundResult = op.bound(selectResult.S, ops);
-  const cons = applyTochWrappers(boundResult.S, token, boundResult.cons);
+  const hasShuruk = token.inside_dot_kind === "shuruk";
+  const shouldHarden = token.inside_dot_kind === "dagesh" || hasShuruk;
+  const cons = applyTochWrappers(token, boundResult.cons);
 
   const sealResult = op.seal(boundResult.S, cons);
   const sealed = applySofWrappers(token, sealResult.h);
+
+  if (shouldHarden) {
+    hardenHandle(sealResult.S, sealed);
+  }
+  if (hasShuruk) {
+    const handle = sealResult.S.handles.get(sealed);
+    if (handle) {
+      handle.meta = { ...handle.meta, carrier_active: true };
+    }
+  }
 
   sealResult.S.vm.K.push(sealed);
   sealResult.S.vm.F = sealed;

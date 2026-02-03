@@ -24,7 +24,7 @@ export const finalNunOp: LetterOp = {
     addCont(S, parent, child);
     const cons: Construction = {
       base: parent,
-      envelope: defaultEnvelope(),
+      envelope: defaultEnvelope("framed_lock"),
       meta: { parent, child }
     };
     return { S, cons };

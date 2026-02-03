@@ -2,21 +2,16 @@ import { describe, expect, it } from "vitest";
 import { Token } from "../../compile/types";
 import { makeSpaceToken } from "../../compile/tokenizer";
 import { createInitialState } from "../../state/state";
+import { Construction } from "../../letters/types";
 import { letterRegistry } from "../../letters/registry";
 import { State } from "../../state/state";
 import { applySpace } from "../../vm/space";
-import { hardenHandle } from "../../state/policies";
 
-function applyTochWrappers(state: State, token: Token, handleId: string): void {
-  if (token.inside_dot_kind === "dagesh" || token.inside_dot_kind === "shuruk") {
-    hardenHandle(state, handleId);
+function applyTochWrappers(token: Token, cons: Construction): Construction {
+  if (token.meta?.traceOrder) {
+    token.meta.traceOrder.push("toch");
   }
-  if (token.inside_dot_kind === "shuruk") {
-    const handle = state.handles.get(handleId);
-    if (handle) {
-      handle.meta = { ...handle.meta, carrier_active: true };
-    }
-  }
+  return cons;
 }
 
 function runTokens(state: State, tokens: Token[]): void {
@@ -34,11 +29,8 @@ function runTokens(state: State, tokens: Token[]): void {
       token.meta.traceOrder.push("rosh");
     }
     const boundResult = op.bound(selectResult.S, selectResult.ops);
-    if (token.meta?.traceOrder) {
-      token.meta.traceOrder.push("toch");
-    }
-    applyTochWrappers(state, token, boundResult.cons.base);
-    const sealResult = op.seal(boundResult.S, boundResult.cons);
+    const cons = applyTochWrappers(token, boundResult.cons);
+    const sealResult = op.seal(boundResult.S, cons);
     if (token.meta?.traceOrder) {
       token.meta.traceOrder.push("sof");
     }

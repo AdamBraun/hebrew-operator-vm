@@ -33,6 +33,26 @@ export function harden(envelope: Envelope): Envelope {
   };
 }
 
+function cloneEnvelope(envelope: Envelope): Envelope {
+  return {
+    ...envelope,
+    ports: new Set(envelope.ports)
+  };
+}
+
+export function applyEnvelopeToHandle(
+  state: State,
+  handleId: string,
+  envelope: Envelope
+): void {
+  const handle = state.handles.get(handleId);
+  if (!handle) {
+    return;
+  }
+  handle.envelope = cloneEnvelope(envelope);
+  handle.policy = handle.envelope.policy;
+}
+
 export function setPolicy(state: State, handleId: string, policy: HandlePolicy): void {
   const handle = state.handles.get(handleId);
   if (handle) {
@@ -46,6 +66,5 @@ export function hardenHandle(state: State, handleId: string): void {
   if (!handle) {
     return;
   }
-  handle.envelope = harden(handle.envelope);
-  handle.policy = handle.envelope.policy;
+  applyEnvelopeToHandle(state, handleId, harden(handle.envelope));
 }

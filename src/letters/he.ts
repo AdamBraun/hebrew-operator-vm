@@ -18,7 +18,7 @@ export const heOp: LetterOp = {
   bound: (S: State, ops) => {
     const cons: Construction = {
       base: ops.args[0],
-      envelope: defaultEnvelope(),
+      envelope: defaultEnvelope("final"),
       meta: { focus: ops.args[0] }
     };
     return { S, cons };
