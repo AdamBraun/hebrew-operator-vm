@@ -17,4 +17,5 @@
 * `ב` opens a `BOUNDARY` obligation; `ד` closes it into a boundary handle/record (or opens+closes immediately if none is pending).
 * `ג` creates a link handle and records a `links` entry.
 * `ה` seals a `final` artifact handle.
+* `וּ` (shuruk) marks the current base handle with `meta.carrier_active = true` and hardens it.
 * GC, rules, and extended classroom relations are placeholders.

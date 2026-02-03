@@ -27,6 +27,12 @@ function applyTochWrappers(state: State, token: Token, cons: Construction): Cons
   if (token.inside_dot_kind === "dagesh" || token.inside_dot_kind === "shuruk") {
     harden(state, cons.base);
   }
+  if (token.inside_dot_kind === "shuruk") {
+    const handle = state.handles.get(cons.base);
+    if (handle) {
+      handle.meta = { ...handle.meta, carrier_active: true };
+    }
+  }
   return cons;
 }
 
