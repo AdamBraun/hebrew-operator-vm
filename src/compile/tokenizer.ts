@@ -78,10 +78,13 @@ export function tokenize(input: string): Token[] {
       const mark = normalized[index];
       raw += mark;
       const diacritic = classifyDiacritic(mark);
+      const insideCandidate = classifyInsideDot(letter, mark);
+      if (!diacritic && insideCandidate === "none") {
+        throw new CompileError(`Unsupported diacritic '${mark}' on ${letter}`);
+      }
       if (diacritic) {
         diacritics.push(diacritic);
       }
-      const insideCandidate = classifyInsideDot(letter, mark);
       if (insideCandidate !== "none") {
         if (insideDot !== "none" && insideDot !== insideCandidate) {
           throw new CompileError(`Multiple inside dots on ${letter}`);

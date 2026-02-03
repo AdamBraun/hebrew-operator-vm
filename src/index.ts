@@ -5,6 +5,7 @@ function printUsage(): void {
   console.log("Usage:");
   console.log("  node dist/index.js run \"<hebrew>\" [--json]");
   console.log("  node dist/index.js trace \"<hebrew>\"");
+  console.log("  node dist/index.js --trace \"<hebrew>\"");
   console.log("  node dist/index.js \"<hebrew>\"");
 }
 
@@ -29,13 +30,20 @@ function runCommand(program: string, json: boolean): void {
 function runTrace(program: string): void {
   const { state, trace } = runProgramWithTrace(program, createInitialState());
   for (const entry of trace) {
-    console.log(`${entry.token} | tau=${entry.tau} F=${entry.F} R=${entry.R} H=${entry.eventCount}`);
+    const events = entry.events.map((event) => event.type).join(", ") || "-";
+    console.log(
+      `${entry.index} | ${entry.token} | tau ${entry.tauBefore}->${entry.tauAfter}` +
+        ` | F=${entry.F} R=${entry.R} K=${entry.KLength} O=${entry.OStackLength}` +
+        ` | events: ${events}`
+    );
   }
   const stateJson = serializeState(state);
   printSummary(stateJson);
 }
 
-const args: string[] = process.argv.slice(2);
+const rawArgs: string[] = process.argv.slice(2);
+const traceFlag = rawArgs.includes("--trace");
+const args = rawArgs.filter((arg) => arg !== "--trace");
 
 if (args.length === 0) {
   printUsage();
@@ -51,9 +59,13 @@ if (command === "run") {
     printUsage();
     process.exit(1);
   }
-  runCommand(program, json);
-} else if (command === "trace") {
-  const program = args.slice(1).join(" ");
+  if (traceFlag) {
+    runTrace(program);
+  } else {
+    runCommand(program, json);
+  }
+} else if (command === "trace" || traceFlag) {
+  const program = command === "trace" ? args.slice(1).join(" ") : args.join(" ");
   if (!program) {
     printUsage();
     process.exit(1);

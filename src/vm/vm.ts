@@ -8,11 +8,15 @@ import { State, createInitialState } from "../state/state";
 import { applySpace } from "./space";
 
 export type TraceEntry = {
+  index: number;
   token: string;
-  tau: number;
+  tauBefore: number;
+  tauAfter: number;
   F: string;
   R: string;
-  eventCount: number;
+  KLength: number;
+  OStackLength: number;
+  events: Array<{ type: string; tau: number; data: any }>;
 };
 
 function applyRoshWrappers(_token: Token, ops: SelectOperands): SelectOperands {
@@ -80,20 +84,27 @@ export function runProgramWithTrace(
   const tokens = prepareTokens(input);
   const trace: TraceEntry[] = [];
 
-  for (const token of tokens) {
+  tokens.forEach((token, index) => {
+    const tauBefore = state.vm.tau;
+    const eventStart = state.vm.H.length;
     if (token.letter === "□") {
       applySpace(state);
     } else {
       executeLetter(state, token);
     }
+    const eventEnd = state.vm.H.length;
     trace.push({
+      index,
       token: token.letter,
-      tau: state.vm.tau,
+      tauBefore,
+      tauAfter: state.vm.tau,
       F: state.vm.F,
       R: state.vm.R,
-      eventCount: state.vm.H.length
+      KLength: state.vm.K.length,
+      OStackLength: state.vm.OStack_word.length,
+      events: state.vm.H.slice(eventStart, eventEnd)
     });
-  }
+  });
 
   return { state, trace };
 }
