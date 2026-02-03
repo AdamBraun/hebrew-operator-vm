@@ -3,7 +3,7 @@ import { validateTokens } from "../compile/validate";
 import { Token } from "../compile/types";
 import { letterRegistry } from "../letters/registry";
 import { Construction, SelectOperands } from "../letters/types";
-import { harden } from "../state/policies";
+import { hardenHandle } from "../state/policies";
 import { State, createInitialState } from "../state/state";
 import { applySpace } from "./space";
 
@@ -31,7 +31,7 @@ function applyTochWrappers(state: State, token: Token, cons: Construction): Cons
     token.meta.traceOrder.push("toch");
   }
   if (token.inside_dot_kind === "dagesh" || token.inside_dot_kind === "shuruk") {
-    harden(state, cons.base);
+    hardenHandle(state, cons.base);
   }
   if (token.inside_dot_kind === "shuruk") {
     const handle = state.handles.get(cons.base);

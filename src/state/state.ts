@@ -1,4 +1,5 @@
 import { BOT_ID, Handle, OMEGA_ID, createHandle } from "./handles";
+import type { Envelope } from "./policies";
 
 export type ObligationKind = "MEM_ZONE" | "SUPPORT" | "BOUNDARY";
 
@@ -62,13 +63,20 @@ export function createInitialState(): State {
 }
 
 export function serializeState(state: State): Record<string, any> {
+  const serializeEnvelope = (envelope: Envelope): Record<string, any> => ({
+    ...envelope,
+    ports: Array.from(envelope.ports).sort()
+  });
   return {
     vm: {
       ...state.vm,
       metaCounter: state.vm.metaCounter ? { ...state.vm.metaCounter } : undefined
     },
     handles: Array.from(state.handles.entries())
-      .map(([, handle]) => ({ ...handle }))
+      .map(([, handle]) => ({
+        ...handle,
+        envelope: serializeEnvelope(handle.envelope)
+      }))
       .sort((a, b) => a.id.localeCompare(b.id)),
     cont: Array.from(state.cont).sort(),
     links: [...state.links],

@@ -5,11 +5,11 @@ import { createInitialState } from "../../state/state";
 import { letterRegistry } from "../../letters/registry";
 import { State } from "../../state/state";
 import { applySpace } from "../../vm/space";
-import { harden } from "../../state/policies";
+import { hardenHandle } from "../../state/policies";
 
 function applyTochWrappers(state: State, token: Token, handleId: string): void {
   if (token.inside_dot_kind === "dagesh" || token.inside_dot_kind === "shuruk") {
-    harden(state, handleId);
+    hardenHandle(state, handleId);
   }
   if (token.inside_dot_kind === "shuruk") {
     const handle = state.handles.get(handleId);

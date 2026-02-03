@@ -1,4 +1,4 @@
-import { HandlePolicy } from "../state/handles";
+import { Envelope, defaultEnvelope } from "../state/policies";
 
 export type LetterMeta = {
   letter: string;
@@ -11,15 +11,7 @@ export type LetterMeta = {
 
 export type SelectOperands = { args: string[]; prefs: Record<string, any> };
 
-export type Envelope = {
-  ctx_flow: "HIGH" | "LOW";
-  x_flow: "IMPLICIT_OK" | "EXPLICIT_ONLY";
-  data_flow: "LIVE" | "SNAPSHOT";
-  edit_flow: "OPEN" | "TIGHT";
-  ports: Set<string>;
-  coupling: "LINK" | "CopyNoBacklink";
-  policy: HandlePolicy;
-};
+export { Envelope, defaultEnvelope };
 
 export type Construction = {
   base: string;
@@ -42,15 +34,3 @@ export type LetterOp = {
     cons: Construction
   ) => { S: import("../state/state").State; h: string; r: string };
 };
-
-export function defaultEnvelope(policy: HandlePolicy = "soft"): Envelope {
-  return {
-    ctx_flow: "LOW",
-    x_flow: "IMPLICIT_OK",
-    data_flow: "LIVE",
-    edit_flow: "OPEN",
-    ports: new Set(),
-    coupling: "LINK",
-    policy
-  };
-}
