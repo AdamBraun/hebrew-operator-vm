@@ -20,5 +20,4 @@ Define the Hebrew alphabet (including space) as a deterministic operator calculu
 
 - No “meaning” or theology in the spec.
 - No Hebrew linguistics or philology.
-- No pedagogy or classroom metaphors.
 - No profile-specific objects or concrete-world assumptions.
