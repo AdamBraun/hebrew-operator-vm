@@ -1,6 +1,7 @@
 import { BOT_ID } from "../state/handles";
 import { State } from "../state/state";
 import { LetterMeta, SelectOperands } from "../letters/types";
+import { RuntimeError } from "./errors";
 
 function takeFromStack(stack: string[], count: number): string[] {
   const selected: string[] = [];
@@ -39,6 +40,13 @@ export function selectOperands(state: State, meta: LetterMeta): { S: State; ops:
       args.push(args[args.length - 1]);
     } else {
       args.push(BOT_ID);
+    }
+  }
+
+  if (meta.distinct_required) {
+    const unique = new Set(args);
+    if (unique.size !== args.length) {
+      throw new RuntimeError("Distinctness requirement not met");
     }
   }
 
