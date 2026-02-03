@@ -98,7 +98,8 @@ export function tokenize(input: string): Token[] {
       letter,
       diacritics,
       inside_dot_kind: insideDot,
-      raw
+      raw,
+      meta: {}
     });
   }
 

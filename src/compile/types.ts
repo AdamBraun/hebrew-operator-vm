@@ -32,6 +32,7 @@ export type Token = {
   diacritics: Diacritic[];
   inside_dot_kind: InsideDotKind;
   raw: string;
+  meta?: Record<string, any>;
 };
 
 export class CompileError extends Error {

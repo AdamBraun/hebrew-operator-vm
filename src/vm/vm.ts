@@ -19,11 +19,17 @@ export type TraceEntry = {
   events: Array<{ type: string; tau: number; data: any }>;
 };
 
-function applyRoshWrappers(_token: Token, ops: SelectOperands): SelectOperands {
+function applyRoshWrappers(token: Token, ops: SelectOperands): SelectOperands {
+  if (token.meta?.traceOrder) {
+    token.meta.traceOrder.push("rosh");
+  }
   return ops;
 }
 
 function applyTochWrappers(state: State, token: Token, cons: Construction): Construction {
+  if (token.meta?.traceOrder) {
+    token.meta.traceOrder.push("toch");
+  }
   if (token.inside_dot_kind === "dagesh" || token.inside_dot_kind === "shuruk") {
     harden(state, cons.base);
   }
@@ -36,7 +42,10 @@ function applyTochWrappers(state: State, token: Token, cons: Construction): Cons
   return cons;
 }
 
-function applySofWrappers(_token: Token, handleId: string): string {
+function applySofWrappers(token: Token, handleId: string): string {
+  if (token.meta?.traceOrder) {
+    token.meta.traceOrder.push("sof");
+  }
   return handleId;
 }
 
