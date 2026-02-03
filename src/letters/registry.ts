@@ -11,8 +11,6 @@ import {
   tavOp,
   tetOp,
   tsadiOp,
-  vavOp,
-  yodOp,
   zayinOp
 } from "./basic";
 import { betOp } from "./bet";
@@ -23,6 +21,8 @@ import { finalsMap } from "./finals";
 import { memOp } from "./mem";
 import { nunOp } from "./nun";
 import { samekhOp } from "./samekh";
+import { vavOp } from "./vav";
+import { yodOp } from "./yod";
 import { LetterOp } from "./types";
 
 export type LetterRegistry = Record<string, LetterOp>;

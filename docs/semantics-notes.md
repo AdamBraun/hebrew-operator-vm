@@ -4,7 +4,7 @@
 
 * Deterministic IDs (`<letter>:<tau>:<counter>`) and event log.
 * Space boundary (`□`) resolution for `SUPPORT` and `MEM_ZONE` obligations.
-* Letters with v0 semantics: נ, ן, ס, מ, ם, ב, ד, ג, ה.
+* Letters with v0 semantics: נ, ן, ס, מ, ם, ב, ד, ג, ה, ו, י.
 * Tokenizer with Hebrew letters, finals, whitespace→`□`, and basic niqqud mapping.
 * Whitespace is semantic: `"נ ס"` inserts `□` and discharges support before `ס`.
 * Same-word `"נס"` allows samekh to discharge support before the boundary.
@@ -17,5 +17,7 @@
 * `ב` opens a `BOUNDARY` obligation; `ד` closes it into a boundary handle/record (or opens+closes immediately if none is pending).
 * `ג` creates a link handle and records a `links` entry.
 * `ה` seals a `final` artifact handle.
-* `וּ` (shuruk) marks the current base handle with `meta.carrier_active = true` and hardens it.
+* `וּ` (shuruk) marks the sealed handle with `meta.carrier_active = true` and hardens it.
+* `ו` creates a structured link handle labeled `vav`.
+* `י` creates an `entity` handle seeded from focus.
 * GC, rules, and extended classroom relations are placeholders.

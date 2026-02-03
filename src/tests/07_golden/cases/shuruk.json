@@ -2,22 +2,25 @@
   "vm": {
     "tau": 2,
     "Omega": "Ω",
-    "F": "⊥",
+    "F": "ו:1:1",
     "R": "⊥",
     "K": [
-      "⊥",
+      "ו:1:1",
       "⊥"
     ],
     "E": [],
     "W": [],
     "OStack_word": [],
-    "H": []
+    "H": [],
+    "metaCounter": {
+      "ו": 1
+    }
   },
   "handles": [
     {
       "id": "⊥",
       "kind": "empty",
-      "policy": "framed_lock",
+      "policy": "soft",
       "anchor": 0,
       "edge_mode": "free",
       "envelope": {
@@ -27,11 +30,9 @@
         "edit_flow": "OPEN",
         "ports": [],
         "coupling": "LINK",
-        "policy": "framed_lock"
+        "policy": "soft"
       },
-      "meta": {
-        "carrier_active": true
-      }
+      "meta": {}
     },
     {
       "id": "Ω",
@@ -49,10 +50,38 @@
         "policy": "soft"
       },
       "meta": {}
+    },
+    {
+      "id": "ו:1:1",
+      "kind": "structured",
+      "policy": "framed_lock",
+      "anchor": 0,
+      "edge_mode": "free",
+      "envelope": {
+        "ctx_flow": "LOW",
+        "x_flow": "IMPLICIT_OK",
+        "data_flow": "LIVE",
+        "edit_flow": "OPEN",
+        "ports": [],
+        "coupling": "LINK",
+        "policy": "framed_lock"
+      },
+      "meta": {
+        "from": "⊥",
+        "to": "Ω",
+        "label": "vav",
+        "carrier_active": true
+      }
     }
   ],
   "cont": [],
-  "links": [],
+  "links": [
+    {
+      "from": "⊥",
+      "to": "Ω",
+      "label": "vav"
+    }
+  ],
   "boundaries": [],
   "rules": []
 }
