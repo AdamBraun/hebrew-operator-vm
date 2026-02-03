@@ -6,8 +6,8 @@
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint . --ext .ts",
-    "format": "prettier --check ."
+    "lint": "eslint \"impl/reference/src/**/*.ts\" \"tests/**/*.ts\"",
+    "format": "prettier --check \"impl/reference/src/**/*.{ts,md,json,yaml,yml}\" \"tests/**/*.{ts,md,json,yaml,yml}\" \"spec/**/*.md\" \"registry/**/*.{yml,yaml}\" \"letters/**/*.md\" \"modifiers/**/*.md\" \"profiles/**/*.md\" \"theory/**/*.md\" \"examples/**/*.md\" \"README.md\" \".github/**/*.{yml,yaml,md}\""
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

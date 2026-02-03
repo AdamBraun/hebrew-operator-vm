@@ -1,0 +1,62 @@
+schema_version: 1
+
+handle_kinds:
+  - ScopeHandle
+  - BoundaryHandle
+  - AliasHandle
+  - RuleHandle
+  - ArtifactHandle
+  - EmptyHandle
+
+obligation_defaults:
+  MEM_ZONE: close_silently
+  SUPPORT: fall
+  BOUNDARY: auto_close_boundary
+
+defaults:
+  arity_req: 1
+  arity_opt: 0
+  distinct_required: false
+  distinct_optional: false
+  reflexive_ok: true
+  operand_kinds:
+    required: ["any"]
+    optional: []
+  obligations:
+    opens: []
+    closes: []
+  phase_writes:
+    select: ["registers"]
+    bound: ["envelope"]
+    seal: ["stack", "residue"]
+  compatibility_tags: []
+  tests: []
+
+letters:
+  "א": { status: stub, compatibility_tags: ["stub"] }
+  "ב": { status: implemented, obligations: { opens: ["BOUNDARY"] } }
+  "ג": { status: implemented, arity_req: 2 }
+  "ד": { status: implemented, obligations: { closes: ["BOUNDARY"] } }
+  "ה": { status: implemented }
+  "ו": { status: implemented, arity_req: 2 }
+  "ז": { status: stub, compatibility_tags: ["stub"] }
+  "ח": { status: stub, compatibility_tags: ["stub"] }
+  "ט": { status: stub, compatibility_tags: ["stub"] }
+  "י": { status: implemented }
+  "כ": { status: stub, compatibility_tags: ["stub"] }
+  "ך": { status: stub, compatibility_tags: ["stub"] }
+  "ל": { status: stub, compatibility_tags: ["stub"] }
+  "מ": { status: implemented, obligations: { opens: ["MEM_ZONE"] } }
+  "ם": { status: implemented, obligations: { closes: ["MEM_ZONE"] } }
+  "נ": { status: implemented, obligations: { opens: ["SUPPORT"] } }
+  "ן": { status: implemented, obligations: { opens: ["SUPPORT"], closes: ["SUPPORT"] } }
+  "ס": { status: implemented, obligations: { closes: ["SUPPORT"] } }
+  "ע": { status: stub, compatibility_tags: ["stub"] }
+  "פ": { status: stub, compatibility_tags: ["stub"] }
+  "ף": { status: stub, compatibility_tags: ["stub"] }
+  "צ": { status: stub, compatibility_tags: ["stub"] }
+  "ץ": { status: stub, compatibility_tags: ["stub"] }
+  "ק": { status: stub, compatibility_tags: ["stub"] }
+  "ר": { status: stub, compatibility_tags: ["stub"] }
+  "ש": { status: stub, compatibility_tags: ["stub"] }
+  "ת": { status: stub, compatibility_tags: ["stub"] }
