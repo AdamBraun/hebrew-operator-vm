@@ -2,6 +2,7 @@ import { BOT_ID, createHandle } from "../state/handles";
 import { addCont } from "../state/relations";
 import { setPolicy } from "../state/policies";
 import { State } from "../state/state";
+import { RuntimeError } from "../vm/errors";
 import { nextId } from "../vm/ids";
 import { Construction, LetterMeta, LetterOp, SelectOperands, defaultEnvelope } from "./types";
 
@@ -40,7 +41,7 @@ export const finalNunOp: LetterOp = {
     });
     const popped = S.vm.OStack_word.pop();
     if (!popped || popped.kind !== "SUPPORT" || popped.child !== child) {
-      throw new Error("Final nun support discharge mismatch");
+      throw new RuntimeError("Final nun support discharge mismatch");
     }
     setPolicy(S, child, "framed_lock");
     return { S, h: child, r: BOT_ID };

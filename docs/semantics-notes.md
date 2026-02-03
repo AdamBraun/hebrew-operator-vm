@@ -8,6 +8,7 @@
 * Tokenizer with Hebrew letters, finals, whitespace→`□`, and basic niqqud mapping.
 * Whitespace is semantic: `"נ ס"` inserts `□` and discharges support before `ס`.
 * Same-word `"נס"` allows samekh to discharge support before the boundary.
+* Runtime errors are thrown for illegal nesting (e.g., `ם` with non-`MEM_ZONE` on top, `ד` with non-`BOUNDARY` obligation).
 
 ## Stubbed / minimal
 
