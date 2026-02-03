@@ -37,6 +37,12 @@ export function assertStateInvariants(state: State): void {
     }
   }
 
+  for (let i = 1; i < state.vm.H.length; i += 1) {
+    if (state.vm.H[i].tau < state.vm.H[i - 1].tau) {
+      throw new Error("Event tau values must be nondecreasing");
+    }
+  }
+
   for (const edge of state.cont) {
     const [from, to] = edge.split("->");
     ensure(from);

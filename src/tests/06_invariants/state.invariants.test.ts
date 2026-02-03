@@ -5,7 +5,7 @@ import { runProgram } from "../../vm/vm";
 
 describe("state invariants", () => {
   it("holds after a few representative programs", () => {
-    const programs = ["", "נ", "נס", "נ ס", "מ", "מם", "מ ם", "ן", "בד", "ג", "ה"];
+    const programs = ["", "נ", "נס", "נ ס", "מ", "מם", "מ ם", "ן", "בד", "ג", "ה", "וּ"];
     for (const program of programs) {
       const state = runProgram(program, createInitialState());
       expect(() => assertStateInvariants(state)).not.toThrow();
