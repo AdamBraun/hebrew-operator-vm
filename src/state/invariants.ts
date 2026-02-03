@@ -12,6 +12,9 @@ export function assertStateInvariants(state: State): void {
     }
   };
 
+  ensure(BOT_ID);
+  ensure(OMEGA_ID);
+  ensure(state.vm.Omega);
   ensure(state.vm.F);
   ensure(state.vm.R);
   state.vm.K.forEach(ensure);
@@ -47,5 +50,16 @@ export function assertStateInvariants(state: State): void {
     const [from, to] = edge.split("->");
     ensure(from);
     ensure(to);
+  }
+
+  for (const boundary of state.boundaries) {
+    ensure(boundary.inside);
+    ensure(boundary.outside);
+    ensure(boundary.id);
+  }
+
+  for (const link of state.links) {
+    ensure(link.from);
+    ensure(link.to);
   }
 }
