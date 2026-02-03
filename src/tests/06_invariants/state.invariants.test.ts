@@ -12,9 +12,12 @@ describe("state invariants", () => {
     }
   });
 
-  it("OStack_word empty after final boundary", () => {
-    const state = runProgram("נ", createInitialState());
-    expect(state.vm.OStack_word.length).toBe(0);
+  it("OStack_word empty after final boundary across a corpus", () => {
+    const programs = ["נ", "ן", "נס", "נ ס", "מ", "מ ם", "מם", "בד", "ג", "ה", "וּ"];
+    for (const program of programs) {
+      const state = runProgram(program, createInitialState());
+      expect(state.vm.OStack_word.length).toBe(0);
+    }
   });
 
   it("tau is nondecreasing and increments only on boundaries", () => {
