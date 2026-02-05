@@ -1,8 +1,19 @@
-import { createHandle } from "../state/handles";
+import { BOT_ID, createHandle } from "../state/handles";
 import { addBoundary, closeMemZoneSilently } from "../state/relations";
 import { State } from "../state/state";
 import { collectGarbage } from "./gc";
+import { RuntimeError } from "./errors";
 import { nextId } from "./ids";
+
+function sealWord(state: State): string {
+  if (!state.vm.wordHasContent) {
+    return BOT_ID;
+  }
+  if (state.vm.wordLastSealedArtifact) {
+    return state.vm.wordLastSealedArtifact;
+  }
+  return state.vm.F;
+}
 
 export function applySpace(state: State): void {
   state.vm.tau += 1;
@@ -42,8 +53,23 @@ export function applySpace(state: State): void {
       state.vm.R = obligation.child;
       state.vm.F = obligation.parent;
     }
+    if (
+      obligation.kind !== "MEM_ZONE" &&
+      obligation.kind !== "SUPPORT" &&
+      obligation.kind !== "BOUNDARY"
+    ) {
+      throw new RuntimeError(`Unknown obligation kind '${obligation.kind}'`);
+    }
   }
 
+  const wordValue = sealWord(state);
+  state.vm.A.push(wordValue);
+
+  state.vm.OStack_word = [];
+  state.vm.wordHasContent = false;
+  state.vm.wordLastSealedArtifact = undefined;
+  state.vm.F = state.vm.Omega;
+  state.vm.R = BOT_ID;
   state.vm.K = [state.vm.F, state.vm.R];
   collectGarbage(state);
 }

@@ -8,7 +8,8 @@ import { runProgram } from "@ref/vm/vm";
 describe("samekh behavior", () => {
   it("stabilizes focus (framed_lock)", () => {
     const state = runProgram("נס", createInitialState());
-    const focus = state.handles.get(state.vm.F);
+    const wordOut = state.vm.A[state.vm.A.length - 1];
+    const focus = state.handles.get(wordOut);
     expect(focus?.policy).toBe("framed_lock");
   });
 

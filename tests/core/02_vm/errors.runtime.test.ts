@@ -9,8 +9,9 @@ describe("runtime errors", () => {
     expect(() => runProgram("נם", createInitialState())).toThrow(RuntimeError);
   });
 
-  it("dalet with non-boundary obligation throws RuntimeError", () => {
-    expect(() => runProgram("נד", createInitialState())).toThrow(RuntimeError);
+  it("dalet does not depend on boundary obligations", () => {
+    const state = runProgram("נד", createInitialState());
+    expect(state.boundaries.length).toBe(1);
   });
 
   it("cont reachability on missing nodes returns false", () => {

@@ -26,10 +26,26 @@ export const vavOp: LetterOp = {
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { from, to } = cons.meta as { from: string; to: string };
+    const { from, to, carrier_mode, rep_flag } = cons.meta as {
+      from: string;
+      to: string;
+      carrier_mode?: string;
+      rep_flag?: number;
+    };
+    const mode = carrier_mode ? "seeded" : "plain";
     const linkId = nextId(S, "ו");
-    S.handles.set(linkId, createHandle(linkId, "structured", { meta: { from, to, label: "vav" } }));
+    S.handles.set(
+      linkId,
+      createHandle(linkId, "structured", {
+        meta: { from, to, label: "vav", mode, carrier_mode, rep_flag }
+      })
+    );
     S.links.push({ from, to, label: "vav" });
-    return { S, h: linkId, r: BOT_ID };
+    const residueId = nextId(S, "ו");
+    S.handles.set(
+      residueId,
+      createHandle(residueId, "scope", { meta: { residueOf: linkId, mode } })
+    );
+    return { S, h: linkId, r: residueId };
   }
 };

@@ -23,12 +23,14 @@ Implementations MUST support these abstract relations or traits, independent of 
 - **Boundary relation:** a separation relation for inside/outside traversal.
 - **Ports:** each boundary or interface handle exposes deterministic ports (`L`, `C`, `R` at minimum).
 - **Policies:** edit policies `{soft, framed_lock, final}`.
-- **Anchoring:** a boolean anchor bit `a ∈ {0,1}` (anchored vs unanchored).
+- Policy semantics (minimum): `framed_lock` blocks frame rewrites but allows interior edits; `final` blocks all mutation. Profiles MAY refine this but MUST preserve the ordering `soft → framed_lock → final`.
+- **Anchoring:** a boolean anchor bit `a ∈ {0,1}` (anchored vs unanchored). Conventional interpretation: `a=1` = anchored/internal/receiving, `a=0` = unanchored/external/autonomous.
 - **Coupling / edit permissions:** traits that gate how patches flow (context flow, data flow, edit flow).
 - **Link relation:** labeled directed links between handles.
 - **Continuation relation (optional but recommended):** for ordered progression handles.
 - **Edge modes:** metadata for behavior classes (e.g., `gated`, `stabilized`, `convergent`, `committed`, `bundled`, `collapsed`).
 - **Head hints:** optional metadata that can bias selection without overriding anchoring.
+- **Cascade rules (optional but recommended):** a persistent rule set `Φ`, where each rule is `(target, bound, priority)`. Profiles may name this differently but must expose deterministic lookup/update if used by letter semantics.
 
 ## Required operations
 

@@ -13,7 +13,10 @@ describe("gimel contract", () => {
 
   it("does not reference invalid handles", () => {
     const state = createInitialState();
-    const { cons } = gimelOp.bound(state, { args: [state.vm.F, state.vm.F], prefs: {} });
+    const { cons } = gimelOp.bound(state, {
+      args: [state.vm.F, state.vm.F, state.vm.F],
+      prefs: {}
+    });
     const { h, r } = gimelOp.seal(state, cons);
     expect(state.handles.has(h)).toBe(true);
     expect(state.handles.has(r) || r === "⊥").toBe(true);

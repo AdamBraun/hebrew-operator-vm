@@ -15,6 +15,7 @@ For any program `P` and initial state `S0`:
 
 - Handle IDs MUST be generated through a single deterministic allocator.
 - IDs MUST NOT depend on wall-clock time, randomness, or iteration order.
+- Acceptable deterministic schemes include structured counters (e.g., `(letter, type, local_counter)`) or content-derived hashes `(hash(letter, inputs, bounds, policy))`, as long as the scheme is stable and collision-safe.
 
 ## Canonical ordering
 

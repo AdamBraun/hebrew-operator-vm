@@ -1,7 +1,6 @@
 import { BOT_ID, createHandle } from "../state/handles";
-import { addBoundary, addCont } from "../state/relations";
+import { addBoundary } from "../state/relations";
 import { State } from "../state/state";
-import { RuntimeError } from "../vm/errors";
 import { nextId } from "../vm/ids";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
 
@@ -18,52 +17,36 @@ export const daletOp: LetterOp = {
   meta,
   select: (S: State) => ({ S, ops: { args: [S.vm.F], prefs: {} } }),
   bound: (S: State, ops) => {
-    const cons: Construction = {
-      base: ops.args[0],
-      envelope: defaultEnvelope(),
-      meta: { focus: ops.args[0] }
-    };
-    return { S, cons };
-  },
-  seal: (S: State, cons: Construction) => {
-    void cons;
-    const top = S.vm.OStack_word[S.vm.OStack_word.length - 1];
-    let parent: string;
-    let child: string;
-
-    if (!top) {
-      parent = S.vm.F;
-      child = nextId(S, "ד");
-      S.handles.set(
-        child,
-        createHandle(child, "scope", { meta: { insideOf: parent, openedBy: "ד" } })
-      );
-      addCont(S, parent, child);
-    } else {
-      if (top.kind !== "BOUNDARY") {
-        throw new RuntimeError("Dalet expected BOUNDARY obligation");
-      }
-      const obligation = S.vm.OStack_word.pop();
-      if (!obligation) {
-        throw new RuntimeError("Dalet boundary obligation missing");
-      }
-      parent = obligation.parent;
-      child = obligation.child;
-    }
-
+    const inside = ops.args[0];
+    const frame = S.vm.E[S.vm.E.length - 1];
+    const outside =
+      S.vm.R !== BOT_ID ? S.vm.R : frame?.Omega_frame ? frame.Omega_frame : S.vm.Omega;
     const boundaryId = nextId(S, "ד");
     S.handles.set(
       boundaryId,
       createHandle(boundaryId, "boundary", {
         anchor: 1,
-        meta: { inside: child, outside: parent, closedBy: "ד" }
+        meta: { inside, outside, closedBy: "ד" }
       })
     );
-    addBoundary(S, boundaryId, child, parent, 1);
+    addBoundary(S, boundaryId, inside, outside, 1);
+    const cons: Construction = {
+      base: inside,
+      envelope: defaultEnvelope(),
+      meta: { boundaryId, inside, outside }
+    };
+    return { S, cons };
+  },
+  seal: (S: State, cons: Construction) => {
+    const { boundaryId, inside, outside } = cons.meta as {
+      boundaryId: string;
+      inside: string;
+      outside: string;
+    };
     S.vm.H.push({
       type: "boundary_close",
       tau: S.vm.tau,
-      data: { id: boundaryId, inside: child, outside: parent }
+      data: { id: boundaryId, inside, outside }
     });
     return { S, h: boundaryId, r: BOT_ID };
   }

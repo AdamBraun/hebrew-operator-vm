@@ -3,12 +3,12 @@ import { createInitialState } from "@ref/state/state";
 import { runProgram } from "@ref/vm/vm";
 
 describe("he behavior", () => {
-  it("seals a final artifact", () => {
+  it("seals a public rule handle", () => {
     const state = runProgram("ה", createInitialState());
-    const artifacts = Array.from(state.handles.values()).filter(
-      (handle) => handle.kind === "artifact"
+    const rules = Array.from(state.handles.values()).filter(
+      (handle) => handle.kind === "rule"
     );
-    expect(artifacts.length).toBe(1);
-    expect(artifacts[0].policy).toBe("final");
+    expect(rules.length).toBe(1);
+    expect(rules[0].meta.public).toBe(1);
   });
 });

@@ -11,7 +11,8 @@ describe("T5 final mem exports handle", () => {
     );
     expect(memHandles.length).toBe(1);
     const [memHandleId, memHandle] = memHandles[0];
-    expect(state.vm.F).toBe(memHandleId);
+    const wordOut = state.vm.A[state.vm.A.length - 1];
+    expect(wordOut).toBe(memHandleId);
     expect(memHandle.meta.zone).toBeDefined();
   });
 });

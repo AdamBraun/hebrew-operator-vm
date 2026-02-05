@@ -19,6 +19,10 @@ export function assertStateInvariants(state: State): void {
   ensure(state.vm.R);
   state.vm.K.forEach(ensure);
   state.vm.W.forEach(ensure);
+  state.vm.A.forEach(ensure);
+  if (state.vm.wordLastSealedArtifact) {
+    ensure(state.vm.wordLastSealedArtifact);
+  }
 
   for (const obligation of state.vm.OStack_word) {
     ensure(obligation.parent);

@@ -6,7 +6,11 @@ function stripEnvelopeAndPolicy(state: ReturnType<typeof runProgram>): Record<st
   const json = serializeState(state);
   return {
     ...json,
-    handles: json.handles.map(({ envelope: _envelope, policy: _policy, ...rest }) => rest)
+    handles: json.handles.map(({ envelope: _envelope, policy: _policy, ...rest }) => {
+      const meta = rest.meta ? { ...rest.meta } : {};
+      delete (meta as { hard?: number }).hard;
+      return { ...rest, meta };
+    })
   };
 }
 
@@ -32,5 +36,7 @@ describe("dagesh harden", () => {
     expect(plainHandle).toBeDefined();
     expect(hardenedHandle?.envelope.policy).toBe("framed_lock");
     expect(plainHandle?.envelope.policy).toBe("soft");
+    expect(hardenedHandle?.meta.hard).toBe(1);
+    expect(plainHandle?.meta.hard).toBeUndefined();
   });
 });

@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest";
+import { BOT_ID } from "@ref/state/handles";
 import { createInitialState } from "@ref/state/state";
 import { runProgram } from "@ref/vm/vm";
 
-describe("mem behavior", () => {
-  it("ם with no MEM_ZONE opens+closes immediately", () => {
-    const state = runProgram("ם", createInitialState());
+describe("phrase accumulator", () => {
+  it("records empty leading/trailing words for empty input", () => {
+    const state = runProgram("", createInitialState());
+    expect(state.vm.A).toEqual([BOT_ID, BOT_ID]);
+  });
+
+  it("exports the word output at boundary", () => {
+    const state = runProgram("מם", createInitialState());
     const memHandles = Array.from(state.handles.values()).filter(
       (handle) => handle.kind === "memHandle"
     );

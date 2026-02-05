@@ -6,10 +6,11 @@ describe("core demo letters", () => {
   it("bet can be first", () => {
     const state = runProgram("בד", createInitialState());
     expect(state.vm.OStack_word.length).toBe(0);
-    expect(state.boundaries.length).toBe(1);
-    const boundary = state.boundaries[0];
-    const boundaryHandle = state.handles.get(boundary.id);
-    expect(boundaryHandle?.meta.closedBy).toBe("ד");
+    expect(state.boundaries.length).toBe(2);
+    const opened = state.handles.get(state.boundaries[0].id);
+    const closed = state.handles.get(state.boundaries[1].id);
+    expect(opened?.meta.openedBy).toBe("ב");
+    expect(closed?.meta.closedBy).toBe("ד");
   });
 
   it("bet can be last", () => {
@@ -18,9 +19,7 @@ describe("core demo letters", () => {
     expect(state.boundaries.length).toBe(1);
     const boundary = state.boundaries[0];
     const boundaryHandle = state.handles.get(boundary.id);
-    expect(boundaryHandle?.meta.closedBy).toBe("space");
-    const autoCloseEvents = state.vm.H.filter((event) => event.type === "boundary_auto_close");
-    expect(autoCloseEvents.length).toBe(1);
+    expect(boundaryHandle?.meta.openedBy).toBe("ב");
   });
 
   it("dalet can be first", () => {
@@ -33,7 +32,7 @@ describe("core demo letters", () => {
   it("dalet can be last", () => {
     const state = runProgram("בד", createInitialState());
     expect(state.vm.OStack_word.length).toBe(0);
-    const boundaryHandle = state.handles.get(state.boundaries[0].id);
+    const boundaryHandle = state.handles.get(state.boundaries[1].id);
     expect(boundaryHandle?.meta.closedBy).toBe("ד");
   });
 
@@ -44,6 +43,8 @@ describe("core demo letters", () => {
       (handle) => handle.meta?.label === "gimel"
     );
     expect(linkHandle?.kind).toBe("structured");
+    const bestow = state.vm.H.find((event) => event.type === "bestow");
+    expect(bestow).toBeDefined();
   });
 
   it("gimel can be last", () => {
@@ -53,23 +54,26 @@ describe("core demo letters", () => {
       (handle) => handle.meta?.label === "gimel"
     );
     expect(linkHandle?.kind).toBe("structured");
+    const bestow = state.vm.H.find((event) => event.type === "bestow");
+    expect(bestow).toBeDefined();
   });
 
   it("he can be first", () => {
     const state = runProgram("הא", createInitialState());
-    const artifacts = Array.from(state.handles.values()).filter(
-      (handle) => handle.kind === "artifact"
+    const rules = Array.from(state.handles.values()).filter(
+      (handle) => handle.kind === "rule"
     );
-    expect(artifacts.length).toBe(1);
-    expect(artifacts[0].policy).toBe("final");
+    expect(rules.length).toBe(1);
+    expect(rules[0].meta.public).toBe(1);
   });
 
   it("he can be last", () => {
     const state = runProgram("אה", createInitialState());
-    const artifacts = Array.from(state.handles.values()).filter(
-      (handle) => handle.kind === "artifact"
+    const rules = Array.from(state.handles.values()).filter(
+      (handle) => handle.kind === "rule"
     );
-    expect(artifacts.length).toBe(1);
-    expect(state.vm.F).toBe(artifacts[0].id);
+    expect(rules.length).toBe(1);
+    const wordOut = state.vm.A[state.vm.A.length - 1];
+    expect(wordOut).toBe(rules[0].id);
   });
 });

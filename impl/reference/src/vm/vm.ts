@@ -31,7 +31,7 @@ function applyTochWrappers(token: Token, cons: Construction): Construction {
     token.meta.traceOrder.push("toch");
   }
   if (token.inside_dot_kind === "shuruk") {
-    return { ...cons, meta: { ...cons.meta, carrier_active: true } };
+    return { ...cons, meta: { ...cons.meta, carrier_mode: "seeded", rep_flag: 1 } };
   }
   return cons;
 }
@@ -48,13 +48,14 @@ function executeLetter(state: State, token: Token): void {
   if (!op) {
     throw new Error(`Missing letter op for ${token.letter}`);
   }
+  state.vm.wordHasContent = true;
 
   const selectResult = op.select(state);
   const ops = applyRoshWrappers(token, selectResult.ops);
 
   const boundResult = op.bound(selectResult.S, ops);
   const hasShuruk = token.inside_dot_kind === "shuruk";
-  const shouldHarden = token.inside_dot_kind === "dagesh" || hasShuruk;
+  const shouldHarden = token.inside_dot_kind === "dagesh";
   const cons = applyTochWrappers(token, boundResult.cons);
 
   const sealResult = op.seal(boundResult.S, cons);
@@ -63,11 +64,22 @@ function executeLetter(state: State, token: Token): void {
   if (shouldHarden) {
     hardenHandle(sealResult.S, sealed);
   }
-  if (hasShuruk && cons.meta?.carrier_active) {
+  if (hasShuruk && cons.meta?.carrier_mode === "seeded") {
     const handle = sealResult.S.handles.get(sealed);
     if (handle) {
-      handle.meta = { ...handle.meta, carrier_active: true };
+      handle.meta = { ...handle.meta, carrier_mode: "seeded", rep_flag: 1 };
     }
+  }
+  if (token.inside_dot_kind === "dagesh") {
+    const handle = sealResult.S.handles.get(sealed);
+    if (handle) {
+      handle.meta = { ...handle.meta, hard: 1 };
+    }
+  }
+
+  const sealedHandle = sealResult.S.handles.get(sealed);
+  if (sealedHandle?.kind === "artifact") {
+    sealResult.S.vm.wordLastSealedArtifact = sealed;
   }
 
   sealResult.S.vm.K.push(sealed);

@@ -9,5 +9,6 @@ describe("yod behavior", () => {
       (handle) => handle.kind === "entity" && handle.meta?.seedOf === state.vm.Omega
     );
     expect(seedHandle).toBeDefined();
+    expect(seedHandle?.anchor).toBe(1);
   });
 });

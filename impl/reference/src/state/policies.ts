@@ -24,12 +24,24 @@ export function defaultEnvelope(policy: HandlePolicy = "soft"): Envelope {
 }
 
 export function harden(envelope: Envelope): Envelope {
-  if (envelope.policy !== "soft") {
-    return envelope;
-  }
+  const raisePolicy = (policy: HandlePolicy): HandlePolicy => {
+    if (policy === "soft") {
+      return "framed_lock";
+    }
+    if (policy === "framed_lock") {
+      return "final";
+    }
+    return "final";
+  };
   return {
     ...envelope,
-    policy: "framed_lock"
+    ctx_flow: "LOW",
+    x_flow: "EXPLICIT_ONLY",
+    data_flow: "SNAPSHOT",
+    edit_flow: "TIGHT",
+    ports: new Set(),
+    coupling: "CopyNoBacklink",
+    policy: raisePolicy(envelope.policy)
   };
 }
 

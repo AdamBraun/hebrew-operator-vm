@@ -23,6 +23,9 @@ export type VM = {
   W: string[];
   OStack_word: Obligation[];
   H: VMEvent[];
+  A: string[];
+  wordHasContent: boolean;
+  wordLastSealedArtifact?: string;
   metaCounter?: Record<string, number>;
 };
 
@@ -49,7 +52,10 @@ export function createInitialState(): State {
     E: [],
     W: [],
     OStack_word: [],
-    H: []
+    H: [],
+    A: [],
+    wordHasContent: false,
+    wordLastSealedArtifact: undefined
   };
 
   return {
@@ -67,11 +73,16 @@ export function serializeState(state: State): Record<string, any> {
     ...envelope,
     ports: Array.from(envelope.ports).sort()
   });
+  const { wordLastSealedArtifact, metaCounter, ...vmRest } = state.vm;
+  const vm: Record<string, any> = { ...vmRest };
+  if (wordLastSealedArtifact !== undefined) {
+    vm.wordLastSealedArtifact = wordLastSealedArtifact;
+  }
+  if (metaCounter) {
+    vm.metaCounter = { ...metaCounter };
+  }
   return {
-    vm: {
-      ...state.vm,
-      metaCounter: state.vm.metaCounter ? { ...state.vm.metaCounter } : undefined
-    },
+    vm,
     handles: Array.from(state.handles.entries())
       .map(([, handle]) => ({
         ...handle,

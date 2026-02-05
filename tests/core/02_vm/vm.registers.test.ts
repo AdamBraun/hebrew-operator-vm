@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { BOT_ID, OMEGA_ID } from "@ref/state/handles";
 import { createInitialState } from "@ref/state/state";
 import { runProgramWithTrace } from "@ref/vm/vm";
 
@@ -19,5 +20,7 @@ describe("vm register updates", () => {
     const trailing = trace[trace.length - 1];
     expect(trailing.token).toBe("□");
     expect(trailing.OStackLength).toBe(0);
+    expect(trailing.F).toBe(OMEGA_ID);
+    expect(trailing.R).toBe(BOT_ID);
   });
 });

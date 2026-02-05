@@ -18,7 +18,8 @@ describe("space boundary MEM_ZONE resolution", () => {
       (handle) => handle.kind === "memHandle"
     );
     expect(memHandles.length).toBe(1);
-    expect(state.vm.F).toBe(memHandles[0].id);
+    const wordOut = state.vm.A[state.vm.A.length - 1];
+    expect(wordOut).toBe(memHandles[0].id);
     expect(state.vm.OStack_word.length).toBe(0);
   });
 

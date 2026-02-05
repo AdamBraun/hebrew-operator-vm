@@ -27,7 +27,10 @@ export const yodOp: LetterOp = {
   seal: (S: State, cons: Construction) => {
     const focus = cons.meta.focus as string;
     const seedId = nextId(S, "י");
-    S.handles.set(seedId, createHandle(seedId, "entity", { meta: { seedOf: focus } }));
+    S.handles.set(
+      seedId,
+      createHandle(seedId, "entity", { anchor: 1, meta: { seedOf: focus, port: "interface" } })
+    );
     return { S, h: seedId, r: BOT_ID };
   }
 };

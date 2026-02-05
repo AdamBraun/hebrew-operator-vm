@@ -16,7 +16,8 @@ describe("nun behavior", () => {
     const state = runProgram("ן", createInitialState());
     const falls = state.vm.H.filter((event) => event.type === "fall");
     expect(falls.length).toBe(0);
-    const focus = state.handles.get(state.vm.F);
+    const wordOut = state.vm.A[state.vm.A.length - 1];
+    const focus = state.handles.get(wordOut);
     expect(focus?.policy).toBe("framed_lock");
   });
 });

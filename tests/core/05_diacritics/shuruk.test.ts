@@ -3,21 +3,28 @@ import { createInitialState } from "@ref/state/state";
 import { runProgram } from "@ref/vm/vm";
 
 describe("shuruk carrier activation", () => {
-  it("vav + shuruk sets carrier_active", () => {
+  it("vav + shuruk sets carrier_mode and rep_flag", () => {
     const state = runProgram("וּ", createInitialState());
-    const handle = state.handles.get(state.vm.F);
-    expect(handle?.meta.carrier_active).toBe(true);
+    const wordOut = state.vm.A[state.vm.A.length - 1];
+    const handle = state.handles.get(wordOut);
+    expect(handle?.meta.carrier_mode).toBe("seeded");
+    expect(handle?.meta.rep_flag).toBe(1);
   });
 
-  it("vav without dot does not set carrier_active", () => {
+  it("vav without dot does not set carrier_mode", () => {
     const state = runProgram("ו", createInitialState());
-    const handle = state.handles.get(state.vm.F);
-    expect(handle?.meta.carrier_active).toBeUndefined();
+    const wordOut = state.vm.A[state.vm.A.length - 1];
+    const handle = state.handles.get(wordOut);
+    expect(handle?.meta.carrier_mode).toBeUndefined();
+    expect(handle?.meta.rep_flag).toBeUndefined();
   });
 
-  it("dagesh on non-vav does not set carrier_active", () => {
+  it("dagesh on non-vav does not set carrier_mode", () => {
     const state = runProgram("בּ", createInitialState());
-    const handle = state.handles.get(state.vm.F);
-    expect(handle?.meta.carrier_active).toBeUndefined();
+    const handle = Array.from(state.handles.values()).find(
+      (entry) => entry.meta?.openedBy === "ב"
+    );
+    expect(handle?.meta.carrier_mode).toBeUndefined();
+    expect(handle?.meta.rep_flag).toBeUndefined();
   });
 });

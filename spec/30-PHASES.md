@@ -20,6 +20,7 @@ Select → Bound → Seal
 - **Inputs:** `(state, operands_sel)`.
 - **Outputs:** `(state, construction)`.
 - **Allowed effects:** compute and/or mutate envelope traits (policies, coupling, ports) for the construction.
+- **Optional tagging:** `Bound` MAY tag patches as `interior` or `frame` so policy levels can deterministically gate edits.
 - **Disallowed:** exporting artifacts or allocating new handles.
 
 ### Seal

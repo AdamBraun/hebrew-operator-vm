@@ -18,21 +18,26 @@ export const heOp: LetterOp = {
   bound: (S: State, ops) => {
     const cons: Construction = {
       base: ops.args[0],
-      envelope: defaultEnvelope("final"),
+      envelope: defaultEnvelope(),
       meta: { focus: ops.args[0] }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
     const focus = cons.meta.focus as string;
-    const artifactId = nextId(S, "ה");
+    const ruleId = nextId(S, "ה");
     S.handles.set(
-      artifactId,
-      createHandle(artifactId, "artifact", {
-        policy: "final",
-        meta: { source: focus }
+      ruleId,
+      createHandle(ruleId, "rule", {
+        meta: { source: focus, public: 1, tau: S.vm.tau }
       })
     );
-    return { S, h: artifactId, r: BOT_ID };
+    S.rules.push({ id: ruleId, target: focus, patch: { public: true }, priority: 0 });
+    S.vm.H.push({
+      type: "declare",
+      tau: S.vm.tau,
+      data: { id: ruleId, target: focus }
+    });
+    return { S, h: ruleId, r: BOT_ID };
   }
 };

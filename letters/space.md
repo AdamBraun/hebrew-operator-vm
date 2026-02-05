@@ -1,36 +1,31 @@
-# □ — Space (boundary operator)
+# Space (\square) — Time-step / boundary
 
-Status: implemented in reference interpreter (VM-level operator).
+Status: spec synced with `spec/60-VM.md`. Implementation may differ.
+
+## Definition (from spec/60-VM)
+
+Whitespace tokens execute the **space operator** and are also injected implicitly at the beginning and end of input.
+
+Space behavior:
+
+1. `τ := τ + 1`
+2. Resolve **all** pending `OStack_word` obligations using boundary defaults.
+3. Export the word result into the phrase accumulator: `A := A ⊕ [ seal_word(state) ]`
+4. Reset word-local execution scope:
+   - `OStack_word := []`
+   - `F := Ω`
+   - `R := ⊥`
+   - `K := [F, R]`
+5. Commit any buffered event batch to the event log.
+6. Optional GC: delete handles not reachable from roots `{Ω, F} ∪ K ∪ W ∪ {R}`.
+
+End-of-input behaves exactly like `□` (commit the final word into `A`).
 
 ## Signature
 
 - Arity: req 0, opt 0.
 - Operand kinds: none.
 - Selection precedence: not applicable (VM operator).
-
-## Select
-
-No selection; operates on VM registers and `OStack_word`.
-
-## Bound
-
-No bound phase; behavior is defined directly in `spec/60-VM.md`.
-
-## Seal
-
-Increments `τ`, resolves all pending word obligations by boundary defaults, exports the word result into phrase accumulator `A`, resets word-local execution scope, commits event batch, and optionally runs GC. See `spec/60-VM.md` for full ordering and `seal_word` rules.
-
-## Obligations
-
-Resolves all pending word-scoped obligations.
-
-## Macro form
-
-Not a letter; `□` is a runtime boundary step. End-of-input behaves exactly like `□`.
-
-## Note (future)
-
-Maqaf (`־`) is a future tied-words separator that will prevent the `□`-commit and join words. It is not implemented yet.
 
 ## Tests
 

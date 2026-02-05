@@ -2,15 +2,23 @@
   "vm": {
     "tau": 2,
     "Omega": "Ω",
-    "F": "ו:1:1",
+    "F": "Ω",
     "R": "⊥",
-    "K": ["ו:1:1", "⊥"],
+    "K": [
+      "Ω",
+      "⊥"
+    ],
     "E": [],
     "W": [],
     "OStack_word": [],
     "H": [],
+    "A": [
+      "⊥",
+      "ו:1:1"
+    ],
+    "wordHasContent": false,
     "metaCounter": {
-      "ו": 1
+      "ו": 2
     }
   },
   "handles": [
@@ -51,7 +59,7 @@
     {
       "id": "ו:1:1",
       "kind": "structured",
-      "policy": "framed_lock",
+      "policy": "soft",
       "anchor": 0,
       "edge_mode": "free",
       "envelope": {
@@ -61,13 +69,35 @@
         "edit_flow": "OPEN",
         "ports": [],
         "coupling": "LINK",
-        "policy": "framed_lock"
+        "policy": "soft"
       },
       "meta": {
         "from": "⊥",
         "to": "Ω",
         "label": "vav",
-        "carrier_active": true
+        "mode": "seeded",
+        "carrier_mode": "seeded",
+        "rep_flag": 1
+      }
+    },
+    {
+      "id": "ו:1:2",
+      "kind": "scope",
+      "policy": "soft",
+      "anchor": 0,
+      "edge_mode": "free",
+      "envelope": {
+        "ctx_flow": "LOW",
+        "x_flow": "IMPLICIT_OK",
+        "data_flow": "LIVE",
+        "edit_flow": "OPEN",
+        "ports": [],
+        "coupling": "LINK",
+        "policy": "soft"
+      },
+      "meta": {
+        "residueOf": "ו:1:1",
+        "mode": "seeded"
       }
     }
   ],
