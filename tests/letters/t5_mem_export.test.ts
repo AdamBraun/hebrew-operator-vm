@@ -15,4 +15,13 @@ describe("T5 final mem exports handle", () => {
     expect(wordOut).toBe(memHandleId);
     expect(memHandle.meta.zone).toBeDefined();
   });
+
+  it("allows final mem with unrelated obligations", () => {
+    const state = runProgram("נם", createInitialState());
+    const memHandles = Array.from(state.handles.values()).filter(
+      (handle) => handle.kind === "memHandle"
+    );
+    expect(memHandles.length).toBeGreaterThan(0);
+    expect(state.vm.H.some((event) => event.type === "fall")).toBe(true);
+  });
 });

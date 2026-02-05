@@ -5,8 +5,8 @@ import { createInitialState } from "@ref/state/state";
 import { runProgram } from "@ref/vm/vm";
 
 describe("runtime errors", () => {
-  it("final mem with non-mem obligation throws RuntimeError", () => {
-    expect(() => runProgram("נם", createInitialState())).toThrow(RuntimeError);
+  it("final mem with non-mem obligation does not throw", () => {
+    expect(() => runProgram("נם", createInitialState())).not.toThrow(RuntimeError);
   });
 
   it("dalet does not depend on boundary obligations", () => {

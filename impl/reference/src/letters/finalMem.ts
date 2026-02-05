@@ -29,20 +29,19 @@ export const finalMemOp: LetterOp = {
     const focus = cons.meta.focus as string;
     if (S.vm.OStack_word.length > 0) {
       const top = S.vm.OStack_word[S.vm.OStack_word.length - 1];
-      if (top.kind !== "MEM_ZONE") {
-        throw new RuntimeError("Final mem encountered non-mem obligation");
+      if (top.kind === "MEM_ZONE") {
+        const obligation = S.vm.OStack_word.pop();
+        if (!obligation) {
+          throw new RuntimeError("Final mem obligation missing");
+        }
+        closeMemZoneSilently(S, obligation.child);
+        const memHandle = nextId(S, "ם");
+        S.handles.set(
+          memHandle,
+          createHandle(memHandle, "memHandle", { meta: { zone: obligation.child } })
+        );
+        return { S, h: memHandle, r: BOT_ID };
       }
-      const obligation = S.vm.OStack_word.pop();
-      if (!obligation) {
-        throw new RuntimeError("Final mem obligation missing");
-      }
-      closeMemZoneSilently(S, obligation.child);
-      const memHandle = nextId(S, "ם");
-      S.handles.set(
-        memHandle,
-        createHandle(memHandle, "memHandle", { meta: { zone: obligation.child } })
-      );
-      return { S, h: memHandle, r: BOT_ID };
     }
 
     const zone = nextId(S, "מ");
