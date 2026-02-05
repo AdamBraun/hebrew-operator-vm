@@ -7,10 +7,55 @@ Instructions:
 - Then explain the sequence's meaning verbally in plain language.
 - Do not output the entire stack or full state space; summarize only the relevant mechanics.
 - If a character is whitespace, treat it as the `□` operator (see the space definition).
+- If a letter carries diacritics (niqqud), explain how the marks modify that letter (see diacritics below).
 - If the word includes a character without a definition, say it's undefined and proceed with the rest.
 
 When answering, be concise but precise. Use short sections.
 Once you acknowledged, answer simply that you're awaiting a Hebrew word
+
+---
+
+## Diacritics (Niqqud) Modifiers
+
+Diacritics are small marks on a letter. They never stand alone; they **modify** the letter’s action.
+
+### Placement tiers (how they act)
+
+- **Rosh (above)**: tweaks selection (what the letter prefers to pick).
+- **Toch (inside)**: tweaks the construction before it seals.
+- **Sof (below)**: tweaks the sealed output.
+
+### Inside dots (Toch / inside)
+
+- **Dagesh (ּ)**: hardens the output (stronger boundaries, tighter flow).
+- **Shuruk (וּ)**: only on ו; turns it into a “carrier” link (seeded/representative mode).
+- **Mappiq (ּ in ה)**: reserved placeholder (no extra behavior yet).
+- **Shin/Sin dots**: on ש only:
+  - **שׁ** (right dot) activates the right branch of ש.
+  - **שׂ** (left dot) activates the left branch of ש.
+
+### Sof vowels (below the letter)
+
+These adjust the **sealed handle** (edge behavior), not the letter’s core meaning.
+
+- **Patach (ַ)**: gated edge (controlled pass-through).
+- **Tzere (ֵ)**: stabilized edge (two-rail support).
+- **Hiriq (ִ)**: committed representative edge.
+- **Segol (ֶ)**: convergent edge (pulls toward a center).
+- **Kamatz (ָ)**: committed/atomic edge (locks as a unit).
+- **Shva (ְ)**: collapsed edge (branch collapses).
+- **Kubutz (ֻ)**: bundled edge (grouped together).
+- **Cholam (ֹ)**: rosh modifier; biases selection toward sealed endpoints.
+
+### Hataf forms (reduced shva + base vowel)
+
+These are treated as **shva + vowel** in a reduced (short) form:
+
+- **Hataf segol (ֱ)** = shva + segol.
+- **Hataf patach (ֲ)** = shva + patach.
+- **Hataf kamatz (ֳ)** = shva + kamatz.
+
+If a diacritic is unrecognized, note it and continue with the rest of the word.
 
 ---
 
@@ -259,7 +304,7 @@ If a `MEM_ZONE` obligation is on top of `OStack_word`, it is popped and closed. 
     ```
 
   * If (OStack_word) is empty: perform (מ) then (ם) immediately on the current anchor, exporting the handle.
-  * Otherwise, the word is ill-formed under strict nesting (compile error).
+  * If (top(OStack_word)) is not (MEM_ZONE): perform the same implicit (מ then ם) without consuming other obligations.
 
 #### Boundary default (space/end-of-input)
 
@@ -335,6 +380,7 @@ Any remaining (MEM_ZONE) obligation is resolved as `CloseMemZoneSilently(Z)` and
 * **Select:** same as פ, targeting the currently open utterance handle (if present).
 * **Bound:** no new bound required beyond what was emitted; the act is closure.
 * **Seal:** freeze the utterance into an atomic, non-extendable rule object; the mouth-channel closes.
+* **Fallback:** if no open utterance is present, synthesize a closed utterance on the current focus and seal it immediately.
 
 ---
 # פ — Mouth-open articulation (פה פתוח)
