@@ -1,4 +1,4 @@
-import { BOT_ID, createHandle } from "../state/handles";
+import { createHandle } from "../state/handles";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
 import { selectOperands } from "../vm/select";
