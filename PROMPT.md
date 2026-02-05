@@ -192,27 +192,31 @@ If a diacritic is unrecognized, note it and continue with the rest of the word.
 
 ## Select
 
-Uses the default selection order with no additional preference rules.
+Select target (x) and template (T) (implicit if absent).
 
 ## Bound
 
-No-op; envelope unchanged.
+Compute a capacity-limited portion and residue:
+
+- p := portion_T(x) (largest/canonical subpart of x that fits T)
+- r := x \ p
 
 ## Seal
 
-Returns the selected base handle; residue is `⊥`.
+Commit p as a unitized handle (`unitized=1`), set focus to it, and return (r_out := r).
+
+Final ך: same, but additionally closes the relevant aspect to further refinement (policy gating).
+
+Note: “as/like” is the special case where T is another object/pattern (“x-as-Y”); “capacity/measure” is the case where T is a vessel/limit.
 
 ## Obligations
 
 None.
 
-## Macro form
-
-- Decomposes to `Y^0 V^0` with identity placement `Δ` (stub).
-
 ## Tests
 
-- None (stub).
+- /tests/letters/04_letters/kaf.contract.test.ts
+- /tests/letters/04_letters/kaf.behavior.test.ts
 
 
 ---
@@ -250,23 +254,32 @@ None.
 
 ## Select
 
-Selects the current focus handle `F`.
+Select the current focus (F) (and implicit stack).
 
 ## Bound
 
-No special bound behavior; the construction base is `F`.
+No new bound; closure happens in Seal.
 
 ## Seal
 
-If a `MEM_ZONE` obligation is on top of `OStack_word`, it is popped and closed. A mem-handle is exported. If no `MEM_ZONE` is pending, `ם` opens and closes a new zone immediately and exports it.
+Deterministic:
+
+- If (top(OStack_word)) is (MEM_ZONE) with child (Z), then:
+
+  ```text
+  o := pop(OStack_word)  // must be MEM_ZONE
+  Z := o.child
+  CloseMemZone(Z)
+  Export handle h := MemHandle(Z)
+  push h to K; set F := h
+  ```
+
+- If (OStack_word) is empty: perform (מ) then (ם) immediately on the current anchor, exporting the handle.
+- If (top(OStack_word)) is not (MEM_ZONE): perform the same implicit (מ then ם) without consuming other obligations.
 
 ## Obligations
 
 - Closes: `MEM_ZONE`
-
-## Macro form
-
-- Uses `Y` to finalize the pending zone into an exported handle.
 
 ## Tests
 
