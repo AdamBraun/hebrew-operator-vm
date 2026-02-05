@@ -23,6 +23,7 @@ npm run iterate-torah -- --input data/torah.json --lang=he
 ```
 
 Notes:
+
 - The iterator sanitizes input to supported Hebrew letters + niqqud, strips cantillation/punctuation,
   and normalizes qamats‑qatan to kamatz.
 - By default it does **not** normalize final letterforms and **fails fast** on RuntimeErrors.

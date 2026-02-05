@@ -79,14 +79,22 @@ export function selectOperands(state: State, meta: LetterMeta): { S: State; ops:
 
     if (state.vm.K.length > 0) {
       const optFromK = takeFromStack(state.vm.K, meta.arity_opt - optional.length);
-      enforceDistinct(optFromK, "Distinctness requirement not met (K optional)", meta.distinct_optional);
+      enforceDistinct(
+        optFromK,
+        "Distinctness requirement not met (K optional)",
+        meta.distinct_optional
+      );
       optional.push(...optFromK);
     }
 
     if (optional.length < meta.arity_opt && state.vm.W.length > 0) {
       const remaining = meta.arity_opt - optional.length;
       const optFromW = takeFromWatchlist(state.vm.W, remaining, usedFromW);
-      enforceDistinct(optFromW, "Distinctness requirement not met (W optional)", meta.distinct_optional);
+      enforceDistinct(
+        optFromW,
+        "Distinctness requirement not met (W optional)",
+        meta.distinct_optional
+      );
       optional.push(...optFromW);
     }
 

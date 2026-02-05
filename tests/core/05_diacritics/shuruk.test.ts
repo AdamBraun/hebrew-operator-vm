@@ -21,9 +21,7 @@ describe("shuruk carrier activation", () => {
 
   it("dagesh on non-vav does not set carrier_mode", () => {
     const state = runProgram("בּ", createInitialState());
-    const handle = Array.from(state.handles.values()).find(
-      (entry) => entry.meta?.openedBy === "ב"
-    );
+    const handle = Array.from(state.handles.values()).find((entry) => entry.meta?.openedBy === "ב");
     expect(handle?.meta.carrier_mode).toBeUndefined();
     expect(handle?.meta.rep_flag).toBeUndefined();
   });

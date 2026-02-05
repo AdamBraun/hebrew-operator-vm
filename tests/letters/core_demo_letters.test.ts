@@ -62,18 +62,14 @@ describe("core demo letters", () => {
 
   it("he can be first", () => {
     const state = runProgram("הא", createInitialState());
-    const rules = Array.from(state.handles.values()).filter(
-      (handle) => handle.kind === "rule"
-    );
+    const rules = Array.from(state.handles.values()).filter((handle) => handle.kind === "rule");
     expect(rules.length).toBe(1);
     expect(rules[0].meta.public).toBe(1);
   });
 
   it("he can be last", () => {
     const state = runProgram("אה", createInitialState());
-    const rules = Array.from(state.handles.values()).filter(
-      (handle) => handle.kind === "rule"
-    );
+    const rules = Array.from(state.handles.values()).filter((handle) => handle.kind === "rule");
     expect(rules.length).toBe(1);
     const wordOut = state.vm.A[state.vm.A.length - 1];
     expect(wordOut).toBe(rules[0].id);
