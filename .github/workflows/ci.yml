@@ -17,22 +17,16 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: "npm"
-          cache-dependency-path: hebrew-operator-vm/package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Install
         run: npm ci
-        working-directory: hebrew-operator-vm
       - name: Lint
         run: npm run lint
-        working-directory: hebrew-operator-vm
       - name: Format
         run: npm run format
-        working-directory: hebrew-operator-vm
       - name: Typecheck
         run: npm run typecheck
-        working-directory: hebrew-operator-vm
       - name: Test
         run: npm test
-        working-directory: hebrew-operator-vm
       - name: Build
         run: npm run build
-        working-directory: hebrew-operator-vm
