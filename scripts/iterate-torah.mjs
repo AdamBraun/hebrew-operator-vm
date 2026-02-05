@@ -62,23 +62,23 @@ const ALLOWED_MARKS = new Set([
 function printHelp() {
   console.log("Usage:");
   console.log(
-    "  node scripts/iterate-torah.mjs [--input=path] [--lang=he|en|both] [--strict]"
+    "  node scripts/iterate-torah.mjs [--input=path] [--lang=he|en|both] [--normalize-finals]"
   );
-  console.log("  node scripts/iterate-torah.mjs [--no-normalize-finals]");
+  console.log("  node scripts/iterate-torah.mjs [--allow-runtime-errors]");
   console.log("");
   console.log("Defaults:");
   console.log(`  --input=${DEFAULT_INPUT}`);
   console.log("  --lang=he");
-  console.log("  normalize-finals=true");
-  console.log("  strict=false (runtime errors are counted and skipped)");
+  console.log("  normalize-finals=false");
+  console.log("  allow-runtime-errors=false (fail fast on RuntimeError)");
 }
 
 function parseArgs(argv) {
   const opts = {
     input: DEFAULT_INPUT,
     lang: "he",
-    normalizeFinals: true,
-    strict: false
+    normalizeFinals: false,
+    allowRuntimeErrors: false
   };
   for (const arg of argv) {
     if (arg === "--help" || arg === "-h") {
@@ -101,8 +101,9 @@ function parseArgs(argv) {
       opts.normalizeFinals = false;
       continue;
     }
-    if (arg === "--strict") {
-      opts.strict = true;
+    if (arg === "--allow-runtime-errors") {
+      opts.allowRuntimeErrors = true;
+      continue;
     }
   }
   if (!["he", "en", "both"].includes(opts.lang)) {
@@ -188,7 +189,7 @@ async function main() {
         try {
           runProgram(cleaned, createInitialState());
         } catch (err) {
-          if (!opts.strict && err && err.name === "RuntimeError") {
+          if (opts.allowRuntimeErrors && err && err.name === "RuntimeError") {
             runtimeErrors += 1;
             continue;
           }
@@ -200,7 +201,7 @@ async function main() {
 
   console.log(
     `done: verses=${total} sanitized=${sanitized} skipped=${skipped} runtimeErrors=${runtimeErrors} ` +
-      `lang=${opts.lang} normalizeFinals=${opts.normalizeFinals} strict=${opts.strict}`
+      `lang=${opts.lang} normalizeFinals=${opts.normalizeFinals} allowRuntimeErrors=${opts.allowRuntimeErrors}`
   );
 }
 

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createHandle } from "@ref/state/handles";
 import { createInitialState } from "@ref/state/state";
-import { RuntimeError } from "@ref/vm/errors";
 import { finalPeOp } from "@ref/letters/finalPe";
 import { peOp } from "@ref/letters/pe";
 
@@ -25,10 +24,15 @@ describe("final pe behavior", () => {
     expect(state.vm.H.some((event) => event.type === "utter_close")).toBe(true);
   });
 
-  it("throws when no open utterance is present", () => {
+  it("creates a closed utterance when no open utterance is present", () => {
     const state = createInitialState();
     const notRule = "notRule";
     state.handles.set(notRule, createHandle(notRule, "scope"));
-    expect(() => finalPeOp.bound(state, { args: [notRule], prefs: {} })).toThrow(RuntimeError);
+    const { cons } = finalPeOp.bound(state, { args: [notRule], prefs: {} });
+    const { h } = finalPeOp.seal(state, cons);
+    const handle = state.handles.get(h);
+    expect(handle?.kind).toBe("rule");
+    expect(handle?.policy).toBe("final");
+    expect(handle?.meta.closed).toBe(1);
   });
 });

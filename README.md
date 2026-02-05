@@ -12,6 +12,22 @@ npm install
 npm run build
 ```
 
+## Torah Corpus (Optional)
+
+The repo includes helper scripts to download the Torah and iterate it through the interpreter.
+
+```bash
+npm run download-torah -- --out data/torah.json --lang=he
+npm run build
+npm run iterate-torah -- --input data/torah.json --lang=he
+```
+
+Notes:
+- The iterator sanitizes input to supported Hebrew letters + niqqud, strips cantillation/punctuation,
+  and normalizes qamats‑qatan to kamatz.
+- By default it does **not** normalize final letterforms and **fails fast** on RuntimeErrors.
+  Use `--normalize-finals` or `--allow-runtime-errors` if you want a more permissive pass.
+
 ## Determinism & obligations
 
 - **Determinism:** handle IDs are allocated as `<letter>:<tau>:<counter>`; the
