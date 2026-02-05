@@ -25,4 +25,14 @@ describe("diacritics mapping", () => {
   it("unknown combining marks fail fast", () => {
     expect(() => tokenize("נ\u0591")).toThrow(CompileError);
   });
+
+  it("hataf marks normalize to shva + base vowel", () => {
+    const segol = tokenize("א\u05B1");
+    const patach = tokenize("א\u05B2");
+    const kamatz = tokenize("א\u05B3");
+
+    expect(segol[0].diacritics.map((d) => d.kind)).toEqual(["shva", "segol"]);
+    expect(patach[0].diacritics.map((d) => d.kind)).toEqual(["shva", "patach"]);
+    expect(kamatz[0].diacritics.map((d) => d.kind)).toEqual(["shva", "kamatz"]);
+  });
 });

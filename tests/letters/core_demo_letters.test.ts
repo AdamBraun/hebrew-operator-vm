@@ -38,7 +38,8 @@ describe("core demo letters", () => {
 
   it("gimel can be first", () => {
     const state = runProgram("גא", createInitialState());
-    expect(state.links.length).toBe(1);
+    const bestowLinks = state.links.filter((link) => link.label === "bestow");
+    expect(bestowLinks.length).toBe(1);
     const linkHandle = Array.from(state.handles.values()).find(
       (handle) => handle.meta?.label === "gimel"
     );
@@ -49,7 +50,8 @@ describe("core demo letters", () => {
 
   it("gimel can be last", () => {
     const state = runProgram("אג", createInitialState());
-    expect(state.links.length).toBe(1);
+    const bestowLinks = state.links.filter((link) => link.label === "bestow");
+    expect(bestowLinks.length).toBe(1);
     const linkHandle = Array.from(state.handles.values()).find(
       (handle) => handle.meta?.label === "gimel"
     );

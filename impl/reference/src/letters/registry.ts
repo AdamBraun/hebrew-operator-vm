@@ -1,18 +1,16 @@
-import {
-  alephOp,
-  ayinOp,
-  hetOp,
-  kafOp,
-  lamedOp,
-  peOp,
-  qofOp,
-  reshOp,
-  shinOp,
-  tavOp,
-  tetOp,
-  tsadiOp,
-  zayinOp
-} from "./basic";
+import { alephOp } from "./aleph";
+import { ayinOp } from "./ayin";
+import { kafOp } from "./kaf";
+import { qofOp } from "./qof";
+import { reshOp } from "./resh";
+import { hetOp } from "./het";
+import { lamedOp } from "./lamed";
+import { peOp } from "./pe";
+import { shinOp } from "./shin";
+import { tavOp } from "./tav";
+import { tetOp } from "./tet";
+import { tsadiOp } from "./tsadi";
+import { zayinOp } from "./zayin";
 import { betOp } from "./bet";
 import { daletOp } from "./dalet";
 import { gimelOp } from "./gimel";

@@ -23,6 +23,12 @@ function applyRoshWrappers(token: Token, ops: SelectOperands): SelectOperands {
   if (token.meta?.traceOrder) {
     token.meta.traceOrder.push("rosh");
   }
+  if (token.inside_dot_kind === "shin_dot_right") {
+    return { ...ops, prefs: { ...ops.prefs, shin_branch: "right" } };
+  }
+  if (token.inside_dot_kind === "shin_dot_left") {
+    return { ...ops, prefs: { ...ops.prefs, shin_branch: "left" } };
+  }
   return ops;
 }
 

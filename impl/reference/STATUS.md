@@ -6,7 +6,7 @@
 
 * Deterministic IDs (`<letter>:<tau>:<counter>`) and event log.
 * Space boundary (`□`) resolution for `SUPPORT` and `MEM_ZONE` obligations.
-* Letters with v0 semantics: נ, ן, ס, מ, ם, ב, ד, ג, ה, ו, י.
+* Letters with v0 semantics: א, ב, ג, ד, ה, ו, ז, ח, ט, י, כ, ך, ל, מ, ם, נ, ן, ס, ע, פ, ף, צ, ץ, ק, ר, ש, ת.
 * Tokenizer with Hebrew letters, finals, whitespace→`□`, and basic niqqud mapping.
 * Whitespace is semantic: `"נ ס"` inserts `□` and discharges support before `ס`.
 * Same-word `"נס"` allows samekh to discharge support before the boundary.
@@ -14,7 +14,7 @@
 
 ## Stubbed / minimal
 
-* All other letters are no-ops (select + seal focus unchanged).
+* All letters have minimal v0 semantics; several remain shallow approximations of the spec.
 * Diacritic wrappers are parsed; `dagesh` hardens the envelope and `shuruk` activates carrier mode (no-op elsewhere).
 * Selection policy uses deterministic sourcing with per-bucket distinctness; type checks are still minimal.
 * `ב` creates an anchored boundary handle for “inside-of” and updates the ambient world.

@@ -11,6 +11,12 @@ const VOWEL_MARKS: Record<string, { kind: DiacriticKind; tier: DiacriticTier }> 
   "\u05BB": { kind: "kubutz", tier: "sof" }
 };
 
+const HATAF_MARKS: Record<string, DiacriticKind> = {
+  "\u05B1": "segol",
+  "\u05B2": "patach",
+  "\u05B3": "kamatz"
+};
+
 const INSIDE_DOT_MARKS: Record<string, DiacriticKind> = {
   "\u05BC": "dagesh",
   "\u05C1": "shin_dot_right",
@@ -25,14 +31,21 @@ export function isHebrewCombiningMark(ch: string): boolean {
   return HEBREW_MARK_RANGE.test(ch);
 }
 
-export function classifyDiacritic(mark: string): Diacritic | null {
+export function classifyDiacritic(mark: string): Diacritic[] | null {
+  const hataf = HATAF_MARKS[mark];
+  if (hataf) {
+    return [
+      { mark, kind: "shva", tier: "sof" },
+      { mark, kind: hataf, tier: "sof" }
+    ];
+  }
   const vowel = VOWEL_MARKS[mark];
   if (vowel) {
-    return { mark, kind: vowel.kind, tier: vowel.tier };
+    return [{ mark, kind: vowel.kind, tier: vowel.tier }];
   }
   const inside = INSIDE_DOT_MARKS[mark];
   if (inside) {
-    return { mark, kind: inside, tier: "toch" };
+    return [{ mark, kind: inside, tier: "toch" }];
   }
   return null;
 }

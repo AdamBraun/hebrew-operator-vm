@@ -77,13 +77,13 @@ export function tokenize(input: string): Token[] {
     while (index < normalized.length && isHebrewCombiningMark(normalized[index])) {
       const mark = normalized[index];
       raw += mark;
-      const diacritic = classifyDiacritic(mark);
+      const diacriticsForMark = classifyDiacritic(mark);
       const insideCandidate = classifyInsideDot(letter, mark);
-      if (!diacritic && insideCandidate === "none") {
+      if (!diacriticsForMark && insideCandidate === "none") {
         throw new CompileError(`Unsupported diacritic '${mark}' on ${letter}`);
       }
-      if (diacritic) {
-        diacritics.push(diacritic);
+      if (diacriticsForMark) {
+        diacritics.push(...diacriticsForMark);
       }
       if (insideCandidate !== "none") {
         if (insideDot !== "none" && insideDot !== insideCandidate) {

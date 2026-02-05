@@ -197,7 +197,7 @@ Return (S_6) with exported handle (h') and residue (r) pushed/set per VM policy.
 * If graph = `Y(L)+Y(R)+Y(C)` at Sof ⇒ **segol** ⇒ `ConvergeToEndpoint`.
 * If graph = `V(L,R)+Y(C)` at Sof ⇒ **kamatz** ⇒ `CommitRepresentativeToAtomic`.
 * If graph = `Y((toch, C))` inside and `inside_dot_kind=shuruk` ⇒ **shuruk** ⇒ `CarrierActivation`; if `inside_dot_kind=dagesh` ⇒ **dagesh** ⇒ `HARDEN`.
-* Chataf variants and diagonals: pending.
+* Chataf variants are normalized to shva + base (reduced); diagonals pending.
 
 ### Diacritic VM effects
 
