@@ -29,6 +29,49 @@ Notes:
 - By default it does **not** normalize final letterforms and **fails fast** on RuntimeErrors.
   Use `--normalize-finals` or `--allow-runtime-errors` if you want a more permissive pass.
 
+### Torah Flow Corpus
+
+For a full Torah-wide word corpus with stable grapheme TokenIDs and flow traces:
+
+```bash
+npm run build
+npm run torah-corpus -- --input data/torah.json --out-dir outputs/torah-corpus/latest --lang=he
+```
+
+Artifacts:
+
+- `token_registry.json`: stable `TokenID -> {base, rosh[], toch[], sof[], notes}`.
+- `word_flows.skeleton.jsonl`: machine layer (`ref`, `surface`, `tokens`, `events`, `flow_skeleton`).
+- `word_flows.one_liner.jsonl`: compiled human layer.
+- `word_flows.full.jsonl`: merged row format for tooling.
+- `pattern_index.json`: explicit semantic patterns + frequent n-grams.
+- `exemplar_library.json`: high-frequency skeleton exemplars.
+- `summary.json`: deterministic stats + semantic fingerprints.
+- `manifest.json`: deterministic checksums/bytes for review + integrity checks.
+- `review_snapshot.json`: compact peer-review surface (top patterns + exemplar preview).
+
+Integrity check:
+
+```bash
+npm run torah-corpus:verify -- --dir outputs/torah-corpus/latest
+```
+
+Diff and regression promotion loop:
+
+```bash
+npm run torah-corpus:diff -- --prev outputs/torah-corpus/run-A --next outputs/torah-corpus/run-B --out outputs/torah-corpus/run-B/diff.from-run-A.json
+npm run torah-corpus:promote -- --diff outputs/torah-corpus/run-B/diff.from-run-A.json --next outputs/torah-corpus/run-B --out tests/core/07_golden/torah_flow_promoted.json --limit=40
+```
+
+Recommended review artifacts to commit when semantics change:
+
+- `outputs/torah-corpus/<run>/token_registry.json`
+- `outputs/torah-corpus/<run>/summary.json`
+- `outputs/torah-corpus/<run>/manifest.json`
+- `outputs/torah-corpus/<run>/review_snapshot.json`
+- `outputs/torah-corpus/<run>/diff.from-<prev>.json` (if comparing runs)
+- `tests/core/07_golden/torah_flow_promoted.json` (selected regression deltas)
+
 ## Determinism & obligations
 
 - **Determinism:** handle IDs are allocated as `<letter>:<tau>:<counter>`; the
