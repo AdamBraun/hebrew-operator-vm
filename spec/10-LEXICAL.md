@@ -12,7 +12,10 @@ Token = {
   letter: Letter | 'שׁ' | 'שׂ' | '□',
   attachments: Modifier[]
   features: {
+    dot_kind?: 'dagesh' | 'shuruk' | 'mappiq' | 'none',
     inside_dot_kind?: 'dagesh' | 'shuruk' | 'mappiq' | 'shin_dot_right' | 'shin_dot_left' | 'none'
+    letter_mode?: 'public' | 'breath' | 'pinned' | 'alias' | 'plain' | 'seeded' | 'transport',
+    is_final?: boolean
   }
 }
 ```
@@ -34,13 +37,13 @@ Token = {
 
 A dot inside a host letter is **not** a separate modifier. It sets `features.inside_dot_kind` by deterministic rules:
 
-- Host `ו` + inside dot → `shuruk`.
-- Host in `{ב, ג, ד, כ, ך, פ, ף, ר, ת}` + inside dot → `dagesh`.
-- Host `ה` + inside dot → `mappiq` (reserved).
+- If `U+05BC` appears on host `ה` → `dot_kind=mappiq`, `inside_dot_kind=mappiq`.
+- Else if `U+05BC` appears on host `ו` and no other Sof vowel marks are present → `dot_kind=shuruk`, `inside_dot_kind=shuruk`.
+- Else if `U+05BC` appears → `dot_kind=dagesh`, `inside_dot_kind=dagesh`.
 - Host `ש` + dot on right → `shin_dot_right` and token letter `שׁ`.
 - Host `ש` + dot on left → `shin_dot_left` and token letter `שׂ`.
-- Otherwise → `none`.
+- Otherwise → `dot_kind=none`, `inside_dot_kind=none`.
 
-Modifier semantics use `inside_dot_kind` to dispatch to the appropriate toch- or rosh-tier behavior.
+Modifier semantics use `dot_kind`/`inside_dot_kind` to dispatch to the appropriate toch- or rosh-tier behavior.
 
 For plain `ש` without a shin/sin dot, token letter remains plain `ש` (or profile-defined ambiguity handling, if enabled).

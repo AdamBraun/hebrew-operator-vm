@@ -1,4 +1,4 @@
-import { Diacritic, DiacriticKind, DiacriticTier, InsideDotKind } from "./types";
+import { Diacritic, DiacriticKind, DiacriticTier, DotKind } from "./types";
 
 const VOWEL_MARKS: Record<string, { kind: DiacriticKind; tier: DiacriticTier }> = {
   "\u05B0": { kind: "shva", tier: "sof" },
@@ -23,7 +23,13 @@ const INSIDE_DOT_MARKS: Record<string, DiacriticKind> = {
   "\u05C2": "shin_dot_left"
 };
 
-const DAGESH_LETTERS = new Set(["ב", "ג", "ד", "כ", "ך", "פ", "ף", "ר", "ת"]);
+const DAGESH_MARK = "\u05BC";
+const SOF_VOWEL_MARKS = new Set([
+  ...Object.entries(VOWEL_MARKS)
+    .filter(([, value]) => value.tier === "sof")
+    .map(([mark]) => mark),
+  ...Object.keys(HATAF_MARKS)
+]);
 
 export const HEBREW_MARK_RANGE = /[\u0591-\u05C7]/u;
 
@@ -50,24 +56,18 @@ export function classifyDiacritic(mark: string): Diacritic[] | null {
   return null;
 }
 
-export function classifyInsideDot(baseLetter: string, mark: string): InsideDotKind {
-  if (mark === "\u05BC") {
-    if (baseLetter === "ו") {
-      return "shuruk";
-    }
-    if (DAGESH_LETTERS.has(baseLetter)) {
-      return "dagesh";
-    }
-    if (baseLetter === "ה") {
-      return "mappiq";
-    }
+export function resolveDotKind(baseLetter: string, marks: string[]): DotKind {
+  if (!marks.includes(DAGESH_MARK)) {
     return "none";
   }
-  if (baseLetter === "ש" && mark === "\u05C1") {
-    return "shin_dot_right";
+  if (baseLetter === "ה") {
+    return "mappiq";
   }
-  if (baseLetter === "ש" && mark === "\u05C2") {
-    return "shin_dot_left";
+  if (baseLetter === "ו") {
+    const hasOtherSofVowel = marks.some((mark) => mark !== DAGESH_MARK && SOF_VOWEL_MARKS.has(mark));
+    if (!hasOtherSofVowel) {
+      return "shuruk";
+    }
   }
-  return "none";
+  return "dagesh";
 }

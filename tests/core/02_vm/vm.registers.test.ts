@@ -5,7 +5,7 @@ import { runProgramWithTrace } from "@ref/vm/vm";
 
 describe("vm register updates", () => {
   it("after a letter, F becomes output handle and K grows", () => {
-    const { trace } = runProgramWithTrace("ה", createInitialState());
+    const { trace } = runProgramWithTrace("הּ", createInitialState());
     const leading = trace[0];
     const letter = trace[1];
 

@@ -60,13 +60,13 @@ Execution of a token ((\ell, \delta)) (let (S_0) be the current state):
 
 **Inside-dot typing:** a dot inside the host letter is typed by `inside_dot_kind ∈ {dagesh, shuruk, mappiq, shin_dot_right, shin_dot_left, none}` with deterministic compilation:
 
-- If host glyph is ו and inside dot present → `inside_dot_kind=shuruk`.
-- Else if host glyph is in `{ב, ג, ד, כ, ך, פ, ף, ר, ת}` and dot present → `inside_dot_kind=dagesh`.
-- Else if host glyph is ה and dot present → `inside_dot_kind=mappiq` (placeholder, reserved).
+- If host glyph is ה and `U+05BC` is present → `inside_dot_kind=mappiq`.
+- Else if host glyph is ו, `U+05BC` is present, and no other Sof vowel marks are present → `inside_dot_kind=shuruk`.
+- Else if `U+05BC` is present → `inside_dot_kind=dagesh`.
 - Else if host glyph is ש and dot present: right dot → `shin_dot_right`, left dot → `shin_dot_left`.
 - Otherwise → `inside_dot_kind=none`.
 
-`dagesh` sets `hard=1` and applies `HARDEN` to the Toch envelope. `shuruk` is a Toch modifier on ו (CarrierActivation). For ש-dots, the tokenizer emits explicit letters: `שׁ` executes as ש, while `שׂ` executes as a composite (`read=ס`, `shape=ש`) where shape contributes routing/fork only. They are not niqqud or HARDEN.
+`dagesh` sets `hard=1` and applies `HARDEN` to the Toch envelope. `shuruk` is a Toch modifier on ו (CarrierActivation). `mappiq` forces full ה execution (no final-heh breath degradation) and defaults to a pinned export mode. For ש-dots, the tokenizer emits explicit letters: `שׁ` executes as ש, while `שׂ` executes as a composite (`read=ס`, `shape=ש`) where shape contributes routing/fork only. They are not niqqud or HARDEN.
 
 **Name → invariants (from existing letter semantics)**
 
@@ -218,7 +218,7 @@ Execution of a token ((\ell, \delta)) (let (S_0) be the current state):
 
 **Diacritic typing constraints:** (\delta*{\text{rosh}}) may only reorder/weight selection preferences; (\delta*{\text{toch}}) may only change bounds/patch metadata; (\delta\_{\text{sof}}) may allocate a new handle only if its output type is declared, otherwise it preserves the input handle kind.
 Declared `out_type` effects: `CommitRepresentativeToAtomic`, `CollapseToAlias`, `Bundle`.
-**Dagesh default:** `inside_dot_kind=dagesh` sets `hard=1` and applies `HARDEN` to the Toch envelope.
+**Dagesh default:** only `inside_dot_kind=dagesh` sets `hard=1` and applies `HARDEN` to the Toch envelope.
 
 ### Validation: glyph ↔ name coherence
 

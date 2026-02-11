@@ -70,8 +70,10 @@ describe("core demo letters", () => {
   it("he can be last", () => {
     const state = runProgram("אה", createInitialState());
     const rules = Array.from(state.handles.values()).filter((handle) => handle.kind === "rule");
-    expect(rules.length).toBe(1);
+    expect(rules.length).toBe(0);
     const wordOut = state.vm.A[state.vm.A.length - 1];
-    expect(wordOut).toBe(rules[0].id);
+    const handle = state.handles.get(wordOut);
+    expect(handle?.meta.he_mode).toBe("breath");
+    expect(handle?.meta.final_tail).toBe("breath");
   });
 });

@@ -19,6 +19,8 @@ export type Diacritic = {
   tier: DiacriticTier;
 };
 
+export type DotKind = "dagesh" | "mappiq" | "shuruk" | "none";
+
 export type InsideDotKind =
   | "dagesh"
   | "shuruk"
@@ -27,10 +29,17 @@ export type InsideDotKind =
   | "shin_dot_left"
   | "none";
 
+export type HehMode = "public" | "breath" | "pinned" | "alias";
+export type VavMode = "plain" | "seeded" | "transport";
+export type LetterMode = HehMode | VavMode;
+
 export type Token = {
   letter: string;
   diacritics: Diacritic[];
+  dot_kind: DotKind;
   inside_dot_kind: InsideDotKind;
+  letter_mode?: LetterMode;
+  is_final: boolean;
   raw: string;
   meta?: Record<string, any>;
 };

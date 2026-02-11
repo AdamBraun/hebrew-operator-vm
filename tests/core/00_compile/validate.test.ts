@@ -6,7 +6,16 @@ import { letterRegistry } from "@ref/letters/registry";
 
 describe("token validation", () => {
   it("rejects non-Σ letters", () => {
-    const tokens = [{ letter: "A", diacritics: [], inside_dot_kind: "none", raw: "A" }];
+    const tokens = [
+      {
+        letter: "A",
+        diacritics: [],
+        dot_kind: "none",
+        inside_dot_kind: "none",
+        is_final: true,
+        raw: "A"
+      }
+    ];
     expect(() => validateTokens(tokens, letterRegistry)).toThrow(CompileError);
   });
 

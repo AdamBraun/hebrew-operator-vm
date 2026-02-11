@@ -46,7 +46,9 @@ describe("diacritic tier ordering", () => {
     const token: Token = {
       letter: "ב",
       diacritics: [],
+      dot_kind: "dagesh",
       inside_dot_kind: "dagesh",
+      is_final: true,
       raw: "בּ",
       meta: { traceOrder: [] }
     };

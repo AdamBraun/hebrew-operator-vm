@@ -32,7 +32,9 @@ Diacritics are small marks on a letter. They never stand alone; they **modify** 
 
 - **Dagesh (ּ)**: hardens the output (stronger boundaries, tighter flow).
 - **Shuruk (וּ)**: only on ו; turns it into a “carrier” link (seeded/representative mode).
-- **Mappiq (ּ in ה)**: reserved placeholder (no extra behavior yet).
+- **Mappiq (ּ in ה)**: forces ה to behave as a *full operator* (not a silent/mater tail).
+  - Sets `H(mode)=pinned` (HY milui): execute ה normally AND export a pinned handle.
+  - Prevents the word-final “breath/mater” degradation.
 - **Shin/Sin dots**: on ש only:
   - **שׁ** (right dot) tokenizes as explicit shin and runs ש semantics (right-branch default in the reference VM).
   - **שׂ** (left dot) tokenizes as explicit sin and runs as a composite: **read rail = ס**, **shape rail = ש** (routing/fork modifier only).
@@ -119,6 +121,13 @@ If a diacritic is unrecognized, note it and continue with the rest of the word.
 * **Select:** the currently focused targets/rules.
 * **Bound:** mark selected bounds as “visible/public/declared”.
 * **Seal:** commit to the public layer (like writing on the board): later rules can reference this as a named, time-stamped declaration.
+* **Mode semantics (milui):** define `H(mode)` where `mode ∈ {public, breath, pinned, alias}`
+  * `public` (default): existing behavior (declare visible/public; yields a declaration handle).
+  * `breath` (HH): word-final fallback when no mappiq; does NOT create a new declaration handle.
+    - It only applies a Sof-tail modifier to the previously sealed output (a “closing breath”).
+  * `pinned` (HY): execute `public`, then export a pinned handle (like adding a י to the result).
+    - This is what mappiq forces.
+  * `alias` (HA): execute `public`, then bind the declared thing to an identity via א-style transport/alias.
 
 ---
 # ו — Extension / channel + Connect (V primitive) (your classroom split)

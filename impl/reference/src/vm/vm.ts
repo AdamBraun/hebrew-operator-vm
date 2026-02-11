@@ -1,6 +1,6 @@
 import { tokenize, makeSpaceToken } from "../compile/tokenizer";
 import { validateTokens } from "../compile/validate";
-import { Token } from "../compile/types";
+import { HehMode, LetterMode, Token } from "../compile/types";
 import { compositeRegistry, letterRegistry } from "../letters/registry";
 import { Construction, LetterOp, SelectOperands } from "../letters/types";
 import { hardenHandle } from "../state/policies";
@@ -23,6 +23,39 @@ export type TraceEntry = {
   events: Array<{ type: string; tau: number; data: any }>;
 };
 
+function isHehMode(mode: LetterMode | undefined): mode is HehMode {
+  return mode === "public" || mode === "breath" || mode === "pinned" || mode === "alias";
+}
+
+function isVavMode(mode: LetterMode | undefined): mode is "plain" | "seeded" | "transport" {
+  return mode === "plain" || mode === "seeded" || mode === "transport";
+}
+
+function resolveLetterMode(token: Token, isWordFinal: boolean): LetterMode | undefined {
+  if (token.letter === "ה") {
+    if (isHehMode(token.letter_mode)) {
+      return token.letter_mode;
+    }
+    if (token.dot_kind === "mappiq") {
+      return "pinned";
+    }
+    if (isWordFinal) {
+      return "breath";
+    }
+    return "public";
+  }
+  if (token.letter === "ו") {
+    if (isVavMode(token.letter_mode)) {
+      return token.letter_mode;
+    }
+    if (token.dot_kind === "shuruk") {
+      return "seeded";
+    }
+    return "plain";
+  }
+  return token.letter_mode;
+}
+
 function applyRoshWrappers(token: Token, ops: SelectOperands): SelectOperands {
   if (token.meta?.traceOrder) {
     token.meta.traceOrder.push("rosh");
@@ -36,14 +69,22 @@ function applyRoshWrappers(token: Token, ops: SelectOperands): SelectOperands {
   return ops;
 }
 
-function applyTochWrappers(token: Token, cons: Construction): Construction {
+function applyTochWrappers(token: Token, cons: Construction, letterMode?: LetterMode): Construction {
   if (token.meta?.traceOrder) {
     token.meta.traceOrder.push("toch");
   }
-  if (token.inside_dot_kind === "shuruk") {
-    return { ...cons, meta: { ...cons.meta, carrier_mode: "seeded", rep_flag: 1 } };
+  const meta = { ...cons.meta };
+  if (token.letter === "ה" && isHehMode(letterMode)) {
+    meta.heh_mode = letterMode;
   }
-  return cons;
+  if (token.letter === "ו" && isVavMode(letterMode)) {
+    meta.vav_mode = letterMode;
+  }
+  if (token.dot_kind === "shuruk") {
+    meta.carrier_mode = "seeded";
+    meta.rep_flag = 1;
+  }
+  return { ...cons, meta };
 }
 
 function applySofWrappers(state: State, token: Token, handleId: string): string {
@@ -110,14 +151,20 @@ function applySofWrappers(state: State, token: Token, handleId: string): string 
   return handleId;
 }
 
-function executeReadRail(state: State, token: Token, op: LetterOp): void {
+function executeReadRail(
+  state: State,
+  token: Token,
+  op: LetterOp,
+  context: { isWordFinal: boolean }
+): void {
   const selectResult = op.select(state);
   const ops = applyRoshWrappers(token, selectResult.ops);
+  const letterMode = resolveLetterMode(token, context.isWordFinal);
 
   const boundResult = op.bound(selectResult.S, ops);
-  const hasShuruk = token.inside_dot_kind === "shuruk";
-  const shouldHarden = token.inside_dot_kind === "dagesh";
-  const cons = applyTochWrappers(token, boundResult.cons);
+  const hasShuruk = token.dot_kind === "shuruk";
+  const shouldHarden = token.dot_kind === "dagesh";
+  const cons = applyTochWrappers(token, boundResult.cons, letterMode);
 
   const sealResult = op.seal(boundResult.S, cons);
   const sealed = applySofWrappers(sealResult.S, token, sealResult.h);
@@ -131,7 +178,7 @@ function executeReadRail(state: State, token: Token, op: LetterOp): void {
       handle.meta = { ...handle.meta, carrier_mode: "seeded", rep_flag: 1 };
     }
   }
-  if (token.inside_dot_kind === "dagesh") {
+  if (token.dot_kind === "dagesh") {
     const handle = sealResult.S.handles.get(sealed);
     if (handle) {
       handle.meta = { ...handle.meta, hard: 1 };
@@ -155,7 +202,11 @@ function applyShapeModifier(state: State, shapeOp: string): void {
   }
 }
 
-function executeLetter(state: State, token: Token): { read_op: string; shape_op: string | null } {
+function executeLetter(
+  state: State,
+  token: Token,
+  context: { isWordFinal: boolean }
+): { read_op: string; shape_op: string | null } {
   state.vm.wordHasContent = true;
 
   const composite = compositeRegistry[token.letter];
@@ -169,7 +220,7 @@ function executeLetter(state: State, token: Token): { read_op: string; shape_op:
     if (!readOp) {
       throw new Error(`Missing read op '${composite.read}' for composite '${token.letter}'`);
     }
-    executeReadRail(state, token, readOp);
+    executeReadRail(state, token, readOp, context);
 
     if (composite.composite_policy.shape_effect_scope === "routing") {
       applyShapeModifier(state, composite.shape);
@@ -181,7 +232,7 @@ function executeLetter(state: State, token: Token): { read_op: string; shape_op:
   if (!op) {
     throw new Error(`Missing letter op for ${token.letter}`);
   }
-  executeReadRail(state, token, op);
+  executeReadRail(state, token, op, context);
   return { read_op: op.meta.letter, shape_op: null };
 }
 
@@ -198,11 +249,13 @@ function prepareTokens(input: string): Token[] {
 
 export function runProgram(input: string, state: State = createInitialState()): State {
   const tokens = prepareTokens(input);
-  for (const token of tokens) {
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
     if (token.letter === "□") {
       applySpace(state);
     } else {
-      executeLetter(state, token);
+      const isWordFinal = index === tokens.length - 1 || tokens[index + 1].letter === "□";
+      executeLetter(state, token, { isWordFinal });
     }
   }
   return state;
@@ -223,7 +276,8 @@ export function runProgramWithTrace(
     if (token.letter === "□") {
       applySpace(state);
     } else {
-      const execution = executeLetter(state, token);
+      const isWordFinal = index === tokens.length - 1 || tokens[index + 1].letter === "□";
+      const execution = executeLetter(state, token, { isWordFinal });
       readOp = execution.read_op;
       shapeOp = execution.shape_op;
     }
