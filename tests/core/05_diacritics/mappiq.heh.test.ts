@@ -19,8 +19,12 @@ describe("mappiq vs final he behavior", () => {
     const dotted = runProgram("לָהּ", createInitialState());
     const plain = runProgram("לָה", createInitialState());
 
-    const dottedRules = Array.from(dotted.handles.values()).filter((handle) => handle.kind === "rule");
-    const plainRules = Array.from(plain.handles.values()).filter((handle) => handle.kind === "rule");
+    const dottedRules = Array.from(dotted.handles.values()).filter(
+      (handle) => handle.kind === "rule"
+    );
+    const plainRules = Array.from(plain.handles.values()).filter(
+      (handle) => handle.kind === "rule"
+    );
     expect(dottedRules.length).toBeGreaterThan(0);
     expect(plainRules.length).toBe(0);
 

@@ -37,7 +37,11 @@ const HEBREW_LETTERS = new Set([
 
 const WHITESPACE = /\s/u;
 
-function mergeInsideDot(current: InsideDotKind, candidate: InsideDotKind, letter: string): InsideDotKind {
+function mergeInsideDot(
+  current: InsideDotKind,
+  candidate: InsideDotKind,
+  letter: string
+): InsideDotKind {
   if (candidate === "none") {
     return current;
   }

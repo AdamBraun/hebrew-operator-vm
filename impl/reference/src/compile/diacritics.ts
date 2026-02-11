@@ -64,7 +64,9 @@ export function resolveDotKind(baseLetter: string, marks: string[]): DotKind {
     return "mappiq";
   }
   if (baseLetter === "ו") {
-    const hasOtherSofVowel = marks.some((mark) => mark !== DAGESH_MARK && SOF_VOWEL_MARKS.has(mark));
+    const hasOtherSofVowel = marks.some(
+      (mark) => mark !== DAGESH_MARK && SOF_VOWEL_MARKS.has(mark)
+    );
     if (!hasOtherSofVowel) {
       return "shuruk";
     }

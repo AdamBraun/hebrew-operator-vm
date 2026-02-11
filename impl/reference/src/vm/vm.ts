@@ -69,7 +69,11 @@ function applyRoshWrappers(token: Token, ops: SelectOperands): SelectOperands {
   return ops;
 }
 
-function applyTochWrappers(token: Token, cons: Construction, letterMode?: LetterMode): Construction {
+function applyTochWrappers(
+  token: Token,
+  cons: Construction,
+  letterMode?: LetterMode
+): Construction {
   if (token.meta?.traceOrder) {
     token.meta.traceOrder.push("toch");
   }
