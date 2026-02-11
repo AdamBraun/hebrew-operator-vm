@@ -34,8 +34,8 @@ Diacritics are small marks on a letter. They never stand alone; they **modify** 
 - **Shuruk (וּ)**: only on ו; turns it into a “carrier” link (seeded/representative mode).
 - **Mappiq (ּ in ה)**: reserved placeholder (no extra behavior yet).
 - **Shin/Sin dots**: on ש only:
-  - **שׁ** (right dot) activates the right branch of ש.
-  - **שׂ** (left dot) activates the left branch of ש.
+  - **שׁ** (right dot) tokenizes as explicit shin and runs ש semantics (right-branch default in the reference VM).
+  - **שׂ** (left dot) tokenizes as explicit sin and runs as a composite: **read rail = ס**, **shape rail = ש** (routing/fork modifier only).
 
 ### Sof vowels (below the letter)
 
@@ -455,7 +455,7 @@ Any remaining (MEM_ZONE) obligation is resolved as `CloseMemZoneSilently(Z)` and
   * (F^{L}, F^{R}): two exported access-handles (the two ו)
     All three inherit the currently-effective constraint bundle of (F).
 * **Seal:** replace focus by this structured object, with a deterministic default active branch.
-* **שׁ vs שׂ:** when `inside_dot_kind=shin_dot_right`, activate (F^{R}); when `inside_dot_kind=shin_dot_left`, activate (F^{L}); the other handle remains latent/available.
+* **שׁ vs שׂ:** `שׁ` executes as regular ש. `שׂ` is **COMPOSITE(read=ס, shape=ש)** with read-first precedence: run ס meaning, then apply ש as routing-only fork metadata.
 * **Key difference:** ש creates multiple internal handles inside one construction, not parallel futures.
 
 ---

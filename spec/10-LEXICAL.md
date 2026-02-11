@@ -9,7 +9,7 @@
 
 ```
 Token = {
-  base_letter: Letter,
+  letter: Letter | 'שׁ' | 'שׂ' | '□',
   attachments: Modifier[]
   features: {
     inside_dot_kind?: 'dagesh' | 'shuruk' | 'mappiq' | 'shin_dot_right' | 'shin_dot_left' | 'none'
@@ -37,7 +37,10 @@ A dot inside a host letter is **not** a separate modifier. It sets `features.ins
 - Host `ו` + inside dot → `shuruk`.
 - Host in `{ב, ג, ד, כ, ך, פ, ף, ר, ת}` + inside dot → `dagesh`.
 - Host `ה` + inside dot → `mappiq` (reserved).
-- Host `ש` + dot on right → `shin_dot_right`; dot on left → `shin_dot_left`.
+- Host `ש` + dot on right → `shin_dot_right` and token letter `שׁ`.
+- Host `ש` + dot on left → `shin_dot_left` and token letter `שׂ`.
 - Otherwise → `none`.
 
 Modifier semantics use `inside_dot_kind` to dispatch to the appropriate toch- or rosh-tier behavior.
+
+For plain `ש` without a shin/sin dot, token letter remains plain `ש` (or profile-defined ambiguity handling, if enabled).

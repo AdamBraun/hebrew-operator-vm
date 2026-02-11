@@ -8,6 +8,8 @@
 * Space boundary (`□`) resolution for `SUPPORT` and `MEM_ZONE` obligations.
 * Letters with v0 semantics: א, ב, ג, ד, ה, ו, ז, ח, ט, י, כ, ך, ל, מ, ם, נ, ן, ס, ע, פ, ף, צ, ץ, ק, ר, ש, ת.
 * Tokenizer with Hebrew letters, finals, whitespace→`□`, and basic niqqud mapping.
+* Shin/sin dot disambiguation: `שׁ` and `שׂ` are emitted as explicit token letters.
+* Composite sin execution: `שׂ` runs `read=ס` then applies `shape=ש` routing metadata (`read_first`).
 * Whitespace is semantic: `"נ ס"` inserts `□` and discharges support before `ס`.
 * Same-word `"נס"` allows samekh to discharge support before the boundary.
 * Runtime errors are thrown for illegal nesting (e.g., `ם` with non-`MEM_ZONE` on top, `ד` with non-`BOUNDARY` obligation).

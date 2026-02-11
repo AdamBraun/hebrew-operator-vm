@@ -66,7 +66,7 @@ Execution of a token ((\ell, \delta)) (let (S_0) be the current state):
 - Else if host glyph is ש and dot present: right dot → `shin_dot_right`, left dot → `shin_dot_left`.
 - Otherwise → `inside_dot_kind=none`.
 
-`dagesh` sets `hard=1` and applies `HARDEN` to the Toch envelope. `shuruk` is a Toch modifier on ו (CarrierActivation). Shin/sin dots are Select-level branch activation for ש and are not niqqud or HARDEN.
+`dagesh` sets `hard=1` and applies `HARDEN` to the Toch envelope. `shuruk` is a Toch modifier on ו (CarrierActivation). For ש-dots, the tokenizer emits explicit letters: `שׁ` executes as ש, while `שׂ` executes as a composite (`read=ס`, `shape=ש`) where shape contributes routing/fork only. They are not niqqud or HARDEN.
 
 **Name → invariants (from existing letter semantics)**
 

@@ -38,6 +38,8 @@ Notes:
   Discharging letters pop the top obligation.
 - **Whitespace → `□`:** any whitespace in input is tokenized as `□`, so spaces
   are semantic word boundaries.
+- **Shin/Sin disambiguation:** `שׁ` and `שׂ` tokenize distinctly; `שׂ` executes as
+  composite `read=ס`, `shape=ש` (read-first, routing-only shape effect).
 - **Space boundary (`□`):** on a space token (or end-of-input), `tau` increments
   and any remaining obligations are resolved: `SUPPORT` falls (logging a `fall`
   event and restoring focus), and `MEM_ZONE` closes silently.
