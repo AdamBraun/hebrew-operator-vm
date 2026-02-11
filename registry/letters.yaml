@@ -50,7 +50,7 @@ letters:
   "ם": { status: implemented, obligations: { closes: ["MEM_ZONE"] } }
   "נ": { status: implemented, obligations: { opens: ["SUPPORT"] } }
   "ן": { status: implemented, obligations: { opens: ["SUPPORT"], closes: ["SUPPORT"] } }
-  "ס": { status: implemented, obligations: { closes: ["SUPPORT"] } }
+  "ס": { id: SAMEKH, status: implemented, obligations: { closes: ["SUPPORT"] } }
   "ע": { status: implemented }
   "פ": { status: implemented, arity_req: 2, arity_opt: 1 }
   "ף": { status: implemented }
@@ -58,5 +58,16 @@ letters:
   "ץ": { status: implemented, arity_req: 2 }
   "ק": { status: implemented, arity_req: 2 }
   "ר": { status: implemented }
-  "ש": { status: implemented }
+  "ש": { id: SHIN_BASE, status: implemented, role: fork_chassis, arity_default: 3 }
+  "שׁ": { alias_of: "ש", status: implemented, diacritic: shin_dot_right }
+  "שׂ":
+    id: SIN_COMPOSITE
+    status: implemented
+    diacritic: sin_dot_left
+    composite:
+      read: "ס"
+      shape: "ש"
+    composite_policy:
+      precedence: read_first
+      shape_effect_scope: routing
   "ת": { status: implemented }

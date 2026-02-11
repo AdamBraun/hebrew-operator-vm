@@ -1,8 +1,8 @@
 import { tokenize, makeSpaceToken } from "../compile/tokenizer";
 import { validateTokens } from "../compile/validate";
 import { Token } from "../compile/types";
-import { letterRegistry } from "../letters/registry";
-import { Construction, SelectOperands } from "../letters/types";
+import { compositeRegistry, letterRegistry } from "../letters/registry";
+import { Construction, LetterOp, SelectOperands } from "../letters/types";
 import { hardenHandle } from "../state/policies";
 import { State, createInitialState } from "../state/state";
 import { applySpace } from "./space";
@@ -10,10 +10,14 @@ import { applySpace } from "./space";
 export type TraceEntry = {
   index: number;
   token: string;
+  read_op: string | null;
+  shape_op: string | null;
   tauBefore: number;
   tauAfter: number;
   F: string;
   R: string;
+  route_mode?: "fork";
+  route_arity?: number;
   KLength: number;
   OStackLength: number;
   events: Array<{ type: string; tau: number; data: any }>;
@@ -106,13 +110,7 @@ function applySofWrappers(state: State, token: Token, handleId: string): string 
   return handleId;
 }
 
-function executeLetter(state: State, token: Token): void {
-  const op = letterRegistry[token.letter];
-  if (!op) {
-    throw new Error(`Missing letter op for ${token.letter}`);
-  }
-  state.vm.wordHasContent = true;
-
+function executeReadRail(state: State, token: Token, op: LetterOp): void {
   const selectResult = op.select(state);
   const ops = applyRoshWrappers(token, selectResult.ops);
 
@@ -150,6 +148,43 @@ function executeLetter(state: State, token: Token): void {
   sealResult.S.vm.R = sealResult.r;
 }
 
+function applyShapeModifier(state: State, shapeOp: string): void {
+  if (shapeOp === "ש") {
+    state.vm.route_mode = "fork";
+    state.vm.route_arity = 3;
+  }
+}
+
+function executeLetter(state: State, token: Token): { read_op: string; shape_op: string | null } {
+  state.vm.wordHasContent = true;
+
+  const composite = compositeRegistry[token.letter];
+  if (composite) {
+    if (composite.composite_policy.precedence !== "read_first") {
+      throw new Error(
+        `Unsupported composite precedence '${composite.composite_policy.precedence}'`
+      );
+    }
+    const readOp = letterRegistry[composite.read];
+    if (!readOp) {
+      throw new Error(`Missing read op '${composite.read}' for composite '${token.letter}'`);
+    }
+    executeReadRail(state, token, readOp);
+
+    if (composite.composite_policy.shape_effect_scope === "routing") {
+      applyShapeModifier(state, composite.shape);
+    }
+    return { read_op: readOp.meta.letter, shape_op: composite.shape };
+  }
+
+  const op = letterRegistry[token.letter];
+  if (!op) {
+    throw new Error(`Missing letter op for ${token.letter}`);
+  }
+  executeReadRail(state, token, op);
+  return { read_op: op.meta.letter, shape_op: null };
+}
+
 function prepareTokens(input: string): Token[] {
   const tokens = tokenize(input);
   validateTokens(tokens, letterRegistry);
@@ -183,19 +218,27 @@ export function runProgramWithTrace(
   tokens.forEach((token, index) => {
     const tauBefore = state.vm.tau;
     const eventStart = state.vm.H.length;
+    let readOp: string | null = null;
+    let shapeOp: string | null = null;
     if (token.letter === "□") {
       applySpace(state);
     } else {
-      executeLetter(state, token);
+      const execution = executeLetter(state, token);
+      readOp = execution.read_op;
+      shapeOp = execution.shape_op;
     }
     const eventEnd = state.vm.H.length;
     trace.push({
       index,
       token: token.letter,
+      read_op: readOp,
+      shape_op: shapeOp,
       tauBefore,
       tauAfter: state.vm.tau,
       F: state.vm.F,
       R: state.vm.R,
+      route_mode: state.vm.route_mode,
+      route_arity: state.vm.route_arity,
       KLength: state.vm.K.length,
       OStackLength: state.vm.OStack_word.length,
       events: state.vm.H.slice(eventStart, eventEnd)

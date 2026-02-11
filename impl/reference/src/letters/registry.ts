@@ -24,6 +24,19 @@ import { yodOp } from "./yod";
 import { LetterOp } from "./types";
 
 export type LetterRegistry = Record<string, LetterOp>;
+export type CompositePolicy = {
+  precedence: "read_first";
+  shape_effect_scope: "routing";
+};
+
+export type CompositeLetter = {
+  id: string;
+  read: string;
+  shape: string;
+  composite_policy: CompositePolicy;
+};
+
+export type CompositeRegistry = Record<string, CompositeLetter>;
 
 export const letterRegistry: LetterRegistry = {
   א: alephOp,
@@ -47,6 +60,20 @@ export const letterRegistry: LetterRegistry = {
   ק: qofOp,
   ר: reshOp,
   ש: shinOp,
+  שׁ: shinOp,
+  שׂ: samekhOp,
   ת: tavOp,
   ...finalsMap
+};
+
+export const compositeRegistry: CompositeRegistry = {
+  שׂ: {
+    id: "SIN_COMPOSITE",
+    read: "ס",
+    shape: "ש",
+    composite_policy: {
+      precedence: "read_first",
+      shape_effect_scope: "routing"
+    }
+  }
 };

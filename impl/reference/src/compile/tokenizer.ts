@@ -94,8 +94,15 @@ export function tokenize(input: string): Token[] {
       index += 1;
     }
 
+    const tokenLetter =
+      letter === "ש" && insideDot === "shin_dot_right"
+        ? "שׁ"
+        : letter === "ש" && insideDot === "shin_dot_left"
+          ? "שׂ"
+          : letter;
+
     tokens.push({
-      letter,
+      letter: tokenLetter,
       diacritics,
       inside_dot_kind: insideDot,
       raw,

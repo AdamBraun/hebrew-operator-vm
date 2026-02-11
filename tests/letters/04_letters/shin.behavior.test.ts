@@ -12,10 +12,10 @@ describe("shin behavior", () => {
     expect(state.handles.has(handle?.meta.spine)).toBe(true);
   });
 
-  it("activates the left branch for shin-dot left", () => {
-    const state = runProgram("שׂ");
+  it("defaults to right branch for plain shin", () => {
+    const state = runProgram("ש");
     const shinId = state.vm.A[state.vm.A.length - 1];
     const handle = state.handles.get(shinId);
-    expect(handle?.meta.active).toBe("left");
+    expect(handle?.meta.active).toBe("right");
   });
 });

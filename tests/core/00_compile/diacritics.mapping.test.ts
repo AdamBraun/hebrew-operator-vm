@@ -18,6 +18,8 @@ describe("diacritics mapping", () => {
   it("shin dot right/left classification", () => {
     const right = tokenize("שׁ");
     const left = tokenize("שׂ");
+    expect(right[0].letter).toBe("שׁ");
+    expect(left[0].letter).toBe("שׂ");
     expect(right[0].inside_dot_kind).toBe("shin_dot_right");
     expect(left[0].inside_dot_kind).toBe("shin_dot_left");
   });

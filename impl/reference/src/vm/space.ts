@@ -68,6 +68,8 @@ export function applySpace(state: State): void {
   state.vm.OStack_word = [];
   state.vm.wordHasContent = false;
   state.vm.wordLastSealedArtifact = undefined;
+  delete state.vm.route_mode;
+  delete state.vm.route_arity;
   state.vm.F = state.vm.Omega;
   state.vm.R = BOT_ID;
   state.vm.K = [state.vm.F, state.vm.R];

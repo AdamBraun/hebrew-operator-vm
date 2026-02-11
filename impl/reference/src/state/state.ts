@@ -27,6 +27,8 @@ export type VM = {
   wordHasContent: boolean;
   wordLastSealedArtifact?: string;
   metaCounter?: Record<string, number>;
+  route_mode?: "fork";
+  route_arity?: number;
 };
 
 export type State = {
@@ -73,13 +75,19 @@ export function serializeState(state: State): Record<string, any> {
     ...envelope,
     ports: Array.from(envelope.ports).sort()
   });
-  const { wordLastSealedArtifact, metaCounter, ...vmRest } = state.vm;
+  const { wordLastSealedArtifact, metaCounter, route_mode, route_arity, ...vmRest } = state.vm;
   const vm: Record<string, any> = { ...vmRest };
   if (wordLastSealedArtifact !== undefined) {
     vm.wordLastSealedArtifact = wordLastSealedArtifact;
   }
   if (metaCounter) {
     vm.metaCounter = { ...metaCounter };
+  }
+  if (route_mode !== undefined) {
+    vm.route_mode = route_mode;
+  }
+  if (route_arity !== undefined) {
+    vm.route_arity = route_arity;
   }
   return {
     vm,

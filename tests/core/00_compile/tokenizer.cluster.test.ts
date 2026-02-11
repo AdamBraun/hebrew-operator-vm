@@ -33,4 +33,11 @@ describe("tokenizer cluster formation", () => {
     const tokensDecomposed = tokenize("נ\u05B8");
     expect(tokens).toEqual(tokensDecomposed);
   });
+
+  it("maps shin/sin dots into explicit token letters", () => {
+    const shin = tokenize("שׁ");
+    const sin = tokenize("שׂ");
+    expect(shin[0].letter).toBe("שׁ");
+    expect(sin[0].letter).toBe("שׂ");
+  });
 });
