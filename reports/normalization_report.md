@@ -7,7 +7,8 @@
 - te'amim policy: strip
 - te'amim ranges: U+0591-U+05AF
 - verses processed: 5846
-- idempotence failures: 0
+- source idempotence failures: 0
+- output idempotence failures: 0
 
 ## Codepoint Counts
 
@@ -16,6 +17,19 @@
 - total combining marks before: 334675
 - total combining marks after: 269913
 - total te'amim removed: 64762
+
+## Category Totals
+
+- kept:
+  - niqqud: 201578
+  - dots (dagesh/mappiq + shin/sin): 58153
+  - te'amim: 0
+  - other combining marks: 10182
+- removed:
+  - niqqud: 0
+  - dots (dagesh/mappiq + shin/sin): 0
+  - te'amim: 64762
+  - other combining marks: 0
 
 ## Kept Mark Categories
 
@@ -28,6 +42,17 @@
 ## Removed Mark Categories
 
 - teamim: 64762
+
+## Combining Mark Order Verification
+
+- hebrew base letters checked: 306269
+- base letters with combining marks checked: 215075
+- out-of-order sequences detected: 0
+- out-of-order samples: (none)
+
+## Output Idempotence Samples
+
+- (none)
 
 ## Output SHA-256
 

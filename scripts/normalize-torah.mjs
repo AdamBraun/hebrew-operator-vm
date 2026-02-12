@@ -10,13 +10,18 @@ const DEFAULT_REPORT = path.resolve(process.cwd(), "reports", "normalization_rep
 
 const TEAMIM_RANGES = [{ start: 0x0591, end: 0x05af }];
 const COMBINING_MARK = /\p{M}/u;
+const HEBREW_BASE_LETTER = /[\u05D0-\u05EA]/u;
+const ORDER_SAMPLE_LIMIT = 10;
+const IDEMPOTENCE_SAMPLE_LIMIT = 10;
 
 function printHelp() {
   console.log("Usage:");
   console.log(
-    "  node scripts/normalize-torah.mjs [--input=path] [--out=path] [--sha-out=path] [--report-out=path]"
+    "  node scripts/normalize-torah.mjs [run] [--input=path] [--out=path] [--sha-out=path] [--report-out=path]"
   );
-  console.log("  node scripts/normalize-torah.mjs [--keep-teamim]");
+  console.log(
+    "  node scripts/normalize-torah.mjs verify [--input=path] [--out=path] [--sha-out=path] [--keep-teamim|--strip-teamim]"
+  );
   console.log("");
   console.log("Defaults:");
   console.log(`  --input=${DEFAULT_INPUT}`);
@@ -27,6 +32,16 @@ function printHelp() {
 }
 
 function parseArgs(argv) {
+  const args = [...argv];
+  let command = "run";
+  if (args.length > 0 && !args[0].startsWith("-")) {
+    command = args.shift();
+  }
+
+  if (!["run", "verify"].includes(command)) {
+    throw new Error(`Unknown command '${command}'`);
+  }
+
   const opts = {
     input: DEFAULT_INPUT,
     out: DEFAULT_OUT,
@@ -35,7 +50,7 @@ function parseArgs(argv) {
     keepTeamim: false
   };
 
-  for (const arg of argv) {
+  for (const arg of args) {
     if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
@@ -64,9 +79,10 @@ function parseArgs(argv) {
       opts.keepTeamim = false;
       continue;
     }
+    throw new Error(`Unknown argument '${arg}'`);
   }
 
-  return opts;
+  return { command, opts };
 }
 
 function isInRanges(codePoint, ranges) {
@@ -125,6 +141,62 @@ function stripMarkupAndEntities(text) {
   out = out.replace(/[ \t\f\v]+/g, " ");
   out = out.replace(/ *\n */g, "\n");
   return out.trim();
+}
+
+function toCodepoints(text) {
+  return [...text]
+    .map((ch) => `U+${ch.codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`)
+    .join(" ");
+}
+
+function verifyCombiningOrder(text) {
+  const chars = [...text];
+  let hebrewBasesChecked = 0;
+  let markSequencesChecked = 0;
+  let outOfOrderCount = 0;
+  const samples = [];
+
+  for (let index = 0; index < chars.length; index += 1) {
+    const base = chars[index];
+    if (!HEBREW_BASE_LETTER.test(base)) {
+      continue;
+    }
+    hebrewBasesChecked += 1;
+
+    const marks = [];
+    let lookahead = index + 1;
+    while (lookahead < chars.length && COMBINING_MARK.test(chars[lookahead])) {
+      marks.push(chars[lookahead]);
+      lookahead += 1;
+    }
+
+    if (marks.length === 0) {
+      continue;
+    }
+    markSequencesChecked += 1;
+
+    const original = marks.join("");
+    const reordered = [...`א${original}`.normalize("NFD")].slice(1).join("");
+    if (original !== reordered) {
+      outOfOrderCount += 1;
+      if (samples.length < ORDER_SAMPLE_LIMIT) {
+        samples.push({
+          base,
+          original,
+          reordered,
+          originalCodepoints: toCodepoints(original),
+          reorderedCodepoints: toCodepoints(reordered)
+        });
+      }
+    }
+  }
+
+  return {
+    hebrewBasesChecked,
+    markSequencesChecked,
+    outOfOrderCount,
+    samples
+  };
 }
 
 function normalizeVerse(text, keepTeamim) {
@@ -186,16 +258,40 @@ function sha256Hex(buffer) {
   return crypto.createHash("sha256").update(buffer).digest("hex");
 }
 
-async function main() {
-  const opts = parseArgs(process.argv.slice(2));
-  const inputPath = path.resolve(opts.input);
-  const outPath = path.resolve(opts.out);
-  const shaOutPath = path.resolve(opts.shaOut);
-  const reportPath = path.resolve(opts.reportOut);
+function parseNormalizedLine(line) {
+  const tabIndex = line.indexOf("\t");
+  if (tabIndex < 0) {
+    return { ref: "", text: line };
+  }
+  return {
+    ref: line.slice(0, tabIndex),
+    text: line.slice(tabIndex + 1)
+  };
+}
 
-  const raw = await fs.readFile(inputPath, "utf8");
-  const source = JSON.parse(raw);
+function verifyNormalizedOutputIdempotence(normalizedText, keepTeamim) {
+  const lines = normalizedText
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter(Boolean);
 
+  let failures = 0;
+  const samples = [];
+  for (const line of lines) {
+    const { ref, text } = parseNormalizedLine(line);
+    const renormalized = normalizeVerse(text, keepTeamim).normalized;
+    if (renormalized !== text) {
+      failures += 1;
+      if (samples.length < IDEMPOTENCE_SAMPLE_LIMIT) {
+        samples.push({ ref, original: text, renormalized });
+      }
+    }
+  }
+
+  return { failures, samples };
+}
+
+function buildNormalizationResult(source, keepTeamim) {
   const lines = [];
   const keptByCategory = new Map();
   const removedByCategory = new Map();
@@ -206,20 +302,28 @@ async function main() {
   let combiningBefore = 0;
   let combiningAfter = 0;
   let removedTeamim = 0;
-  let idempotenceFailures = 0;
+  let sourceIdempotenceFailures = 0;
+  let hebrewBasesChecked = 0;
+  let markSequencesChecked = 0;
+  let outOfOrderMarkSequences = 0;
+  const outOfOrderSamples = [];
 
   for (const book of source.books ?? []) {
     for (const chapter of book.chapters ?? []) {
       for (const verse of chapter.verses ?? []) {
         verses += 1;
         const text = verse.he ?? "";
-        const { normalized, stats } = normalizeVerse(text, opts.keepTeamim);
+        const { normalized, stats } = normalizeVerse(text, keepTeamim);
+        const orderCheck = verifyCombiningOrder(normalized);
 
         codepointsBefore += stats.codepointsBefore;
         codepointsAfter += stats.codepointsAfter;
         combiningBefore += stats.combiningBefore;
         combiningAfter += stats.combiningAfter;
         removedTeamim += stats.removedTeamim;
+        hebrewBasesChecked += orderCheck.hebrewBasesChecked;
+        markSequencesChecked += orderCheck.markSequencesChecked;
+        outOfOrderMarkSequences += orderCheck.outOfOrderCount;
 
         for (const [key, value] of stats.keptByCategory.entries()) {
           increment(keptByCategory, key, value);
@@ -227,10 +331,19 @@ async function main() {
         for (const [key, value] of stats.removedByCategory.entries()) {
           increment(removedByCategory, key, value);
         }
+        for (const sample of orderCheck.samples) {
+          if (outOfOrderSamples.length >= ORDER_SAMPLE_LIMIT) {
+            break;
+          }
+          outOfOrderSamples.push({
+            ref: `${book.name} ${chapter.n}:${verse.n}`,
+            ...sample
+          });
+        }
 
-        const renormalized = normalizeVerse(normalized, opts.keepTeamim).normalized;
+        const renormalized = normalizeVerse(normalized, keepTeamim).normalized;
         if (renormalized !== normalized) {
-          idempotenceFailures += 1;
+          sourceIdempotenceFailures += 1;
         }
 
         const ref = `${book.name} ${chapter.n}:${verse.n}`;
@@ -244,14 +357,69 @@ async function main() {
   const normalizedBuffer = Buffer.from(normalizedText, "utf8");
   const checksum = sha256Hex(normalizedBuffer);
 
-  await fs.mkdir(path.dirname(outPath), { recursive: true });
-  await fs.mkdir(path.dirname(shaOutPath), { recursive: true });
-  await fs.mkdir(path.dirname(reportPath), { recursive: true });
+  const outputIdempotence = verifyNormalizedOutputIdempotence(normalizedText, keepTeamim);
 
-  await fs.writeFile(outPath, normalizedBuffer);
-  await fs.writeFile(shaOutPath, `${checksum}\n`, "utf8");
+  return {
+    normalizedText,
+    normalizedBuffer,
+    checksum,
+    stats: {
+      verses,
+      codepointsBefore,
+      codepointsAfter,
+      combiningBefore,
+      combiningAfter,
+      removedTeamim,
+      keptByCategory,
+      removedByCategory,
+      sourceIdempotenceFailures,
+      outputIdempotenceFailures: outputIdempotence.failures,
+      outputIdempotenceSamples: outputIdempotence.samples,
+      hebrewBasesChecked,
+      markSequencesChecked,
+      outOfOrderMarkSequences,
+      outOfOrderSamples
+    }
+  };
+}
 
-  const report = [
+function buildReport(result, opts, inputPath, outPath, shaOutPath) {
+  const {
+    verses,
+    codepointsBefore,
+    codepointsAfter,
+    combiningBefore,
+    combiningAfter,
+    removedTeamim,
+    keptByCategory,
+    removedByCategory,
+    sourceIdempotenceFailures,
+    outputIdempotenceFailures,
+    outputIdempotenceSamples,
+    hebrewBasesChecked,
+    markSequencesChecked,
+    outOfOrderMarkSequences,
+    outOfOrderSamples
+  } = result.stats;
+
+  const keptNiqqud = keptByCategory.get("niqqud") ?? 0;
+  const keptDots =
+    (keptByCategory.get("dagesh_or_mappiq") ?? 0) + (keptByCategory.get("shin_or_sin_dot") ?? 0);
+  const keptTeamim = keptByCategory.get("teamim") ?? 0;
+  const keptOther = sortedEntries(keptByCategory)
+    .filter(([key]) => !["niqqud", "dagesh_or_mappiq", "shin_or_sin_dot", "teamim"].includes(key))
+    .reduce((acc, [, value]) => acc + value, 0);
+
+  const removedNiqqud = removedByCategory.get("niqqud") ?? 0;
+  const removedDots =
+    (removedByCategory.get("dagesh_or_mappiq") ?? 0) +
+    (removedByCategory.get("shin_or_sin_dot") ?? 0);
+  const removedTeamimByCategory = removedByCategory.get("teamim") ?? 0;
+  const removedOther = sortedEntries(removedByCategory)
+    .filter(([key]) => !["niqqud", "dagesh_or_mappiq", "shin_or_sin_dot", "teamim"].includes(key))
+    .reduce((acc, [, value]) => acc + value, 0);
+
+  return [
     "# Normalization Report",
     "",
     `- input: ${inputPath}`,
@@ -261,7 +429,8 @@ async function main() {
     `- te'amim policy: ${opts.keepTeamim ? "keep" : "strip"}`,
     `- te'amim ranges: U+0591-U+05AF`,
     `- verses processed: ${verses}`,
-    `- idempotence failures: ${idempotenceFailures}`,
+    `- source idempotence failures: ${sourceIdempotenceFailures}`,
+    `- output idempotence failures: ${outputIdempotenceFailures}`,
     "",
     "## Codepoint Counts",
     "",
@@ -271,6 +440,19 @@ async function main() {
     `- total combining marks after: ${combiningAfter}`,
     `- total te'amim removed: ${removedTeamim}`,
     "",
+    "## Category Totals",
+    "",
+    "- kept:",
+    `  - niqqud: ${keptNiqqud}`,
+    `  - dots (dagesh/mappiq + shin/sin): ${keptDots}`,
+    `  - te'amim: ${keptTeamim}`,
+    `  - other combining marks: ${keptOther}`,
+    "- removed:",
+    `  - niqqud: ${removedNiqqud}`,
+    `  - dots (dagesh/mappiq + shin/sin): ${removedDots}`,
+    `  - te'amim: ${removedTeamimByCategory}`,
+    `  - other combining marks: ${removedOther}`,
+    "",
     "## Kept Mark Categories",
     "",
     formatMapTable(keptByCategory),
@@ -279,24 +461,140 @@ async function main() {
     "",
     formatMapTable(removedByCategory),
     "",
+    "## Combining Mark Order Verification",
+    "",
+    `- hebrew base letters checked: ${hebrewBasesChecked}`,
+    `- base letters with combining marks checked: ${markSequencesChecked}`,
+    `- out-of-order sequences detected: ${outOfOrderMarkSequences}`,
+    outOfOrderSamples.length === 0
+      ? "- out-of-order samples: (none)"
+      : "- out-of-order samples:",
+    ...outOfOrderSamples.map(
+      (sample) =>
+        `  - ${sample.ref} base='${sample.base}' original='${sample.originalCodepoints}' reordered='${sample.reorderedCodepoints}'`
+    ),
+    "",
+    "## Output Idempotence Samples",
+    "",
+    outputIdempotenceSamples.length === 0
+      ? "- (none)"
+      : "- lines that changed after re-normalization:",
+    ...outputIdempotenceSamples.map(
+      (sample) =>
+        `  - ${sample.ref || "(unknown)"} original='${sample.original}' renormalized='${sample.renormalized}'`
+    ),
+    "",
     "## Output SHA-256",
     "",
-    `- ${checksum}`,
+    `- ${result.checksum}`,
     ""
   ].join("\n");
+}
 
+async function runCommand(opts) {
+  const inputPath = path.resolve(opts.input);
+  const outPath = path.resolve(opts.out);
+  const shaOutPath = path.resolve(opts.shaOut);
+  const reportPath = path.resolve(opts.reportOut);
+
+  const raw = await fs.readFile(inputPath, "utf8");
+  const source = JSON.parse(raw);
+  const result = buildNormalizationResult(source, opts.keepTeamim);
+
+  await fs.mkdir(path.dirname(outPath), { recursive: true });
+  await fs.mkdir(path.dirname(shaOutPath), { recursive: true });
+  await fs.mkdir(path.dirname(reportPath), { recursive: true });
+
+  await fs.writeFile(outPath, result.normalizedBuffer);
+  await fs.writeFile(shaOutPath, `${result.checksum}\n`, "utf8");
+
+  const report = buildReport(result, opts, inputPath, outPath, shaOutPath);
   await fs.writeFile(reportPath, report, "utf8");
+
+  if (
+    result.stats.sourceIdempotenceFailures > 0 ||
+    result.stats.outputIdempotenceFailures > 0 ||
+    result.stats.outOfOrderMarkSequences > 0
+  ) {
+    throw new Error(
+      `normalization quality gate failed: sourceIdempotenceFailures=${result.stats.sourceIdempotenceFailures} outputIdempotenceFailures=${result.stats.outputIdempotenceFailures} outOfOrderMarkSequences=${result.stats.outOfOrderMarkSequences}`
+    );
+  }
 
   console.log(
     [
-      `done: verses=${verses}`,
+      `done: verses=${result.stats.verses}`,
       `teAmimPolicy=${opts.keepTeamim ? "keep" : "strip"}`,
-      `idempotenceFailures=${idempotenceFailures}`,
+      `sourceIdempotenceFailures=${result.stats.sourceIdempotenceFailures}`,
+      `outputIdempotenceFailures=${result.stats.outputIdempotenceFailures}`,
       `out=${outPath}`,
       `shaOut=${shaOutPath}`,
       `report=${reportPath}`
     ].join(" ")
   );
+}
+
+async function verifyCommand(opts) {
+  const inputPath = path.resolve(opts.input);
+  const outPath = path.resolve(opts.out);
+  const shaOutPath = path.resolve(opts.shaOut);
+
+  const [rawInput, existingOutputBuffer, existingShaRaw] = await Promise.all([
+    fs.readFile(inputPath, "utf8"),
+    fs.readFile(outPath),
+    fs.readFile(shaOutPath, "utf8")
+  ]);
+
+  const source = JSON.parse(rawInput);
+  const expected = buildNormalizationResult(source, opts.keepTeamim);
+
+  const existingOutput = existingOutputBuffer.toString("utf8");
+  const existingOutputSha = sha256Hex(existingOutputBuffer);
+  const recordedSha = existingShaRaw.trim();
+
+  const failures = [];
+
+  if (expected.normalizedText !== existingOutput) {
+    failures.push("normalized output file does not match deterministic normalization of input");
+  }
+  if (recordedSha !== existingOutputSha) {
+    failures.push("recorded sha256 does not match actual output bytes");
+  }
+  if (recordedSha !== expected.checksum) {
+    failures.push("recorded sha256 does not match deterministic checksum from current input");
+  }
+  if (expected.stats.sourceIdempotenceFailures > 0) {
+    failures.push(`source idempotence failures: ${expected.stats.sourceIdempotenceFailures}`);
+  }
+  if (expected.stats.outputIdempotenceFailures > 0) {
+    failures.push(`output idempotence failures: ${expected.stats.outputIdempotenceFailures}`);
+  }
+  if (expected.stats.outOfOrderMarkSequences > 0) {
+    failures.push(`out-of-order mark sequences: ${expected.stats.outOfOrderMarkSequences}`);
+  }
+
+  if (failures.length > 0) {
+    throw new Error(`verify failed: ${failures.join("; ")}`);
+  }
+
+  console.log(
+    [
+      "verify: ok",
+      `teAmimPolicy=${opts.keepTeamim ? "keep" : "strip"}`,
+      `verses=${expected.stats.verses}`,
+      `sha256=${recordedSha}`,
+      `out=${outPath}`
+    ].join(" ")
+  );
+}
+
+async function main() {
+  const { command, opts } = parseArgs(process.argv.slice(2));
+  if (command === "verify") {
+    await verifyCommand(opts);
+    return;
+  }
+  await runCommand(opts);
 }
 
 main().catch((err) => {

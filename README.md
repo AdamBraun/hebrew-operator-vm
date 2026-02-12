@@ -29,6 +29,31 @@ Notes:
 - By default it does **not** normalize final letterforms and **fails fast** on RuntimeErrors.
   Use `--normalize-finals` or `--allow-runtime-errors` if you want a more permissive pass.
 
+### Torah Normalization Pipeline
+
+For a deterministic canonical Unicode normalization stage (NFD) with explicit verse refs:
+
+```bash
+npm run normalize-torah
+```
+
+Verify normalized artifact integrity + checksum stability gate:
+
+```bash
+npm run normalize-torah:verify
+```
+
+Outputs:
+
+- `data/torah.normalized.txt`
+- `data/torah.normalized.sha256`
+- `reports/normalization_report.md`
+
+Options:
+
+- `--keep-teamim` to keep cantillation marks.
+- `--strip-teamim` to explicitly strip cantillation marks (default, U+0591-U+05AF).
+
 ### Torah Flow Corpus
 
 For a full Torah-wide word corpus with stable grapheme TokenIDs and flow traces:
