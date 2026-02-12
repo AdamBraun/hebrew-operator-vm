@@ -63,7 +63,11 @@ describe("torah corpus verse execution modes", () => {
     const verseModeFlowPath = path.join(tmpDir, "corpus", "verse.word_flows.txt");
     const verseModeReportPath = path.join(tmpDir, "reports", "verse.execution_report.md");
     const verseModeVerseTracePath = path.join(tmpDir, "corpus", "verse.verse_traces.jsonl");
-    const verseModeVerseReportPath = path.join(tmpDir, "reports", "verse.verse_execution_report.md");
+    const verseModeVerseReportPath = path.join(
+      tmpDir,
+      "reports",
+      "verse.verse_execution_report.md"
+    );
     const verseModeMotifIndexPath = path.join(tmpDir, "index", "verse.verse_motif_index.json");
 
     runNode([
@@ -108,7 +112,11 @@ describe("torah corpus verse execution modes", () => {
     const windowModeFlowPath = path.join(tmpDir, "corpus", "window.word_flows.txt");
     const windowModeReportPath = path.join(tmpDir, "reports", "window.execution_report.md");
     const windowModeVerseTracePath = path.join(tmpDir, "corpus", "window.verse_traces.jsonl");
-    const windowModeVerseReportPath = path.join(tmpDir, "reports", "window.verse_execution_report.md");
+    const windowModeVerseReportPath = path.join(
+      tmpDir,
+      "reports",
+      "window.verse_execution_report.md"
+    );
     const windowModeMotifIndexPath = path.join(tmpDir, "index", "window.verse_motif_index.json");
 
     runNode([
