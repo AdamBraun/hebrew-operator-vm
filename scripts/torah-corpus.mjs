@@ -110,6 +110,26 @@ function loadTorahCorpusDiff() {
 const torahCorpusDiff = loadTorahCorpusDiff();
 const { buildDiffPayload } = torahCorpusDiff;
 
+function loadTorahCorpusRegress() {
+  const regressModulePath = path.resolve(
+    process.cwd(),
+    "impl/reference/dist/scripts/torahCorpus/regress"
+  );
+  try {
+    return cjsRequire(regressModulePath);
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "MODULE_NOT_FOUND") {
+      throw new Error(
+        "Missing compiled torah corpus regress module. Run `npm run build` before `node scripts/torah-corpus.mjs`."
+      );
+    }
+    throw error;
+  }
+}
+
+const torahCorpusRegress = loadTorahCorpusRegress();
+const { buildCuratedGoldens, buildRegressionReport } = torahCorpusRegress;
+
 const TRACE_VERSION = "1.0.0";
 const TRACE_RENDER_VERSION = "1.0.0";
 const SPACE_TOKEN = "□";
@@ -2327,200 +2347,6 @@ async function loadGoldens(pathName) {
     payload,
     cases
   };
-}
-
-function addGoldenKey(selectedKeys, notesByKey, key, note) {
-  if (!key) {
-    return;
-  }
-  if (!notesByKey.has(key)) {
-    notesByKey.set(key, new Set());
-    selectedKeys.push(key);
-  }
-  if (note) {
-    notesByKey.get(key).add(note);
-  }
-}
-
-function findFirstRow(rows, usedKeys, predicate) {
-  for (const row of rows) {
-    if (usedKeys.has(row.key)) {
-      continue;
-    }
-    if (predicate(row)) {
-      return row;
-    }
-  }
-  return null;
-}
-
-function buildCuratedGoldens({ runRows, runMap, groupedDeltas, changedSkeletonRows, goldenLimit }) {
-  const selectedKeys = [];
-  const notesByKey = new Map();
-  const usedKeys = new Set();
-
-  for (const group of groupedDeltas) {
-    const candidate = group.sample_keys?.[0];
-    if (!candidate || usedKeys.has(candidate)) {
-      continue;
-    }
-    usedKeys.add(candidate);
-    addGoldenKey(selectedKeys, notesByKey, candidate, `delta:${group.signature}`);
-    if (selectedKeys.length >= goldenLimit) {
-      break;
-    }
-  }
-
-  const edgeRules = [
-    {
-      note: "edge:mappiq",
-      predicate: (row) => row.surface.includes("הּ") || row.skeleton.includes("HE.DECLARE_PIN")
-    },
-    {
-      note: "edge:shin_sin",
-      predicate: (row) =>
-        row.surface.includes("שׁ") ||
-        row.surface.includes("שׂ") ||
-        row.skeleton.includes("SHIN.FORK")
-    },
-    {
-      note: "edge:finals",
-      predicate: (row) =>
-        /[ךםןףץ]/u.test(row.surface) || row.skeleton.some((op) => op.startsWith("FINAL_"))
-    }
-  ];
-
-  for (const rule of edgeRules) {
-    if (selectedKeys.length >= goldenLimit) {
-      break;
-    }
-    const row = findFirstRow(runRows, usedKeys, rule.predicate);
-    if (!row) {
-      continue;
-    }
-    usedKeys.add(row.key);
-    addGoldenKey(selectedKeys, notesByKey, row.key, rule.note);
-  }
-
-  const familyRules = [
-    {
-      note: "family:ALEPH",
-      predicate: (row) => row.skeleton.some((op) => op.startsWith("ALEPH."))
-    },
-    { note: "family:HE", predicate: (row) => row.skeleton.some((op) => op.startsWith("HE.")) },
-    { note: "family:TAV", predicate: (row) => row.skeleton.some((op) => op.startsWith("TAV.")) },
-    { note: "family:MEM", predicate: (row) => row.skeleton.includes("MEM.OPEN") },
-    { note: "family:FINAL_MEM", predicate: (row) => row.skeleton.includes("FINAL_MEM.CLOSE") },
-    { note: "family:NUN", predicate: (row) => row.skeleton.some((op) => op.startsWith("NUN.")) },
-    {
-      note: "family:SAMEKH",
-      predicate: (row) => row.skeleton.some((op) => op.startsWith("SAMEKH."))
-    },
-    { note: "family:SHIN", predicate: (row) => row.skeleton.some((op) => op.startsWith("SHIN.")) },
-    { note: "family:TSADI", predicate: (row) => row.skeleton.some((op) => op.includes("TSADI.")) },
-    {
-      note: "family:SPACE",
-      predicate: (row) => row.skeleton.some((op) => op.startsWith("SPACE."))
-    },
-    { note: "family:PE", predicate: (row) => row.skeleton.some((op) => op.startsWith("PE.")) }
-  ];
-
-  for (const rule of familyRules) {
-    if (selectedKeys.length >= goldenLimit) {
-      break;
-    }
-    const row = findFirstRow(runRows, usedKeys, rule.predicate);
-    if (!row) {
-      continue;
-    }
-    usedKeys.add(row.key);
-    addGoldenKey(selectedKeys, notesByKey, row.key, rule.note);
-  }
-
-  for (const change of changedSkeletonRows) {
-    if (selectedKeys.length >= goldenLimit) {
-      break;
-    }
-    if (usedKeys.has(change.key)) {
-      continue;
-    }
-    const row = runMap.get(change.key);
-    if (!row) {
-      continue;
-    }
-    usedKeys.add(change.key);
-    addGoldenKey(selectedKeys, notesByKey, change.key, "changed:representative");
-  }
-
-  const cases = [];
-  for (const key of selectedKeys) {
-    if (cases.length >= goldenLimit) {
-      break;
-    }
-    const row = runMap.get(key);
-    if (!row) {
-      continue;
-    }
-    const notes = Array.from(notesByKey.get(key) ?? []).sort(sortRefLike);
-    cases.push({
-      key,
-      ref: row.ref,
-      surface: row.surface,
-      expected_skeleton: row.skeleton,
-      notes: notes.length > 0 ? notes.join("; ") : "curated"
-    });
-  }
-  return cases;
-}
-
-function buildRegressionReport({
-  runB,
-  compileB,
-  goldensPath,
-  regressionFailures,
-  regressionPasses
-}) {
-  const lines = [
-    "# Regression Report",
-    "",
-    "## Inputs",
-    `- run_b: ${workspaceRelativePath(runB.trace_path)}`,
-    `- semantic_versions: ${summarizeSemanticVersions(runB.semantic_versions)}`,
-    `- goldens: ${workspaceRelativePath(goldensPath)}`,
-    `- compile_bundle: ${compileB.path ? workspaceRelativePath(compileB.path) : "not found"}`,
-    `- compile_warnings: ${compileB.warning_count ?? "unknown"} (${formatWarningCounts(
-      compileB.warning_by_code
-    )})`,
-    "",
-    "## Summary",
-    `- total_goldens: ${regressionPasses.length + regressionFailures.length}`,
-    `- passed: ${regressionPasses.length}`,
-    `- failed: ${regressionFailures.length}`
-  ];
-
-  if (regressionFailures.length === 0) {
-    lines.push("", "## Result", "- PASS");
-    return lines;
-  }
-
-  lines.push("", "## Result", "- FAIL");
-  lines.push("", "## Failures");
-  for (const failure of regressionFailures) {
-    lines.push(`- ${failure.key} (${failure.surface || "n/a"})`);
-    lines.push(`  - ref: ${failure.ref}`);
-    lines.push(`  - reason: ${failure.reason}`);
-    if (failure.expected_skeleton) {
-      lines.push(`  - expected: ${failure.expected_skeleton.join(" -> ") || "(empty)"}`);
-    }
-    if (failure.actual_skeleton) {
-      lines.push(`  - actual: ${failure.actual_skeleton.join(" -> ") || "(empty)"}`);
-    }
-    if (failure.delta_summary) {
-      lines.push(`  - delta: ${failure.delta_summary}`);
-    }
-  }
-
-  return lines;
 }
 
 async function runAll(argv) {

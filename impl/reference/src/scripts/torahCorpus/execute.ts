@@ -1,7 +1,5 @@
 import crypto from "node:crypto";
-import {
-  workspaceRelativePath
-} from "./report";
+import { workspaceRelativePath } from "./report";
 
 type SkeletonRow = {
   skeleton: string[];
@@ -210,9 +208,7 @@ export function buildExecuteReports(input: BuildExecuteReportsInput): BuildExecu
     reportLines.push("", "### Cross-Word Delta Samples");
     for (const sample of input.modeDiffEvents.slice(0, 20)) {
       reportLines.push(`- ${sample.ref_key}`);
-      reportLines.push(
-        `  - baseline: ${sample.baseline_skeleton.join(" -> ") || "(empty)"}`
-      );
+      reportLines.push(`  - baseline: ${sample.baseline_skeleton.join(" -> ") || "(empty)"}`);
       reportLines.push(`  - observed: ${sample.observed_skeleton.join(" -> ") || "(empty)"}`);
       reportLines.push(`  - reason: ${sample.explanation}`);
     }
@@ -286,10 +282,12 @@ export function buildExecuteReports(input: BuildExecuteReportsInput): BuildExecu
     "",
     "## Cross-Word Samples",
     ...(input.modeDiffEvents.length > 0
-      ? input.modeDiffEvents.slice(0, 30).map(
-          (sample) =>
-            `- ${sample.ref_key} | ${sample.baseline_skeleton.join(" -> ") || "(empty)"} => ${sample.observed_skeleton.join(" -> ") || "(empty)"} | ${sample.explanation}`
-        )
+      ? input.modeDiffEvents
+          .slice(0, 30)
+          .map(
+            (sample) =>
+              `- ${sample.ref_key} | ${sample.baseline_skeleton.join(" -> ") || "(empty)"} => ${sample.observed_skeleton.join(" -> ") || "(empty)"} | ${sample.explanation}`
+          )
       : ["- none"]),
     "",
     "## Outputs",
@@ -304,7 +302,11 @@ export function buildExecuteReports(input: BuildExecuteReportsInput): BuildExecu
       line.startsWith("- execution_mode:")
     );
     if (insertAfterExecutionMode >= 0) {
-      verseReportLines.splice(insertAfterExecutionMode + 1, 0, `- window_size: ${input.windowSize}`);
+      verseReportLines.splice(
+        insertAfterExecutionMode + 1,
+        0,
+        `- window_size: ${input.windowSize}`
+      );
     }
   }
 

@@ -46,8 +46,8 @@ describe("torah corpus execute report builder", () => {
       missingBundles: [],
       runtimeErrors: [],
       elapsedMs: 10,
-      traceContent: "{\"x\":1}\n",
-      verseTraceContent: "{\"y\":1}\n",
+      traceContent: '{"x":1}\n',
+      verseTraceContent: '{"y":1}\n',
       compileFlowString: (skeleton, separator) => skeleton.join(separator),
       arraysEqual: (left, right) => JSON.stringify(left) === JSON.stringify(right)
     });

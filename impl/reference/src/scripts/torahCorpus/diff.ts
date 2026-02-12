@@ -47,8 +47,12 @@ export function buildDiffPayload(
   groups: Record<string, string[]>;
   changed_words: Array<{ ref_key: string; why: string[] }>;
 } {
-  const prevMap = new Map(prevRows.map((row) => [String(row.ref_key ?? ""), normalizeComparableRow(row)]));
-  const nextMap = new Map(nextRows.map((row) => [String(row.ref_key ?? ""), normalizeComparableRow(row)]));
+  const prevMap = new Map(
+    prevRows.map((row) => [String(row.ref_key ?? ""), normalizeComparableRow(row)])
+  );
+  const nextMap = new Map(
+    nextRows.map((row) => [String(row.ref_key ?? ""), normalizeComparableRow(row)])
+  );
   const keys = Array.from(new Set([...prevMap.keys(), ...nextMap.keys()])).sort((left, right) =>
     left.localeCompare(right, "en")
   );
