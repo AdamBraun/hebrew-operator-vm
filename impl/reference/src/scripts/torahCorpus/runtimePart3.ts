@@ -539,7 +539,6 @@ async function loadGoldens(pathName) {
   };
 }
 
-
 export {
   rowRefKey,
   normalizeTraceRow,

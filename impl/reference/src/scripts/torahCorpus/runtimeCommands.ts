@@ -541,22 +541,18 @@ async function runExecute(argv) {
       const meta = wordRowsMeta[wordIndex];
       const baselineExecution = baselineExecutions[wordIndex];
       const modeExecution = modeExecutions[wordIndex];
-      const {
-        execution,
-        allowedDeltaIncrement,
-        blockedDeltaIncrement,
-        clampedWordIncrement
-      } = applyWordExecutionPolicy({
-        metaUnknownSignatures: meta.unknown_signatures,
-        baselineExecution,
-        modeExecution,
-        mode: opts.mode,
-        safetyRailActive,
-        arraysEqual,
-        skeletonDeltaOps,
-        isSafetyRailDeltaAllowed,
-        makeUnknownSignatureTraceEvent
-      });
+      const { execution, allowedDeltaIncrement, blockedDeltaIncrement, clampedWordIncrement } =
+        applyWordExecutionPolicy({
+          metaUnknownSignatures: meta.unknown_signatures,
+          baselineExecution,
+          modeExecution,
+          mode: opts.mode,
+          safetyRailActive,
+          arraysEqual,
+          skeletonDeltaOps,
+          isSafetyRailDeltaAllowed,
+          makeUnknownSignatureTraceEvent
+        });
       safetyRailStats.allowed_deltas += allowedDeltaIncrement;
       safetyRailStats.blocked_deltas += blockedDeltaIncrement;
       safetyRailStats.clamped_words += clampedWordIncrement;

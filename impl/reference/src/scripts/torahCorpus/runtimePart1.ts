@@ -1020,7 +1020,6 @@ function collectExecutableVerses(data, opts) {
   };
 }
 
-
 export {
   SPACE_TOKEN,
   sanitizeText,

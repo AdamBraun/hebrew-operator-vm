@@ -257,7 +257,10 @@ function buildVerseBoundaryResolution(verseWordRows, boundaryByType) {
 
   const supportBalance = Math.max(0, supportOpened - supportDischarged);
   const memBalance = Math.max(0, memOpened - memClosed);
-  const boundaryCount = Object.values(boundaryByType).reduce((sum, count) => sum + Number(count), 0);
+  const boundaryCount = Object.values(boundaryByType).reduce(
+    (sum, count) => sum + Number(count),
+    0
+  );
   const requiresDischarge = supportBalance > 0 || memBalance > 0;
 
   return {
@@ -322,7 +325,10 @@ function buildVerseMotifs({ verseWordRows, crossWordEvents, verseBoundaryResolut
   const finalizeRows = verseWordRows
     .filter((row) => row.skeleton.includes("TAV.FINALIZE"))
     .map((row) => row.ref_key);
-  if (finalizeRows.length === 1 && finalizeRows[0] === verseWordRows[verseWordRows.length - 1].ref_key) {
+  if (
+    finalizeRows.length === 1 &&
+    finalizeRows[0] === verseWordRows[verseWordRows.length - 1].ref_key
+  ) {
     motifs.push({
       motif: "FINALIZE_AT_VERSE_EDGE",
       count: 1,
@@ -646,7 +652,6 @@ function rowRefKey(row) {
   }
   return "";
 }
-
 
 export {
   resolveWordTokenIds,
