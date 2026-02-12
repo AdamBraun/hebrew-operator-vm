@@ -93,7 +93,12 @@ const {
   resolveExecutePaths,
   resolveSemanticVersion,
   assertExecuteTokenSources,
-  buildVerseWordRowsMeta
+  buildVerseWordRowsMeta,
+  selectModeExecutions,
+  computeSafetyRailActivation,
+  applyWordExecutionPolicy,
+  buildVerseTraceRecord,
+  buildWordExecutionArtifacts
 } = torahCorpusExecute;
 
 function loadTorahCorpusDiff() {
@@ -2772,33 +2777,19 @@ async function runExecute(argv) {
       return getIsolatedFlow(meta.surface);
     });
 
-    let modeExecutions;
-    if (opts.mode === "WORD") {
-      modeExecutions = baselineExecutions.map((execution) => ({
-        flowRaw: [...execution.flowRaw],
-        flowCompact: [...execution.flowCompact],
-        traceEvents: [...execution.traceEvents],
-        runtimeErrorMessage: execution.runtimeErrorMessage,
-        windowStart: execution.windowStart
-      }));
-    } else if (opts.mode === "VERSE") {
-      modeExecutions = runVerseWordFlows({
-        words: verseEntry.words,
-        runProgramWithTrace,
-        createInitialState,
-        allowRuntimeErrors: opts.allowRuntimeErrors,
-        verseRefKey: verseEntry.ref_key
-      });
-    } else {
-      modeExecutions = runWindowWordFlows({
-        words: verseEntry.words,
-        windowSize: opts.windowSize ?? DEFAULT_WINDOW_SIZE,
-        runProgramWithTrace,
-        createInitialState,
-        allowRuntimeErrors: opts.allowRuntimeErrors,
-        verseRefKey: verseEntry.ref_key
-      });
-    }
+    const modeExecutions = selectModeExecutions({
+      mode: opts.mode,
+      baselineExecutions,
+      words: verseEntry.words,
+      windowSize: opts.windowSize,
+      defaultWindowSize: DEFAULT_WINDOW_SIZE,
+      runVerseWordFlows,
+      runWindowWordFlows,
+      runProgramWithTrace,
+      createInitialState,
+      allowRuntimeErrors: opts.allowRuntimeErrors,
+      verseRefKey: verseEntry.ref_key
+    });
 
     if (modeExecutions.length !== wordRowsMeta.length) {
       throw new Error(
@@ -2806,20 +2797,16 @@ async function runExecute(argv) {
       );
     }
 
-    const provisionalDeltaCount = wordRowsMeta.reduce((sum, meta, index) => {
-      if (meta.unknown_signatures.length > 0) {
-        return sum;
-      }
-      return arraysEqual(baselineExecutions[index].flowCompact, modeExecutions[index].flowCompact)
-        ? sum
-        : sum + 1;
-    }, 0);
-    const provisionalDeltaRate =
-      wordRowsMeta.length > 0 ? provisionalDeltaCount / wordRowsMeta.length : 0;
-    const safetyRailActive =
-      opts.mode !== "WORD" &&
-      safetyRailStats.enabled &&
-      provisionalDeltaRate > safetyRailStats.threshold;
+    const { provisionalDeltaCount, provisionalDeltaRate, safetyRailActive } =
+      computeSafetyRailActivation({
+        mode: opts.mode,
+        safetyRailEnabled: safetyRailStats.enabled,
+        safetyRailThreshold: safetyRailStats.threshold,
+        wordRowsMeta,
+        baselineExecutions,
+        modeExecutions,
+        arraysEqual
+      });
     if (safetyRailActive) {
       safetyRailStats.activated_verses += 1;
     }
@@ -2832,153 +2819,89 @@ async function runExecute(argv) {
     for (let wordIndex = 0; wordIndex < wordRowsMeta.length; wordIndex += 1) {
       const meta = wordRowsMeta[wordIndex];
       const baselineExecution = baselineExecutions[wordIndex];
-      let execution = modeExecutions[wordIndex];
+      const modeExecution = modeExecutions[wordIndex];
+      const {
+        execution,
+        allowedDeltaIncrement,
+        blockedDeltaIncrement,
+        clampedWordIncrement
+      } = applyWordExecutionPolicy({
+        metaUnknownSignatures: meta.unknown_signatures,
+        baselineExecution,
+        modeExecution,
+        mode: opts.mode,
+        safetyRailActive,
+        arraysEqual,
+        skeletonDeltaOps,
+        isSafetyRailDeltaAllowed,
+        makeUnknownSignatureTraceEvent
+      });
+      safetyRailStats.allowed_deltas += allowedDeltaIncrement;
+      safetyRailStats.blocked_deltas += blockedDeltaIncrement;
+      safetyRailStats.clamped_words += clampedWordIncrement;
 
-      if (meta.unknown_signatures.length > 0) {
-        execution = {
-          flowRaw: ["ERROR.UNKNOWN_SIGNATURE"],
-          flowCompact: ["ERROR.UNKNOWN_SIGNATURE"],
-          traceEvents: [makeUnknownSignatureTraceEvent(meta.unknown_signatures[0] ?? "unknown")],
-          runtimeErrorMessage: "",
-          windowStart: execution?.windowStart ?? baselineExecution.windowStart
-        };
-      }
-
-      const changedFromBaseline = !arraysEqual(baselineExecution.flowCompact, execution.flowCompact);
-      if (safetyRailActive && changedFromBaseline) {
-        const deltaOps = skeletonDeltaOps(baselineExecution.flowCompact, execution.flowCompact);
-        if (!isSafetyRailDeltaAllowed(deltaOps)) {
-          safetyRailStats.clamped_words += 1;
-          safetyRailStats.blocked_deltas += 1;
-          execution = {
-            flowRaw: [...baselineExecution.flowRaw],
-            flowCompact: [...baselineExecution.flowCompact],
-            traceEvents: [...baselineExecution.traceEvents],
-            runtimeErrorMessage: baselineExecution.runtimeErrorMessage,
-            windowStart: execution.windowStart,
-            safetyRailClamped: true,
-            safetyRailDeltaOps: deltaOps
-          };
-        } else {
-          safetyRailStats.allowed_deltas += 1;
-        }
-      } else if (changedFromBaseline && opts.mode !== "WORD") {
-        safetyRailStats.allowed_deltas += 1;
-      }
-
-      if (execution.runtimeErrorMessage) {
-        runtimeErrors.push({
-          ref_key: meta.ref_key,
-          surface: meta.surface,
-          message: execution.runtimeErrorMessage
-        });
-      }
-
-      const skeleton = execution.flowCompact;
-      const flow = compileFlowString(skeleton, " ⇢ ");
-      const skeletonKey = skeleton.join(" -> ");
-      skeletonCounts.set(skeletonKey, (skeletonCounts.get(skeletonKey) ?? 0) + 1);
-
-      const rawWordRecord = {
-        record_kind: "WORD_TRACE",
-        trace_version: TRACE_VERSION,
-        semantics_version: semanticVersion,
-        render_version: TRACE_RENDER_VERSION,
-        ref: meta.ref,
-        ref_key: meta.ref_key,
-        surface: meta.surface,
-        token_ids: meta.token_ids,
-        events: execution.traceEvents,
-        skeleton,
-        flow,
-        mode: opts.mode
-      };
-      if (opts.mode === "WINDOW") {
-        rawWordRecord.window_start = execution.windowStart ?? 1;
-      }
-      const row = canonicalizeWordTraceRecord(rawWordRecord);
-      if (opts.debugRawEvents) {
-        row.skeleton_raw = execution.flowRaw;
-      }
-      rows.push(row);
-      flowLines.push(`${meta.ref_key}\t${meta.surface}\t${flow}`);
-
-      baselineRows.push({
-        ref_key: meta.ref_key,
-        skeleton: baselineExecution.flowCompact
+      const artifacts = buildWordExecutionArtifacts({
+        traceVersion: TRACE_VERSION,
+        traceRenderVersion: TRACE_RENDER_VERSION,
+        semanticVersion,
+        mode: opts.mode,
+        debugRawEvents: opts.debugRawEvents,
+        meta,
+        wordIndex,
+        baselineExecution,
+        execution,
+        compileFlowString,
+        extractBoundaryOps,
+        explainDeltaByMode,
+        arraysEqual,
+        canonicalizeWordTraceRecord
       });
 
-      totalEventsInVerse += execution.traceEvents.length;
-      const boundaryOps = extractBoundaryOps(skeleton);
-      for (const op of boundaryOps) {
+      if (artifacts.runtimeErrorSample) {
+        runtimeErrors.push(artifacts.runtimeErrorSample);
+      }
+      skeletonCounts.set(artifacts.skeletonKey, (skeletonCounts.get(artifacts.skeletonKey) ?? 0) + 1);
+
+      rows.push(artifacts.row);
+      flowLines.push(artifacts.flowLine);
+      baselineRows.push(artifacts.baselineRow);
+
+      totalEventsInVerse += artifacts.traceEventCount;
+      for (const op of artifacts.boundaryOps) {
         boundaryByType[op] = (boundaryByType[op] ?? 0) + 1;
       }
-      verseWordRows.push({
-        ref_key: meta.ref_key,
-        token_index: wordIndex + 1,
-        skeleton,
-        boundary_ops: boundaryOps
-      });
+      verseWordRows.push(artifacts.verseWordRow);
 
-      if (opts.mode !== "WORD" && !arraysEqual(baselineExecution.flowCompact, skeleton)) {
-        const explanation = explainDeltaByMode({
-          mode: opts.mode,
-          tokenIndex: wordIndex + 1,
-          windowStart: execution.windowStart ?? 1,
-          boundaryOps
-        });
-        const deltaEvent = {
-          ref_key: meta.ref_key,
-          token_index: wordIndex + 1,
-          baseline_skeleton: baselineExecution.flowCompact,
-          observed_skeleton: skeleton,
-          explanation
-        };
-        crossWordEvents.push(deltaEvent);
+      if (artifacts.deltaEvent) {
+        crossWordEvents.push(artifacts.deltaEvent);
         modeDiffEvents.push({
           verse_ref_key: verseEntry.ref_key,
-          ...deltaEvent
+          ...artifacts.deltaEvent
         });
       }
     }
 
-    const verseEndBoundaryOps =
-      verseWordRows.length > 0 ? verseWordRows[verseWordRows.length - 1].boundary_ops : [];
-    const verseBoundaryResolution = buildVerseBoundaryResolution(verseWordRows, boundaryByType);
-    const verseRecord = {
-      record_kind: "VERSE_TRACE",
-      trace_version: TRACE_VERSION,
-      semantics_version: semanticVersion,
-      render_version: TRACE_RENDER_VERSION,
-      ref: verseEntry.ref,
-      ref_key: verseEntry.ref_key,
-      mode: opts.modeLabel,
-      words_total: verseWordRows.length,
-      total_events: totalEventsInVerse,
-      boundary_events: {
-        total: Object.values(boundaryByType).reduce((sum, count) => sum + Number(count), 0),
-        by_type: sortCountObjectByKey(boundaryByType),
-        verse_end: verseEndBoundaryOps,
-        verse_boundary_operator: verseBoundaryResolution
-      },
-      cross_word_events: crossWordEvents,
-      notable_motifs: buildVerseMotifs({
-        verseWordRows,
-        crossWordEvents,
-        verseBoundaryResolution
-      })
-    };
-    if (safetyRailActive) {
-      verseRecord.safety_rail = {
-        active: true,
-        provisional_delta_count: provisionalDeltaCount,
-        provisional_delta_rate: Number(provisionalDeltaRate.toFixed(6)),
-        threshold: safetyRailStats.threshold
-      };
-    }
-    if (opts.mode === "WINDOW") {
-      verseRecord.window_size = opts.windowSize;
-    }
+    const verseRecord = buildVerseTraceRecord({
+      traceVersion: TRACE_VERSION,
+      traceRenderVersion: TRACE_RENDER_VERSION,
+      semanticVersion,
+      verseRef: verseEntry.ref,
+      verseRefKey: verseEntry.ref_key,
+      modeLabel: opts.modeLabel,
+      mode: opts.mode,
+      windowSize: opts.windowSize,
+      safetyRailActive,
+      provisionalDeltaCount,
+      provisionalDeltaRate,
+      safetyRailThreshold: safetyRailStats.threshold,
+      verseWordRows,
+      crossWordEvents,
+      totalEventsInVerse,
+      boundaryByType,
+      sortCountObjectByKey,
+      buildVerseBoundaryResolution,
+      buildVerseMotifs
+    });
     verseRows.push(canonicalizeVerseTraceRecord(verseRecord));
   }
 

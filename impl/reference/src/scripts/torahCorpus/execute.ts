@@ -132,7 +132,12 @@ type BuildVerseWordRowsMetaInput = {
   tokenize: (surface: string) => unknown[];
   tokenIdBySignature: Map<string, number>;
   compiledTokenIdSet: Set<string>;
-  buildRefKey: (ref: { book: string; chapter: number; verse: number; token_index: number }) => string;
+  buildRefKey: (ref: {
+    book: string;
+    chapter: number;
+    verse: number;
+    token_index: number;
+  }) => string;
   resolveWordTokenIds: (args: {
     surface: string;
     tokenize: (surface: string) => unknown[];
@@ -143,6 +148,116 @@ type BuildVerseWordRowsMetaInput = {
     unknown_signatures: string[];
     missing_bundle_ids: number[];
   };
+};
+
+type ExecutionResult = {
+  flowRaw: string[];
+  flowCompact: string[];
+  traceEvents: unknown[];
+  runtimeErrorMessage: string;
+  windowStart: number;
+  safetyRailClamped?: boolean;
+  safetyRailDeltaOps?: unknown;
+};
+
+type VerseWordRow = {
+  boundary_ops: string[];
+};
+
+type BuildWordExecutionArtifactsInput = {
+  traceVersion: string;
+  traceRenderVersion: string;
+  semanticVersion: string;
+  mode: string;
+  debugRawEvents: boolean;
+  meta: {
+    ref: {
+      book: string;
+      chapter: number;
+      verse: number;
+      token_index: number;
+    };
+    ref_key: string;
+    surface: string;
+    token_ids: number[];
+  };
+  wordIndex: number;
+  baselineExecution: ExecutionResult;
+  execution: ExecutionResult;
+  compileFlowString: (skeleton: string[], separator: string) => string;
+  extractBoundaryOps: (skeleton: string[]) => string[];
+  explainDeltaByMode: (args: {
+    mode: string;
+    tokenIndex: number;
+    windowStart: number;
+    boundaryOps: string[];
+  }) => string;
+  arraysEqual: (left: string[], right: string[]) => boolean;
+  canonicalizeWordTraceRecord: (record: Record<string, unknown>) => Record<string, unknown>;
+};
+
+type BuildWordExecutionArtifactsOutput = {
+  row: Record<string, unknown>;
+  flowLine: string;
+  baselineRow: {
+    ref_key: string;
+    skeleton: string[];
+  };
+  runtimeErrorSample: {
+    ref_key: string;
+    surface: string;
+    message: string;
+  } | null;
+  skeleton: string[];
+  skeletonKey: string;
+  boundaryOps: string[];
+  traceEventCount: number;
+  verseWordRow: {
+    ref_key: string;
+    token_index: number;
+    skeleton: string[];
+    boundary_ops: string[];
+  };
+  deltaEvent: {
+    ref_key: string;
+    token_index: number;
+    baseline_skeleton: string[];
+    observed_skeleton: string[];
+    explanation: string;
+  } | null;
+};
+
+type BuildVerseTraceRecordInput = {
+  traceVersion: string;
+  traceRenderVersion: string;
+  semanticVersion: string;
+  verseRef: {
+    book: string;
+    chapter: number;
+    verse: number;
+  };
+  verseRefKey: string;
+  modeLabel: string;
+  mode: string;
+  windowSize: number | null;
+  safetyRailActive: boolean;
+  provisionalDeltaCount: number;
+  provisionalDeltaRate: number;
+  safetyRailThreshold: number;
+  verseWordRows: VerseWordRow[];
+  crossWordEvents: unknown[];
+  totalEventsInVerse: number;
+  boundaryByType: Record<string, number>;
+  sortCountObjectByKey: (counts: Record<string, number>) => Record<string, number>;
+  buildVerseBoundaryResolution: (
+    verseWordRows: VerseWordRow[],
+    boundaryByType: Record<string, number>
+  ) => unknown;
+  buildVerseMotifs: (args: {
+    verseWordRows: VerseWordRow[];
+    crossWordEvents: unknown[];
+    verseBoundaryResolution: unknown;
+  }) => unknown[];
 };
 
 export function resolveExecutePaths(opts: ExecutePathOpts): ExecutePaths {
@@ -260,6 +375,295 @@ export function buildVerseWordRowsMeta({
   }
 
   return { wordRowsMeta, missingBundles, unknownSignatures };
+}
+
+export function selectModeExecutions(args: {
+  mode: string;
+  baselineExecutions: ExecutionResult[];
+  words: string[];
+  windowSize: number | null;
+  defaultWindowSize: number;
+  runVerseWordFlows: (input: {
+    words: string[];
+    runProgramWithTrace: unknown;
+    createInitialState: unknown;
+    allowRuntimeErrors: boolean;
+    verseRefKey: string;
+  }) => ExecutionResult[];
+  runWindowWordFlows: (input: {
+    words: string[];
+    windowSize: number;
+    runProgramWithTrace: unknown;
+    createInitialState: unknown;
+    allowRuntimeErrors: boolean;
+    verseRefKey: string;
+  }) => ExecutionResult[];
+  runProgramWithTrace: unknown;
+  createInitialState: unknown;
+  allowRuntimeErrors: boolean;
+  verseRefKey: string;
+}): ExecutionResult[] {
+  if (args.mode === "WORD") {
+    return args.baselineExecutions.map((execution) => ({
+      flowRaw: [...execution.flowRaw],
+      flowCompact: [...execution.flowCompact],
+      traceEvents: [...execution.traceEvents],
+      runtimeErrorMessage: execution.runtimeErrorMessage,
+      windowStart: execution.windowStart
+    }));
+  }
+  if (args.mode === "VERSE") {
+    return args.runVerseWordFlows({
+      words: args.words,
+      runProgramWithTrace: args.runProgramWithTrace,
+      createInitialState: args.createInitialState,
+      allowRuntimeErrors: args.allowRuntimeErrors,
+      verseRefKey: args.verseRefKey
+    });
+  }
+  return args.runWindowWordFlows({
+    words: args.words,
+    windowSize: args.windowSize ?? args.defaultWindowSize,
+    runProgramWithTrace: args.runProgramWithTrace,
+    createInitialState: args.createInitialState,
+    allowRuntimeErrors: args.allowRuntimeErrors,
+    verseRefKey: args.verseRefKey
+  });
+}
+
+export function computeSafetyRailActivation(args: {
+  mode: string;
+  safetyRailEnabled: boolean;
+  safetyRailThreshold: number;
+  wordRowsMeta: Array<{ unknown_signatures: string[] }>;
+  baselineExecutions: ExecutionResult[];
+  modeExecutions: ExecutionResult[];
+  arraysEqual: (left: string[], right: string[]) => boolean;
+}): {
+  provisionalDeltaCount: number;
+  provisionalDeltaRate: number;
+  safetyRailActive: boolean;
+} {
+  const provisionalDeltaCount = args.wordRowsMeta.reduce((sum, meta, index) => {
+    if (meta.unknown_signatures.length > 0) {
+      return sum;
+    }
+    return args.arraysEqual(
+      args.baselineExecutions[index].flowCompact,
+      args.modeExecutions[index].flowCompact
+    )
+      ? sum
+      : sum + 1;
+  }, 0);
+  const provisionalDeltaRate =
+    args.wordRowsMeta.length > 0 ? provisionalDeltaCount / args.wordRowsMeta.length : 0;
+  const safetyRailActive =
+    args.mode !== "WORD" && args.safetyRailEnabled && provisionalDeltaRate > args.safetyRailThreshold;
+  return {
+    provisionalDeltaCount,
+    provisionalDeltaRate,
+    safetyRailActive
+  };
+}
+
+export function applyWordExecutionPolicy(args: {
+  metaUnknownSignatures: string[];
+  baselineExecution: ExecutionResult;
+  modeExecution: ExecutionResult;
+  mode: string;
+  safetyRailActive: boolean;
+  arraysEqual: (left: string[], right: string[]) => boolean;
+  skeletonDeltaOps: (previousSkeleton: string[], nextSkeleton: string[]) => unknown;
+  isSafetyRailDeltaAllowed: (deltaOps: unknown) => boolean;
+  makeUnknownSignatureTraceEvent: (signature: string) => unknown;
+}): {
+  execution: ExecutionResult;
+  changedFromBaseline: boolean;
+  allowedDeltaIncrement: number;
+  blockedDeltaIncrement: number;
+  clampedWordIncrement: number;
+} {
+  let execution = args.modeExecution;
+
+  if (args.metaUnknownSignatures.length > 0) {
+    execution = {
+      flowRaw: ["ERROR.UNKNOWN_SIGNATURE"],
+      flowCompact: ["ERROR.UNKNOWN_SIGNATURE"],
+      traceEvents: [
+        args.makeUnknownSignatureTraceEvent(args.metaUnknownSignatures[0] ?? "unknown")
+      ],
+      runtimeErrorMessage: "",
+      windowStart: execution?.windowStart ?? args.baselineExecution.windowStart
+    };
+  }
+
+  const changedFromBaseline = !args.arraysEqual(
+    args.baselineExecution.flowCompact,
+    execution.flowCompact
+  );
+
+  if (args.safetyRailActive && changedFromBaseline) {
+    const deltaOps = args.skeletonDeltaOps(
+      args.baselineExecution.flowCompact,
+      execution.flowCompact
+    );
+    if (!args.isSafetyRailDeltaAllowed(deltaOps)) {
+      execution = {
+        flowRaw: [...args.baselineExecution.flowRaw],
+        flowCompact: [...args.baselineExecution.flowCompact],
+        traceEvents: [...args.baselineExecution.traceEvents],
+        runtimeErrorMessage: args.baselineExecution.runtimeErrorMessage,
+        windowStart: execution.windowStart,
+        safetyRailClamped: true,
+        safetyRailDeltaOps: deltaOps
+      };
+      return {
+        execution,
+        changedFromBaseline,
+        allowedDeltaIncrement: 0,
+        blockedDeltaIncrement: 1,
+        clampedWordIncrement: 1
+      };
+    }
+    return {
+      execution,
+      changedFromBaseline,
+      allowedDeltaIncrement: 1,
+      blockedDeltaIncrement: 0,
+      clampedWordIncrement: 0
+    };
+  }
+
+  return {
+    execution,
+    changedFromBaseline,
+    allowedDeltaIncrement: changedFromBaseline && args.mode !== "WORD" ? 1 : 0,
+    blockedDeltaIncrement: 0,
+    clampedWordIncrement: 0
+  };
+}
+
+export function buildVerseTraceRecord(args: BuildVerseTraceRecordInput): Record<string, unknown> {
+  const verseEndBoundaryOps =
+    args.verseWordRows.length > 0 ? args.verseWordRows[args.verseWordRows.length - 1].boundary_ops : [];
+  const verseBoundaryResolution = args.buildVerseBoundaryResolution(
+    args.verseWordRows,
+    args.boundaryByType
+  );
+
+  const verseRecord: Record<string, unknown> = {
+    record_kind: "VERSE_TRACE",
+    trace_version: args.traceVersion,
+    semantics_version: args.semanticVersion,
+    render_version: args.traceRenderVersion,
+    ref: args.verseRef,
+    ref_key: args.verseRefKey,
+    mode: args.modeLabel,
+    words_total: args.verseWordRows.length,
+    total_events: args.totalEventsInVerse,
+    boundary_events: {
+      total: Object.values(args.boundaryByType).reduce((sum, count) => sum + Number(count), 0),
+      by_type: args.sortCountObjectByKey(args.boundaryByType),
+      verse_end: verseEndBoundaryOps,
+      verse_boundary_operator: verseBoundaryResolution
+    },
+    cross_word_events: args.crossWordEvents,
+    notable_motifs: args.buildVerseMotifs({
+      verseWordRows: args.verseWordRows,
+      crossWordEvents: args.crossWordEvents,
+      verseBoundaryResolution
+    })
+  };
+
+  if (args.safetyRailActive) {
+    verseRecord.safety_rail = {
+      active: true,
+      provisional_delta_count: args.provisionalDeltaCount,
+      provisional_delta_rate: Number(args.provisionalDeltaRate.toFixed(6)),
+      threshold: args.safetyRailThreshold
+    };
+  }
+  if (args.mode === "WINDOW") {
+    verseRecord.window_size = args.windowSize;
+  }
+
+  return verseRecord;
+}
+
+export function buildWordExecutionArtifacts(
+  args: BuildWordExecutionArtifactsInput
+): BuildWordExecutionArtifactsOutput {
+  const skeleton = args.execution.flowCompact;
+  const flow = args.compileFlowString(skeleton, " ⇢ ");
+  const skeletonKey = skeleton.join(" -> ");
+  const boundaryOps = args.extractBoundaryOps(skeleton);
+
+  const rawWordRecord: Record<string, unknown> = {
+    record_kind: "WORD_TRACE",
+    trace_version: args.traceVersion,
+    semantics_version: args.semanticVersion,
+    render_version: args.traceRenderVersion,
+    ref: args.meta.ref,
+    ref_key: args.meta.ref_key,
+    surface: args.meta.surface,
+    token_ids: args.meta.token_ids,
+    events: args.execution.traceEvents,
+    skeleton,
+    flow,
+    mode: args.mode
+  };
+  if (args.mode === "WINDOW") {
+    rawWordRecord.window_start = args.execution.windowStart ?? 1;
+  }
+
+  const row = args.canonicalizeWordTraceRecord(rawWordRecord);
+  if (args.debugRawEvents) {
+    row.skeleton_raw = args.execution.flowRaw;
+  }
+
+  const changedFromBaseline = !args.arraysEqual(args.baselineExecution.flowCompact, skeleton);
+  const deltaEvent =
+    args.mode !== "WORD" && changedFromBaseline
+      ? {
+          ref_key: args.meta.ref_key,
+          token_index: args.wordIndex + 1,
+          baseline_skeleton: args.baselineExecution.flowCompact,
+          observed_skeleton: skeleton,
+          explanation: args.explainDeltaByMode({
+            mode: args.mode,
+            tokenIndex: args.wordIndex + 1,
+            windowStart: args.execution.windowStart ?? 1,
+            boundaryOps
+          })
+        }
+      : null;
+
+  return {
+    row,
+    flowLine: `${args.meta.ref_key}\t${args.meta.surface}\t${flow}`,
+    baselineRow: {
+      ref_key: args.meta.ref_key,
+      skeleton: args.baselineExecution.flowCompact
+    },
+    runtimeErrorSample: args.execution.runtimeErrorMessage
+      ? {
+          ref_key: args.meta.ref_key,
+          surface: args.meta.surface,
+          message: args.execution.runtimeErrorMessage
+        }
+      : null,
+    skeleton,
+    skeletonKey,
+    boundaryOps,
+    traceEventCount: args.execution.traceEvents.length,
+    verseWordRow: {
+      ref_key: args.meta.ref_key,
+      token_index: args.wordIndex + 1,
+      skeleton,
+      boundary_ops: boundaryOps
+    },
+    deltaEvent
+  };
 }
 
 function sortRefLike(left: string, right: string): number {
