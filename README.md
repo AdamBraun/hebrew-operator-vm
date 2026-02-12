@@ -54,6 +54,32 @@ Options:
 - `--keep-teamim` to keep cantillation marks.
 - `--strip-teamim` to explicitly strip cantillation marks (default, U+0591-U+05AF).
 
+### Grapheme Signature Token Registry (Observed-Only)
+
+Extract all observed Hebrew grapheme signatures from normalized Torah text and assign stable TokenIDs:
+
+```bash
+npm run token-registry -- --input data/torah.normalized.txt
+```
+
+Verify deterministic outputs against the same input:
+
+```bash
+npm run token-registry:verify -- --input data/torah.normalized.txt
+```
+
+Outputs:
+
+- `data/tokens.registry.json`
+- `data/tokens.signatures.txt`
+- `reports/token_registry_report.md`
+
+Notes:
+
+- Clusters are parsed as `base-letter + zero-or-more combining marks`.
+- Supported combining marks are explicit; unsupported combining marks fail loudly with codepoint + context.
+- TokenIDs are assigned deterministically by sorted signature order.
+
 ### Torah Flow Corpus
 
 For a full Torah-wide word corpus with stable grapheme TokenIDs and flow traces:

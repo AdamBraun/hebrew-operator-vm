@@ -1,0 +1,171 @@
+# Token Registry Report
+
+- input: /Users/adambraun/projects/letters/data/torah.normalized.txt
+- records scanned: 5846
+- grapheme clusters scanned: 306269
+- grapheme clusters mapped: 306269
+- distinct signatures: 763
+- token registry checksum (sha256): 5ef22af9595dd64d36853b31b6fefc808092309b2943c0da895ac208e96c3b99
+- signatures list checksum (sha256): 89fadf043f7d506b273151f2d2e4255de30dc7b7258ace33892b8f8e9693aca7
+
+## Validation
+
+- completeness: pass
+- unknown-mark policy: unsupported combining marks fail loudly
+- token assignment policy: sorted by base letter then sorted mark sequence
+
+## Base Letter Counts
+
+- א: 27099
+- ב: 16409
+- ג: 2118
+- ד: 7057
+- ה: 28101
+- ו: 30593
+- ז: 2212
+- ח: 7200
+- ט: 1809
+- י: 31627
+- ך: 3361
+- כ: 8637
+- ל: 21588
+- ם: 10637
+- מ: 14488
+- ן: 4276
+- נ: 9891
+- ס: 2257
+- ע: 11261
+- ף: 832
+- פ: 4318
+- ץ: 1036
+- צ: 2942
+- ק: 4706
+- ר: 18194
+- ש: 15625
+- ת: 17995
+
+## Combining Mark Frequencies
+
+- U+05BC (HEBREW POINT DAGESH OR MAPIQ): 42571
+- U+05B8 (HEBREW POINT QAMATS): 37217
+- U+05B0 (HEBREW POINT SHEVA): 36781
+- U+05B7 (HEBREW POINT PATAH): 30677
+- U+05B4 (HEBREW POINT HIRIQ): 25511
+- U+05B6 (HEBREW POINT SEGOL): 22485
+- U+05B9 (HEBREW POINT HOLAM): 21829
+- U+05B5 (HEBREW POINT TSERE): 15809
+- U+05C1 (HEBREW POINT SHIN DOT): 12162
+- U+05BD (HEBREW POINT METEG): 10109
+- U+05B2 (HEBREW POINT HATAF PATAH): 6901
+- U+05C2 (HEBREW POINT SIN DOT): 3420
+- U+05C7 (HEBREW POINT QAMATS QATAN): 1961
+- U+05B1 (HEBREW POINT HATAF SEGOL): 1119
+- U+05BB (HEBREW POINT QUBUTS): 1072
+- U+05B3 (HEBREW POINT HATAF QAMATS): 116
+- U+05BA (HEBREW POINT HOLAM HASER FOR VAV): 100
+- U+05C4 (HEBREW MARK UPPER DOT): 32
+- U+05BF (HEBREW POINT RAFE): 27
+- U+034F (COMBINING GRAPHEME JOINER): 14
+
+## Top 100 Signatures
+
+- TokenID 280: BASE=י|MARKS=NONE (count=19111)
+- TokenID 136: BASE=ה|MARKS=NONE (count=11230)
+- TokenID 400: BASE=ם|MARKS=NONE (count=10637)
+- TokenID 724: BASE=ת|MARKS=NONE (count=8938)
+- TokenID 193: BASE=ו|MARKS=U+05BC (count=7719)
+- TokenID 639: BASE=ר|MARKS=NONE (count=7584)
+- TokenID 364: BASE=ל|MARKS=NONE (count=7187)
+- TokenID 1: BASE=א|MARKS=NONE (count=7026)
+- TokenID 187: BASE=ו|MARKS=U+05B9 (count=7006)
+- TokenID 163: BASE=ו|MARKS=U+05B0 (count=6726)
+- TokenID 14: BASE=א|MARKS=U+05B6 (count=5375)
+- TokenID 149: BASE=ה|MARKS=U+05B7 (count=5262)
+- TokenID 439: BASE=ן|MARKS=NONE (count=4248)
+- TokenID 179: BASE=ו|MARKS=U+05B7 (count=4244)
+- TokenID 406: BASE=מ|MARKS=U+05B4 (count=3447)
+- TokenID 6: BASE=א|MARKS=U+05B2 (count=3384)
+- TokenID 365: BASE=ל|MARKS=U+05B0 (count=3360)
+- TokenID 152: BASE=ה|MARKS=U+05B8 (count=3177)
+- TokenID 687: BASE=ש|MARKS=U+05B6,U+05C1 (count=3023)
+- TokenID 32: BASE=ב|MARKS=U+05B0,U+05BC (count=2947)
+- TokenID 282: BASE=י|MARKS=U+05B0 (count=2924)
+- TokenID 521: BASE=ע|MARKS=U+05B7 (count=2895)
+- TokenID 285: BASE=י|MARKS=U+05B4 (count=2790)
+- TokenID 664: BASE=ש|MARKS=U+05B0,U+05C1 (count=2665)
+- TokenID 640: BASE=ר|MARKS=U+05B0 (count=2419)
+- TokenID 650: BASE=ר|MARKS=U+05B8 (count=2354)
+- TokenID 11: BASE=א|MARKS=U+05B5 (count=2345)
+- TokenID 101: BASE=ד|MARKS=NONE (count=2330)
+- TokenID 17: BASE=א|MARKS=U+05B7 (count=2317)
+- TokenID 385: BASE=ל|MARKS=U+05B8 (count=2314)
+- TokenID 323: BASE=ך|MARKS=U+05B8 (count=2226)
+- TokenID 30: BASE=ב|MARKS=NONE (count=2218)
+- TokenID 390: BASE=ל|MARKS=U+05B9 (count=2218)
+- TokenID 20: BASE=א|MARKS=U+05B8 (count=1971)
+- TokenID 183: BASE=ו|MARKS=U+05B8 (count=1947)
+- TokenID 31: BASE=ב|MARKS=U+05B0 (count=1912)
+- TokenID 154: BASE=ה|MARKS=U+05B9 (count=1887)
+- TokenID 513: BASE=ע|MARKS=U+05B2 (count=1859)
+- TokenID 720: BASE=ש|MARKS=U+05C1 (count=1852)
+- TokenID 524: BASE=ע|MARKS=U+05B8 (count=1689)
+- TokenID 450: BASE=נ|MARKS=U+05B5 (count=1667)
+- TokenID 162: BASE=ו|MARKS=NONE (count=1621)
+- TokenID 646: BASE=ר|MARKS=U+05B6 (count=1612)
+- TokenID 463: BASE=נ|MARKS=U+05B8 (count=1562)
+- TokenID 418: BASE=מ|MARKS=U+05B7 (count=1533)
+- TokenID 239: BASE=ח|MARKS=U+05B7 (count=1518)
+- TokenID 9: BASE=א|MARKS=U+05B4 (count=1492)
+- TokenID 446: BASE=נ|MARKS=U+05B4 (count=1458)
+- TokenID 143: BASE=ה|MARKS=U+05B4 (count=1392)
+- TokenID 402: BASE=מ|MARKS=U+05B0 (count=1371)
+- TokenID 510: BASE=ע|MARKS=NONE (count=1355)
+- TokenID 147: BASE=ה|MARKS=U+05B6 (count=1327)
+- TokenID 747: BASE=ת|MARKS=U+05B8 (count=1327)
+- TokenID 369: BASE=ל|MARKS=U+05B4 (count=1318)
+- TokenID 51: BASE=ב|MARKS=U+05B8 (count=1267)
+- TokenID 302: BASE=י|MARKS=U+05B8 (count=1253)
+- TokenID 426: BASE=מ|MARKS=U+05B9 (count=1203)
+- TokenID 642: BASE=ר|MARKS=U+05B4 (count=1191)
+- TokenID 52: BASE=ב|MARKS=U+05B8,U+05BC (count=1182)
+- TokenID 381: BASE=ל|MARKS=U+05B7 (count=1166)
+- TokenID 22: BASE=א|MARKS=U+05B9 (count=1165)
+- TokenID 48: BASE=ב|MARKS=U+05B7,U+05BC (count=1160)
+- TokenID 231: BASE=ח|MARKS=U+05B2 (count=1097)
+- TokenID 321: BASE=ך|MARKS=U+05B0 (count=1097)
+- TokenID 338: BASE=כ|MARKS=U+05B6 (count=1085)
+- TokenID 286: BASE=י|MARKS=U+05B4,U+05BC (count=1083)
+- TokenID 228: BASE=ח|MARKS=NONE (count=1075)
+- TokenID 748: BASE=ת|MARKS=U+05B8,U+05BC (count=1074)
+- TokenID 414: BASE=מ|MARKS=U+05B6 (count=1052)
+- TokenID 702: BASE=ש|MARKS=U+05B8,U+05C1 (count=1051)
+- TokenID 442: BASE=נ|MARKS=NONE (count=1046)
+- TokenID 602: BASE=ק|MARKS=U+05B0 (count=1046)
+- TokenID 241: BASE=ח|MARKS=U+05B8 (count=1044)
+- TokenID 410: BASE=מ|MARKS=U+05B5 (count=1042)
+- TokenID 569: BASE=ץ|MARKS=NONE (count=1036)
+- TokenID 422: BASE=מ|MARKS=U+05B8 (count=1022)
+- TokenID 665: BASE=ש|MARKS=U+05B0,U+05C2 (count=984)
+- TokenID 5: BASE=א|MARKS=U+05B1 (count=960)
+- TokenID 731: BASE=ת|MARKS=U+05B4,U+05BC (count=957)
+- TokenID 373: BASE=ל|MARKS=U+05B5 (count=940)
+- TokenID 145: BASE=ה|MARKS=U+05B5 (count=930)
+- TokenID 652: BASE=ר|MARKS=U+05B9 (count=914)
+- TokenID 377: BASE=ל|MARKS=U+05B6 (count=906)
+- TokenID 517: BASE=ע|MARKS=U+05B5 (count=900)
+- TokenID 648: BASE=ר|MARKS=U+05B7 (count=900)
+- TokenID 572: BASE=צ|MARKS=U+05B0 (count=888)
+- TokenID 35: BASE=ב|MARKS=U+05B4 (count=865)
+- TokenID 360: BASE=כ|MARKS=U+05BC,U+05C7 (count=851)
+- TokenID 534: BASE=פ|MARKS=U+05B0 (count=840)
+- TokenID 672: BASE=ש|MARKS=U+05B4,U+05C1 (count=833)
+- TokenID 532: BASE=ף|MARKS=NONE (count=832)
+- TokenID 515: BASE=ע|MARKS=U+05B4 (count=831)
+- TokenID 331: BASE=כ|MARKS=U+05B4,U+05BC (count=825)
+- TokenID 307: BASE=י|MARKS=U+05B9,U+05BC (count=813)
+- TokenID 601: BASE=ק|MARKS=NONE (count=800)
+- TokenID 121: BASE=ד|MARKS=U+05B8 (count=762)
+- TokenID 401: BASE=מ|MARKS=NONE (count=740)
+- TokenID 444: BASE=נ|MARKS=U+05B0 (count=717)
+- TokenID 644: BASE=ר|MARKS=U+05B5 (count=713)
+- TokenID 40: BASE=ב|MARKS=U+05B5,U+05BC (count=711)
