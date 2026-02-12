@@ -140,6 +140,31 @@ Outputs:
 - `corpus/word_flows.txt`: aligned one-line flow strings (`ref_key<TAB>surface<TAB>flow`).
 - `reports/execution_report.md`: coverage, determinism checksum basis, error counts, top skeletons, performance.
 
+### Pattern Index + Query API
+
+Build searchable skeleton/motif indexes from `corpus/word_traces.jsonl`:
+
+```bash
+npm run pattern-index -- --input corpus/word_traces.jsonl --index-dir index
+```
+
+Core artifacts:
+
+- `index/skeleton_counts.json`: deterministic `skeleton_key -> count` map + checksum.
+- `index/skeleton_to_occurrences.bin`: JSON-v1 `skeleton_key -> [occurrence...]` payload + k-gram postings.
+- `index/motif_index.json`: motif match precompute by skeleton key.
+- `reports/pattern_index_report.md`: top-100 skeletons, motif counts, and build summary.
+
+Query examples:
+
+```bash
+npm run pattern-query -- skeleton "GIMEL.BESTOW|TAV.FINALIZE" --index-dir index
+npm run pattern-query -- subsequence "GIMEL.BESTOW|TAV.FINALIZE" --index-dir index
+npm run pattern-query -- suffix "*.FINALIZE" --index-dir index
+npm run pattern-query -- contains "BESTOW" --then "SEAL" --index-dir index
+npm run pattern-query -- motif ENDS_WITH_FINALIZE --index-dir index
+```
+
 Integrity check:
 
 ```bash

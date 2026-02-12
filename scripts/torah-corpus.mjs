@@ -82,6 +82,12 @@ const ALLOWED_MARKS = new Set([
   "\u05C1",
   "\u05C2"
 ]);
+const ALLOWED_MARK_CODEPOINTS = new Set(
+  Array.from(ALLOWED_MARKS)
+    .map((mark) => mark.codePointAt(0))
+    .filter((codepoint) => codepoint !== undefined)
+);
+const SIGNATURE_MARK_ALIAS_MAP = new Map([[0x05c7, 0x05b8]]);
 
 const RO_SH_ORDER = ["holam"];
 const TOCH_ORDER = ["mappiq", "shuruk", "dagesh", "shinDot", "sinDot"];
@@ -686,37 +692,130 @@ function encodeRegistrySignature(base, markCodepoints) {
   return `BASE=${base}|MARKS=${marksValue}`;
 }
 
+function parseCodepointString(value) {
+  const text = String(value ?? "").trim();
+  if (!text) {
+    return null;
+  }
+  const stripped = text.replace(/^U\+/iu, "");
+  const parsed = Number.parseInt(stripped, 16);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+  return parsed;
+}
+
+function markCodepointsFromDescriptor(descriptor) {
+  if (Array.isArray(descriptor?.marks)) {
+    return descriptor.marks
+      .map((mark) => parseCodepointString(mark))
+      .filter((codepoint) => codepoint !== null);
+  }
+
+  if (typeof descriptor?.signature === "string") {
+    const parts = descriptor.signature.split("|");
+    const marksPart = parts.find((part) => part.startsWith("MARKS="));
+    if (!marksPart) {
+      return [];
+    }
+    const value = marksPart.slice("MARKS=".length);
+    if (!value || value === "NONE") {
+      return [];
+    }
+    return value
+      .split(",")
+      .map((mark) => parseCodepointString(mark))
+      .filter((codepoint) => codepoint !== null);
+  }
+
+  return [];
+}
+
+function baseLetterFromDescriptor(descriptor) {
+  if (typeof descriptor?.base === "string" && descriptor.base.length > 0) {
+    return descriptor.base;
+  }
+  if (typeof descriptor?.signature === "string") {
+    const match = descriptor.signature.match(/^BASE=([^|]+)\|MARKS=/u);
+    if (match?.[1]) {
+      return match[1];
+    }
+  }
+  return "";
+}
+
+function normalizeMarkCodepointsForRuntime(markCodepoints) {
+  const normalized = [];
+  for (const markCodepoint of markCodepoints) {
+    const mapped = SIGNATURE_MARK_ALIAS_MAP.get(markCodepoint) ?? markCodepoint;
+    if (!ALLOWED_MARK_CODEPOINTS.has(mapped)) {
+      continue;
+    }
+    normalized.push(mapped);
+  }
+  return normalized.sort((left, right) => left - right);
+}
+
 function tokenRegistrySignature(token) {
   const raw = String(token.raw ?? token.letter ?? "").normalize("NFD");
   const chars = [...raw];
   const base = chars[0] ?? tokenBaseLetter(token);
-  const markCodepoints = chars
-    .slice(1)
-    .map((mark) => mark.codePointAt(0))
-    .filter((codepoint) => codepoint !== undefined)
-    .sort((left, right) => left - right);
+  const markCodepoints = normalizeMarkCodepointsForRuntime(
+    chars
+      .slice(1)
+      .map((mark) => mark.codePointAt(0))
+      .filter((codepoint) => codepoint !== undefined)
+  );
   return encodeRegistrySignature(base, markCodepoints);
 }
 
 function buildTokenIdBySignature(registryPayload) {
+  const descriptors = [];
   const map = new Map();
+  const exactSignatures = new Set();
+
   for (const [tokenIdRaw, descriptor] of Object.entries(registryPayload?.tokens ?? {})) {
     const tokenId = Number(tokenIdRaw);
     if (!Number.isFinite(tokenId)) {
       continue;
     }
+
+    const base = baseLetterFromDescriptor(descriptor);
+    if (!base) {
+      continue;
+    }
+    const descriptorMarkCodepoints = markCodepointsFromDescriptor(descriptor);
     const signature =
-      descriptor?.signature ??
-      encodeRegistrySignature(
-        descriptor?.base,
-        Array.isArray(descriptor?.marks)
-          ? descriptor.marks
-              .map((mark) => Number.parseInt(String(mark).replace(/^U\+/u, ""), 16))
-              .filter((codepoint) => Number.isFinite(codepoint))
-          : []
-      );
+      descriptor?.signature ?? encodeRegistrySignature(base, descriptorMarkCodepoints);
     map.set(signature, tokenId);
+    exactSignatures.add(signature);
+    descriptors.push({ tokenId, base, signature, descriptorMarkCodepoints });
   }
+
+  const ambiguousAliases = new Set();
+  for (const descriptor of descriptors) {
+    const normalizedSignature = encodeRegistrySignature(
+      descriptor.base,
+      normalizeMarkCodepointsForRuntime(descriptor.descriptorMarkCodepoints)
+    );
+    if (
+      normalizedSignature === descriptor.signature ||
+      exactSignatures.has(normalizedSignature) ||
+      ambiguousAliases.has(normalizedSignature)
+    ) {
+      continue;
+    }
+
+    const existing = map.get(normalizedSignature);
+    if (existing === undefined || existing === descriptor.tokenId) {
+      map.set(normalizedSignature, descriptor.tokenId);
+      continue;
+    }
+
+    map.delete(normalizedSignature);
+    ambiguousAliases.add(normalizedSignature);
+  }
+
   return map;
 }
 
