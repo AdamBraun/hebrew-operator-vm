@@ -73,6 +73,43 @@ const {
   markdownSafe
 } = torahCorpusReport;
 
+function loadTorahCorpusExecute() {
+  const executeModulePath = path.resolve(
+    process.cwd(),
+    "impl/reference/dist/scripts/torahCorpus/execute"
+  );
+  try {
+    return cjsRequire(executeModulePath);
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "MODULE_NOT_FOUND") {
+      throw new Error(
+        "Missing compiled torah corpus execute module. Run `npm run build` before `node scripts/torah-corpus.mjs`."
+      );
+    }
+    throw error;
+  }
+}
+
+const torahCorpusExecute = loadTorahCorpusExecute();
+const { buildExecuteReports } = torahCorpusExecute;
+
+function loadTorahCorpusDiff() {
+  const diffModulePath = path.resolve(process.cwd(), "impl/reference/dist/scripts/torahCorpus/diff");
+  try {
+    return cjsRequire(diffModulePath);
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "MODULE_NOT_FOUND") {
+      throw new Error(
+        "Missing compiled torah corpus diff module. Run `npm run build` before `node scripts/torah-corpus.mjs`."
+      );
+    }
+    throw error;
+  }
+}
+
+const torahCorpusDiff = loadTorahCorpusDiff();
+const { buildDiffPayload } = torahCorpusDiff;
+
 const TRACE_VERSION = "1.0.0";
 const TRACE_RENDER_VERSION = "1.0.0";
 const SPACE_TOKEN = "□";
@@ -3161,207 +3198,42 @@ async function runExecute(argv) {
   const topSkeletons = Array.from(skeletonCounts.entries())
     .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "en"))
     .slice(0, 20);
-
-  const traceSha256 = sha256FromBuffer(Buffer.from(traceContent, "utf8"));
-  const verseTraceSha256 = sha256FromBuffer(Buffer.from(verseTraceContent, "utf8"));
-  const flowDeterminismFailures = rows.filter(
-    (row) => row.flow !== compileFlowString(row.skeleton, " ⇢ ")
-  ).length;
-  const wordModeMismatches = rows.filter(
-    (row, index) => !arraysEqual(row.skeleton, baselineRows[index]?.skeleton ?? [])
-  ).length;
-  const explainabilityFailures = modeDiffEvents.filter(
-    (event) => typeof event.explanation !== "string" || event.explanation.length === 0
-  ).length;
-  const explainabilityPass =
-    opts.mode === "WORD" || modeDiffEvents.length === 0 || explainabilityFailures === 0;
-  const wordModeGateText =
-    opts.mode === "WORD"
-      ? `${wordModeMismatches === 0 ? "PASS" : "FAIL"} (${rows.length - wordModeMismatches}/${rows.length})`
-      : `N/A (${opts.modeLabel}; baseline_deltas=${modeDiffEvents.length})`;
-  const explainabilityGateText =
-    opts.mode === "WORD"
-      ? "PASS (WORD baseline mode)"
-      : modeDiffEvents.length === 0
-        ? "PASS (0/0)"
-        : `${explainabilityPass ? "PASS" : "FAIL"} (${modeDiffEvents.length - explainabilityFailures}/${modeDiffEvents.length})`;
-  const safetyRailGateText =
-    !safetyRailStats.enabled || opts.mode === "WORD"
-      ? "N/A"
-      : safetyRailStats.activated_verses === 0
-        ? "PASS (not triggered)"
-        : `ACTIVE (verses=${safetyRailStats.activated_verses}, clamped_words=${safetyRailStats.clamped_words})`;
-
-  const reportLines = [
-    "# Corpus Execution Report",
-    "",
-    "## Summary",
-    `- input: ${workspaceRelativePath(inputPath)}`,
-    `- token_registry: ${workspaceRelativePath(tokenRegistryPath)}`,
-    `- compiled_bundles: ${workspaceRelativePath(compiledBundlesPath)}`,
-    `- semantic_version: ${semanticVersion}`,
-    `- execution_mode: ${opts.modeLabel}`,
-    `- safety_rail_enabled: ${safetyRailStats.enabled}`,
-    `- safety_rail_threshold: ${safetyRailStats.threshold}`,
-    `- words_total: ${wordsTotal}`,
-    `- words_emitted: ${rows.length}`,
-    `- verses_total: ${versesTotal}`,
-    `- verses_sanitized: ${versesSanitized}`,
-    `- verses_skipped: ${versesSkipped}`,
-    `- verses_emitted: ${verseRows.length}`,
-    `- unique_skeletons: ${skeletonCounts.size}`,
-    `- trace_sha256: ${traceSha256}`,
-    `- verse_trace_sha256: ${verseTraceSha256}`,
-    `- elapsed_ms: ${elapsedMs.toFixed(2)}`,
-    `- words_per_second: ${(elapsedMs > 0 ? (rows.length * 1000) / elapsedMs : 0).toFixed(2)}`,
-    "",
-    "## Quality Gates",
-    `- coverage: ${rows.length === wordsTotal ? "PASS" : "FAIL"} (${rows.length}/${wordsTotal})`,
-    `- determinism_basis: trace checksum captured (${traceSha256})`,
-    `- flow_derivation: ${flowDeterminismFailures === 0 ? "PASS" : "FAIL"} (${flowDeterminismFailures} mismatches)`,
-    `- word_mode_equivalence: ${wordModeGateText}`,
-    `- explainability: ${explainabilityGateText}`,
-    `- safety_rail: ${safetyRailGateText}`,
-    "",
-    "## Errors",
-    `- unknown_signatures: ${unknownSignatures.length}`,
-    `- missing_compiled_bundles: ${missingBundles.length}`,
-    `- runtime_errors: ${runtimeErrors.length}`,
-    "",
-    "## Top Skeletons",
-    ...topSkeletons.map(([skeleton, count]) => `- ${count} x ${skeleton || "(empty)"}`),
-    "",
-    "## Outputs",
-    `- traces: ${workspaceRelativePath(traceOutPath)}`,
-    `- flows: ${workspaceRelativePath(flowsOutPath)}`,
-    `- verse_traces: ${workspaceRelativePath(verseTraceOutPath)}`,
-    `- report: ${workspaceRelativePath(reportOutPath)}`,
-    `- verse_report: ${workspaceRelativePath(verseReportOutPath)}`,
-    `- verse_motif_index: ${workspaceRelativePath(verseMotifIndexOutPath)}`
-  ];
-
-  if (unknownSignatures.length > 0) {
-    reportLines.push("", "### Unknown Signature Samples");
-    for (const sample of unknownSignatures.slice(0, 20)) {
-      reportLines.push(`- ${sample.ref_key}: ${sample.signatures.join(", ")}`);
-    }
-  }
-
-  if (missingBundles.length > 0) {
-    reportLines.push("", "### Missing Bundle Samples");
-    for (const sample of missingBundles.slice(0, 20)) {
-      reportLines.push(`- ${sample.ref_key}: token_id=${sample.token_id}`);
-    }
-  }
-
-  if (runtimeErrors.length > 0) {
-    reportLines.push("", "### Runtime Error Samples");
-    for (const sample of runtimeErrors.slice(0, 20)) {
-      reportLines.push(`- ${sample.ref_key}: ${sample.message}`);
-    }
-  }
-
-  if (modeDiffEvents.length > 0) {
-    reportLines.push("", "### Cross-Word Delta Samples");
-    for (const sample of modeDiffEvents.slice(0, 20)) {
-      reportLines.push(`- ${sample.ref_key}`);
-      reportLines.push(
-        `  - baseline: ${sample.baseline_skeleton.join(" -> ") || "(empty)"}`
-      );
-      reportLines.push(`  - observed: ${sample.observed_skeleton.join(" -> ") || "(empty)"}`);
-      reportLines.push(`  - reason: ${sample.explanation}`);
-    }
-  }
+  const { traceSha256, verseTraceSha256, reportLines, verseReportLines } = buildExecuteReports({
+    inputPath,
+    tokenRegistryPath,
+    compiledBundlesPath,
+    traceOutPath,
+    flowsOutPath,
+    reportOutPath,
+    verseTraceOutPath,
+    verseReportOutPath,
+    verseMotifIndexOutPath,
+    semanticVersion,
+    mode: opts.mode,
+    modeLabel: opts.modeLabel,
+    windowSize: opts.windowSize,
+    safetyRailStats,
+    wordsTotal,
+    versesTotal,
+    versesSanitized,
+    versesSkipped,
+    rows,
+    baselineRows,
+    modeDiffEvents,
+    verseRows,
+    uniqueSkeletons: skeletonCounts.size,
+    topSkeletons,
+    unknownSignatures,
+    missingBundles,
+    runtimeErrors,
+    elapsedMs,
+    traceContent,
+    verseTraceContent,
+    compileFlowString,
+    arraysEqual
+  });
 
   await fs.writeFile(reportOutPath, reportLines.join("\n") + "\n", "utf8");
-
-  const totalBoundaryByType = {};
-  const motifTotals = {};
-  const boundaryResolutionActionCounts = {};
-  let versesWithCrossWordEvents = 0;
-  for (const verseRow of verseRows) {
-    if ((verseRow.cross_word_events ?? []).length > 0) {
-      versesWithCrossWordEvents += 1;
-    }
-    for (const [op, count] of Object.entries(verseRow.boundary_events?.by_type ?? {})) {
-      totalBoundaryByType[op] = (totalBoundaryByType[op] ?? 0) + Number(count);
-    }
-    for (const motif of verseRow.notable_motifs ?? []) {
-      motifTotals[motif.motif] = (motifTotals[motif.motif] ?? 0) + Number(motif.count ?? 0);
-    }
-    const action = verseRow?.boundary_events?.verse_boundary_operator?.action;
-    if (typeof action === "string" && action.length > 0) {
-      boundaryResolutionActionCounts[action] = (boundaryResolutionActionCounts[action] ?? 0) + 1;
-    }
-  }
-
-  const topBoundaryRows = Object.entries(totalBoundaryByType)
-    .sort((left, right) => right[1] - left[1] || sortRefLike(left[0], right[0]))
-    .slice(0, 12)
-    .map(([op, count]) => `- ${count} x ${op}`);
-  const topMotifRows = Object.entries(motifTotals)
-    .sort((left, right) => right[1] - left[1] || sortRefLike(left[0], right[0]))
-    .slice(0, 12)
-    .map(([motif, count]) => `- ${count} x ${motif}`);
-  const boundaryResolutionRows = Object.entries(boundaryResolutionActionCounts)
-    .sort((left, right) => right[1] - left[1] || sortRefLike(left[0], right[0]))
-    .map(([action, count]) => `- ${count} x ${action}`);
-
-  const verseReportLines = [
-    "# Verse Execution Report",
-    "",
-    "## Summary",
-    `- input: ${workspaceRelativePath(inputPath)}`,
-    `- semantic_version: ${semanticVersion}`,
-    `- execution_mode: ${opts.modeLabel}`,
-    `- safety_rail_enabled: ${safetyRailStats.enabled}`,
-    `- safety_rail_threshold: ${safetyRailStats.threshold}`,
-    `- words_total: ${rows.length}`,
-    `- verses_total: ${verseRows.length}`,
-    `- changed_words_vs_word_mode: ${modeDiffEvents.length}`,
-    `- verses_with_cross_word_events: ${versesWithCrossWordEvents}`,
-    `- trace_sha256: ${traceSha256}`,
-    `- verse_trace_sha256: ${verseTraceSha256}`,
-    "",
-    "## Quality Gates",
-    `- word_mode_equivalence: ${wordModeGateText}`,
-    `- determinism: PASS (checksum basis captured)`,
-    `- explainability: ${explainabilityGateText}`,
-    `- safety_rail: ${safetyRailGateText}`,
-    "",
-    "## Boundary Operators",
-    ...(topBoundaryRows.length > 0 ? topBoundaryRows : ["- none"]),
-    "",
-    "## Verse Boundary Operator",
-    ...(boundaryResolutionRows.length > 0 ? boundaryResolutionRows : ["- none"]),
-    "",
-    "## Motif Expansions",
-    ...(topMotifRows.length > 0 ? topMotifRows : ["- none"]),
-    "",
-    "## Cross-Word Samples",
-    ...(modeDiffEvents.length > 0
-      ? modeDiffEvents.slice(0, 30).map(
-          (sample) =>
-            `- ${sample.ref_key} | ${sample.baseline_skeleton.join(" -> ") || "(empty)"} => ${sample.observed_skeleton.join(" -> ") || "(empty)"} | ${sample.explanation}`
-        )
-      : ["- none"]),
-    "",
-    "## Outputs",
-    `- traces: ${workspaceRelativePath(traceOutPath)}`,
-    `- verse_traces: ${workspaceRelativePath(verseTraceOutPath)}`,
-    `- execution_report: ${workspaceRelativePath(reportOutPath)}`,
-    `- verse_report: ${workspaceRelativePath(verseReportOutPath)}`,
-    `- verse_motif_index: ${workspaceRelativePath(verseMotifIndexOutPath)}`
-  ];
-  if (opts.mode === "WINDOW") {
-    const insertAfterExecutionMode = verseReportLines.findIndex((line) =>
-      line.startsWith("- execution_mode:")
-    );
-    if (insertAfterExecutionMode >= 0) {
-      verseReportLines.splice(insertAfterExecutionMode + 1, 0, `- window_size: ${opts.windowSize}`);
-    }
-  }
-
   await fs.writeFile(verseReportOutPath, verseReportLines.join("\n") + "\n", "utf8");
 
   const verseMotifIndexPayload = buildVerseMotifIndex({
@@ -3396,17 +3268,6 @@ async function runExecute(argv) {
   );
 }
 
-function normalizeComparableRow(row) {
-  return {
-    ref_key: row.ref_key,
-    surface: row.surface,
-    tokens: row.tokens,
-    events: row.events,
-    flow_skeleton: row.flow_skeleton,
-    one_liner: row.one_liner
-  };
-}
-
 async function runDiff(argv) {
   const opts = parseDiffArgs(argv);
   const prevPath = resolveCorpusFilePath(opts.prev);
@@ -3416,83 +3277,10 @@ async function runDiff(argv) {
     : path.join(path.dirname(nextPath), "diff.from-prev.json");
 
   const [prevRows, nextRows] = await Promise.all([readJsonl(prevPath), readJsonl(nextPath)]);
-  const prevMap = new Map(prevRows.map((row) => [row.ref_key, normalizeComparableRow(row)]));
-  const nextMap = new Map(nextRows.map((row) => [row.ref_key, normalizeComparableRow(row)]));
-  const keys = Array.from(new Set([...prevMap.keys(), ...nextMap.keys()])).sort((left, right) =>
-    left.localeCompare(right, "en")
-  );
-
-  const groups = {
-    added: [],
-    removed: [],
-    token_sequence_changed: [],
-    event_stream_changed: [],
-    flow_skeleton_changed: [],
-    one_liner_changed: [],
-    surface_changed: []
-  };
-
-  const changedWords = [];
-
-  for (const key of keys) {
-    const prev = prevMap.get(key);
-    const next = nextMap.get(key);
-    if (!prev && next) {
-      groups.added.push(key);
-      changedWords.push({ ref_key: key, why: ["added"] });
-      continue;
-    }
-    if (prev && !next) {
-      groups.removed.push(key);
-      changedWords.push({ ref_key: key, why: ["removed"] });
-      continue;
-    }
-    if (!prev || !next) {
-      continue;
-    }
-
-    const why = [];
-    if (JSON.stringify(prev.surface) !== JSON.stringify(next.surface)) {
-      groups.surface_changed.push(key);
-      why.push("surface_changed");
-    }
-    if (JSON.stringify(prev.tokens) !== JSON.stringify(next.tokens)) {
-      groups.token_sequence_changed.push(key);
-      why.push("token_sequence_changed");
-    }
-    if (JSON.stringify(prev.events) !== JSON.stringify(next.events)) {
-      groups.event_stream_changed.push(key);
-      why.push("event_stream_changed");
-    }
-    if (JSON.stringify(prev.flow_skeleton) !== JSON.stringify(next.flow_skeleton)) {
-      groups.flow_skeleton_changed.push(key);
-      why.push("flow_skeleton_changed");
-    }
-    if (JSON.stringify(prev.one_liner) !== JSON.stringify(next.one_liner)) {
-      groups.one_liner_changed.push(key);
-      why.push("one_liner_changed");
-    }
-    if (why.length > 0) {
-      changedWords.push({ ref_key: key, why });
-    }
-  }
-
-  const payload = {
-    schema_version: 1,
-    prev: workspaceRelativePath(prevPath),
-    next: workspaceRelativePath(nextPath),
-    summary: {
-      total_prev: prevRows.length,
-      total_next: nextRows.length,
-      changed_words: changedWords.length,
-      by_reason: Object.fromEntries(Object.entries(groups).map(([key, refs]) => [key, refs.length]))
-    },
-    groups,
-    changed_words: changedWords
-  };
+  const payload = buildDiffPayload(prevPath, nextPath, prevRows, nextRows);
 
   await writeJson(outPath, payload);
-  console.log(`diff: changed=${changedWords.length} out=${outPath}`);
+  console.log(`diff: changed=${payload.summary.changed_words} out=${outPath}`);
 }
 
 async function runPromote(argv) {
