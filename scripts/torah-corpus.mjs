@@ -98,7 +98,14 @@ const {
   computeSafetyRailActivation,
   applyWordExecutionPolicy,
   buildVerseTraceRecord,
-  buildWordExecutionArtifacts
+  buildWordExecutionArtifacts,
+  accumulateWordExecutionArtifacts,
+  finalizeExecuteOutputs,
+  buildExecuteCompletion,
+  buildVerseMotifIndex,
+  buildExecuteWritePlan,
+  buildBaselineExecutions,
+  assertModeExecutionLength
 } = torahCorpusExecute;
 
 function loadTorahCorpusDiff() {
@@ -1481,58 +1488,6 @@ function buildVerseMotifs({ verseWordRows, crossWordEvents, verseBoundaryResolut
   return motifs;
 }
 
-function buildVerseMotifIndex({
-  modeLabel,
-  semanticVersion,
-  verseRows,
-  safetyRailSummary,
-  verseTraceSha256
-}) {
-  const motifByName = new Map();
-  const boundaryCounts = {};
-  let crossWordEventCount = 0;
-
-  for (const row of verseRows) {
-    crossWordEventCount += (row.cross_word_events ?? []).length;
-    for (const [op, count] of Object.entries(row.boundary_events?.by_type ?? {})) {
-      boundaryCounts[op] = (boundaryCounts[op] ?? 0) + Number(count);
-    }
-    for (const motif of row.notable_motifs ?? []) {
-      const entry = motifByName.get(motif.motif) ?? {
-        motif: motif.motif,
-        count: 0,
-        verse_refs: [],
-        samples: []
-      };
-      entry.count += Number(motif.count ?? 0);
-      if (entry.verse_refs.length < 40) {
-        entry.verse_refs.push(row.ref_key);
-      }
-      const sampleCandidate = motif.samples ?? motif.refs ?? motif.ops ?? motif.action ?? null;
-      if (sampleCandidate !== null && entry.samples.length < 20) {
-        entry.samples.push(sampleCandidate);
-      }
-      motifByName.set(motif.motif, entry);
-    }
-  }
-
-  const motifs = Array.from(motifByName.values()).sort(
-    (left, right) => right.count - left.count || sortRefLike(left.motif, right.motif)
-  );
-
-  return {
-    schema_version: 1,
-    mode: modeLabel,
-    semantic_version: semanticVersion,
-    verse_trace_sha256: verseTraceSha256,
-    verses_indexed: verseRows.length,
-    cross_word_event_count: crossWordEventCount,
-    boundary_operator_totals: sortCountObjectByKey(boundaryCounts),
-    safety_rail: safetyRailSummary,
-    motifs
-  };
-}
-
 function buildPatternIndex(fullRows) {
   const explicitPatterns = {
     MEM_OPEN_TO_MEM_CLOSE: {
@@ -2764,17 +2719,10 @@ async function runExecute(argv) {
     missingBundles.push(...verseMissingBundles);
     unknownSignatures.push(...verseUnknownSignatures);
 
-    const baselineExecutions = wordRowsMeta.map((meta) => {
-      if (meta.unknown_signatures.length > 0) {
-        return {
-          flowRaw: ["ERROR.UNKNOWN_SIGNATURE"],
-          flowCompact: ["ERROR.UNKNOWN_SIGNATURE"],
-          traceEvents: [makeUnknownSignatureTraceEvent(meta.unknown_signatures[0] ?? "unknown")],
-          runtimeErrorMessage: "",
-          windowStart: 1
-        };
-      }
-      return getIsolatedFlow(meta.surface);
+    const baselineExecutions = buildBaselineExecutions({
+      wordRowsMeta,
+      getIsolatedFlow,
+      makeUnknownSignatureTraceEvent
     });
 
     const modeExecutions = selectModeExecutions({
@@ -2791,11 +2739,12 @@ async function runExecute(argv) {
       verseRefKey: verseEntry.ref_key
     });
 
-    if (modeExecutions.length !== wordRowsMeta.length) {
-      throw new Error(
-        `Execution mode ${opts.modeLabel} emitted ${modeExecutions.length} rows for ${verseEntry.ref_key}, expected ${wordRowsMeta.length}`
-      );
-    }
+    assertModeExecutionLength({
+      modeLabel: opts.modeLabel,
+      verseRefKey: verseEntry.ref_key,
+      emitted: modeExecutions.length,
+      expected: wordRowsMeta.length
+    });
 
     const { provisionalDeltaCount, provisionalDeltaRate, safetyRailActive } =
       computeSafetyRailActivation({
@@ -2857,28 +2806,20 @@ async function runExecute(argv) {
         canonicalizeWordTraceRecord
       });
 
-      if (artifacts.runtimeErrorSample) {
-        runtimeErrors.push(artifacts.runtimeErrorSample);
-      }
-      skeletonCounts.set(artifacts.skeletonKey, (skeletonCounts.get(artifacts.skeletonKey) ?? 0) + 1);
-
-      rows.push(artifacts.row);
-      flowLines.push(artifacts.flowLine);
-      baselineRows.push(artifacts.baselineRow);
-
-      totalEventsInVerse += artifacts.traceEventCount;
-      for (const op of artifacts.boundaryOps) {
-        boundaryByType[op] = (boundaryByType[op] ?? 0) + 1;
-      }
-      verseWordRows.push(artifacts.verseWordRow);
-
-      if (artifacts.deltaEvent) {
-        crossWordEvents.push(artifacts.deltaEvent);
-        modeDiffEvents.push({
-          verse_ref_key: verseEntry.ref_key,
-          ...artifacts.deltaEvent
-        });
-      }
+      totalEventsInVerse = accumulateWordExecutionArtifacts({
+        artifacts,
+        verseRefKey: verseEntry.ref_key,
+        rows,
+        flowLines,
+        baselineRows,
+        runtimeErrors,
+        skeletonCounts,
+        boundaryByType,
+        verseWordRows,
+        crossWordEvents,
+        modeDiffEvents,
+        totalEventsInVerse
+      });
     }
 
     const verseRecord = buildVerseTraceRecord({
@@ -2905,29 +2846,22 @@ async function runExecute(argv) {
     verseRows.push(canonicalizeVerseTraceRecord(verseRecord));
   }
 
-  rows.sort(compareWordTraceRecords);
-  verseRows.sort(compareVerseTraceRecords);
-
-  const traceContent = rows.map((row) => JSON.stringify(row)).join("\n") + "\n";
-  const verseTraceContent = verseRows.map((row) => JSON.stringify(row)).join("\n") + "\n";
-  await Promise.all([
-    fs.mkdir(path.dirname(traceOutPath), { recursive: true }),
-    fs.mkdir(path.dirname(flowsOutPath), { recursive: true }),
-    fs.mkdir(path.dirname(reportOutPath), { recursive: true }),
-    fs.mkdir(path.dirname(verseTraceOutPath), { recursive: true }),
-    fs.mkdir(path.dirname(verseReportOutPath), { recursive: true }),
-    fs.mkdir(path.dirname(verseMotifIndexOutPath), { recursive: true })
-  ]);
-  await Promise.all([
-    fs.writeFile(traceOutPath, traceContent, "utf8"),
-    fs.writeFile(flowsOutPath, flowLines.join("\n") + "\n", "utf8"),
-    fs.writeFile(verseTraceOutPath, verseTraceContent, "utf8")
-  ]);
+  const {
+    sortedRows,
+    sortedVerseRows,
+    traceContent,
+    verseTraceContent,
+    topSkeletons,
+    uniqueSkeletons
+  } = finalizeExecuteOutputs({
+    rows,
+    verseRows,
+    compareWordTraceRecords,
+    compareVerseTraceRecords,
+    skeletonCounts
+  });
 
   const elapsedMs = Number(process.hrtime.bigint() - startNs) / 1_000_000;
-  const topSkeletons = Array.from(skeletonCounts.entries())
-    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "en"))
-    .slice(0, 20);
   const { traceSha256, verseTraceSha256, reportLines, verseReportLines } = buildExecuteReports({
     inputPath,
     tokenRegistryPath,
@@ -2947,11 +2881,11 @@ async function runExecute(argv) {
     versesTotal,
     versesSanitized,
     versesSkipped,
-    rows,
+    rows: sortedRows,
     baselineRows,
     modeDiffEvents,
-    verseRows,
-    uniqueSkeletons: skeletonCounts.size,
+    verseRows: sortedVerseRows,
+    uniqueSkeletons,
     topSkeletons,
     unknownSignatures,
     missingBundles,
@@ -2963,39 +2897,57 @@ async function runExecute(argv) {
     arraysEqual
   });
 
-  await fs.writeFile(reportOutPath, reportLines.join("\n") + "\n", "utf8");
-  await fs.writeFile(verseReportOutPath, verseReportLines.join("\n") + "\n", "utf8");
-
   const verseMotifIndexPayload = buildVerseMotifIndex({
     modeLabel: opts.modeLabel,
     semanticVersion,
-    verseRows,
+    verseRows: sortedVerseRows,
     safetyRailSummary: safetyRailStats,
     verseTraceSha256
   });
-  await writeJson(verseMotifIndexOutPath, verseMotifIndexPayload);
-
-  const hasHardErrors = unknownSignatures.length > 0 || missingBundles.length > 0;
-  if (hasHardErrors) {
-    throw new Error(
-      `execute failed: unknownSignatures=${unknownSignatures.length} missingBundles=${missingBundles.length}`
-    );
-  }
-
-  console.log(
-    [
-      `execute: words=${rows.length}`,
-      `mode=${opts.modeLabel}`,
-      `uniqueSkeletons=${skeletonCounts.size}`,
-      `runtimeErrors=${runtimeErrors.length}`,
-      `traceOut=${traceOutPath}`,
-      `flowsOut=${flowsOutPath}`,
-      `verseTraceOut=${verseTraceOutPath}`,
-      `reportOut=${reportOutPath}`,
-      `verseReportOut=${verseReportOutPath}`,
-      `verseMotifIndexOut=${verseMotifIndexOutPath}`
-    ].join(" ")
+  const executeWritePlan = buildExecuteWritePlan({
+    traceOutPath,
+    flowsOutPath,
+    reportOutPath,
+    verseTraceOutPath,
+    verseReportOutPath,
+    verseMotifIndexOutPath,
+    traceContent,
+    flowLines,
+    verseTraceContent,
+    reportLines,
+    verseReportLines,
+    verseMotifIndexPayload
+  });
+  await Promise.all(
+    executeWritePlan.directoryPaths.map((directoryPath) =>
+      fs.mkdir(directoryPath, { recursive: true })
+    )
   );
+  await Promise.all(
+    executeWritePlan.textWrites.map((write) => fs.writeFile(write.path, write.content, "utf8"))
+  );
+  await Promise.all(
+    executeWritePlan.jsonWrites.map((write) => writeJson(write.path, write.payload))
+  );
+
+  const executeCompletion = buildExecuteCompletion({
+    wordsEmitted: sortedRows.length,
+    modeLabel: opts.modeLabel,
+    uniqueSkeletons,
+    runtimeErrors: runtimeErrors.length,
+    traceOutPath,
+    flowsOutPath,
+    verseTraceOutPath,
+    reportOutPath,
+    verseReportOutPath,
+    verseMotifIndexOutPath,
+    unknownSignatures: unknownSignatures.length,
+    missingBundles: missingBundles.length
+  });
+  if (executeCompletion.hardErrorMessage) {
+    throw new Error(executeCompletion.hardErrorMessage);
+  }
+  console.log(executeCompletion.consoleLine);
 }
 
 async function runDiff(argv) {

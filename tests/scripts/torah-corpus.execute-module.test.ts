@@ -1,11 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   applyWordExecutionPolicy,
+  assertModeExecutionLength,
   assertExecuteTokenSources,
+  accumulateWordExecutionArtifacts,
+  buildBaselineExecutions,
+  buildExecuteCompletion,
+  buildExecuteWritePlan,
+  buildVerseMotifIndex,
   buildVerseTraceRecord,
   buildVerseWordRowsMeta,
   buildWordExecutionArtifacts,
   computeSafetyRailActivation,
+  finalizeExecuteOutputs,
   resolveExecutePaths,
   resolveSemanticVersion,
   selectModeExecutions
@@ -144,12 +151,12 @@ describe("torah corpus execute module helpers", () => {
       mode: "WINDOW",
       safetyRailEnabled: true,
       safetyRailThreshold: 0.4,
-      wordRowsMeta: [{ unknown_signatures: [] }, { unknown_signatures: ["x"] }, { unknown_signatures: [] }],
-      baselineExecutions: [
-        { flowCompact: ["A"] },
-        { flowCompact: ["B"] },
-        { flowCompact: ["C"] }
+      wordRowsMeta: [
+        { unknown_signatures: [] },
+        { unknown_signatures: ["x"] },
+        { unknown_signatures: [] }
       ],
+      baselineExecutions: [{ flowCompact: ["A"] }, { flowCompact: ["B"] }, { flowCompact: ["C"] }],
       modeExecutions: [{ flowCompact: ["A"] }, { flowCompact: ["X"] }, { flowCompact: ["D"] }],
       arraysEqual: (left, right) => JSON.stringify(left) === JSON.stringify(right)
     });
@@ -289,5 +296,230 @@ describe("torah corpus execute module helpers", () => {
       token_index: 1,
       explanation: "window shift"
     });
+  });
+
+  it("accumulates word execution artifacts into verse-level trackers", () => {
+    const rows: Record<string, unknown>[] = [];
+    const flowLines: string[] = [];
+    const baselineRows: Array<{ ref_key: string; skeleton: string[] }> = [];
+    const runtimeErrors: Array<{ ref_key: string; surface: string; message: string }> = [];
+    const skeletonCounts = new Map<string, number>();
+    const boundaryByType: Record<string, number> = {};
+    const verseWordRows: Array<{
+      ref_key: string;
+      token_index: number;
+      skeleton: string[];
+      boundary_ops: string[];
+    }> = [];
+    const crossWordEvents: Array<{
+      ref_key: string;
+      token_index: number;
+      baseline_skeleton: string[];
+      observed_skeleton: string[];
+      explanation: string;
+    }> = [];
+    const modeDiffEvents: Array<{
+      verse_ref_key: string;
+      ref_key: string;
+      token_index: number;
+      baseline_skeleton: string[];
+      observed_skeleton: string[];
+      explanation: string;
+    }> = [];
+
+    const total = accumulateWordExecutionArtifacts({
+      artifacts: {
+        row: { ref_key: "Genesis/1/1/1" },
+        flowLine: "Genesis/1/1/1\tאב\tA",
+        baselineRow: { ref_key: "Genesis/1/1/1", skeleton: ["BASE"] },
+        runtimeErrorSample: { ref_key: "Genesis/1/1/1", surface: "אב", message: "err" },
+        skeleton: ["NEXT"],
+        skeletonKey: "NEXT",
+        boundaryOps: ["WORD_BOUNDARY", "WORD_BOUNDARY"],
+        traceEventCount: 3,
+        verseWordRow: {
+          ref_key: "Genesis/1/1/1",
+          token_index: 1,
+          skeleton: ["NEXT"],
+          boundary_ops: ["WORD_BOUNDARY", "WORD_BOUNDARY"]
+        },
+        deltaEvent: {
+          ref_key: "Genesis/1/1/1",
+          token_index: 1,
+          baseline_skeleton: ["BASE"],
+          observed_skeleton: ["NEXT"],
+          explanation: "window shift"
+        }
+      },
+      verseRefKey: "Genesis/1/1",
+      rows,
+      flowLines,
+      baselineRows,
+      runtimeErrors,
+      skeletonCounts,
+      boundaryByType,
+      verseWordRows,
+      crossWordEvents,
+      modeDiffEvents,
+      totalEventsInVerse: 7
+    });
+
+    expect(total).toBe(10);
+    expect(rows).toHaveLength(1);
+    expect(flowLines).toHaveLength(1);
+    expect(runtimeErrors).toHaveLength(1);
+    expect(skeletonCounts.get("NEXT")).toBe(1);
+    expect(boundaryByType.WORD_BOUNDARY).toBe(2);
+    expect(crossWordEvents).toHaveLength(1);
+    expect(modeDiffEvents[0]?.verse_ref_key).toBe("Genesis/1/1");
+  });
+
+  it("finalizes execute outputs with sorted rows and top skeletons", () => {
+    const result = finalizeExecuteOutputs({
+      rows: [{ ref_key: "Genesis/1/1/2" }, { ref_key: "Genesis/1/1/1" }],
+      verseRows: [{ ref_key: "Genesis/1/2" }, { ref_key: "Genesis/1/1" }],
+      compareWordTraceRecords: (left, right) =>
+        String(left.ref_key).localeCompare(String(right.ref_key), "en"),
+      compareVerseTraceRecords: (left, right) =>
+        String(left.ref_key).localeCompare(String(right.ref_key), "en"),
+      skeletonCounts: new Map([
+        ["B", 1],
+        ["A", 2]
+      ])
+    });
+
+    expect(result.sortedRows.map((row) => row.ref_key)).toEqual(["Genesis/1/1/1", "Genesis/1/1/2"]);
+    expect(result.sortedVerseRows.map((row) => row.ref_key)).toEqual(["Genesis/1/1", "Genesis/1/2"]);
+    expect(result.traceContent.endsWith("\n")).toBe(true);
+    expect(result.verseTraceContent.endsWith("\n")).toBe(true);
+    expect(result.topSkeletons[0]).toEqual(["A", 2]);
+    expect(result.uniqueSkeletons).toBe(2);
+  });
+
+  it("builds execute completion payloads for error and success cases", () => {
+    const failed = buildExecuteCompletion({
+      wordsEmitted: 10,
+      modeLabel: "WINDOW(2)",
+      uniqueSkeletons: 4,
+      runtimeErrors: 1,
+      traceOutPath: "/tmp/trace.jsonl",
+      flowsOutPath: "/tmp/flows.txt",
+      verseTraceOutPath: "/tmp/verse-trace.jsonl",
+      reportOutPath: "/tmp/report.md",
+      verseReportOutPath: "/tmp/verse-report.md",
+      verseMotifIndexOutPath: "/tmp/motif.json",
+      unknownSignatures: 2,
+      missingBundles: 3
+    });
+    expect(failed.hardErrorMessage).toBe(
+      "execute failed: unknownSignatures=2 missingBundles=3"
+    );
+    expect(failed.consoleLine).toContain("mode=WINDOW(2)");
+
+    const ok = buildExecuteCompletion({
+      wordsEmitted: 1,
+      modeLabel: "WORD",
+      uniqueSkeletons: 1,
+      runtimeErrors: 0,
+      traceOutPath: "/tmp/trace.jsonl",
+      flowsOutPath: "/tmp/flows.txt",
+      verseTraceOutPath: "/tmp/verse-trace.jsonl",
+      reportOutPath: "/tmp/report.md",
+      verseReportOutPath: "/tmp/verse-report.md",
+      verseMotifIndexOutPath: "/tmp/motif.json",
+      unknownSignatures: 0,
+      missingBundles: 0
+    });
+    expect(ok.hardErrorMessage).toBeNull();
+    expect(ok.consoleLine).toContain("execute: words=1");
+  });
+
+  it("builds verse motif index aggregates", () => {
+    const result = buildVerseMotifIndex({
+      modeLabel: "WINDOW(2)",
+      semanticVersion: "2.0.0",
+      verseRows: [
+        {
+          ref_key: "Genesis/1/2",
+          cross_word_events: [{}, {}],
+          boundary_events: { by_type: { WORD_BOUNDARY: 1 } },
+          notable_motifs: [{ motif: "A", count: 2, action: "x" }]
+        },
+        {
+          ref_key: "Genesis/1/1",
+          cross_word_events: [{}],
+          boundary_events: { by_type: { WORD_BOUNDARY: 3, DIVINE_NAME_STATE: 1 } },
+          notable_motifs: [{ motif: "A", count: 1, refs: ["Genesis/1/1/1"] }]
+        }
+      ],
+      safetyRailSummary: { enabled: true, activated_verses: 1 },
+      verseTraceSha256: "abc123"
+    });
+
+    expect(result.cross_word_event_count).toBe(3);
+    expect(result.boundary_operator_totals).toEqual({
+      DIVINE_NAME_STATE: 1,
+      WORD_BOUNDARY: 4
+    });
+    expect(Array.isArray(result.motifs)).toBe(true);
+    expect((result.motifs as Array<{ motif: string; count: number }>)[0]).toMatchObject({
+      motif: "A",
+      count: 3
+    });
+  });
+
+  it("builds execute write plans with deduped directories", () => {
+    const plan = buildExecuteWritePlan({
+      traceOutPath: "/tmp/out/word.jsonl",
+      flowsOutPath: "/tmp/out/flows.txt",
+      reportOutPath: "/tmp/reports/execution.md",
+      verseTraceOutPath: "/tmp/out/verse.jsonl",
+      verseReportOutPath: "/tmp/reports/verse.md",
+      verseMotifIndexOutPath: "/tmp/index/motif.json",
+      traceContent: "{\"a\":1}\n",
+      flowLines: ["a", "b"],
+      verseTraceContent: "{\"v\":1}\n",
+      reportLines: ["# Report"],
+      verseReportLines: ["# Verse Report"],
+      verseMotifIndexPayload: { schema_version: 1 }
+    });
+
+    expect(plan.directoryPaths).toEqual(["/tmp/index", "/tmp/out", "/tmp/reports"]);
+    expect(plan.textWrites).toHaveLength(5);
+    expect(plan.textWrites[1]?.content).toBe("a\nb\n");
+    expect(plan.textWrites[3]?.content).toBe("# Report\n");
+    expect(plan.jsonWrites[0]?.path).toBe("/tmp/index/motif.json");
+  });
+
+  it("builds baseline executions and handles unknown signatures", () => {
+    const result = buildBaselineExecutions({
+      wordRowsMeta: [
+        { surface: "אב", unknown_signatures: [] },
+        { surface: "גד", unknown_signatures: ["sig-x"] }
+      ],
+      getIsolatedFlow: (surface) => ({
+        flowRaw: [surface],
+        flowCompact: [surface],
+        traceEvents: [],
+        runtimeErrorMessage: "",
+        windowStart: 1
+      }),
+      makeUnknownSignatureTraceEvent: (signature) => ({ event: "unknown", signature })
+    });
+
+    expect(result).toHaveLength(2);
+    expect(result[0]?.flowCompact).toEqual(["אב"]);
+    expect(result[1]?.flowCompact).toEqual(["ERROR.UNKNOWN_SIGNATURE"]);
+  });
+
+  it("asserts mode execution length matches expected rows", () => {
+    expect(() =>
+      assertModeExecutionLength({
+        modeLabel: "WORD",
+        verseRefKey: "Genesis/1/1",
+        emitted: 1,
+        expected: 2
+      })
+    ).toThrow(/emitted 1 rows/);
   });
 });

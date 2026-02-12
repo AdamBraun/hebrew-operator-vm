@@ -227,6 +227,145 @@ type BuildWordExecutionArtifactsOutput = {
   } | null;
 };
 
+type AccumulateWordExecutionArtifactsInput = {
+  artifacts: BuildWordExecutionArtifactsOutput;
+  verseRefKey: string;
+  rows: Record<string, unknown>[];
+  flowLines: string[];
+  baselineRows: Array<{
+    ref_key: string;
+    skeleton: string[];
+  }>;
+  runtimeErrors: Array<{
+    ref_key: string;
+    surface: string;
+    message: string;
+  }>;
+  skeletonCounts: Map<string, number>;
+  boundaryByType: Record<string, number>;
+  verseWordRows: Array<{
+    ref_key: string;
+    token_index: number;
+    skeleton: string[];
+    boundary_ops: string[];
+  }>;
+  crossWordEvents: Array<{
+    ref_key: string;
+    token_index: number;
+    baseline_skeleton: string[];
+    observed_skeleton: string[];
+    explanation: string;
+  }>;
+  modeDiffEvents: Array<{
+    verse_ref_key: string;
+    ref_key: string;
+    token_index: number;
+    baseline_skeleton: string[];
+    observed_skeleton: string[];
+    explanation: string;
+  }>;
+  totalEventsInVerse: number;
+};
+
+type FinalizeExecuteOutputsInput = {
+  rows: Record<string, unknown>[];
+  verseRows: Record<string, unknown>[];
+  compareWordTraceRecords: (left: Record<string, unknown>, right: Record<string, unknown>) => number;
+  compareVerseTraceRecords: (
+    left: Record<string, unknown>,
+    right: Record<string, unknown>
+  ) => number;
+  skeletonCounts: Map<string, number>;
+  topSkeletonLimit?: number;
+};
+
+type FinalizeExecuteOutputsOutput = {
+  sortedRows: Record<string, unknown>[];
+  sortedVerseRows: Record<string, unknown>[];
+  traceContent: string;
+  verseTraceContent: string;
+  topSkeletons: Array<[string, number]>;
+  uniqueSkeletons: number;
+};
+
+type BuildExecuteCompletionInput = {
+  wordsEmitted: number;
+  modeLabel: string;
+  uniqueSkeletons: number;
+  runtimeErrors: number;
+  traceOutPath: string;
+  flowsOutPath: string;
+  verseTraceOutPath: string;
+  reportOutPath: string;
+  verseReportOutPath: string;
+  verseMotifIndexOutPath: string;
+  unknownSignatures: number;
+  missingBundles: number;
+};
+
+type BuildExecuteCompletionOutput = {
+  hardErrorMessage: string | null;
+  consoleLine: string;
+};
+
+type BuildVerseMotifIndexInput = {
+  modeLabel: string;
+  semanticVersion: string;
+  verseRows: Array<{
+    ref_key?: string;
+    cross_word_events?: unknown[];
+    boundary_events?: {
+      by_type?: Record<string, number>;
+    };
+    notable_motifs?: Array<{
+      motif?: string;
+      count?: number;
+      samples?: unknown;
+      refs?: unknown;
+      ops?: unknown;
+      action?: unknown;
+    }>;
+  }>;
+  safetyRailSummary: Record<string, unknown>;
+  verseTraceSha256: string;
+};
+
+type BuildExecuteWritePlanInput = {
+  traceOutPath: string;
+  flowsOutPath: string;
+  reportOutPath: string;
+  verseTraceOutPath: string;
+  verseReportOutPath: string;
+  verseMotifIndexOutPath: string;
+  traceContent: string;
+  flowLines: string[];
+  verseTraceContent: string;
+  reportLines: string[];
+  verseReportLines: string[];
+  verseMotifIndexPayload: Record<string, unknown>;
+};
+
+type BuildExecuteWritePlanOutput = {
+  directoryPaths: string[];
+  textWrites: Array<{
+    path: string;
+    content: string;
+  }>;
+  jsonWrites: Array<{
+    path: string;
+    payload: Record<string, unknown>;
+  }>;
+};
+
+type BuildBaselineExecutionsInput = {
+  wordRowsMeta: Array<{
+    unknown_signatures: string[];
+    surface: string;
+  }>;
+  getIsolatedFlow: (surface: string) => ExecutionResult;
+  makeUnknownSignatureTraceEvent: (signature: string) => unknown;
+};
+
 type BuildVerseTraceRecordInput = {
   traceVersion: string;
   traceRenderVersion: string;
@@ -458,7 +597,9 @@ export function computeSafetyRailActivation(args: {
   const provisionalDeltaRate =
     args.wordRowsMeta.length > 0 ? provisionalDeltaCount / args.wordRowsMeta.length : 0;
   const safetyRailActive =
-    args.mode !== "WORD" && args.safetyRailEnabled && provisionalDeltaRate > args.safetyRailThreshold;
+    args.mode !== "WORD" &&
+    args.safetyRailEnabled &&
+    provisionalDeltaRate > args.safetyRailThreshold;
   return {
     provisionalDeltaCount,
     provisionalDeltaRate,
@@ -545,7 +686,9 @@ export function applyWordExecutionPolicy(args: {
 
 export function buildVerseTraceRecord(args: BuildVerseTraceRecordInput): Record<string, unknown> {
   const verseEndBoundaryOps =
-    args.verseWordRows.length > 0 ? args.verseWordRows[args.verseWordRows.length - 1].boundary_ops : [];
+    args.verseWordRows.length > 0
+      ? args.verseWordRows[args.verseWordRows.length - 1].boundary_ops
+      : [];
   const verseBoundaryResolution = args.buildVerseBoundaryResolution(
     args.verseWordRows,
     args.boundaryByType
@@ -664,6 +807,225 @@ export function buildWordExecutionArtifacts(
     },
     deltaEvent
   };
+}
+
+export function accumulateWordExecutionArtifacts(
+  args: AccumulateWordExecutionArtifactsInput
+): number {
+  if (args.artifacts.runtimeErrorSample) {
+    args.runtimeErrors.push(args.artifacts.runtimeErrorSample);
+  }
+  args.skeletonCounts.set(
+    args.artifacts.skeletonKey,
+    (args.skeletonCounts.get(args.artifacts.skeletonKey) ?? 0) + 1
+  );
+  args.rows.push(args.artifacts.row);
+  args.flowLines.push(args.artifacts.flowLine);
+  args.baselineRows.push(args.artifacts.baselineRow);
+
+  for (const op of args.artifacts.boundaryOps) {
+    args.boundaryByType[op] = (args.boundaryByType[op] ?? 0) + 1;
+  }
+  args.verseWordRows.push(args.artifacts.verseWordRow);
+
+  if (args.artifacts.deltaEvent) {
+    args.crossWordEvents.push(args.artifacts.deltaEvent);
+    args.modeDiffEvents.push({
+      verse_ref_key: args.verseRefKey,
+      ...args.artifacts.deltaEvent
+    });
+  }
+
+  return args.totalEventsInVerse + args.artifacts.traceEventCount;
+}
+
+export function finalizeExecuteOutputs(
+  args: FinalizeExecuteOutputsInput
+): FinalizeExecuteOutputsOutput {
+  const sortedRows = [...args.rows].sort(args.compareWordTraceRecords);
+  const sortedVerseRows = [...args.verseRows].sort(args.compareVerseTraceRecords);
+  const traceContent = sortedRows.map((row) => JSON.stringify(row)).join("\n") + "\n";
+  const verseTraceContent = sortedVerseRows.map((row) => JSON.stringify(row)).join("\n") + "\n";
+  const topSkeletons = Array.from(args.skeletonCounts.entries())
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "en"))
+    .slice(0, args.topSkeletonLimit ?? 20);
+
+  return {
+    sortedRows,
+    sortedVerseRows,
+    traceContent,
+    verseTraceContent,
+    topSkeletons,
+    uniqueSkeletons: args.skeletonCounts.size
+  };
+}
+
+export function buildExecuteCompletion(
+  args: BuildExecuteCompletionInput
+): BuildExecuteCompletionOutput {
+  const hardErrorMessage =
+    args.unknownSignatures > 0 || args.missingBundles > 0
+      ? `execute failed: unknownSignatures=${args.unknownSignatures} missingBundles=${args.missingBundles}`
+      : null;
+  const consoleLine = [
+    `execute: words=${args.wordsEmitted}`,
+    `mode=${args.modeLabel}`,
+    `uniqueSkeletons=${args.uniqueSkeletons}`,
+    `runtimeErrors=${args.runtimeErrors}`,
+    `traceOut=${args.traceOutPath}`,
+    `flowsOut=${args.flowsOutPath}`,
+    `verseTraceOut=${args.verseTraceOutPath}`,
+    `reportOut=${args.reportOutPath}`,
+    `verseReportOut=${args.verseReportOutPath}`,
+    `verseMotifIndexOut=${args.verseMotifIndexOutPath}`
+  ].join(" ");
+
+  return {
+    hardErrorMessage,
+    consoleLine
+  };
+}
+
+function sortCountObjectByKeyLocal(obj: Record<string, number>): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const key of Object.keys(obj ?? {}).sort(sortRefLike)) {
+    out[key] = obj[key];
+  }
+  return out;
+}
+
+export function buildVerseMotifIndex(args: BuildVerseMotifIndexInput): Record<string, unknown> {
+  const motifByName = new Map<
+    string,
+    {
+      motif: string;
+      count: number;
+      verse_refs: string[];
+      samples: unknown[];
+    }
+  >();
+  const boundaryCounts: Record<string, number> = {};
+  let crossWordEventCount = 0;
+
+  for (const row of args.verseRows) {
+    crossWordEventCount += (row.cross_word_events ?? []).length;
+    for (const [op, count] of Object.entries(row.boundary_events?.by_type ?? {})) {
+      boundaryCounts[op] = (boundaryCounts[op] ?? 0) + Number(count);
+    }
+    for (const motif of row.notable_motifs ?? []) {
+      if (typeof motif?.motif !== "string" || motif.motif.length === 0) {
+        continue;
+      }
+      const entry = motifByName.get(motif.motif) ?? {
+        motif: motif.motif,
+        count: 0,
+        verse_refs: [],
+        samples: []
+      };
+      entry.count += Number(motif.count ?? 0);
+      if (entry.verse_refs.length < 40 && typeof row.ref_key === "string" && row.ref_key.length > 0) {
+        entry.verse_refs.push(row.ref_key);
+      }
+      const sampleCandidate = motif.samples ?? motif.refs ?? motif.ops ?? motif.action ?? null;
+      if (sampleCandidate !== null && entry.samples.length < 20) {
+        entry.samples.push(sampleCandidate);
+      }
+      motifByName.set(motif.motif, entry);
+    }
+  }
+
+  const motifs = Array.from(motifByName.values()).sort(
+    (left, right) => right.count - left.count || sortRefLike(left.motif, right.motif)
+  );
+
+  return {
+    schema_version: 1,
+    mode: args.modeLabel,
+    semantic_version: args.semanticVersion,
+    verse_trace_sha256: args.verseTraceSha256,
+    verses_indexed: args.verseRows.length,
+    cross_word_event_count: crossWordEventCount,
+    boundary_operator_totals: sortCountObjectByKeyLocal(boundaryCounts),
+    safety_rail: args.safetyRailSummary,
+    motifs
+  };
+}
+
+export function buildExecuteWritePlan(
+  args: BuildExecuteWritePlanInput
+): BuildExecuteWritePlanOutput {
+  const directoryPaths = Array.from(
+    new Set([
+      path.dirname(args.traceOutPath),
+      path.dirname(args.flowsOutPath),
+      path.dirname(args.reportOutPath),
+      path.dirname(args.verseTraceOutPath),
+      path.dirname(args.verseReportOutPath),
+      path.dirname(args.verseMotifIndexOutPath)
+    ])
+  ).sort(sortRefLike);
+
+  return {
+    directoryPaths,
+    textWrites: [
+      {
+        path: args.traceOutPath,
+        content: args.traceContent
+      },
+      {
+        path: args.flowsOutPath,
+        content: args.flowLines.join("\n") + "\n"
+      },
+      {
+        path: args.verseTraceOutPath,
+        content: args.verseTraceContent
+      },
+      {
+        path: args.reportOutPath,
+        content: args.reportLines.join("\n") + "\n"
+      },
+      {
+        path: args.verseReportOutPath,
+        content: args.verseReportLines.join("\n") + "\n"
+      }
+    ],
+    jsonWrites: [
+      {
+        path: args.verseMotifIndexOutPath,
+        payload: args.verseMotifIndexPayload
+      }
+    ]
+  };
+}
+
+export function buildBaselineExecutions(args: BuildBaselineExecutionsInput): ExecutionResult[] {
+  return args.wordRowsMeta.map((meta) => {
+    if (meta.unknown_signatures.length > 0) {
+      return {
+        flowRaw: ["ERROR.UNKNOWN_SIGNATURE"],
+        flowCompact: ["ERROR.UNKNOWN_SIGNATURE"],
+        traceEvents: [
+          args.makeUnknownSignatureTraceEvent(meta.unknown_signatures[0] ?? "unknown")
+        ],
+        runtimeErrorMessage: "",
+        windowStart: 1
+      };
+    }
+    return args.getIsolatedFlow(meta.surface);
+  });
+}
+
+export function assertModeExecutionLength(args: {
+  modeLabel: string;
+  verseRefKey: string;
+  emitted: number;
+  expected: number;
+}): void {
+  if (args.emitted !== args.expected) {
+    throw new Error(
+      `Execution mode ${args.modeLabel} emitted ${args.emitted} rows for ${args.verseRefKey}, expected ${args.expected}`
+    );
+  }
 }
 
 function sortRefLike(left: string, right: string): number {
