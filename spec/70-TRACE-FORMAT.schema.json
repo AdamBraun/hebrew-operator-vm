@@ -1,0 +1,1709 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://letters.spec/70-trace-format.schema.json",
+  "title": "Canonical Trace Record",
+  "description": "Canonical machine-truth schema for word and verse trace records.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/WordTraceRecord"
+    },
+    {
+      "$ref": "#/$defs/VerseTraceRecord"
+    }
+  ],
+  "$defs": {
+    "SemVer": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "TraceVersion": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]+\\.[0-9]+$"
+    },
+    "HandleId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "RefWord": {
+      "type": "object",
+      "required": ["book", "chapter", "verse", "token_index"],
+      "additionalProperties": false,
+      "properties": {
+        "book": {
+          "type": "string",
+          "minLength": 1
+        },
+        "chapter": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "verse": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "token_index": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "RefVerse": {
+      "type": "object",
+      "required": ["book", "chapter", "verse"],
+      "additionalProperties": false,
+      "properties": {
+        "book": {
+          "type": "string",
+          "minLength": 1
+        },
+        "chapter": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "verse": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "EventKind": {
+      "type": "string",
+      "enum": [
+        "ALEPH.ALIAS",
+        "GIMEL.BESTOW",
+        "DALET.BOUNDARY_CLOSE",
+        "RESH.BOUNDARY_CLOSE",
+        "HE.DECLARE",
+        "HE.DECLARE_BREATH",
+        "HE.DECLARE_PIN",
+        "HE.DECLARE_ALIAS",
+        "ZAYIN.GATE",
+        "HET.COMPARTMENT",
+        "TET.COVERT",
+        "LAMED.ENDPOINT",
+        "MEM.OPEN",
+        "FINAL_MEM.CLOSE",
+        "NUN.SUPPORT_DEBT",
+        "SAMEKH.SUPPORT_DISCHARGE",
+        "PE.UTTER",
+        "TSADI.ALIGN",
+        "QOF.APPROX",
+        "SHIN.FORK",
+        "TAV.FINALIZE",
+        "FINAL_NUN.SUPPORT_DEBT",
+        "FINAL_NUN.SUPPORT_DISCHARGE",
+        "FINAL_PE.UTTER_CLOSE",
+        "FINAL_TSADI.ALIGN_FINAL",
+        "SPACE.SUPPORT_DISCHARGE",
+        "SPACE.BOUNDARY_AUTO_CLOSE",
+        "SPACE.MEM_AUTO_CLOSE",
+        "ERROR.RUNTIME",
+        "ERROR.UNKNOWN_SIGNATURE",
+        "EXTENSION"
+      ]
+    },
+    "EventKindNoExtension": {
+      "type": "string",
+      "enum": [
+        "ALEPH.ALIAS",
+        "GIMEL.BESTOW",
+        "DALET.BOUNDARY_CLOSE",
+        "RESH.BOUNDARY_CLOSE",
+        "HE.DECLARE",
+        "HE.DECLARE_BREATH",
+        "HE.DECLARE_PIN",
+        "HE.DECLARE_ALIAS",
+        "ZAYIN.GATE",
+        "HET.COMPARTMENT",
+        "TET.COVERT",
+        "LAMED.ENDPOINT",
+        "MEM.OPEN",
+        "FINAL_MEM.CLOSE",
+        "NUN.SUPPORT_DEBT",
+        "SAMEKH.SUPPORT_DISCHARGE",
+        "PE.UTTER",
+        "TSADI.ALIGN",
+        "QOF.APPROX",
+        "SHIN.FORK",
+        "TAV.FINALIZE",
+        "FINAL_NUN.SUPPORT_DEBT",
+        "FINAL_NUN.SUPPORT_DISCHARGE",
+        "FINAL_PE.UTTER_CLOSE",
+        "FINAL_TSADI.ALIGN_FINAL",
+        "SPACE.SUPPORT_DISCHARGE",
+        "SPACE.BOUNDARY_AUTO_CLOSE",
+        "SPACE.MEM_AUTO_CLOSE",
+        "ERROR.RUNTIME",
+        "ERROR.UNKNOWN_SIGNATURE"
+      ]
+    },
+    "BoundaryOpKind": {
+      "type": "string",
+      "pattern": "^(?:[A-Z][A-Z0-9_]*\\.[A-Z][A-Z0-9_]*|ERROR\\.[A-Z_]+|EXTENSION)$"
+    },
+    "FlowMode": {
+      "type": "string",
+      "enum": ["WORD", "VERSE", "WINDOW"]
+    },
+    "TraceEvent": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AliasEvent"
+        },
+        {
+          "$ref": "#/$defs/BestowEvent"
+        },
+        {
+          "$ref": "#/$defs/BoundaryCloseEvent"
+        },
+        {
+          "$ref": "#/$defs/DeclareEvent"
+        },
+        {
+          "$ref": "#/$defs/DeclareBreathEvent"
+        },
+        {
+          "$ref": "#/$defs/DeclarePinEvent"
+        },
+        {
+          "$ref": "#/$defs/DeclareAliasEvent"
+        },
+        {
+          "$ref": "#/$defs/GateEvent"
+        },
+        {
+          "$ref": "#/$defs/CompartmentEvent"
+        },
+        {
+          "$ref": "#/$defs/CovertEvent"
+        },
+        {
+          "$ref": "#/$defs/EndpointEvent"
+        },
+        {
+          "$ref": "#/$defs/MemOpenEvent"
+        },
+        {
+          "$ref": "#/$defs/FinalMemCloseEvent"
+        },
+        {
+          "$ref": "#/$defs/NunSupportDebtEvent"
+        },
+        {
+          "$ref": "#/$defs/SupportDischargeEvent"
+        },
+        {
+          "$ref": "#/$defs/UtterEvent"
+        },
+        {
+          "$ref": "#/$defs/AlignEvent"
+        },
+        {
+          "$ref": "#/$defs/ApproxEvent"
+        },
+        {
+          "$ref": "#/$defs/ShinEvent"
+        },
+        {
+          "$ref": "#/$defs/FinalizeEvent"
+        },
+        {
+          "$ref": "#/$defs/FinalNunSupportDebtEvent"
+        },
+        {
+          "$ref": "#/$defs/FinalNunSupportDischargeEvent"
+        },
+        {
+          "$ref": "#/$defs/FinalPeCloseEvent"
+        },
+        {
+          "$ref": "#/$defs/FinalTsadiAlignEvent"
+        },
+        {
+          "$ref": "#/$defs/SpaceSupportDischargeEvent"
+        },
+        {
+          "$ref": "#/$defs/SpaceBoundaryAutoCloseEvent"
+        },
+        {
+          "$ref": "#/$defs/SpaceMemAutoCloseEvent"
+        },
+        {
+          "$ref": "#/$defs/RuntimeErrorEvent"
+        },
+        {
+          "$ref": "#/$defs/UnknownSignatureErrorEvent"
+        },
+        {
+          "$ref": "#/$defs/ExtensionEvent"
+        }
+      ]
+    },
+    "AliasEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "ALEPH.ALIAS"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id", "left", "right"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "left": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "right": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "BestowEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "GIMEL.BESTOW"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["from", "to", "payload"],
+          "additionalProperties": false,
+          "properties": {
+            "from": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "to": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "payload": {}
+          }
+        }
+      }
+    },
+    "BoundaryCloseEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": ["DALET.BOUNDARY_CLOSE", "RESH.BOUNDARY_CLOSE"]
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id", "inside", "outside"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "inside": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "outside": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "anchor": {
+              "type": "integer",
+              "enum": [0, 1]
+            }
+          }
+        }
+      }
+    },
+    "DeclareEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "HE.DECLARE"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id", "target", "mode"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "target": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "mode": {
+              "type": "string",
+              "enum": ["public", "pinned", "alias"]
+            }
+          }
+        }
+      }
+    },
+    "DeclareBreathEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "HE.DECLARE_BREATH"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["target"],
+          "additionalProperties": false,
+          "properties": {
+            "target": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "DeclarePinEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "HE.DECLARE_PIN"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["declaration", "pin"],
+          "additionalProperties": false,
+          "properties": {
+            "declaration": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "pin": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "DeclareAliasEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "HE.DECLARE_ALIAS"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["declaration", "referent", "alias"],
+          "additionalProperties": false,
+          "properties": {
+            "declaration": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "referent": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "alias": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "GateEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "ZAYIN.GATE"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id", "target"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "target": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "CompartmentEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "HET.COMPARTMENT"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id", "inside", "outside", "boundaryId"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "inside": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "outside": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "boundaryId": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "CovertEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "TET.COVERT"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id", "target", "patch"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "target": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "patch": {}
+          }
+        }
+      }
+    },
+    "EndpointEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "LAMED.ENDPOINT"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id", "endpoint", "domain", "boundaryId"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "endpoint": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "domain": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "boundaryId": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "MemOpenEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "MEM.OPEN"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "derived_obligation"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["obligation_kind", "action"],
+          "additionalProperties": false,
+          "properties": {
+            "obligation_kind": {
+              "const": "MEM_ZONE"
+            },
+            "action": {
+              "const": "open"
+            },
+            "parent": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "zone": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "FinalMemCloseEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "FINAL_MEM.CLOSE"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "derived_obligation"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["obligation_kind", "action", "mode"],
+          "additionalProperties": false,
+          "properties": {
+            "obligation_kind": {
+              "const": "MEM_ZONE"
+            },
+            "action": {
+              "const": "close"
+            },
+            "mode": {
+              "type": "string",
+              "enum": ["existing", "synthetic"]
+            },
+            "zone": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "handle": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "NunSupportDebtEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "NUN.SUPPORT_DEBT"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "derived_obligation"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["obligation_kind", "action"],
+          "additionalProperties": false,
+          "properties": {
+            "obligation_kind": {
+              "const": "SUPPORT"
+            },
+            "action": {
+              "const": "open"
+            },
+            "parent": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "child": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "SupportDischargeEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "SAMEKH.SUPPORT_DISCHARGE"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["child", "parent"],
+          "additionalProperties": false,
+          "properties": {
+            "child": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "parent": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "UtterEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "PE.UTTER"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id", "source", "payload", "target"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "source": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "payload": {},
+            "target": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "AlignEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "TSADI.ALIGN"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id", "focus", "exemplar"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "focus": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "exemplar": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "ApproxEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "QOF.APPROX"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id", "left", "right"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "left": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "right": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "ShinEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "SHIN.FORK"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id", "focus", "spine", "left", "right", "active"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "focus": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "spine": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "left": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "right": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "active": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "FinalizeEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "TAV.FINALIZE"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id", "target", "outside", "boundaryId", "residueId"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "target": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "outside": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "boundaryId": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "residueId": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "FinalNunSupportDebtEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "FINAL_NUN.SUPPORT_DEBT"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "derived_obligation"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["obligation_kind", "action"],
+          "additionalProperties": false,
+          "properties": {
+            "obligation_kind": {
+              "const": "SUPPORT"
+            },
+            "action": {
+              "const": "open"
+            },
+            "parent": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "child": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "FinalNunSupportDischargeEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "FINAL_NUN.SUPPORT_DISCHARGE"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "derived_obligation"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["obligation_kind", "action", "mode"],
+          "additionalProperties": false,
+          "properties": {
+            "obligation_kind": {
+              "const": "SUPPORT"
+            },
+            "action": {
+              "const": "discharge"
+            },
+            "mode": {
+              "const": "same_word"
+            },
+            "parent": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "child": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "FinalPeCloseEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "FINAL_PE.UTTER_CLOSE"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "FinalTsadiAlignEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "FINAL_TSADI.ALIGN_FINAL"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id", "focus", "exemplar"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "focus": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "exemplar": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "SpaceSupportDischargeEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "SPACE.SUPPORT_DISCHARGE"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["child", "parent"],
+          "additionalProperties": false,
+          "properties": {
+            "child": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "parent": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "SpaceBoundaryAutoCloseEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "SPACE.BOUNDARY_AUTO_CLOSE"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "vm_event"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["id", "inside", "outside"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "inside": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "outside": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "SpaceMemAutoCloseEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "SPACE.MEM_AUTO_CLOSE"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "derived_boundary"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["obligation_kind", "action"],
+          "additionalProperties": false,
+          "properties": {
+            "obligation_kind": {
+              "const": "MEM_ZONE"
+            },
+            "action": {
+              "const": "auto_close"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "zone": {
+              "$ref": "#/$defs/HandleId"
+            }
+          }
+        }
+      }
+    },
+    "RuntimeErrorEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "ERROR.RUNTIME"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "error"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["message"],
+          "additionalProperties": false,
+          "properties": {
+            "message": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "UnknownSignatureErrorEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "ERROR.UNKNOWN_SIGNATURE"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "error"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["signature"],
+          "additionalProperties": false,
+          "properties": {
+            "signature": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "ExtensionEvent": {
+      "type": "object",
+      "required": ["kind", "index", "tau", "source", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "EXTENSION"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tau": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "const": "extension"
+        },
+        "payload": {
+          "type": "object",
+          "required": ["extension_kind", "data"],
+          "additionalProperties": false,
+          "properties": {
+            "extension_kind": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*(?:\\.[A-Z][A-Z0-9_]*)+$"
+            },
+            "data": {}
+          }
+        }
+      }
+    },
+    "WordTraceRecord": {
+      "type": "object",
+      "required": [
+        "record_kind",
+        "trace_version",
+        "semantics_version",
+        "render_version",
+        "ref",
+        "ref_key",
+        "surface",
+        "token_ids",
+        "events"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "record_kind": {
+          "const": "WORD_TRACE"
+        },
+        "trace_version": {
+          "$ref": "#/$defs/TraceVersion"
+        },
+        "semantics_version": {
+          "$ref": "#/$defs/SemVer"
+        },
+        "render_version": {
+          "$ref": "#/$defs/SemVer"
+        },
+        "ref": {
+          "$ref": "#/$defs/RefWord"
+        },
+        "ref_key": {
+          "type": "string",
+          "pattern": "^[^/]+/[0-9]+/[0-9]+/[0-9]+$"
+        },
+        "surface": {
+          "type": "string"
+        },
+        "token_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TraceEvent"
+          }
+        },
+        "skeleton": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EventKindNoExtension"
+          }
+        },
+        "flow": {
+          "type": "string"
+        },
+        "mode": {
+          "$ref": "#/$defs/FlowMode"
+        },
+        "window_start": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "canonical_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      }
+    },
+    "VerseBoundaryOperator": {
+      "type": "object",
+      "required": [
+        "op_family",
+        "trigger",
+        "support_opened",
+        "support_discharged",
+        "support_resolved_at_boundary",
+        "mem_opened",
+        "mem_closed",
+        "mem_resolved_at_boundary",
+        "boundary_ops_seen",
+        "finalize_refs",
+        "action"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "op_family": {
+          "const": "VERSE.BOUNDARY_RESOLUTION"
+        },
+        "trigger": {
+          "const": "explicit_verse_boundary"
+        },
+        "support_opened": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "support_discharged": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "support_resolved_at_boundary": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mem_opened": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mem_closed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mem_resolved_at_boundary": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "boundary_ops_seen": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "finalize_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[^/]+/[0-9]+/[0-9]+/[0-9]+$"
+          }
+        },
+        "action": {
+          "type": "string",
+          "enum": ["discharge_or_close_pending", "confirm_stable_closure"]
+        }
+      }
+    },
+    "VerseBoundaryEvents": {
+      "type": "object",
+      "required": ["total", "by_type", "verse_end", "verse_boundary_operator"],
+      "additionalProperties": false,
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "by_type": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/BoundaryOpKind"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "verse_end": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BoundaryOpKind"
+          }
+        },
+        "verse_boundary_operator": {
+          "$ref": "#/$defs/VerseBoundaryOperator"
+        }
+      }
+    },
+    "CrossWordEvent": {
+      "type": "object",
+      "required": [
+        "ref_key",
+        "token_index",
+        "baseline_skeleton",
+        "observed_skeleton",
+        "explanation"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ref_key": {
+          "type": "string",
+          "pattern": "^[^/]+/[0-9]+/[0-9]+/[0-9]+$"
+        },
+        "token_index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "baseline_skeleton": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BoundaryOpKind"
+          }
+        },
+        "observed_skeleton": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BoundaryOpKind"
+          }
+        },
+        "explanation": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "NotableMotif": {
+      "type": "object",
+      "required": ["motif", "count"],
+      "additionalProperties": false,
+      "properties": {
+        "motif": {
+          "type": "string",
+          "minLength": 1
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "samples": {
+          "type": "array"
+        },
+        "refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ops": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "action": {
+          "type": "string"
+        }
+      }
+    },
+    "SafetyRail": {
+      "type": "object",
+      "required": ["active", "provisional_delta_count", "provisional_delta_rate", "threshold"],
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "type": "boolean"
+        },
+        "provisional_delta_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "provisional_delta_rate": {
+          "type": "number",
+          "minimum": 0
+        },
+        "threshold": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "VerseTraceRecord": {
+      "type": "object",
+      "required": [
+        "record_kind",
+        "trace_version",
+        "semantics_version",
+        "render_version",
+        "ref",
+        "ref_key",
+        "mode",
+        "words_total",
+        "total_events",
+        "boundary_events",
+        "cross_word_events",
+        "notable_motifs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "record_kind": {
+          "const": "VERSE_TRACE"
+        },
+        "trace_version": {
+          "$ref": "#/$defs/TraceVersion"
+        },
+        "semantics_version": {
+          "$ref": "#/$defs/SemVer"
+        },
+        "render_version": {
+          "$ref": "#/$defs/SemVer"
+        },
+        "ref": {
+          "$ref": "#/$defs/RefVerse"
+        },
+        "ref_key": {
+          "type": "string",
+          "pattern": "^[^/]+/[0-9]+/[0-9]+$"
+        },
+        "mode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "words_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_events": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "boundary_events": {
+          "$ref": "#/$defs/VerseBoundaryEvents"
+        },
+        "cross_word_events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CrossWordEvent"
+          }
+        },
+        "notable_motifs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NotableMotif"
+          }
+        },
+        "window_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "safety_rail": {
+          "$ref": "#/$defs/SafetyRail"
+        },
+        "canonical_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

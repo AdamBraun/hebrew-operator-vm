@@ -1,0 +1,70 @@
+{
+  "record_kind": "WORD_TRACE",
+  "trace_version": "1.0.0",
+  "semantics_version": "1.0.0",
+  "render_version": "1.0.0",
+  "ref": {
+    "book": "Genesis",
+    "chapter": 1,
+    "verse": 1,
+    "token_index": 2
+  },
+  "ref_key": "Genesis/1/1/2",
+  "surface": "רֵאשִׁית",
+  "token_ids": [644, 1, 672, 280, 724],
+  "events": [
+    {
+      "kind": "RESH.BOUNDARY_CLOSE",
+      "index": 0,
+      "tau": 2,
+      "source": "vm_event",
+      "payload": {
+        "id": "ר:2:1",
+        "inside": "Ω",
+        "outside": "⊥",
+        "anchor": 0
+      }
+    },
+    {
+      "kind": "ALEPH.ALIAS",
+      "index": 1,
+      "tau": 3,
+      "source": "vm_event",
+      "payload": {
+        "id": "א:3:1",
+        "left": "ר:2:2",
+        "right": "Ω"
+      }
+    },
+    {
+      "kind": "SHIN.FORK",
+      "index": 2,
+      "tau": 4,
+      "source": "vm_event",
+      "payload": {
+        "id": "ש:4:1",
+        "focus": "א:3:1",
+        "spine": "ש:4:2",
+        "left": "ש:4:3",
+        "right": "ש:4:4",
+        "active": "ש:4:3"
+      }
+    },
+    {
+      "kind": "TAV.FINALIZE",
+      "index": 3,
+      "tau": 5,
+      "source": "vm_event",
+      "payload": {
+        "id": "ת:5:2",
+        "target": "ש:4:1",
+        "outside": "Ω",
+        "boundaryId": "ת:5:1",
+        "residueId": "ת:5:3"
+      }
+    }
+  ],
+  "skeleton": ["RESH.BOUNDARY_CLOSE", "ALEPH.ALIAS", "SHIN.FORK", "TAV.FINALIZE"],
+  "flow": "ר boundary close ⇢ א alias ⇢ ש fork route ⇢ ת finalize+stamp",
+  "mode": "WORD"
+}
