@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildCuratedGoldens, buildRegressionReport } from "@ref/scripts/torahCorpus/regress";
+import {
+  buildCuratedGoldens,
+  buildRegressionReport,
+  buildRegressDiffLines
+} from "@ref/scripts/torahCorpus/regress";
 
 describe("torah corpus regress module", () => {
   it("builds curated goldens from delta groups and row families", () => {
@@ -60,5 +64,101 @@ describe("torah corpus regress module", () => {
     expect(text).toContain("## Result");
     expect(text).toContain("- FAIL");
     expect(text).toContain("Inserted TAV.FINALIZE");
+  });
+
+  it("renders regress diff report narrative sections", () => {
+    const lines = buildRegressDiffLines({
+      runA: {
+        trace_path: `${process.cwd()}/outputs/a/word_traces.jsonl`,
+        trace_sha256: "a".repeat(64),
+        semantic_versions: ["1.0.0"],
+        rows: [{}],
+        map: new Map([
+          [
+            "Genesis/1/1/1",
+            {
+              key: "Genesis/1/1/1",
+              ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 1 },
+              surface: "אב",
+              flow: "a",
+              skeleton: ["ALEPH.ALIAS"],
+              semantic_version: "1.0.0"
+            }
+          ]
+        ])
+      },
+      runB: {
+        trace_path: `${process.cwd()}/outputs/b/word_traces.jsonl`,
+        trace_sha256: "b".repeat(64),
+        semantic_versions: ["1.1.0"],
+        rows: [{}],
+        map: new Map([
+          [
+            "Genesis/1/1/1",
+            {
+              key: "Genesis/1/1/1",
+              ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 1 },
+              surface: "אב",
+              flow: "b",
+              skeleton: ["ALEPH.ALIAS", "TAV.FINALIZE"],
+              semantic_version: "1.1.0"
+            }
+          ]
+        ])
+      },
+      compileA: {
+        path: `${process.cwd()}/data/a.json`,
+        registry_sha256: "a1",
+        warning_count: 0,
+        warning_by_code: {}
+      },
+      compileB: {
+        path: `${process.cwd()}/data/b.json`,
+        registry_sha256: "b1",
+        warning_count: 1,
+        warning_by_code: { WARN_A: 1 }
+      },
+      addedKeys: [],
+      removedKeys: [],
+      skeletonChanges: [
+        {
+          key: "Genesis/1/1/1",
+          row_a: {
+            key: "Genesis/1/1/1",
+            ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 1 },
+            surface: "אב",
+            flow: "a",
+            skeleton: ["ALEPH.ALIAS"],
+            semantic_version: "1.0.0"
+          },
+          row_b: {
+            key: "Genesis/1/1/1",
+            ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 1 },
+            surface: "אב",
+            flow: "b",
+            skeleton: ["ALEPH.ALIAS", "TAV.FINALIZE"],
+            semantic_version: "1.1.0"
+          },
+          delta: { summary: "Inserted TAV.FINALIZE" },
+          semantic_reason: "semantic_version 1.0.0 -> 1.1.0",
+          warning_reason: "compile warnings unchanged (none)"
+        }
+      ],
+      renderingChanges: [],
+      topGroupedDeltas: [
+        {
+          count: 1,
+          change_type: "event_added",
+          signature: "ADD:TAV.FINALIZE",
+          summary: "Inserted TAV.FINALIZE",
+          sample_keys: ["Genesis/1/1/1"]
+        }
+      ]
+    });
+
+    const text = lines.join("\n");
+    expect(text).toContain("## Top Skeleton Delta Groups");
+    expect(text).toContain("## Most Interesting Samples");
+    expect(text).toContain("ADD:TAV.FINALIZE");
   });
 });

@@ -1,5 +1,8 @@
 import {
   formatWarningCounts,
+  markdownSafe,
+  prettyRef,
+  type PrettyRefRow,
   summarizeSemanticVersions,
   workspaceRelativePath
 } from "./report";
@@ -51,6 +54,68 @@ type BuildRegressionReportInput = {
   goldensPath: string;
   regressionFailures: RegressionFailure[];
   regressionPasses: string[];
+};
+
+type RegressDiffRow = PrettyRefRow & {
+  surface: string;
+  flow: string;
+  skeleton: string[];
+  semantic_version: string;
+};
+
+type RegressDiffRun = {
+  trace_path: string;
+  trace_sha256: string;
+  semantic_versions: string[];
+  rows: unknown[];
+  map: Map<string, RegressDiffRow>;
+};
+
+type RegressDiffCompile = {
+  path?: string;
+  registry_sha256: string;
+  warning_count?: number;
+  warning_by_code?: Record<string, number>;
+  load_error?: string;
+};
+
+type RegressDeltaGroup = {
+  count: number;
+  change_type: string;
+  signature: string;
+  summary: string;
+  sample_keys: string[];
+};
+
+type RegressSkeletonChange = {
+  key: string;
+  row_a: RegressDiffRow;
+  row_b: RegressDiffRow;
+  delta: {
+    summary: string;
+  };
+  semantic_reason: string;
+  warning_reason: string;
+};
+
+type RegressRenderingChange = {
+  key: string;
+  row_a: RegressDiffRow;
+  row_b: RegressDiffRow;
+  semantic_reason: string;
+  warning_reason: string;
+};
+
+type BuildRegressDiffLinesInput = {
+  runA: RegressDiffRun;
+  runB: RegressDiffRun;
+  compileA: RegressDiffCompile;
+  compileB: RegressDiffCompile;
+  addedKeys: string[];
+  removedKeys: string[];
+  skeletonChanges: RegressSkeletonChange[];
+  renderingChanges: RegressRenderingChange[];
+  topGroupedDeltas: RegressDeltaGroup[];
 };
 
 function sortRefLike(left: string, right: string): number {
@@ -295,4 +360,217 @@ export function buildRegressionReport({
   }
 
   return lines;
+}
+
+function truncate(value: unknown, max = 120): string {
+  const text = String(value);
+  if (text.length <= max) {
+    return text;
+  }
+  return `${text.slice(0, max - 3)}...`;
+}
+
+type InterestingSample = {
+  kind: string;
+  key: string;
+  summary: string;
+  semantic_reason: string;
+  warning_reason: string;
+  row_a: RegressDiffRow | null;
+  row_b: RegressDiffRow | null;
+};
+
+export function buildRegressDiffLines({
+  runA,
+  runB,
+  compileA,
+  compileB,
+  addedKeys,
+  removedKeys,
+  skeletonChanges,
+  renderingChanges,
+  topGroupedDeltas
+}: BuildRegressDiffLinesInput): string[] {
+  const diffLines = [
+    "# Run-to-Run Diff Report",
+    "",
+    "## Header",
+    `- run_a: ${workspaceRelativePath(runA.trace_path)}`,
+    `- run_b: ${workspaceRelativePath(runB.trace_path)}`,
+    `- trace_sha256_a: ${runA.trace_sha256}`,
+    `- trace_sha256_b: ${runB.trace_sha256}`,
+    `- semantic_versions_a: ${summarizeSemanticVersions(runA.semantic_versions)}`,
+    `- semantic_versions_b: ${summarizeSemanticVersions(runB.semantic_versions)}`,
+    `- compiled_bundle_a: ${compileA.path ? workspaceRelativePath(compileA.path) : "not found"}`,
+    `- compiled_bundle_b: ${compileB.path ? workspaceRelativePath(compileB.path) : "not found"}`,
+    `- registry_sha256_a: ${compileA.registry_sha256}`,
+    `- registry_sha256_b: ${compileB.registry_sha256}`,
+    `- compile_warnings_a: ${compileA.warning_count ?? "unknown"} (${formatWarningCounts(
+      compileA.warning_by_code
+    )})`,
+    `- compile_warnings_b: ${compileB.warning_count ?? "unknown"} (${formatWarningCounts(
+      compileB.warning_by_code
+    )})`,
+    "",
+    "## Summary",
+    `- total_words_a: ${runA.rows.length}`,
+    `- total_words_b: ${runB.rows.length}`,
+    `- stable_identity: PASS (duplicate keys rejected per-run)`,
+    `- ingestion_changes: ${addedKeys.length + removedKeys.length}`,
+    `- skeleton_changes: ${skeletonChanges.length}`,
+    `- rendering_only_changes: ${renderingChanges.length}`
+  ];
+
+  if (compileA.load_error) {
+    diffLines.push(`- compile_context_a_note: ${compileA.load_error}`);
+  }
+  if (compileB.load_error) {
+    diffLines.push(`- compile_context_b_note: ${compileB.load_error}`);
+  }
+
+  diffLines.push("", "## Breaking Changes (Tokenization / Ingestion)");
+  diffLines.push(`- added_keys_in_b: ${addedKeys.length}`);
+  diffLines.push(`- removed_keys_from_a: ${removedKeys.length}`);
+
+  if (addedKeys.length > 0) {
+    diffLines.push("", "### Added Samples");
+    for (const key of addedKeys.slice(0, 20)) {
+      const row = runB.map.get(key);
+      if (!row) {
+        continue;
+      }
+      diffLines.push(`- ${key} | ${prettyRef(row)} | ${row.surface} | ${row.flow}`);
+    }
+  }
+
+  if (removedKeys.length > 0) {
+    diffLines.push("", "### Removed Samples");
+    for (const key of removedKeys.slice(0, 20)) {
+      const row = runA.map.get(key);
+      if (!row) {
+        continue;
+      }
+      diffLines.push(`- ${key} | ${prettyRef(row)} | ${row.surface} | ${row.flow}`);
+    }
+  }
+
+  diffLines.push("", "## Top Skeleton Delta Groups");
+  if (topGroupedDeltas.length === 0) {
+    diffLines.push("- none");
+  } else {
+    diffLines.push("| rank | count | change_type | signature | sample_summary |");
+    diffLines.push("| ---: | ---: | --- | --- | --- |");
+    for (let index = 0; index < topGroupedDeltas.length; index += 1) {
+      const entry = topGroupedDeltas[index];
+      diffLines.push(
+        `| ${index + 1} | ${entry.count} | ${markdownSafe(entry.change_type)} | ${markdownSafe(
+          truncate(entry.signature, 100)
+        )} | ${markdownSafe(truncate(entry.summary, 100))} |`
+      );
+    }
+  }
+
+  diffLines.push("", "## Rendering-Only Changes");
+  if (renderingChanges.length === 0) {
+    diffLines.push("- none");
+  } else {
+    for (const change of renderingChanges.slice(0, 20)) {
+      diffLines.push(`- ${change.key} | ${prettyRef(change.row_b)} | ${change.row_b.surface}`);
+      diffLines.push(`  - skeleton: ${(change.row_b.skeleton ?? []).join(" -> ") || "(empty)"}`);
+      diffLines.push(`  - flow_a: ${change.row_a.flow}`);
+      diffLines.push(`  - flow_b: ${change.row_b.flow}`);
+    }
+  }
+
+  const interesting: InterestingSample[] = [];
+  const seenInteresting = new Set<string>();
+  const addInteresting = (entry: InterestingSample) => {
+    const id = `${entry.kind}:${entry.key}`;
+    if (seenInteresting.has(id)) {
+      return;
+    }
+    seenInteresting.add(id);
+    interesting.push(entry);
+  };
+
+  for (const group of topGroupedDeltas.slice(0, 12)) {
+    const sampleKey = group.sample_keys[0];
+    const sample = skeletonChanges.find((change) => change.key === sampleKey);
+    if (!sample) {
+      continue;
+    }
+    addInteresting({
+      kind: "skeleton_delta",
+      key: sample.key,
+      summary: sample.delta.summary,
+      semantic_reason: sample.semantic_reason,
+      warning_reason: sample.warning_reason,
+      row_a: sample.row_a,
+      row_b: sample.row_b
+    });
+  }
+
+  for (const key of addedKeys.slice(0, 4)) {
+    const row = runB.map.get(key);
+    if (!row) {
+      continue;
+    }
+    addInteresting({
+      kind: "added",
+      key,
+      summary: "New key present in run B only",
+      semantic_reason: `semantic_version ${row.semantic_version}`,
+      warning_reason: "compile warning delta unavailable for added key",
+      row_a: null,
+      row_b: row
+    });
+  }
+
+  for (const key of removedKeys.slice(0, 4)) {
+    const row = runA.map.get(key);
+    if (!row) {
+      continue;
+    }
+    addInteresting({
+      kind: "removed",
+      key,
+      summary: "Key removed from run B",
+      semantic_reason: `semantic_version ${row.semantic_version}`,
+      warning_reason: "compile warning delta unavailable for removed key",
+      row_a: row,
+      row_b: null
+    });
+  }
+
+  for (const change of renderingChanges.slice(0, 4)) {
+    addInteresting({
+      kind: "rendering_only",
+      key: change.key,
+      summary: "Flow text changed, skeleton unchanged",
+      semantic_reason: change.semantic_reason,
+      warning_reason: change.warning_reason,
+      row_a: change.row_a,
+      row_b: change.row_b
+    });
+  }
+
+  diffLines.push("", "## Most Interesting Samples");
+  if (interesting.length === 0) {
+    diffLines.push("- none");
+  } else {
+    for (const sample of interesting.slice(0, 20)) {
+      const rowForRef = sample.row_b ?? sample.row_a ?? { key: sample.key, surface: "", flow: "", skeleton: [], semantic_version: "unknown" };
+      diffLines.push(`- [${sample.kind}] ${sample.key} | ${prettyRef(rowForRef)}`);
+      diffLines.push(`  - summary: ${sample.summary}`);
+      diffLines.push(`  - why: ${sample.semantic_reason}; ${sample.warning_reason}`);
+      if (sample.row_a) {
+        diffLines.push(`  - run_a: ${sample.row_a.surface} :: ${sample.row_a.flow}`);
+      }
+      if (sample.row_b) {
+        diffLines.push(`  - run_b: ${sample.row_b.surface} :: ${sample.row_b.flow}`);
+      }
+    }
+  }
+
+  return diffLines;
 }
