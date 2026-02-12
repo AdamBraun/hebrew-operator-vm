@@ -1,12 +1,12 @@
 # CI Guardrails Baseline Report
 
 - mode: fail
-- generated_at_utc: 2026-02-12T20:41:51.323Z
+- generated_at_utc: 2026-02-12T20:56:20.556Z
 - touched_source: working_tree
-- touched_files: 5
+- touched_files: 4
 - thresholds.max_bytes: 30000
 - thresholds.max_complexity_score: 220
-- files_scanned: 74
+- files_scanned: 75
 - legacy_allowlisted_violations: 2
 - touched_legacy_violations: 0
 - new_violations: 0
@@ -21,10 +21,10 @@
 | impl/reference/src/scripts/torahCorpus/runtimeCommands.ts | no | 29570 | 55 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/runtimePart1.ts | no | 28394 | 122 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/execute.ts | no | 27099 | 51 | pass | pass |
+| impl/reference/src/scripts/extractTokenRegistry/runtime.ts | yes | 22509 | 62 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/regress.ts | no | 21536 | 78 | pass | pass |
-| impl/reference/src/scripts/normalizeTorah/runtime.ts | yes | 20918 | 66 | pass | pass |
+| impl/reference/src/scripts/normalizeTorah/runtime.ts | no | 20918 | 66 | pass | pass |
 | scripts/compile-token-operators.mjs | no | 20062 | 90 | pass | pass |
-| scripts/extract-token-registry.mjs | no | 19733 | 61 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/runtimePart2.ts | no | 18990 | 97 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/args.ts | no | 17845 | 81 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/runtimePart3.ts | no | 15671 | 85 | pass | pass |
@@ -79,7 +79,8 @@
 | impl/reference/src/compile/types.ts | no | 1031 | 1 | pass | pass |
 | impl/reference/src/letters/yod.ts | no | 993 | 1 | pass | pass |
 | impl/reference/src/letters/types.ts | no | 905 | 1 | pass | pass |
-| scripts/normalize-torah.mjs | yes | 838 | 7 | pass | pass |
+| scripts/extract-token-registry.mjs | yes | 882 | 7 | pass | pass |
+| scripts/normalize-torah.mjs | no | 838 | 7 | pass | pass |
 | scripts/torah-corpus.mjs | no | 837 | 7 | pass | pass |
 | scripts/download-torah.mjs | no | 831 | 7 | pass | pass |
 | scripts/iterate-torah.mjs | no | 824 | 7 | pass | pass |
