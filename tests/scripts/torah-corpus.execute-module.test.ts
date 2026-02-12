@@ -389,7 +389,10 @@ describe("torah corpus execute module helpers", () => {
     });
 
     expect(result.sortedRows.map((row) => row.ref_key)).toEqual(["Genesis/1/1/1", "Genesis/1/1/2"]);
-    expect(result.sortedVerseRows.map((row) => row.ref_key)).toEqual(["Genesis/1/1", "Genesis/1/2"]);
+    expect(result.sortedVerseRows.map((row) => row.ref_key)).toEqual([
+      "Genesis/1/1",
+      "Genesis/1/2"
+    ]);
     expect(result.traceContent.endsWith("\n")).toBe(true);
     expect(result.verseTraceContent.endsWith("\n")).toBe(true);
     expect(result.topSkeletons[0]).toEqual(["A", 2]);
@@ -411,9 +414,7 @@ describe("torah corpus execute module helpers", () => {
       unknownSignatures: 2,
       missingBundles: 3
     });
-    expect(failed.hardErrorMessage).toBe(
-      "execute failed: unknownSignatures=2 missingBundles=3"
-    );
+    expect(failed.hardErrorMessage).toBe("execute failed: unknownSignatures=2 missingBundles=3");
     expect(failed.consoleLine).toContain("mode=WINDOW(2)");
 
     const ok = buildExecuteCompletion({
@@ -476,9 +477,9 @@ describe("torah corpus execute module helpers", () => {
       verseTraceOutPath: "/tmp/out/verse.jsonl",
       verseReportOutPath: "/tmp/reports/verse.md",
       verseMotifIndexOutPath: "/tmp/index/motif.json",
-      traceContent: "{\"a\":1}\n",
+      traceContent: '{"a":1}\n',
       flowLines: ["a", "b"],
-      verseTraceContent: "{\"v\":1}\n",
+      verseTraceContent: '{"v":1}\n',
       reportLines: ["# Report"],
       verseReportLines: ["# Verse Report"],
       verseMotifIndexPayload: { schema_version: 1 }

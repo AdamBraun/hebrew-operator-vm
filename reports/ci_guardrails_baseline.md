@@ -1,10 +1,10 @@
 # CI Guardrails Baseline Report
 
 - mode: warn
-- generated_at_utc: 2026-02-12T14:35:41.992Z
+- generated_at_utc: 2026-02-12T19:52:26.884Z
 - thresholds.max_bytes: 30000
 - thresholds.max_complexity_score: 220
-- files_scanned: 61
+- files_scanned: 67
 - legacy_allowlisted_violations: 3
 - new_violations: 0
 
@@ -12,13 +12,17 @@
 
 | file | bytes | complexity_score | bytes_status | complexity_status |
 |---|---:|---:|---|---|
-| scripts/torah-corpus.mjs | 137977 | 597 | legacy_allowlisted | legacy_allowlisted |
+| scripts/torah-corpus.mjs | 92113 | 376 | legacy_allowlisted | legacy_allowlisted |
 | scripts/exemplar-library.mjs | 41157 | 168 | legacy_allowlisted | pass |
 | scripts/pattern-index.mjs | 34252 | 174 | legacy_allowlisted | pass |
+| impl/reference/src/scripts/torahCorpus/execute.ts | 27098 | 51 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/regress.ts | 21508 | 78 | pass | pass |
 | scripts/compile-token-operators.mjs | 20062 | 90 | pass | pass |
 | scripts/extract-token-registry.mjs | 19733 | 61 | pass | pass |
 | scripts/normalize-torah.mjs | 17870 | 64 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/args.ts | 17845 | 81 | pass | pass |
 | impl/reference/src/trace/canonicalize.ts | 12681 | 53 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/executeReports.ts | 11766 | 30 | pass | pass |
 | impl/reference/src/trace/types.ts | 10437 | 6 | pass | pass |
 | impl/reference/src/vm/vm.ts | 9029 | 57 | pass | pass |
 | impl/reference/src/dispatch/dispatcher.ts | 7345 | 42 | pass | pass |
@@ -26,6 +30,7 @@
 | scripts/iterate-torah.mjs | 5094 | 29 | pass | pass |
 | impl/reference/src/compile/tokenizer.ts | 3539 | 25 | pass | pass |
 | impl/reference/src/vm/select.ts | 3533 | 26 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/diff.ts | 3532 | 15 | pass | pass |
 | impl/reference/src/trace/hash.ts | 3317 | 15 | pass | pass |
 | impl/reference/src/letters/he.ts | 2907 | 5 | pass | pass |
 | impl/reference/src/state/state.ts | 2716 | 5 | pass | pass |
@@ -33,6 +38,7 @@
 | impl/reference/src/vm/space.ts | 2319 | 11 | pass | pass |
 | impl/reference/src/dispatch/types.ts | 2305 | 1 | pass | pass |
 | impl/reference/src/letters/shin.ts | 2265 | 2 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/report.ts | 2241 | 10 | pass | pass |
 | impl/reference/src/letters/tav.ts | 2129 | 1 | pass | pass |
 | impl/reference/src/compile/diacritics.ts | 2037 | 9 | pass | pass |
 | impl/reference/src/letters/lamed.ts | 1965 | 1 | pass | pass |
