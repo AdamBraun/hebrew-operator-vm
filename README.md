@@ -146,7 +146,24 @@ Integrity check:
 npm run torah-corpus:verify -- --dir outputs/torah-corpus/latest
 ```
 
-Diff and regression promotion loop:
+Run-to-run diff + regression (single command):
+
+```bash
+npm run torah-corpus:regress -- --run-a corpus/run-A/word_traces.jsonl --run-b corpus/run-B/word_traces.jsonl --update-goldens
+```
+
+Outputs:
+
+- `diffs/runA_vs_runB.md`: readable run diff with breaking changes, top skeleton deltas, and semantic/warning context.
+- `tests/goldens.json`: curated golden skeleton expectations (`ref`, `surface`, `expected_skeleton`, `notes`).
+- `reports/regression_report.md`: exact-match regression results for all goldens (fails command on mismatch).
+
+Notes:
+
+- Omit `--update-goldens` during normal verification to fail loudly on unintended behavior changes.
+- Pass `--compiled-a` / `--compiled-b` if each run used different compiled token bundles and you want precise warning deltas.
+
+Legacy diff and regression promotion loop:
 
 ```bash
 npm run torah-corpus:diff -- --prev outputs/torah-corpus/run-A --next outputs/torah-corpus/run-B --out outputs/torah-corpus/run-B/diff.from-run-A.json

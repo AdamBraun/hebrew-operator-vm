@@ -15,10 +15,13 @@ const DEFAULT_PROMOTE_OUT = path.resolve(
 );
 const DEFAULT_TRACE_OUT = path.resolve(process.cwd(), "corpus", "word_traces.jsonl");
 const DEFAULT_FLOWS_OUT = path.resolve(process.cwd(), "corpus", "word_flows.txt");
-const DEFAULT_EXECUTION_REPORT_OUT = path.resolve(
+const DEFAULT_EXECUTION_REPORT_OUT = path.resolve(process.cwd(), "reports", "execution_report.md");
+const DEFAULT_DIFF_REPORT_OUT = path.resolve(process.cwd(), "diffs", "runA_vs_runB.md");
+const DEFAULT_GOLDENS_OUT = path.resolve(process.cwd(), "tests", "goldens.json");
+const DEFAULT_REGRESSION_REPORT_OUT = path.resolve(
   process.cwd(),
   "reports",
-  "execution_report.md"
+  "regression_report.md"
 );
 const DEFAULT_TOKEN_REGISTRY_PATH = path.resolve(process.cwd(), "data", "tokens.registry.json");
 const DEFAULT_COMPILED_BUNDLES_PATH = path.resolve(process.cwd(), "data", "tokens.compiled.json");
@@ -26,11 +29,11 @@ const DEFAULT_SEMANTICS_DEFS_PATH = path.resolve(process.cwd(), "registry", "tok
 const SPACE_TOKEN = "□";
 
 const FINAL_MAP = {
-  "ך": "כ",
-  "ם": "מ",
-  "ן": "נ",
-  "ף": "פ",
-  "ץ": "צ"
+  ך: "כ",
+  ם: "מ",
+  ן: "נ",
+  ף: "פ",
+  ץ: "צ"
 };
 
 const HEBREW_LETTERS = new Set([
@@ -170,11 +173,19 @@ function printHelp() {
   console.log(
     "  node scripts/torah-corpus.mjs run-all [--normalize-finals] [--allow-runtime-errors]"
   );
-  console.log("  node scripts/torah-corpus.mjs diff --prev=dir-or-file --next=dir-or-file [--out=path]");
+  console.log(
+    "  node scripts/torah-corpus.mjs diff --prev=dir-or-file --next=dir-or-file [--out=path]"
+  );
   console.log(
     "  node scripts/torah-corpus.mjs promote --diff=path [--next=dir-or-file] [--out=path] [--limit=N]"
   );
   console.log("  node scripts/torah-corpus.mjs verify [--dir=path]");
+  console.log(
+    "  node scripts/torah-corpus.mjs regress --run-a=dir-or-file --run-b=dir-or-file [--diff-out=path] [--goldens=path] [--regression-out=path]"
+  );
+  console.log(
+    "  node scripts/torah-corpus.mjs regress [--compiled-a=path] [--compiled-b=path] [--update-goldens] [--golden-limit=N]"
+  );
   console.log("");
   console.log("Defaults:");
   console.log(`  --input=${DEFAULT_INPUT}`);
@@ -182,6 +193,9 @@ function printHelp() {
   console.log(`  --trace-out=${DEFAULT_TRACE_OUT}`);
   console.log(`  --flows-out=${DEFAULT_FLOWS_OUT}`);
   console.log(`  --report-out=${DEFAULT_EXECUTION_REPORT_OUT}`);
+  console.log(`  --diff-out=${DEFAULT_DIFF_REPORT_OUT}`);
+  console.log(`  --goldens=${DEFAULT_GOLDENS_OUT}`);
+  console.log(`  --regression-out=${DEFAULT_REGRESSION_REPORT_OUT}`);
   console.log(`  --token-registry=${DEFAULT_TOKEN_REGISTRY_PATH}`);
   console.log(`  --compiled-bundles=${DEFAULT_COMPILED_BUNDLES_PATH}`);
   console.log("  --lang=he");
@@ -427,6 +441,89 @@ function parseVerifyArgs(argv) {
       index = dirOpt.nextIndex;
       continue;
     }
+  }
+
+  return opts;
+}
+
+function parseRegressArgs(argv) {
+  const opts = {
+    runA: "",
+    runB: "",
+    diffOut: DEFAULT_DIFF_REPORT_OUT,
+    goldens: DEFAULT_GOLDENS_OUT,
+    regressionOut: DEFAULT_REGRESSION_REPORT_OUT,
+    compiledA: "",
+    compiledB: "",
+    updateGoldens: false,
+    goldenLimit: 60
+  };
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === "--help" || arg === "-h") {
+      printHelp();
+      process.exit(0);
+    }
+    const runAOpt = readOptionValue(argv, index, "--run-a");
+    if (runAOpt) {
+      opts.runA = runAOpt.value;
+      index = runAOpt.nextIndex;
+      continue;
+    }
+    const runBOpt = readOptionValue(argv, index, "--run-b");
+    if (runBOpt) {
+      opts.runB = runBOpt.value;
+      index = runBOpt.nextIndex;
+      continue;
+    }
+    const diffOutOpt = readOptionValue(argv, index, "--diff-out");
+    if (diffOutOpt) {
+      opts.diffOut = diffOutOpt.value;
+      index = diffOutOpt.nextIndex;
+      continue;
+    }
+    const goldensOpt = readOptionValue(argv, index, "--goldens");
+    if (goldensOpt) {
+      opts.goldens = goldensOpt.value;
+      index = goldensOpt.nextIndex;
+      continue;
+    }
+    const regressionOutOpt = readOptionValue(argv, index, "--regression-out");
+    if (regressionOutOpt) {
+      opts.regressionOut = regressionOutOpt.value;
+      index = regressionOutOpt.nextIndex;
+      continue;
+    }
+    const compiledAOpt = readOptionValue(argv, index, "--compiled-a");
+    if (compiledAOpt) {
+      opts.compiledA = compiledAOpt.value;
+      index = compiledAOpt.nextIndex;
+      continue;
+    }
+    const compiledBOpt = readOptionValue(argv, index, "--compiled-b");
+    if (compiledBOpt) {
+      opts.compiledB = compiledBOpt.value;
+      index = compiledBOpt.nextIndex;
+      continue;
+    }
+    const goldenLimitOpt = readOptionValue(argv, index, "--golden-limit");
+    if (goldenLimitOpt) {
+      opts.goldenLimit = Number(goldenLimitOpt.value);
+      index = goldenLimitOpt.nextIndex;
+      continue;
+    }
+    if (arg === "--update-goldens") {
+      opts.updateGoldens = true;
+      continue;
+    }
+  }
+
+  if (!opts.runA || !opts.runB) {
+    throw new Error("regress requires --run-a and --run-b");
+  }
+  if (!Number.isFinite(opts.goldenLimit) || opts.goldenLimit <= 0) {
+    throw new Error(`Invalid --golden-limit: ${opts.goldenLimit}`);
   }
 
   return opts;
@@ -686,32 +783,50 @@ function summarizeEvent(type, event, traceEntry) {
 function mapRawEventToFlow(event, traceEntry) {
   switch (event.type) {
     case "align":
-      return { op_family: "TSADI.ALIGN", params_summary: summarizeEvent(event.type, event, traceEntry) };
+      return {
+        op_family: "TSADI.ALIGN",
+        params_summary: summarizeEvent(event.type, event, traceEntry)
+      };
     case "align_final":
       return {
         op_family: "FINAL_TSADI.ALIGN_FINAL",
         params_summary: summarizeEvent(event.type, event, traceEntry)
       };
     case "finalize":
-      return { op_family: "TAV.FINALIZE", params_summary: summarizeEvent(event.type, event, traceEntry) };
+      return {
+        op_family: "TAV.FINALIZE",
+        params_summary: summarizeEvent(event.type, event, traceEntry)
+      };
     case "bestow":
-      return { op_family: "GIMEL.BESTOW", params_summary: summarizeEvent(event.type, event, traceEntry) };
+      return {
+        op_family: "GIMEL.BESTOW",
+        params_summary: summarizeEvent(event.type, event, traceEntry)
+      };
     case "declare":
-      return { op_family: "HE.DECLARE", params_summary: summarizeEvent(event.type, event, traceEntry) };
+      return {
+        op_family: "HE.DECLARE",
+        params_summary: summarizeEvent(event.type, event, traceEntry)
+      };
     case "declare_breath":
       return {
         op_family: "HE.DECLARE_BREATH",
         params_summary: summarizeEvent(event.type, event, traceEntry)
       };
     case "declare_pin":
-      return { op_family: "HE.DECLARE_PIN", params_summary: summarizeEvent(event.type, event, traceEntry) };
+      return {
+        op_family: "HE.DECLARE_PIN",
+        params_summary: summarizeEvent(event.type, event, traceEntry)
+      };
     case "declare_alias":
       return {
         op_family: "HE.DECLARE_ALIAS",
         params_summary: summarizeEvent(event.type, event, traceEntry)
       };
     case "alias":
-      return { op_family: "ALEPH.ALIAS", params_summary: summarizeEvent(event.type, event, traceEntry) };
+      return {
+        op_family: "ALEPH.ALIAS",
+        params_summary: summarizeEvent(event.type, event, traceEntry)
+      };
     case "support":
       return {
         op_family: "SAMEKH.SUPPORT_DISCHARGE",
@@ -729,12 +844,14 @@ function mapRawEventToFlow(event, traceEntry) {
       };
     case "boundary_close":
       return {
-        op_family:
-          traceEntry.read_op === "ד" ? "DALET.BOUNDARY_CLOSE" : "RESH.BOUNDARY_CLOSE",
+        op_family: traceEntry.read_op === "ד" ? "DALET.BOUNDARY_CLOSE" : "RESH.BOUNDARY_CLOSE",
         params_summary: summarizeEvent(event.type, event, traceEntry)
       };
     case "utter":
-      return { op_family: "PE.UTTER", params_summary: summarizeEvent(event.type, event, traceEntry) };
+      return {
+        op_family: "PE.UTTER",
+        params_summary: summarizeEvent(event.type, event, traceEntry)
+      };
     case "utter_close":
       return {
         op_family: "FINAL_PE.UTTER_CLOSE",
@@ -751,13 +868,25 @@ function mapRawEventToFlow(event, traceEntry) {
         params_summary: summarizeEvent(event.type, event, traceEntry)
       };
     case "covert":
-      return { op_family: "TET.COVERT", params_summary: summarizeEvent(event.type, event, traceEntry) };
+      return {
+        op_family: "TET.COVERT",
+        params_summary: summarizeEvent(event.type, event, traceEntry)
+      };
     case "gate":
-      return { op_family: "ZAYIN.GATE", params_summary: summarizeEvent(event.type, event, traceEntry) };
+      return {
+        op_family: "ZAYIN.GATE",
+        params_summary: summarizeEvent(event.type, event, traceEntry)
+      };
     case "approx":
-      return { op_family: "QOF.APPROX", params_summary: summarizeEvent(event.type, event, traceEntry) };
+      return {
+        op_family: "QOF.APPROX",
+        params_summary: summarizeEvent(event.type, event, traceEntry)
+      };
     case "shin":
-      return { op_family: "SHIN.FORK", params_summary: summarizeEvent(event.type, event, traceEntry) };
+      return {
+        op_family: "SHIN.FORK",
+        params_summary: summarizeEvent(event.type, event, traceEntry)
+      };
     default:
       return null;
   }
@@ -796,7 +925,11 @@ function extractWordFlow(trace) {
       addFlow("MEM.OPEN", "open mem zone debt", "derived");
     }
     if (traceEntry.read_op === "ם") {
-      addFlow("FINAL_MEM.CLOSE", delta < 0 ? "close existing mem zone" : "close/synthesize mem zone", "derived");
+      addFlow(
+        "FINAL_MEM.CLOSE",
+        delta < 0 ? "close existing mem zone" : "close/synthesize mem zone",
+        "derived"
+      );
     }
     if (traceEntry.read_op === "נ" && delta > 0) {
       addFlow("NUN.SUPPORT_DEBT", "open support debt", "derived");
@@ -818,7 +951,9 @@ function extractWordFlow(trace) {
     }
 
     if (traceEntry.token === SPACE_TOKEN && delta < 0) {
-      const supportFalls = (traceEntry.events ?? []).filter((event) => event.type === "fall").length;
+      const supportFalls = (traceEntry.events ?? []).filter(
+        (event) => event.type === "fall"
+      ).length;
       const boundaryAuto = (traceEntry.events ?? []).filter(
         (event) => event.type === "boundary_auto_close"
       ).length;
@@ -909,7 +1044,10 @@ function buildPatternIndex(fullRows) {
 
   const toSortedArray = (map) =>
     Array.from(map.values())
-      .sort((left, right) => right.count - left.count || left.pattern.join().localeCompare(right.pattern.join()))
+      .sort(
+        (left, right) =>
+          right.count - left.count || left.pattern.join().localeCompare(right.pattern.join())
+      )
       .slice(0, 250);
 
   return {
@@ -1027,6 +1165,892 @@ function resolveCorpusFilePath(inputPathOrDir) {
   return path.join(full, "word_flows.full.jsonl");
 }
 
+async function pathExists(pathName) {
+  try {
+    await fs.access(pathName);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function resolveTraceFilePath(inputPathOrDir) {
+  const full = path.resolve(inputPathOrDir);
+  if (full.endsWith(".jsonl")) {
+    if (!(await pathExists(full))) {
+      throw new Error(`Missing trace file: ${full}`);
+    }
+    return full;
+  }
+
+  const candidates = [
+    path.join(full, "word_traces.jsonl"),
+    path.join(full, "word_flows.full.jsonl"),
+    path.join(full, "word_flows.skeleton.jsonl")
+  ];
+  for (const candidate of candidates) {
+    if (await pathExists(candidate)) {
+      return candidate;
+    }
+  }
+  throw new Error(
+    `Unable to resolve trace file from '${inputPathOrDir}'. Tried: ${candidates
+      .map((candidate) => workspaceRelativePath(candidate))
+      .join(", ")}`
+  );
+}
+
+function toEventOp(value) {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (Array.isArray(value) && typeof value[0] === "string") {
+    return value[0];
+  }
+  if (value && typeof value === "object" && typeof value.type === "string") {
+    return value.type;
+  }
+  return "";
+}
+
+function normalizeSkeleton(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.map((entry) => toEventOp(entry)).filter(Boolean);
+}
+
+function skeletonFromRow(row) {
+  if (Array.isArray(row?.skeleton)) {
+    return normalizeSkeleton(row.skeleton);
+  }
+  if (Array.isArray(row?.flow_compact)) {
+    return normalizeSkeleton(row.flow_compact);
+  }
+  if (Array.isArray(row?.flow_skeleton)) {
+    return normalizeSkeleton(row.flow_skeleton);
+  }
+  if (Array.isArray(row?.events)) {
+    return normalizeSkeleton(row.events);
+  }
+  return [];
+}
+
+function normalizeTokenIds(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .map((entry) => Number(entry))
+    .filter((entry) => Number.isFinite(entry))
+    .map((entry) => Number(entry));
+}
+
+function parseRefKey(refKey) {
+  const pieces = String(refKey ?? "").split("/");
+  if (pieces.length < 4) {
+    return null;
+  }
+  const tokenIndexRaw = pieces.pop();
+  const verseRaw = pieces.pop();
+  const chapterRaw = pieces.pop();
+  const book = pieces.join("/");
+  const chapter = Number(chapterRaw);
+  const verse = Number(verseRaw);
+  const tokenIndex = Number(tokenIndexRaw);
+  if (
+    !book ||
+    !Number.isFinite(chapter) ||
+    !Number.isFinite(verse) ||
+    !Number.isFinite(tokenIndex)
+  ) {
+    return null;
+  }
+  return {
+    book,
+    chapter,
+    verse,
+    token_index: tokenIndex
+  };
+}
+
+function rowRefKey(row) {
+  if (typeof row?.ref_key === "string" && row.ref_key.length > 0) {
+    return row.ref_key;
+  }
+  const ref = row?.ref;
+  if (ref && typeof ref === "object") {
+    const tokenIndex =
+      ref.token_index ?? ref.word_index_in_verse ?? ref.word_index ?? ref.index ?? null;
+    if (
+      typeof ref.book === "string" &&
+      Number.isFinite(Number(ref.chapter)) &&
+      Number.isFinite(Number(ref.verse)) &&
+      Number.isFinite(Number(tokenIndex))
+    ) {
+      return `${ref.book}/${Number(ref.chapter)}/${Number(ref.verse)}/${Number(tokenIndex)}`;
+    }
+  }
+  return "";
+}
+
+function normalizeTraceRow(row, index, sourcePath) {
+  const key = rowRefKey(row);
+  if (!key) {
+    throw new Error(
+      `Row ${index + 1} in ${workspaceRelativePath(sourcePath)} is missing a stable identity (ref_key or ref + token_index)`
+    );
+  }
+  const skeleton = skeletonFromRow(row);
+  const flow =
+    typeof row?.flow === "string"
+      ? row.flow
+      : typeof row?.one_liner === "string"
+        ? row.one_liner
+        : compileFlowString(skeleton, " ⇢ ");
+  const refFromRow = row?.ref && typeof row.ref === "object" ? row.ref : null;
+  const ref = refFromRow ?? parseRefKey(key) ?? null;
+
+  return {
+    key,
+    ref,
+    surface: String(row?.surface ?? ""),
+    skeleton,
+    flow,
+    semantic_version:
+      typeof row?.semantic_version === "string" && row.semantic_version.length > 0
+        ? row.semantic_version
+        : "unknown",
+    token_ids: normalizeTokenIds(row?.token_ids ?? row?.tokens ?? []),
+    source_path: workspaceRelativePath(sourcePath),
+    row_index: index + 1
+  };
+}
+
+function sortRefLike(left, right) {
+  return String(left).localeCompare(String(right), "en", { numeric: true });
+}
+
+async function loadTraceRun(inputPathOrDir, label) {
+  const tracePath = await resolveTraceFilePath(inputPathOrDir);
+  const raw = await fs.readFile(tracePath, "utf8");
+  const traceSha256 = sha256FromBuffer(Buffer.from(raw, "utf8"));
+  const parsedRows = raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+
+  const map = new Map();
+  const rows = [];
+  const duplicates = [];
+  const semanticVersions = new Set();
+
+  for (let index = 0; index < parsedRows.length; index += 1) {
+    const normalized = normalizeTraceRow(parsedRows[index], index, tracePath);
+    semanticVersions.add(normalized.semantic_version);
+    if (map.has(normalized.key)) {
+      duplicates.push(normalized.key);
+      continue;
+    }
+    map.set(normalized.key, normalized);
+    rows.push(normalized);
+  }
+
+  if (duplicates.length > 0) {
+    throw new Error(
+      `Stable identity failure (${label}): duplicate keys detected in ${workspaceRelativePath(
+        tracePath
+      )}: ${duplicates.slice(0, 10).join(", ")}`
+    );
+  }
+
+  return {
+    label,
+    input_path: path.resolve(inputPathOrDir),
+    trace_path: tracePath,
+    trace_sha256: traceSha256,
+    rows,
+    map,
+    semantic_versions: Array.from(semanticVersions).sort(sortRefLike)
+  };
+}
+
+function sortCountObjectByKey(obj) {
+  const out = {};
+  for (const key of Object.keys(obj ?? {}).sort(sortRefLike)) {
+    out[key] = obj[key];
+  }
+  return out;
+}
+
+function mergeCountObjects(base, delta) {
+  const out = { ...base };
+  for (const [key, count] of Object.entries(delta ?? {})) {
+    out[key] = (out[key] ?? 0) + Number(count ?? 0);
+  }
+  return out;
+}
+
+function totalFromCounts(byCode) {
+  return Object.values(byCode ?? {}).reduce((sum, value) => sum + Number(value ?? 0), 0);
+}
+
+function formatWarningCounts(byCode) {
+  const entries = Object.entries(byCode ?? {}).filter(([, count]) => Number(count) > 0);
+  if (entries.length === 0) {
+    return "none";
+  }
+  return entries
+    .sort((left, right) => sortRefLike(left[0], right[0]))
+    .map(([code, count]) => `${code} x${count}`)
+    .join(", ");
+}
+
+function buildTokenWarningIndex(compiledPayload) {
+  const tokenWarnings = new Map();
+  for (const [tokenIdRaw, tokenMeta] of Object.entries(compiledPayload?.tokens ?? {})) {
+    const tokenId = Number(tokenIdRaw);
+    if (!Number.isFinite(tokenId)) {
+      continue;
+    }
+    const warnings = Array.isArray(tokenMeta?.warnings) ? tokenMeta.warnings : [];
+    const byCode = {};
+    for (const warning of warnings) {
+      const code =
+        typeof warning?.code === "string" && warning.code.length > 0
+          ? warning.code
+          : "UNKNOWN_WARNING";
+      byCode[code] = (byCode[code] ?? 0) + 1;
+    }
+    if (Object.keys(byCode).length > 0) {
+      tokenWarnings.set(tokenId, byCode);
+    }
+  }
+  return tokenWarnings;
+}
+
+function wordWarningSummary(row, compileContext) {
+  if (!compileContext?.token_warning_index) {
+    return { total: 0, by_code: {} };
+  }
+  let byCode = {};
+  for (const tokenId of row?.token_ids ?? []) {
+    const tokenCounts = compileContext.token_warning_index.get(Number(tokenId));
+    if (!tokenCounts) {
+      continue;
+    }
+    byCode = mergeCountObjects(byCode, tokenCounts);
+  }
+  byCode = sortCountObjectByKey(byCode);
+  return {
+    total: totalFromCounts(byCode),
+    by_code: byCode
+  };
+}
+
+function warningDeltaText(leftSummary, rightSummary) {
+  const leftText = formatWarningCounts(leftSummary?.by_code ?? {});
+  const rightText = formatWarningCounts(rightSummary?.by_code ?? {});
+  if (leftText === rightText) {
+    return `compile warnings unchanged (${leftText})`;
+  }
+  return `compile warnings ${leftText} -> ${rightText}`;
+}
+
+async function resolveCompiledPath(explicitPath, run) {
+  if (explicitPath) {
+    const resolved = path.resolve(explicitPath);
+    if (!(await pathExists(resolved))) {
+      throw new Error(`Missing compiled bundle: ${resolved}`);
+    }
+    return resolved;
+  }
+
+  const candidates = [];
+  const seen = new Set();
+  const pushCandidate = (candidate) => {
+    const resolved = path.resolve(candidate);
+    if (seen.has(resolved)) {
+      return;
+    }
+    seen.add(resolved);
+    candidates.push(resolved);
+  };
+
+  let dir = path.dirname(run.trace_path);
+  for (let i = 0; i < 4; i += 1) {
+    pushCandidate(path.join(dir, "tokens.compiled.json"));
+    pushCandidate(path.join(dir, "data", "tokens.compiled.json"));
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+  pushCandidate(DEFAULT_COMPILED_BUNDLES_PATH);
+
+  for (const candidate of candidates) {
+    if (await pathExists(candidate)) {
+      return candidate;
+    }
+  }
+  return "";
+}
+
+async function loadCompileContext(explicitPath, run) {
+  const compiledPath = await resolveCompiledPath(explicitPath, run);
+  if (!compiledPath) {
+    return {
+      path: "",
+      semver: "unknown",
+      registry_sha256: "unknown",
+      definitions_sha256: "unknown",
+      warning_count: null,
+      warning_by_code: {},
+      token_warning_index: null,
+      load_error: "not found"
+    };
+  }
+
+  try {
+    const payload = await readJson(compiledPath);
+    const warningByCode = sortCountObjectByKey(payload?.stats?.warning_by_code ?? {});
+    return {
+      path: compiledPath,
+      semver: payload?.semantics?.semver ?? "unknown",
+      registry_sha256: payload?.source?.registry_sha256 ?? "unknown",
+      definitions_sha256: payload?.semantics?.definitions_sha256 ?? "unknown",
+      warning_count:
+        typeof payload?.stats?.warning_count === "number"
+          ? payload.stats.warning_count
+          : totalFromCounts(warningByCode),
+      warning_by_code: warningByCode,
+      token_warning_index: buildTokenWarningIndex(payload),
+      load_error: ""
+    };
+  } catch (err) {
+    if (explicitPath) {
+      throw err;
+    }
+    return {
+      path: compiledPath,
+      semver: "unknown",
+      registry_sha256: "unknown",
+      definitions_sha256: "unknown",
+      warning_count: null,
+      warning_by_code: {},
+      token_warning_index: null,
+      load_error: String(err?.message ?? err)
+    };
+  }
+}
+
+function arraysEqual(left, right) {
+  if (left.length !== right.length) {
+    return false;
+  }
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] !== right[index]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function sameEventMultiset(left, right) {
+  if (left.length !== right.length) {
+    return false;
+  }
+  const counts = new Map();
+  for (const event of left) {
+    counts.set(event, (counts.get(event) ?? 0) + 1);
+  }
+  for (const event of right) {
+    if (!counts.has(event)) {
+      return false;
+    }
+    const next = counts.get(event) - 1;
+    if (next === 0) {
+      counts.delete(event);
+    } else {
+      counts.set(event, next);
+    }
+  }
+  return counts.size === 0;
+}
+
+function buildLcsTable(left, right) {
+  const table = Array.from({ length: left.length + 1 }, () => Array(right.length + 1).fill(0));
+  for (let i = 1; i <= left.length; i += 1) {
+    for (let j = 1; j <= right.length; j += 1) {
+      if (left[i - 1] === right[j - 1]) {
+        table[i][j] = table[i - 1][j - 1] + 1;
+      } else {
+        table[i][j] = Math.max(table[i - 1][j], table[i][j - 1]);
+      }
+    }
+  }
+  return table;
+}
+
+function buildEditOps(left, right) {
+  const table = buildLcsTable(left, right);
+  const reversed = [];
+  let i = left.length;
+  let j = right.length;
+
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && left[i - 1] === right[j - 1]) {
+      i -= 1;
+      j -= 1;
+      continue;
+    }
+    const up = i > 0 ? table[i - 1][j] : -1;
+    const leftCell = j > 0 ? table[i][j - 1] : -1;
+    if (i > 0 && (j === 0 || up >= leftCell)) {
+      reversed.push({ kind: "delete", event: left[i - 1], index: i - 1 });
+      i -= 1;
+      continue;
+    }
+    if (j > 0) {
+      reversed.push({ kind: "insert", event: right[j - 1], index: j - 1 });
+      j -= 1;
+      continue;
+    }
+  }
+
+  return reversed.reverse();
+}
+
+function compressEditOps(ops) {
+  const out = [];
+  for (let index = 0; index < ops.length; index += 1) {
+    const current = ops[index];
+    const next = ops[index + 1];
+    if (current.kind === "delete" && next?.kind === "insert") {
+      out.push({
+        kind: "replace",
+        from_event: current.event,
+        to_event: next.event,
+        index: current.index
+      });
+      index += 1;
+      continue;
+    }
+    if (current.kind === "insert" && next?.kind === "delete") {
+      out.push({
+        kind: "replace",
+        from_event: next.event,
+        to_event: current.event,
+        index: next.index
+      });
+      index += 1;
+      continue;
+    }
+    out.push(current);
+  }
+  return out;
+}
+
+function positionText(index, length) {
+  if (index <= 0) {
+    return "at start";
+  }
+  if (index >= length - 1) {
+    return "at end";
+  }
+  return `at position ${index + 1}`;
+}
+
+function classifySkeletonDelta(previousSkeleton, nextSkeleton) {
+  if (arraysEqual(previousSkeleton, nextSkeleton)) {
+    return {
+      change_type: "unchanged",
+      signature: "UNCHANGED",
+      summary: "No skeleton change",
+      operations: []
+    };
+  }
+
+  if (sameEventMultiset(previousSkeleton, nextSkeleton)) {
+    let start = 0;
+    while (
+      start < previousSkeleton.length &&
+      start < nextSkeleton.length &&
+      previousSkeleton[start] === nextSkeleton[start]
+    ) {
+      start += 1;
+    }
+    let endPrev = previousSkeleton.length - 1;
+    let endNext = nextSkeleton.length - 1;
+    while (
+      endPrev >= start &&
+      endNext >= start &&
+      previousSkeleton[endPrev] === nextSkeleton[endNext]
+    ) {
+      endPrev -= 1;
+      endNext -= 1;
+    }
+    const movedFrom = previousSkeleton.slice(start, endPrev + 1);
+    const movedTo = nextSkeleton.slice(start, endNext + 1);
+    return {
+      change_type: "event_order_changed",
+      signature: `ORDER:${movedFrom.join("->")}=>${movedTo.join("->")}`,
+      summary: `Reordered events ${movedFrom.join(" -> ")} => ${movedTo.join(" -> ")}`,
+      operations: [
+        {
+          kind: "order",
+          from: movedFrom,
+          to: movedTo
+        }
+      ]
+    };
+  }
+
+  const operations = compressEditOps(buildEditOps(previousSkeleton, nextSkeleton));
+  const inserts = operations.filter((op) => op.kind === "insert");
+  const deletes = operations.filter((op) => op.kind === "delete");
+  const replaces = operations.filter((op) => op.kind === "replace");
+
+  if (inserts.length > 0 && deletes.length === 0 && replaces.length === 0) {
+    const events = inserts.map((entry) => entry.event);
+    if (events.length === 1) {
+      const op = inserts[0];
+      return {
+        change_type: "event_inserted",
+        signature: `INSERT:${op.event}`,
+        summary: `Inserted ${op.event} ${positionText(op.index, nextSkeleton.length)}`,
+        operations
+      };
+    }
+    return {
+      change_type: "event_inserted",
+      signature: `INSERT:${events.join(",")}`,
+      summary: `Inserted ${events.length} events: ${events.join(", ")}`,
+      operations
+    };
+  }
+
+  if (deletes.length > 0 && inserts.length === 0 && replaces.length === 0) {
+    const events = deletes.map((entry) => entry.event);
+    if (events.length === 1) {
+      const op = deletes[0];
+      return {
+        change_type: "event_removed",
+        signature: `REMOVE:${op.event}`,
+        summary: `Removed ${op.event} ${positionText(op.index, previousSkeleton.length)}`,
+        operations
+      };
+    }
+    return {
+      change_type: "event_removed",
+      signature: `REMOVE:${events.join(",")}`,
+      summary: `Removed ${events.length} events: ${events.join(", ")}`,
+      operations
+    };
+  }
+
+  if (replaces.length > 0 && inserts.length === 0 && deletes.length === 0) {
+    const pairs = replaces.map((entry) => `${entry.from_event}→${entry.to_event}`);
+    if (pairs.length === 1) {
+      const op = replaces[0];
+      return {
+        change_type: "event_replaced",
+        signature: `REPLACE:${op.from_event}→${op.to_event}`,
+        summary: `Replaced ${op.from_event} with ${op.to_event} ${positionText(
+          op.index,
+          previousSkeleton.length
+        )}`,
+        operations
+      };
+    }
+    return {
+      change_type: "event_replaced",
+      signature: `REPLACE:${pairs.join("|")}`,
+      summary: `Replaced ${pairs.length} events: ${pairs.join(", ")}`,
+      operations
+    };
+  }
+
+  const compact = operations.map((entry) => {
+    if (entry.kind === "replace") {
+      return `${entry.from_event}→${entry.to_event}`;
+    }
+    return entry.kind === "insert" ? `+${entry.event}` : `-${entry.event}`;
+  });
+  return {
+    change_type: "mixed_delta",
+    signature: `MIXED:${compact.join("|")}`,
+    summary: `Mixed delta: ${compact.join(", ")}`,
+    operations
+  };
+}
+
+function summarizeSemanticVersions(versions) {
+  if (!versions || versions.length === 0) {
+    return "unknown";
+  }
+  if (versions.length === 1) {
+    return versions[0];
+  }
+  return versions.join(", ");
+}
+
+function prettyRef(row) {
+  if (!row?.ref || typeof row.ref !== "object") {
+    return row?.key ?? "unknown";
+  }
+  const chapter = row.ref.chapter ?? "?";
+  const verse = row.ref.verse ?? "?";
+  const tokenIndex =
+    row.ref.token_index ??
+    row.ref.word_index_in_verse ??
+    row.ref.word_index ??
+    row.ref.index ??
+    "?";
+  return `${row.ref.book} ${chapter}:${verse} (word ${tokenIndex})`;
+}
+
+function markdownSafe(value) {
+  return String(value).replace(/\|/g, "\\|");
+}
+
+function compareDeltaGroupEntries(left, right) {
+  if (left.count !== right.count) {
+    return right.count - left.count;
+  }
+  return sortRefLike(left.signature, right.signature);
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function normalizeGoldenCase(caseRow, index) {
+  const key = rowRefKey(caseRow) || caseRow?.key;
+  if (!key) {
+    throw new Error(`Golden case at index ${index} is missing key/ref`);
+  }
+  const expectedSkeleton = normalizeSkeleton(
+    caseRow?.expected_skeleton ?? caseRow?.expectedSkeleton ?? caseRow?.skeleton ?? []
+  );
+  return {
+    key,
+    ref: caseRow?.ref ?? parseRefKey(key) ?? null,
+    surface: typeof caseRow?.surface === "string" ? caseRow.surface : "",
+    expected_skeleton: expectedSkeleton,
+    notes: typeof caseRow?.notes === "string" ? caseRow.notes : "curated"
+  };
+}
+
+async function loadGoldens(pathName) {
+  if (!(await pathExists(pathName))) {
+    return null;
+  }
+  const payload = await readJson(pathName);
+  const rawCases = Array.isArray(payload) ? payload : asArray(payload?.cases);
+  const cases = rawCases.map((caseRow, index) => normalizeGoldenCase(caseRow, index));
+  return {
+    payload,
+    cases
+  };
+}
+
+function addGoldenKey(selectedKeys, notesByKey, key, note) {
+  if (!key) {
+    return;
+  }
+  if (!notesByKey.has(key)) {
+    notesByKey.set(key, new Set());
+    selectedKeys.push(key);
+  }
+  if (note) {
+    notesByKey.get(key).add(note);
+  }
+}
+
+function findFirstRow(rows, usedKeys, predicate) {
+  for (const row of rows) {
+    if (usedKeys.has(row.key)) {
+      continue;
+    }
+    if (predicate(row)) {
+      return row;
+    }
+  }
+  return null;
+}
+
+function buildCuratedGoldens({ runRows, runMap, groupedDeltas, changedSkeletonRows, goldenLimit }) {
+  const selectedKeys = [];
+  const notesByKey = new Map();
+  const usedKeys = new Set();
+
+  for (const group of groupedDeltas) {
+    const candidate = group.sample_keys?.[0];
+    if (!candidate || usedKeys.has(candidate)) {
+      continue;
+    }
+    usedKeys.add(candidate);
+    addGoldenKey(selectedKeys, notesByKey, candidate, `delta:${group.signature}`);
+    if (selectedKeys.length >= goldenLimit) {
+      break;
+    }
+  }
+
+  const edgeRules = [
+    {
+      note: "edge:mappiq",
+      predicate: (row) => row.surface.includes("הּ") || row.skeleton.includes("HE.DECLARE_PIN")
+    },
+    {
+      note: "edge:shin_sin",
+      predicate: (row) =>
+        row.surface.includes("שׁ") ||
+        row.surface.includes("שׂ") ||
+        row.skeleton.includes("SHIN.FORK")
+    },
+    {
+      note: "edge:finals",
+      predicate: (row) =>
+        /[ךםןףץ]/u.test(row.surface) || row.skeleton.some((op) => op.startsWith("FINAL_"))
+    }
+  ];
+
+  for (const rule of edgeRules) {
+    if (selectedKeys.length >= goldenLimit) {
+      break;
+    }
+    const row = findFirstRow(runRows, usedKeys, rule.predicate);
+    if (!row) {
+      continue;
+    }
+    usedKeys.add(row.key);
+    addGoldenKey(selectedKeys, notesByKey, row.key, rule.note);
+  }
+
+  const familyRules = [
+    {
+      note: "family:ALEPH",
+      predicate: (row) => row.skeleton.some((op) => op.startsWith("ALEPH."))
+    },
+    { note: "family:HE", predicate: (row) => row.skeleton.some((op) => op.startsWith("HE.")) },
+    { note: "family:TAV", predicate: (row) => row.skeleton.some((op) => op.startsWith("TAV.")) },
+    { note: "family:MEM", predicate: (row) => row.skeleton.includes("MEM.OPEN") },
+    { note: "family:FINAL_MEM", predicate: (row) => row.skeleton.includes("FINAL_MEM.CLOSE") },
+    { note: "family:NUN", predicate: (row) => row.skeleton.some((op) => op.startsWith("NUN.")) },
+    {
+      note: "family:SAMEKH",
+      predicate: (row) => row.skeleton.some((op) => op.startsWith("SAMEKH."))
+    },
+    { note: "family:SHIN", predicate: (row) => row.skeleton.some((op) => op.startsWith("SHIN.")) },
+    { note: "family:TSADI", predicate: (row) => row.skeleton.some((op) => op.includes("TSADI.")) },
+    {
+      note: "family:SPACE",
+      predicate: (row) => row.skeleton.some((op) => op.startsWith("SPACE."))
+    },
+    { note: "family:PE", predicate: (row) => row.skeleton.some((op) => op.startsWith("PE.")) }
+  ];
+
+  for (const rule of familyRules) {
+    if (selectedKeys.length >= goldenLimit) {
+      break;
+    }
+    const row = findFirstRow(runRows, usedKeys, rule.predicate);
+    if (!row) {
+      continue;
+    }
+    usedKeys.add(row.key);
+    addGoldenKey(selectedKeys, notesByKey, row.key, rule.note);
+  }
+
+  for (const change of changedSkeletonRows) {
+    if (selectedKeys.length >= goldenLimit) {
+      break;
+    }
+    if (usedKeys.has(change.key)) {
+      continue;
+    }
+    const row = runMap.get(change.key);
+    if (!row) {
+      continue;
+    }
+    usedKeys.add(change.key);
+    addGoldenKey(selectedKeys, notesByKey, change.key, "changed:representative");
+  }
+
+  const cases = [];
+  for (const key of selectedKeys) {
+    if (cases.length >= goldenLimit) {
+      break;
+    }
+    const row = runMap.get(key);
+    if (!row) {
+      continue;
+    }
+    const notes = Array.from(notesByKey.get(key) ?? []).sort(sortRefLike);
+    cases.push({
+      key,
+      ref: row.ref,
+      surface: row.surface,
+      expected_skeleton: row.skeleton,
+      notes: notes.length > 0 ? notes.join("; ") : "curated"
+    });
+  }
+  return cases;
+}
+
+function buildRegressionReport({
+  runB,
+  compileB,
+  goldensPath,
+  regressionFailures,
+  regressionPasses
+}) {
+  const lines = [
+    "# Regression Report",
+    "",
+    "## Inputs",
+    `- run_b: ${workspaceRelativePath(runB.trace_path)}`,
+    `- semantic_versions: ${summarizeSemanticVersions(runB.semantic_versions)}`,
+    `- goldens: ${workspaceRelativePath(goldensPath)}`,
+    `- compile_bundle: ${compileB.path ? workspaceRelativePath(compileB.path) : "not found"}`,
+    `- compile_warnings: ${compileB.warning_count ?? "unknown"} (${formatWarningCounts(
+      compileB.warning_by_code
+    )})`,
+    "",
+    "## Summary",
+    `- total_goldens: ${regressionPasses.length + regressionFailures.length}`,
+    `- passed: ${regressionPasses.length}`,
+    `- failed: ${regressionFailures.length}`
+  ];
+
+  if (regressionFailures.length === 0) {
+    lines.push("", "## Result", "- PASS");
+    return lines;
+  }
+
+  lines.push("", "## Result", "- FAIL");
+  lines.push("", "## Failures");
+  for (const failure of regressionFailures) {
+    lines.push(`- ${failure.key} (${failure.surface || "n/a"})`);
+    lines.push(`  - ref: ${failure.ref}`);
+    lines.push(`  - reason: ${failure.reason}`);
+    if (failure.expected_skeleton) {
+      lines.push(`  - expected: ${failure.expected_skeleton.join(" -> ") || "(empty)"}`);
+    }
+    if (failure.actual_skeleton) {
+      lines.push(`  - actual: ${failure.actual_skeleton.join(" -> ") || "(empty)"}`);
+    }
+    if (failure.delta_summary) {
+      lines.push(`  - delta: ${failure.delta_summary}`);
+    }
+  }
+
+  return lines;
+}
+
 async function runAll(argv) {
   const opts = parseCommonRunArgs(argv);
   const inputPath = path.resolve(opts.input);
@@ -1047,7 +2071,9 @@ async function runAll(argv) {
   };
 
   const require = createRequire(import.meta.url);
-  const { tokenize } = require(path.resolve(process.cwd(), "impl/reference/dist/compile/tokenizer"));
+  const { tokenize } = require(
+    path.resolve(process.cwd(), "impl/reference/dist/compile/tokenizer")
+  );
   const { runProgramWithTrace } = require(path.resolve(process.cwd(), "impl/reference/dist/vm/vm"));
   const { createInitialState } = require(
     path.resolve(process.cwd(), "impl/reference/dist/state/state")
@@ -1070,11 +2096,7 @@ async function runAll(argv) {
       for (const verse of chapter.verses ?? []) {
         versesTotal += 1;
         const rawText =
-          opts.lang === "en"
-            ? verse.en
-            : opts.lang === "both"
-              ? verse.he ?? verse.en
-              : verse.he;
+          opts.lang === "en" ? verse.en : opts.lang === "both" ? (verse.he ?? verse.en) : verse.he;
         const cleaned = sanitizeText(rawText, opts);
         if (!cleaned) {
           versesSkipped += 1;
@@ -1160,9 +2182,7 @@ async function runAll(argv) {
   const sortedSignatureKeys = Array.from(signatureByKey.keys()).sort((left, right) =>
     left.localeCompare(right, "he")
   );
-  const tokenIdBySignature = new Map(
-    sortedSignatureKeys.map((key, index) => [key, index + 1])
-  );
+  const tokenIdBySignature = new Map(sortedSignatureKeys.map((key, index) => [key, index + 1]));
 
   const tokenRegistry = {};
   for (const key of sortedSignatureKeys) {
@@ -1337,12 +2357,13 @@ async function runExecute(argv) {
   const flowsOutPath = path.resolve(opts.flowsOut);
   const reportOutPath = path.resolve(opts.reportOut);
 
-  const [rawBuffer, tokenRegistryPayload, compiledPayload, semanticsDefsPayload] = await Promise.all([
-    fs.readFile(inputPath),
-    readJson(tokenRegistryPath),
-    readJson(compiledBundlesPath),
-    readJson(DEFAULT_SEMANTICS_DEFS_PATH).catch(() => null)
-  ]);
+  const [rawBuffer, tokenRegistryPayload, compiledPayload, semanticsDefsPayload] =
+    await Promise.all([
+      fs.readFile(inputPath),
+      readJson(tokenRegistryPath),
+      readJson(compiledBundlesPath),
+      readJson(DEFAULT_SEMANTICS_DEFS_PATH).catch(() => null)
+    ]);
   const raw = rawBuffer.toString("utf8");
   const data = JSON.parse(raw);
 
@@ -1363,7 +2384,9 @@ async function runExecute(argv) {
   }
 
   const require = createRequire(import.meta.url);
-  const { tokenize } = require(path.resolve(process.cwd(), "impl/reference/dist/compile/tokenizer"));
+  const { tokenize } = require(
+    path.resolve(process.cwd(), "impl/reference/dist/compile/tokenizer")
+  );
   const { runProgramWithTrace } = require(path.resolve(process.cwd(), "impl/reference/dist/vm/vm"));
   const { createInitialState } = require(
     path.resolve(process.cwd(), "impl/reference/dist/state/state")
@@ -1388,11 +2411,7 @@ async function runExecute(argv) {
       for (const verse of chapter.verses ?? []) {
         versesTotal += 1;
         const rawText =
-          opts.lang === "en"
-            ? verse.en
-            : opts.lang === "both"
-              ? verse.he ?? verse.en
-              : verse.he;
+          opts.lang === "en" ? verse.en : opts.lang === "both" ? (verse.he ?? verse.en) : verse.he;
         const cleaned = sanitizeText(rawText, opts);
         if (!cleaned) {
           versesSkipped += 1;
@@ -1451,7 +2470,11 @@ async function runExecute(argv) {
               flowCompact = ["ERROR.RUNTIME"];
             }
           } else {
-            unknownSignatures.push({ ref_key: refKey, surface, signatures: localUnknownSignatures });
+            unknownSignatures.push({
+              ref_key: refKey,
+              surface,
+              signatures: localUnknownSignatures
+            });
             flowRaw = ["ERROR.UNKNOWN_SIGNATURE"];
             flowCompact = ["ERROR.UNKNOWN_SIGNATURE"];
           }
@@ -1668,9 +2691,7 @@ async function runDiff(argv) {
       total_prev: prevRows.length,
       total_next: nextRows.length,
       changed_words: changedWords.length,
-      by_reason: Object.fromEntries(
-        Object.entries(groups).map(([key, refs]) => [key, refs.length])
-      )
+      by_reason: Object.fromEntries(Object.entries(groups).map(([key, refs]) => [key, refs.length]))
     },
     groups,
     changed_words: changedWords
@@ -1685,11 +2706,7 @@ async function runPromote(argv) {
   const diffPath = path.resolve(opts.diffPath);
   const diff = await readJson(diffPath);
 
-  const nextPath = opts.next
-    ? resolveCorpusFilePath(opts.next)
-    : diff?.next
-      ? diff.next
-      : "";
+  const nextPath = opts.next ? resolveCorpusFilePath(opts.next) : diff?.next ? diff.next : "";
   if (!nextPath) {
     throw new Error("Unable to resolve next corpus path. Pass --next.");
   }
@@ -1777,7 +2794,10 @@ async function runVerify(argv) {
       : path.resolve(process.cwd(), recordPath);
 
     try {
-      const [stat, sha256] = await Promise.all([fs.stat(artifactPath), sha256FromFile(artifactPath)]);
+      const [stat, sha256] = await Promise.all([
+        fs.stat(artifactPath),
+        sha256FromFile(artifactPath)
+      ]);
       checked += 1;
       if (sha256 !== meta.sha256) {
         failures.push({ name, issue: "sha256 mismatch", expected: meta.sha256, actual: sha256 });
@@ -1826,6 +2846,370 @@ async function runVerify(argv) {
   );
 }
 
+async function runRegress(argv) {
+  const opts = parseRegressArgs(argv);
+  const diffOutPath = path.resolve(opts.diffOut);
+  const goldensPath = path.resolve(opts.goldens);
+  const regressionOutPath = path.resolve(opts.regressionOut);
+
+  const [runA, runB] = await Promise.all([
+    loadTraceRun(opts.runA, "A"),
+    loadTraceRun(opts.runB, "B")
+  ]);
+
+  const [compileA, compileB] = await Promise.all([
+    loadCompileContext(opts.compiledA, runA),
+    loadCompileContext(opts.compiledB, runB)
+  ]);
+
+  const allKeys = Array.from(new Set([...runA.map.keys(), ...runB.map.keys()])).sort(sortRefLike);
+  const addedKeys = [];
+  const removedKeys = [];
+  const renderingChanges = [];
+  const skeletonChanges = [];
+  const groupedDeltaMap = new Map();
+
+  for (const key of allKeys) {
+    const rowA = runA.map.get(key);
+    const rowB = runB.map.get(key);
+    if (!rowA && rowB) {
+      addedKeys.push(key);
+      continue;
+    }
+    if (rowA && !rowB) {
+      removedKeys.push(key);
+      continue;
+    }
+    if (!rowA || !rowB) {
+      continue;
+    }
+
+    if (!arraysEqual(rowA.skeleton, rowB.skeleton)) {
+      const delta = classifySkeletonDelta(rowA.skeleton, rowB.skeleton);
+      const warningsA = wordWarningSummary(rowA, compileA);
+      const warningsB = wordWarningSummary(rowB, compileB);
+      const semanticReason =
+        rowA.semantic_version === rowB.semantic_version
+          ? `semantic_version unchanged (${rowA.semantic_version})`
+          : `semantic_version ${rowA.semantic_version} -> ${rowB.semantic_version}`;
+      const warningReason = warningDeltaText(warningsA, warningsB);
+
+      const change = {
+        key,
+        row_a: rowA,
+        row_b: rowB,
+        delta,
+        semantic_reason: semanticReason,
+        warning_reason: warningReason
+      };
+      skeletonChanges.push(change);
+
+      const group = groupedDeltaMap.get(delta.signature) ?? {
+        signature: delta.signature,
+        change_type: delta.change_type,
+        summary: delta.summary,
+        count: 0,
+        sample_keys: []
+      };
+      group.count += 1;
+      if (group.sample_keys.length < 20) {
+        group.sample_keys.push(key);
+      }
+      groupedDeltaMap.set(delta.signature, group);
+      continue;
+    }
+
+    if (rowA.flow !== rowB.flow) {
+      renderingChanges.push({
+        key,
+        row_a: rowA,
+        row_b: rowB
+      });
+    }
+  }
+
+  const groupedDeltas = Array.from(groupedDeltaMap.values()).sort(compareDeltaGroupEntries);
+  const topGroupedDeltas = groupedDeltas.slice(0, 20);
+
+  const truncate = (value, max = 120) => {
+    const text = String(value);
+    if (text.length <= max) {
+      return text;
+    }
+    return `${text.slice(0, max - 3)}...`;
+  };
+
+  const diffLines = [
+    "# Run-to-Run Diff Report",
+    "",
+    "## Header",
+    `- run_a: ${workspaceRelativePath(runA.trace_path)}`,
+    `- run_b: ${workspaceRelativePath(runB.trace_path)}`,
+    `- trace_sha256_a: ${runA.trace_sha256}`,
+    `- trace_sha256_b: ${runB.trace_sha256}`,
+    `- semantic_versions_a: ${summarizeSemanticVersions(runA.semantic_versions)}`,
+    `- semantic_versions_b: ${summarizeSemanticVersions(runB.semantic_versions)}`,
+    `- compiled_bundle_a: ${compileA.path ? workspaceRelativePath(compileA.path) : "not found"}`,
+    `- compiled_bundle_b: ${compileB.path ? workspaceRelativePath(compileB.path) : "not found"}`,
+    `- registry_sha256_a: ${compileA.registry_sha256}`,
+    `- registry_sha256_b: ${compileB.registry_sha256}`,
+    `- compile_warnings_a: ${compileA.warning_count ?? "unknown"} (${formatWarningCounts(
+      compileA.warning_by_code
+    )})`,
+    `- compile_warnings_b: ${compileB.warning_count ?? "unknown"} (${formatWarningCounts(
+      compileB.warning_by_code
+    )})`,
+    "",
+    "## Summary",
+    `- total_words_a: ${runA.rows.length}`,
+    `- total_words_b: ${runB.rows.length}`,
+    `- stable_identity: PASS (duplicate keys rejected per-run)`,
+    `- ingestion_changes: ${addedKeys.length + removedKeys.length}`,
+    `- skeleton_changes: ${skeletonChanges.length}`,
+    `- rendering_only_changes: ${renderingChanges.length}`
+  ];
+
+  if (compileA.load_error) {
+    diffLines.push(`- compile_context_a_note: ${compileA.load_error}`);
+  }
+  if (compileB.load_error) {
+    diffLines.push(`- compile_context_b_note: ${compileB.load_error}`);
+  }
+
+  diffLines.push("", "## Breaking Changes (Tokenization / Ingestion)");
+  diffLines.push(`- added_keys_in_b: ${addedKeys.length}`);
+  diffLines.push(`- removed_keys_from_a: ${removedKeys.length}`);
+
+  if (addedKeys.length > 0) {
+    diffLines.push("", "### Added Samples");
+    for (const key of addedKeys.slice(0, 20)) {
+      const row = runB.map.get(key);
+      if (!row) {
+        continue;
+      }
+      diffLines.push(`- ${key} | ${prettyRef(row)} | ${row.surface} | ${row.flow}`);
+    }
+  }
+
+  if (removedKeys.length > 0) {
+    diffLines.push("", "### Removed Samples");
+    for (const key of removedKeys.slice(0, 20)) {
+      const row = runA.map.get(key);
+      if (!row) {
+        continue;
+      }
+      diffLines.push(`- ${key} | ${prettyRef(row)} | ${row.surface} | ${row.flow}`);
+    }
+  }
+
+  diffLines.push("", "## Top Skeleton Delta Groups");
+  if (topGroupedDeltas.length === 0) {
+    diffLines.push("- none");
+  } else {
+    diffLines.push("| rank | count | change_type | signature | sample_summary |");
+    diffLines.push("| ---: | ---: | --- | --- | --- |");
+    for (let index = 0; index < topGroupedDeltas.length; index += 1) {
+      const entry = topGroupedDeltas[index];
+      diffLines.push(
+        `| ${index + 1} | ${entry.count} | ${markdownSafe(entry.change_type)} | ${markdownSafe(
+          truncate(entry.signature, 100)
+        )} | ${markdownSafe(truncate(entry.summary, 100))} |`
+      );
+    }
+  }
+
+  diffLines.push("", "## Rendering-Only Changes");
+  if (renderingChanges.length === 0) {
+    diffLines.push("- none");
+  } else {
+    for (const change of renderingChanges.slice(0, 20)) {
+      diffLines.push(`- ${change.key} | ${prettyRef(change.row_b)} | ${change.row_b.surface}`);
+      diffLines.push(`  - skeleton: ${(change.row_b.skeleton ?? []).join(" -> ") || "(empty)"}`);
+      diffLines.push(`  - flow_a: ${change.row_a.flow}`);
+      diffLines.push(`  - flow_b: ${change.row_b.flow}`);
+    }
+  }
+
+  const interesting = [];
+  const seenInteresting = new Set();
+  const addInteresting = (entry) => {
+    const id = `${entry.kind}:${entry.key}`;
+    if (seenInteresting.has(id)) {
+      return;
+    }
+    seenInteresting.add(id);
+    interesting.push(entry);
+  };
+
+  for (const group of topGroupedDeltas.slice(0, 12)) {
+    const sampleKey = group.sample_keys[0];
+    const sample = skeletonChanges.find((change) => change.key === sampleKey);
+    if (!sample) {
+      continue;
+    }
+    addInteresting({
+      kind: "skeleton_delta",
+      key: sample.key,
+      summary: sample.delta.summary,
+      semantic_reason: sample.semantic_reason,
+      warning_reason: sample.warning_reason,
+      row_a: sample.row_a,
+      row_b: sample.row_b
+    });
+  }
+
+  for (const key of addedKeys.slice(0, 4)) {
+    const row = runB.map.get(key);
+    if (!row) {
+      continue;
+    }
+    addInteresting({
+      kind: "added",
+      key,
+      summary: "New key present in run B only",
+      semantic_reason: `semantic_version ${row.semantic_version}`,
+      warning_reason: "compile warning delta unavailable for added key",
+      row_a: null,
+      row_b: row
+    });
+  }
+
+  for (const key of removedKeys.slice(0, 4)) {
+    const row = runA.map.get(key);
+    if (!row) {
+      continue;
+    }
+    addInteresting({
+      kind: "removed",
+      key,
+      summary: "Key removed from run B",
+      semantic_reason: `semantic_version ${row.semantic_version}`,
+      warning_reason: "compile warning delta unavailable for removed key",
+      row_a: row,
+      row_b: null
+    });
+  }
+
+  for (const change of renderingChanges.slice(0, 4)) {
+    addInteresting({
+      kind: "rendering_only",
+      key: change.key,
+      summary: "Flow text changed, skeleton unchanged",
+      semantic_reason:
+        change.row_a.semantic_version === change.row_b.semantic_version
+          ? `semantic_version unchanged (${change.row_b.semantic_version})`
+          : `semantic_version ${change.row_a.semantic_version} -> ${change.row_b.semantic_version}`,
+      warning_reason: warningDeltaText(
+        wordWarningSummary(change.row_a, compileA),
+        wordWarningSummary(change.row_b, compileB)
+      ),
+      row_a: change.row_a,
+      row_b: change.row_b
+    });
+  }
+
+  diffLines.push("", "## Most Interesting Samples");
+  if (interesting.length === 0) {
+    diffLines.push("- none");
+  } else {
+    for (const sample of interesting.slice(0, 20)) {
+      const rowForRef = sample.row_b ?? sample.row_a ?? { key: sample.key };
+      diffLines.push(`- [${sample.kind}] ${sample.key} | ${prettyRef(rowForRef)}`);
+      diffLines.push(`  - summary: ${sample.summary}`);
+      diffLines.push(`  - why: ${sample.semantic_reason}; ${sample.warning_reason}`);
+      if (sample.row_a) {
+        diffLines.push(`  - run_a: ${sample.row_a.surface} :: ${sample.row_a.flow}`);
+      }
+      if (sample.row_b) {
+        diffLines.push(`  - run_b: ${sample.row_b.surface} :: ${sample.row_b.flow}`);
+      }
+    }
+  }
+
+  await fs.mkdir(path.dirname(diffOutPath), { recursive: true });
+  await fs.writeFile(diffOutPath, diffLines.join("\n") + "\n", "utf8");
+
+  const existingGoldens = await loadGoldens(goldensPath);
+  let goldenCases = existingGoldens?.cases ?? [];
+  let goldenMode = "reused";
+  if (!existingGoldens || opts.updateGoldens) {
+    goldenCases = buildCuratedGoldens({
+      runRows: runB.rows,
+      runMap: runB.map,
+      groupedDeltas: topGroupedDeltas,
+      changedSkeletonRows: skeletonChanges,
+      goldenLimit: opts.goldenLimit
+    });
+    goldenMode = existingGoldens ? "updated" : "created";
+    await writeJson(goldensPath, {
+      schema_version: 1,
+      source_run_b: workspaceRelativePath(runB.trace_path),
+      semantic_versions_b: runB.semantic_versions,
+      count: goldenCases.length,
+      cases: goldenCases
+    });
+  }
+
+  const regressionFailures = [];
+  const regressionPasses = [];
+  for (const golden of goldenCases) {
+    const actual = runB.map.get(golden.key);
+    const refText = actual ? prettyRef(actual) : prettyRef(golden);
+    if (!actual) {
+      regressionFailures.push({
+        key: golden.key,
+        surface: golden.surface,
+        ref: refText,
+        reason: "missing key in run B",
+        expected_skeleton: golden.expected_skeleton,
+        actual_skeleton: null,
+        delta_summary: ""
+      });
+      continue;
+    }
+
+    if (!arraysEqual(golden.expected_skeleton, actual.skeleton)) {
+      const delta = classifySkeletonDelta(golden.expected_skeleton, actual.skeleton);
+      regressionFailures.push({
+        key: golden.key,
+        surface: actual.surface,
+        ref: refText,
+        reason: "skeleton mismatch",
+        expected_skeleton: golden.expected_skeleton,
+        actual_skeleton: actual.skeleton,
+        delta_summary: delta.summary
+      });
+      continue;
+    }
+
+    regressionPasses.push(golden.key);
+  }
+
+  const regressionLines = buildRegressionReport({
+    runB,
+    compileB,
+    goldensPath,
+    regressionFailures,
+    regressionPasses
+  });
+  await fs.mkdir(path.dirname(regressionOutPath), { recursive: true });
+  await fs.writeFile(regressionOutPath, regressionLines.join("\n") + "\n", "utf8");
+
+  console.log(
+    `regress: delta=${skeletonChanges.length} rendering=${renderingChanges.length} goldens=${goldenCases.length} goldensMode=${goldenMode} diff=${workspaceRelativePath(
+      diffOutPath
+    )} regression=${workspaceRelativePath(regressionOutPath)}`
+  );
+
+  if (regressionFailures.length > 0) {
+    throw new Error(
+      `Regression failed: ${regressionFailures.length} golden case(s) mismatched. See ${workspaceRelativePath(
+        regressionOutPath
+      )}`
+    );
+  }
+}
+
 async function main() {
   const [command, ...argv] = process.argv.slice(2);
   if (!command || command === "--help" || command === "-h") {
@@ -1851,6 +3235,10 @@ async function main() {
   }
   if (command === "verify") {
     await runVerify(argv);
+    return;
+  }
+  if (command === "regress") {
+    await runRegress(argv);
     return;
   }
 
