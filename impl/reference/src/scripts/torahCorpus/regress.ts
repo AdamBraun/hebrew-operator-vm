@@ -44,7 +44,7 @@ type RegressionFailure = {
 type BuildRegressionReportInput = {
   runB: {
     trace_path: string;
-    semantic_versions: string[];
+    semantics_versions: string[];
   };
   compileB: {
     path?: string;
@@ -60,13 +60,13 @@ type RegressDiffRow = PrettyRefRow & {
   surface: string;
   flow: string;
   skeleton: string[];
-  semantic_version: string;
+  semantics_version: string;
 };
 
 type RegressDiffRun = {
   trace_path: string;
   trace_sha256: string;
-  semantic_versions: string[];
+  semantics_versions: string[];
   rows: unknown[];
   map: Map<string, RegressDiffRow>;
 };
@@ -359,7 +359,7 @@ export function buildRegressionReport({
     "",
     "## Inputs",
     `- run_b: ${workspaceRelativePath(runB.trace_path)}`,
-    `- semantic_versions: ${summarizeSemanticVersions(runB.semantic_versions)}`,
+    `- semantics_versions: ${summarizeSemanticVersions(runB.semantics_versions)}`,
     `- goldens: ${workspaceRelativePath(goldensPath)}`,
     `- compile_bundle: ${compileB.path ? workspaceRelativePath(compileB.path) : "not found"}`,
     `- compile_warnings: ${compileB.warning_count ?? "unknown"} (${formatWarningCounts(
@@ -434,8 +434,8 @@ export function buildRegressDiffLines({
     `- run_b: ${workspaceRelativePath(runB.trace_path)}`,
     `- trace_sha256_a: ${runA.trace_sha256}`,
     `- trace_sha256_b: ${runB.trace_sha256}`,
-    `- semantic_versions_a: ${summarizeSemanticVersions(runA.semantic_versions)}`,
-    `- semantic_versions_b: ${summarizeSemanticVersions(runB.semantic_versions)}`,
+    `- semantics_versions_a: ${summarizeSemanticVersions(runA.semantics_versions)}`,
+    `- semantics_versions_b: ${summarizeSemanticVersions(runB.semantics_versions)}`,
     `- compiled_bundle_a: ${compileA.path ? workspaceRelativePath(compileA.path) : "not found"}`,
     `- compiled_bundle_b: ${compileB.path ? workspaceRelativePath(compileB.path) : "not found"}`,
     `- registry_sha256_a: ${compileA.registry_sha256}`,
@@ -554,7 +554,7 @@ export function buildRegressDiffLines({
       kind: "added",
       key,
       summary: "New key present in run B only",
-      semantic_reason: `semantic_version ${row.semantic_version}`,
+      semantic_reason: `semantics_version ${row.semantics_version}`,
       warning_reason: "compile warning delta unavailable for added key",
       row_a: null,
       row_b: row
@@ -570,7 +570,7 @@ export function buildRegressDiffLines({
       kind: "removed",
       key,
       summary: "Key removed from run B",
-      semantic_reason: `semantic_version ${row.semantic_version}`,
+      semantic_reason: `semantics_version ${row.semantics_version}`,
       warning_reason: "compile warning delta unavailable for removed key",
       row_a: row,
       row_b: null
@@ -600,7 +600,7 @@ export function buildRegressDiffLines({
           surface: "",
           flow: "",
           skeleton: [],
-          semantic_version: "unknown"
+          semantics_version: "unknown"
         };
       diffLines.push(`- [${sample.kind}] ${sample.key} | ${prettyRef(rowForRef)}`);
       diffLines.push(`  - summary: ${sample.summary}`);
@@ -662,9 +662,9 @@ export function compareRegressRuns({
       const warningsA = wordWarningSummary(rowA, compileA);
       const warningsB = wordWarningSummary(rowB, compileB);
       const semanticReason =
-        rowA.semantic_version === rowB.semantic_version
-          ? `semantic_version unchanged (${rowA.semantic_version})`
-          : `semantic_version ${rowA.semantic_version} -> ${rowB.semantic_version}`;
+        rowA.semantics_version === rowB.semantics_version
+          ? `semantics_version unchanged (${rowA.semantics_version})`
+          : `semantics_version ${rowA.semantics_version} -> ${rowB.semantics_version}`;
       const warningReason = warningDeltaText(warningsA, warningsB);
 
       const change = {
@@ -694,9 +694,9 @@ export function compareRegressRuns({
 
     if (rowA.flow !== rowB.flow) {
       const semanticReason =
-        rowA.semantic_version === rowB.semantic_version
-          ? `semantic_version unchanged (${rowB.semantic_version})`
-          : `semantic_version ${rowA.semantic_version} -> ${rowB.semantic_version}`;
+        rowA.semantics_version === rowB.semantics_version
+          ? `semantics_version unchanged (${rowB.semantics_version})`
+          : `semantics_version ${rowA.semantics_version} -> ${rowB.semantics_version}`;
       const warningReason = warningDeltaText(
         wordWarningSummary(rowA, compileA),
         wordWarningSummary(rowB, compileB)

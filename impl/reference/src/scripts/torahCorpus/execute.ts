@@ -853,7 +853,7 @@ export function buildVerseMotifIndex(args: BuildVerseMotifIndexInput): Record<st
   return {
     schema_version: 1,
     mode: args.modeLabel,
-    semantic_version: args.semanticVersion,
+    semantics_version: args.semanticVersion,
     verse_trace_sha256: args.verseTraceSha256,
     verses_indexed: args.verseRows.length,
     cross_word_event_count: crossWordEventCount,

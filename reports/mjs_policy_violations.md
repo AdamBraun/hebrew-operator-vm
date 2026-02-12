@@ -1,9 +1,9 @@
 # MJS Policy Violations
 
 - mode: fail
-- generated_at_utc: 2026-02-12T20:18:27.782Z
+- generated_at_utc: 2026-02-12T20:24:42.903Z
 - touched_source: working_tree
-- touched_files: 11
+- touched_files: 7
 - files_scanned: 8
 - wrappers_detected: 1
 - legacy_business_logic: 7

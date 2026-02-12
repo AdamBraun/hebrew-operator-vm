@@ -936,7 +936,7 @@ async function runRegress(argv) {
     await writeJson(goldensPath, {
       schema_version: 1,
       source_run_b: workspaceRelativePath(runB.trace_path),
-      semantic_versions_b: runB.semantic_versions,
+      semantics_versions_b: runB.semantics_versions,
       count: goldenCases.length,
       cases: goldenCases
     });

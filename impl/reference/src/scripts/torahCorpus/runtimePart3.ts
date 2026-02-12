@@ -53,7 +53,7 @@ function normalizeTraceRow(row, index, sourcePath) {
     surface: String(row?.surface ?? ""),
     skeleton,
     flow,
-    semantic_version: getSemanticVersion(row),
+    semantics_version: getSemanticVersion(row),
     token_ids: normalizeTokenIds(row?.token_ids ?? row?.tokens ?? []),
     source_path: workspaceRelativePath(sourcePath),
     row_index: index + 1
@@ -77,11 +77,11 @@ async function loadTraceRun(inputPathOrDir, label) {
   const map = new Map();
   const rows = [];
   const duplicates = [];
-  const semanticVersions = new Set();
+  const semanticsVersions = new Set();
 
   for (let index = 0; index < parsedRows.length; index += 1) {
     const normalized = normalizeTraceRow(parsedRows[index], index, tracePath);
-    semanticVersions.add(normalized.semantic_version);
+    semanticsVersions.add(normalized.semantics_version);
     if (map.has(normalized.key)) {
       duplicates.push(normalized.key);
       continue;
@@ -105,7 +105,7 @@ async function loadTraceRun(inputPathOrDir, label) {
     trace_sha256: traceSha256,
     rows,
     map,
-    semantic_versions: Array.from(semanticVersions).sort(sortRefLike)
+    semantics_versions: Array.from(semanticsVersions).sort(sortRefLike)
   };
 }
 

@@ -1,9 +1,9 @@
 # CI Guardrails Baseline Report
 
 - mode: fail
-- generated_at_utc: 2026-02-12T20:18:27.788Z
+- generated_at_utc: 2026-02-12T20:24:42.911Z
 - touched_source: working_tree
-- touched_files: 11
+- touched_files: 7
 - thresholds.max_bytes: 30000
 - thresholds.max_complexity_score: 220
 - files_scanned: 71
@@ -18,18 +18,18 @@
 |---|---|---:|---:|---|---|
 | scripts/exemplar-library.mjs | no | 41157 | 168 | legacy_allowlisted | pass |
 | scripts/pattern-index.mjs | no | 34252 | 174 | legacy_allowlisted | pass |
-| impl/reference/src/scripts/torahCorpus/runtimeCommands.ts | no | 29568 | 55 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/runtimeCommands.ts | yes | 29570 | 55 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/runtimePart1.ts | no | 28394 | 122 | pass | pass |
-| impl/reference/src/scripts/torahCorpus/execute.ts | no | 27098 | 51 | pass | pass |
-| impl/reference/src/scripts/torahCorpus/regress.ts | no | 21508 | 78 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/execute.ts | yes | 27099 | 51 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/regress.ts | yes | 21536 | 78 | pass | pass |
 | scripts/compile-token-operators.mjs | no | 20062 | 90 | pass | pass |
 | scripts/extract-token-registry.mjs | no | 19733 | 61 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/runtimePart2.ts | no | 18990 | 97 | pass | pass |
 | scripts/normalize-torah.mjs | no | 17870 | 64 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/args.ts | no | 17845 | 81 | pass | pass |
-| impl/reference/src/scripts/torahCorpus/runtimePart3.ts | yes | 15665 | 85 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/runtimePart3.ts | yes | 15671 | 85 | pass | pass |
 | impl/reference/src/trace/canonicalize.ts | no | 12681 | 53 | pass | pass |
-| impl/reference/src/scripts/torahCorpus/executeReports.ts | no | 11766 | 30 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/executeReports.ts | yes | 11768 | 30 | pass | pass |
 | impl/reference/src/trace/types.ts | no | 10437 | 6 | pass | pass |
 | impl/reference/src/vm/vm.ts | no | 9029 | 57 | pass | pass |
 | impl/reference/src/dispatch/dispatcher.ts | no | 7345 | 42 | pass | pass |

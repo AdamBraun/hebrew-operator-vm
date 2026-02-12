@@ -40,7 +40,7 @@ describe("torah corpus regress module", () => {
     const lines = buildRegressionReport({
       runB: {
         trace_path: `${process.cwd()}/corpus/word_traces.jsonl`,
-        semantic_versions: ["1.0.0"]
+        semantics_versions: ["1.0.0"]
       },
       compileB: {
         path: `${process.cwd()}/data/tokens.compiled.json`,
@@ -73,7 +73,7 @@ describe("torah corpus regress module", () => {
       runA: {
         trace_path: `${process.cwd()}/outputs/a/word_traces.jsonl`,
         trace_sha256: "a".repeat(64),
-        semantic_versions: ["1.0.0"],
+        semantics_versions: ["1.0.0"],
         rows: [{}],
         map: new Map([
           [
@@ -84,7 +84,7 @@ describe("torah corpus regress module", () => {
               surface: "אב",
               flow: "a",
               skeleton: ["ALEPH.ALIAS"],
-              semantic_version: "1.0.0"
+              semantics_version: "1.0.0"
             }
           ]
         ])
@@ -92,7 +92,7 @@ describe("torah corpus regress module", () => {
       runB: {
         trace_path: `${process.cwd()}/outputs/b/word_traces.jsonl`,
         trace_sha256: "b".repeat(64),
-        semantic_versions: ["1.1.0"],
+        semantics_versions: ["1.1.0"],
         rows: [{}],
         map: new Map([
           [
@@ -103,7 +103,7 @@ describe("torah corpus regress module", () => {
               surface: "אב",
               flow: "b",
               skeleton: ["ALEPH.ALIAS", "TAV.FINALIZE"],
-              semantic_version: "1.1.0"
+              semantics_version: "1.1.0"
             }
           ]
         ])
@@ -131,7 +131,7 @@ describe("torah corpus regress module", () => {
             surface: "אב",
             flow: "a",
             skeleton: ["ALEPH.ALIAS"],
-            semantic_version: "1.0.0"
+            semantics_version: "1.0.0"
           },
           row_b: {
             key: "Genesis/1/1/1",
@@ -139,10 +139,10 @@ describe("torah corpus regress module", () => {
             surface: "אב",
             flow: "b",
             skeleton: ["ALEPH.ALIAS", "TAV.FINALIZE"],
-            semantic_version: "1.1.0"
+            semantics_version: "1.1.0"
           },
           delta: { summary: "Inserted TAV.FINALIZE" },
-          semantic_reason: "semantic_version 1.0.0 -> 1.1.0",
+          semantic_reason: "semantics_version 1.0.0 -> 1.1.0",
           warning_reason: "compile warnings unchanged (none)"
         }
       ],
@@ -169,7 +169,7 @@ describe("torah corpus regress module", () => {
       runA: {
         trace_path: "a",
         trace_sha256: "a",
-        semantic_versions: ["1.0.0"],
+        semantics_versions: ["1.0.0"],
         rows: [{}],
         map: new Map([
           [
@@ -180,7 +180,7 @@ describe("torah corpus regress module", () => {
               surface: "אב",
               flow: "a",
               skeleton: ["ALEPH.ALIAS"],
-              semantic_version: "1.0.0"
+              semantics_version: "1.0.0"
             }
           ]
         ])
@@ -188,7 +188,7 @@ describe("torah corpus regress module", () => {
       runB: {
         trace_path: "b",
         trace_sha256: "b",
-        semantic_versions: ["1.1.0"],
+        semantics_versions: ["1.1.0"],
         rows: [{}, {}],
         map: new Map([
           [
@@ -199,7 +199,7 @@ describe("torah corpus regress module", () => {
               surface: "אב",
               flow: "b",
               skeleton: ["ALEPH.ALIAS", "TAV.FINALIZE"],
-              semantic_version: "1.1.0"
+              semantics_version: "1.1.0"
             }
           ],
           [
@@ -210,7 +210,7 @@ describe("torah corpus regress module", () => {
               surface: "גד",
               flow: "c",
               skeleton: ["GIMEL.BESTOW"],
-              semantic_version: "1.1.0"
+              semantics_version: "1.1.0"
             }
           ]
         ])
@@ -256,7 +256,7 @@ describe("torah corpus regress module", () => {
             surface: "אב",
             flow: "x",
             skeleton: ["ALEPH.ALIAS"],
-            semantic_version: "1.0.0"
+            semantics_version: "1.0.0"
           }
         ]
       ]),
