@@ -80,6 +80,30 @@ Notes:
 - Supported combining marks are explicit; unsupported combining marks fail loudly with codepoint + context.
 - TokenIDs are assigned deterministically by sorted signature order.
 
+### Token Operator Compilation Cache
+
+Compile each TokenID into a deterministic operator bundle with runtime-ready dispatch metadata:
+
+```bash
+npm run token-compile -- --registry data/tokens.registry.json
+```
+
+Verify deterministic compile artifacts:
+
+```bash
+npm run token-compile:verify -- --registry data/tokens.registry.json
+```
+
+Outputs:
+
+- `data/tokens.compiled.json`
+- `reports/compile_report.md`
+
+Notes:
+
+- Runtime dispatch uses the compiled runtime bundle (`apply(tokenId, state)`) and avoids Unicode mark parsing on the hot path.
+- Semantic changes are centralized in `registry/token-semantics.json`; re-running compile regenerates bundles and report diffs.
+
 ### Torah Flow Corpus
 
 For a full Torah-wide word corpus with stable grapheme TokenIDs and flow traces:
