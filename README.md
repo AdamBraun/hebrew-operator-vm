@@ -178,6 +178,20 @@ Outputs:
 - `corpus/word_flows.txt`: aligned one-line flow strings (`ref_key<TAB>surface<TAB>flow`).
 - `reports/execution_report.md`: coverage, determinism checksum basis, error counts, top skeletons, performance.
 
+### Atomic Event Rendering (Event -> Sentence)
+
+Render canonical trace events into deterministic one-event-per-line atomic sentences:
+
+```bash
+npm run build
+npm run render:atomic -- --trace corpus/word_traces.jsonl --out outputs/render/atomic
+```
+
+Outputs:
+
+- `outputs/render/atomic/atomic_events.txt`: tab-separated anchored lines (`ref_key`, `word_index`, `event_index`, `event_text`).
+- `outputs/render/atomic/atomic_events.jsonl`: JSONL rows with `event_text` plus anchors.
+
 ### Pattern Index + Query API
 
 Build searchable skeleton/motif indexes from `corpus/word_traces.jsonl`:
