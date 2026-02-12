@@ -1,11 +1,16 @@
 #!/usr/bin/env node
+const childProcess = require("node:child_process");
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const util = require("node:util");
 
 const DEFAULT_MODE = "warn";
 const DEFAULT_ALLOWLIST_PATH = path.resolve(process.cwd(), "config", "mjs-policy-allowlist.json");
 const DEFAULT_REPORT_PATH = path.resolve(process.cwd(), "reports", "mjs_policy_violations.md");
+const DEFAULT_BASE_SHA = String(process.env.GUARDRAILS_BASE_SHA ?? "").trim();
+const DEFAULT_HEAD_SHA = String(process.env.GUARDRAILS_HEAD_SHA ?? process.env.GITHUB_SHA ?? "").trim();
 const IGNORED_DIRS = new Set([".git", "node_modules", "dist"]);
+const execFileAsync = util.promisify(childProcess.execFile);
 
 function toPortablePath(value) {
   return String(value).split(path.sep).join("/");
@@ -39,7 +44,9 @@ function parseArgs(argv) {
   const opts = {
     mode: DEFAULT_MODE,
     allowlistPath: DEFAULT_ALLOWLIST_PATH,
-    reportPath: DEFAULT_REPORT_PATH
+    reportPath: DEFAULT_REPORT_PATH,
+    baseSha: DEFAULT_BASE_SHA,
+    headSha: DEFAULT_HEAD_SHA
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -47,7 +54,7 @@ function parseArgs(argv) {
     if (arg === "--help" || arg === "-h") {
       console.log("Usage:");
       console.log(
-        "  node scripts/check-mjs-policy.cjs [--mode=warn|fail] [--allowlist=path] [--report=path]"
+        "  node scripts/check-mjs-policy.cjs [--mode=warn|fail] [--allowlist=path] [--report=path] [--base-sha=sha] [--head-sha=sha]"
       );
       process.exit(0);
     }
@@ -73,6 +80,20 @@ function parseArgs(argv) {
       continue;
     }
 
+    const baseShaOpt = readOptionValue(argv, index, "--base-sha");
+    if (baseShaOpt) {
+      opts.baseSha = String(baseShaOpt.value ?? "").trim();
+      index = baseShaOpt.nextIndex;
+      continue;
+    }
+
+    const headShaOpt = readOptionValue(argv, index, "--head-sha");
+    if (headShaOpt) {
+      opts.headSha = String(headShaOpt.value ?? "").trim();
+      index = headShaOpt.nextIndex;
+      continue;
+    }
+
     throw new Error(`Unknown option: ${arg}`);
   }
 
@@ -81,6 +102,99 @@ function parseArgs(argv) {
   }
 
   return opts;
+}
+
+function normalizeSha(value) {
+  const trimmed = String(value ?? "").trim();
+  if (trimmed.length === 0) {
+    return "";
+  }
+  if (/^0+$/.test(trimmed)) {
+    return "";
+  }
+  return trimmed;
+}
+
+function parseNullDelimitedPaths(output) {
+  if (!output) {
+    return [];
+  }
+  return String(output)
+    .split("\u0000")
+    .filter((entry) => entry.length > 0)
+    .map((entry) => toPortablePath(entry));
+}
+
+async function runGit(args) {
+  const result = await execFileAsync("git", args, {
+    cwd: process.cwd(),
+    windowsHide: true,
+    encoding: "utf8",
+    maxBuffer: 1024 * 1024 * 16
+  });
+  return result.stdout;
+}
+
+async function tryTouchedFromDiff(args) {
+  try {
+    return parseNullDelimitedPaths(await runGit(args));
+  } catch (err) {
+    return null;
+  }
+}
+
+async function collectTouchedFiles(opts) {
+  const touched = new Set();
+  const baseSha = normalizeSha(opts.baseSha);
+  const headSha = normalizeSha(opts.headSha) || "HEAD";
+  let source = "working_tree";
+
+  if (baseSha) {
+    const rangePaths =
+      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", `${baseSha}...${headSha}`])) ??
+      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", baseSha, headSha]));
+    if (rangePaths) {
+      for (const filePath of rangePaths) {
+        touched.add(filePath);
+      }
+      source = `git_diff:${baseSha}...${headSha}`;
+    }
+  }
+
+  if (source === "working_tree") {
+    if (String(process.env.CI ?? "").toLowerCase() === "true") {
+      const ciFallbackPaths =
+        (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", "HEAD~1", "HEAD"])) ??
+        [];
+      for (const filePath of ciFallbackPaths) {
+        touched.add(filePath);
+      }
+    }
+
+    const workingTreePaths =
+      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", "HEAD"])) ?? [];
+    for (const filePath of workingTreePaths) {
+      touched.add(filePath);
+    }
+
+    const stagedPaths =
+      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "--cached", "-z", "HEAD"])) ??
+      [];
+    for (const filePath of stagedPaths) {
+      touched.add(filePath);
+    }
+  }
+
+  const untrackedPaths =
+    (await tryTouchedFromDiff(["ls-files", "--others", "--exclude-standard", "-z"])) ?? [];
+  for (const filePath of untrackedPaths) {
+    touched.add(filePath);
+  }
+
+  return {
+    files: touched,
+    source
+  };
 }
 
 async function walkMjsFiles(dirPath) {
@@ -170,25 +284,29 @@ function isLikelyWrapper(content) {
   return true;
 }
 
-function renderReport({ opts, rows, counts }) {
+function renderReport({ opts, rows, counts, touched }) {
   const lines = [
-    "# MJS Policy Violations (Warn Mode Baseline)",
+    "# MJS Policy Violations",
     "",
     `- mode: ${opts.mode}`,
     `- generated_at_utc: ${new Date().toISOString()}`,
+    `- touched_source: ${touched.source}`,
+    `- touched_files: ${touched.count}`,
     `- files_scanned: ${rows.length}`,
     `- wrappers_detected: ${counts.wrappers}`,
     `- legacy_business_logic: ${counts.legacy}`,
+    `- touched_legacy_business_logic: ${counts.touchedLegacy}`,
     `- new_business_logic: ${counts.new}`,
+    `- blocking_violations: ${counts.blocking}`,
     "",
     "## Classification",
     "",
-    "| file | classification |",
-    "|---|---|"
+    "| file | touched | classification |",
+    "|---|---|---|"
   ];
 
   for (const row of rows) {
-    lines.push(`| ${row.file} | ${row.classification} |`);
+    lines.push(`| ${row.file} | ${row.touched ? "yes" : "no"} | ${row.classification} |`);
   }
 
   return lines.join("\n") + "\n";
@@ -203,32 +321,45 @@ async function run() {
   const rows = [];
   let wrappers = 0;
   let legacy = 0;
+  let touchedLegacy = 0;
   let newlyIntroduced = 0;
+  let blockingViolations = 0;
+  const touched = await collectTouchedFiles(opts);
 
   for (const filePath of files) {
     const relativePath = workspaceRelativePath(filePath);
     const content = await fs.readFile(filePath, "utf8");
+    const isTouched = touched.files.has(relativePath);
 
     let classification = "";
     if (allowlist.wrapperAllowlist.has(relativePath)) {
       classification = "wrapper_allowlisted";
       wrappers += 1;
     } else if (allowlist.legacyBusinessLogic.has(relativePath)) {
-      classification = "legacy_business_logic";
-      legacy += 1;
-      console.warn(`[mjs-policy:legacy] ${relativePath}`);
+      if (isTouched) {
+        classification = "touched_legacy_business_logic";
+        touchedLegacy += 1;
+        blockingViolations += 1;
+        console.warn(`[mjs-policy:touched-legacy] ${relativePath}`);
+      } else {
+        classification = "legacy_business_logic";
+        legacy += 1;
+        console.warn(`[mjs-policy:legacy] ${relativePath}`);
+      }
     } else if (isLikelyWrapper(content)) {
       classification = "wrapper_detected";
       wrappers += 1;
     } else {
       classification = "new_business_logic";
       newlyIntroduced += 1;
+      blockingViolations += 1;
       console.warn(`[mjs-policy:new] ${relativePath}`);
     }
 
     rows.push({
       file: relativePath,
-      classification
+      classification,
+      touched: isTouched
     });
   }
 
@@ -238,7 +369,13 @@ async function run() {
     counts: {
       wrappers,
       legacy,
-      new: newlyIntroduced
+      touchedLegacy,
+      new: newlyIntroduced,
+      blocking: blockingViolations
+    },
+    touched: {
+      source: touched.source,
+      count: touched.files.size
     }
   });
 
@@ -247,10 +384,10 @@ async function run() {
 
   const reportRel = workspaceRelativePath(opts.reportPath);
   console.log(
-    `mjs-policy: mode=${opts.mode} files=${rows.length} wrappers=${wrappers} legacy=${legacy} new=${newlyIntroduced} report=${reportRel}`
+    `mjs-policy: mode=${opts.mode} files=${rows.length} touched=${touched.files.size} wrappers=${wrappers} legacy=${legacy} touchedLegacy=${touchedLegacy} new=${newlyIntroduced} blocking=${blockingViolations} report=${reportRel}`
   );
 
-  if (opts.mode === "fail" && newlyIntroduced > 0) {
+  if (opts.mode === "fail" && blockingViolations > 0) {
     process.exitCode = 1;
   }
 }

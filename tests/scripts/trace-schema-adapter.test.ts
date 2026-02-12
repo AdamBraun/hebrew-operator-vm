@@ -14,19 +14,19 @@ beforeAll(async () => {
 });
 
 describe("trace schema adapter", () => {
-  it("reads canonical semantic_version", () => {
-    expect(getSemanticVersion({ semantic_version: "1.2.3" })).toBe("1.2.3");
-  });
-
-  it("reads legacy semantics_version", () => {
+  it("reads canonical semantics_version", () => {
     expect(getSemanticVersion({ semantics_version: "1.2.3" })).toBe("1.2.3");
   });
 
-  it("prefers semantic_version when both exist", () => {
+  it("reads legacy semantic_version", () => {
+    expect(getSemanticVersion({ semantic_version: "1.2.3" })).toBe("1.2.3");
+  });
+
+  it("prefers semantics_version when both exist", () => {
     expect(
       getSemanticVersion({
-        semantic_version: "2.0.0",
-        semantics_version: "1.9.9"
+        semantics_version: "2.0.0",
+        semantic_version: "1.9.9"
       })
     ).toBe("2.0.0");
   });

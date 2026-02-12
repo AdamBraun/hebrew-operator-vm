@@ -7,11 +7,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GUARDRAILS_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+      GUARDRAILS_HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
     strategy:
       matrix:
         node: [20, 22]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Use Node.js ${{ matrix.node }}
         uses: actions/setup-node@v4
         with:
@@ -22,9 +27,9 @@ jobs:
         run: npm ci
       - name: Lint
         run: npm run lint
-      - name: Guardrails (Warn Mode)
+      - name: Guardrails (Fail Mode, touched files)
         run: npm run ci:guardrails
-      - name: MJS Policy (Warn Mode)
+      - name: MJS Policy (Fail Mode, touched files)
         run: npm run ci:mjs-policy
       - name: Format
         run: npm run format

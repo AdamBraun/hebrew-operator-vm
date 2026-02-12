@@ -20,11 +20,11 @@ import { compileFlowString } from "./runtimePart1";
 
 function getSemanticVersion(value) {
   if (value && typeof value === "object") {
-    if (typeof value.semantic_version === "string" && value.semantic_version.length > 0) {
-      return value.semantic_version;
-    }
     if (typeof value.semantics_version === "string" && value.semantics_version.length > 0) {
       return value.semantics_version;
+    }
+    if (typeof value.semantic_version === "string" && value.semantic_version.length > 0) {
+      return value.semantic_version;
     }
   }
   return "unknown";

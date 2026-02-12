@@ -1,10 +1,15 @@
 #!/usr/bin/env node
+const childProcess = require("node:child_process");
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const util = require("node:util");
 
 const DEFAULT_MODE = "warn";
 const DEFAULT_REPORT_PATH = path.resolve(process.cwd(), "reports", "ci_guardrails_baseline.md");
 const DEFAULT_ALLOWLIST_PATH = path.resolve(process.cwd(), "config", "guardrails-allowlist.json");
+const DEFAULT_BASE_SHA = String(process.env.GUARDRAILS_BASE_SHA ?? "").trim();
+const DEFAULT_HEAD_SHA = String(process.env.GUARDRAILS_HEAD_SHA ?? process.env.GITHUB_SHA ?? "").trim();
+const execFileAsync = util.promisify(childProcess.execFile);
 
 const SOURCE_ROOTS = [
   path.resolve(process.cwd(), "impl", "reference", "src"),
@@ -50,7 +55,9 @@ function parseArgs(argv) {
   const opts = {
     mode: DEFAULT_MODE,
     reportPath: DEFAULT_REPORT_PATH,
-    allowlistPath: DEFAULT_ALLOWLIST_PATH
+    allowlistPath: DEFAULT_ALLOWLIST_PATH,
+    baseSha: DEFAULT_BASE_SHA,
+    headSha: DEFAULT_HEAD_SHA
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -58,7 +65,7 @@ function parseArgs(argv) {
     if (arg === "--help" || arg === "-h") {
       console.log("Usage:");
       console.log(
-        "  node scripts/ci-guardrails.cjs [--mode=warn|fail] [--report=path] [--allowlist=path]"
+        "  node scripts/ci-guardrails.cjs [--mode=warn|fail] [--report=path] [--allowlist=path] [--base-sha=sha] [--head-sha=sha]"
       );
       process.exit(0);
     }
@@ -84,6 +91,20 @@ function parseArgs(argv) {
       continue;
     }
 
+    const baseShaOpt = readOptionValue(argv, index, "--base-sha");
+    if (baseShaOpt) {
+      opts.baseSha = String(baseShaOpt.value ?? "").trim();
+      index = baseShaOpt.nextIndex;
+      continue;
+    }
+
+    const headShaOpt = readOptionValue(argv, index, "--head-sha");
+    if (headShaOpt) {
+      opts.headSha = String(headShaOpt.value ?? "").trim();
+      index = headShaOpt.nextIndex;
+      continue;
+    }
+
     throw new Error(`Unknown option: ${arg}`);
   }
 
@@ -92,6 +113,99 @@ function parseArgs(argv) {
   }
 
   return opts;
+}
+
+function normalizeSha(value) {
+  const trimmed = String(value ?? "").trim();
+  if (trimmed.length === 0) {
+    return "";
+  }
+  if (/^0+$/.test(trimmed)) {
+    return "";
+  }
+  return trimmed;
+}
+
+function parseNullDelimitedPaths(output) {
+  if (!output) {
+    return [];
+  }
+  return String(output)
+    .split("\u0000")
+    .filter((entry) => entry.length > 0)
+    .map((entry) => toPortablePath(entry));
+}
+
+async function runGit(args) {
+  const result = await execFileAsync("git", args, {
+    cwd: process.cwd(),
+    windowsHide: true,
+    encoding: "utf8",
+    maxBuffer: 1024 * 1024 * 16
+  });
+  return result.stdout;
+}
+
+async function tryTouchedFromDiff(args) {
+  try {
+    return parseNullDelimitedPaths(await runGit(args));
+  } catch (err) {
+    return null;
+  }
+}
+
+async function collectTouchedFiles(opts) {
+  const touched = new Set();
+  const baseSha = normalizeSha(opts.baseSha);
+  const headSha = normalizeSha(opts.headSha) || "HEAD";
+  let source = "working_tree";
+
+  if (baseSha) {
+    const rangePaths =
+      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", `${baseSha}...${headSha}`])) ??
+      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", baseSha, headSha]));
+    if (rangePaths) {
+      for (const filePath of rangePaths) {
+        touched.add(filePath);
+      }
+      source = `git_diff:${baseSha}...${headSha}`;
+    }
+  }
+
+  if (source === "working_tree") {
+    if (String(process.env.CI ?? "").toLowerCase() === "true") {
+      const ciFallbackPaths =
+        (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", "HEAD~1", "HEAD"])) ??
+        [];
+      for (const filePath of ciFallbackPaths) {
+        touched.add(filePath);
+      }
+    }
+
+    const workingTreePaths =
+      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", "HEAD"])) ?? [];
+    for (const filePath of workingTreePaths) {
+      touched.add(filePath);
+    }
+
+    const stagedPaths =
+      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "--cached", "-z", "HEAD"])) ??
+      [];
+    for (const filePath of stagedPaths) {
+      touched.add(filePath);
+    }
+  }
+
+  const untrackedPaths =
+    (await tryTouchedFromDiff(["ls-files", "--others", "--exclude-standard", "-z"])) ?? [];
+  for (const filePath of untrackedPaths) {
+    touched.add(filePath);
+  }
+
+  return {
+    files: touched,
+    source
+  };
 }
 
 async function walkFiles(dirPath) {
@@ -169,34 +283,44 @@ async function loadAllowlist(allowlistPath) {
   }
 }
 
-function evaluateMetric(value, threshold, allowlist, filePath) {
+function evaluateMetric(value, threshold, allowlist, filePath, touchedFiles) {
   if (value <= threshold) {
     return "pass";
   }
-  return allowlist.has(filePath) ? "legacy_allowlisted" : "new_violation";
+  if (!allowlist.has(filePath)) {
+    return "new_violation";
+  }
+  if (touchedFiles.has(filePath)) {
+    return "touched_legacy_violation";
+  }
+  return "legacy_allowlisted";
 }
 
-function renderReport({ opts, rows, counts }) {
+function renderReport({ opts, rows, counts, touched }) {
   const lines = [
     "# CI Guardrails Baseline Report",
     "",
     `- mode: ${opts.mode}`,
     `- generated_at_utc: ${new Date().toISOString()}`,
+    `- touched_source: ${touched.source}`,
+    `- touched_files: ${touched.count}`,
     `- thresholds.max_bytes: ${THRESHOLDS.max_bytes}`,
     `- thresholds.max_complexity_score: ${THRESHOLDS.max_complexity_score}`,
     `- files_scanned: ${rows.length}`,
     `- legacy_allowlisted_violations: ${counts.legacy}`,
+    `- touched_legacy_violations: ${counts.touchedLegacy}`,
     `- new_violations: ${counts.new}`,
+    `- blocking_violations: ${counts.blocking}`,
     "",
     "## File Metrics",
     "",
-    "| file | bytes | complexity_score | bytes_status | complexity_status |",
-    "|---|---:|---:|---|---|"
+    "| file | touched | bytes | complexity_score | bytes_status | complexity_status |",
+    "|---|---|---:|---:|---|---|"
   ];
 
   for (const row of rows) {
     lines.push(
-      `| ${row.file} | ${row.bytes} | ${row.complexity_score} | ${row.bytes_status} | ${row.complexity_status} |`
+      `| ${row.file} | ${row.touched ? "yes" : "no"} | ${row.bytes} | ${row.complexity_score} | ${row.bytes_status} | ${row.complexity_status} |`
     );
   }
 
@@ -215,6 +339,9 @@ async function run() {
   const rows = [];
   let newViolations = 0;
   let legacyViolations = 0;
+  let touchedLegacyViolations = 0;
+  let blockingViolations = 0;
+  const touched = await collectTouchedFiles(opts);
 
   for (const filePath of files) {
     const content = await fs.readFile(filePath, "utf8");
@@ -226,24 +353,36 @@ async function run() {
       bytes,
       THRESHOLDS.max_bytes,
       allowlist.max_bytes,
-      relativePath
+      relativePath,
+      touched.files
     );
     const complexityStatus = evaluateMetric(
       complexityScore,
       THRESHOLDS.max_complexity_score,
       allowlist.max_complexity_score,
-      relativePath
+      relativePath,
+      touched.files
     );
 
-    if (bytesStatus === "new_violation" || complexityStatus === "new_violation") {
+    const hasNew = bytesStatus === "new_violation" || complexityStatus === "new_violation";
+    const hasTouchedLegacy =
+      bytesStatus === "touched_legacy_violation" || complexityStatus === "touched_legacy_violation";
+    const hasLegacy =
+      bytesStatus === "legacy_allowlisted" || complexityStatus === "legacy_allowlisted";
+
+    if (hasNew) {
       newViolations += 1;
+      blockingViolations += 1;
       console.warn(
         `[guardrails:new] ${relativePath} bytes=${bytes} complexity=${complexityScore} (bytes:${bytesStatus}, complexity:${complexityStatus})`
       );
-    } else if (
-      bytesStatus === "legacy_allowlisted" ||
-      complexityStatus === "legacy_allowlisted"
-    ) {
+    } else if (hasTouchedLegacy) {
+      touchedLegacyViolations += 1;
+      blockingViolations += 1;
+      console.warn(
+        `[guardrails:touched-legacy] ${relativePath} bytes=${bytes} complexity=${complexityScore} (bytes:${bytesStatus}, complexity:${complexityStatus})`
+      );
+    } else if (hasLegacy) {
       legacyViolations += 1;
       console.warn(
         `[guardrails:legacy] ${relativePath} bytes=${bytes} complexity=${complexityScore} (bytes:${bytesStatus}, complexity:${complexityStatus})`
@@ -255,7 +394,8 @@ async function run() {
       bytes,
       complexity_score: complexityScore,
       bytes_status: bytesStatus,
-      complexity_status: complexityStatus
+      complexity_status: complexityStatus,
+      touched: touched.files.has(relativePath)
     });
   }
 
@@ -265,7 +405,13 @@ async function run() {
     rows,
     counts: {
       legacy: legacyViolations,
-      new: newViolations
+      touchedLegacy: touchedLegacyViolations,
+      new: newViolations,
+      blocking: blockingViolations
+    },
+    touched: {
+      source: touched.source,
+      count: touched.files.size
     }
   });
 
@@ -274,10 +420,10 @@ async function run() {
 
   const reportRel = workspaceRelativePath(opts.reportPath);
   console.log(
-    `guardrails: mode=${opts.mode} files=${rows.length} legacy=${legacyViolations} new=${newViolations} report=${reportRel}`
+    `guardrails: mode=${opts.mode} files=${rows.length} touched=${touched.files.size} legacy=${legacyViolations} touchedLegacy=${touchedLegacyViolations} new=${newViolations} blocking=${blockingViolations} report=${reportRel}`
   );
 
-  if (opts.mode === "fail" && newViolations > 0) {
+  if (opts.mode === "fail" && blockingViolations > 0) {
     process.exitCode = 1;
   }
 }

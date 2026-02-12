@@ -28,12 +28,17 @@ Rules:
 - When touching legacy `.mjs` files, move logic into TS modules and keep the
   wrapper minimal.
 
-Guardrail commands (warn mode):
+Guardrail commands (fail mode for new/touched violations):
 
 ```bash
 npm run ci:guardrails
 npm run ci:mjs-policy
 ```
+
+Optional CI range override (used by GitHub Actions):
+
+- `GUARDRAILS_BASE_SHA`
+- `GUARDRAILS_HEAD_SHA`
 
 Generated reports:
 
