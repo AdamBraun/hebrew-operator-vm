@@ -1,12 +1,12 @@
 # CI Guardrails Baseline Report
 
 - mode: fail
-- generated_at_utc: 2026-02-12T20:31:12.204Z
+- generated_at_utc: 2026-02-12T20:35:33.456Z
 - touched_source: working_tree
-- touched_files: 7
+- touched_files: 4
 - thresholds.max_bytes: 30000
 - thresholds.max_complexity_score: 220
-- files_scanned: 72
+- files_scanned: 73
 - legacy_allowlisted_violations: 2
 - touched_legacy_violations: 0
 - new_violations: 0
@@ -33,8 +33,8 @@
 | impl/reference/src/trace/types.ts | no | 10437 | 6 | pass | pass |
 | impl/reference/src/vm/vm.ts | no | 9029 | 57 | pass | pass |
 | impl/reference/src/dispatch/dispatcher.ts | no | 7345 | 42 | pass | pass |
-| impl/reference/src/scripts/downloadTorah/runtime.ts | yes | 7024 | 30 | pass | pass |
-| scripts/iterate-torah.mjs | no | 5094 | 29 | pass | pass |
+| impl/reference/src/scripts/downloadTorah/runtime.ts | no | 7020 | 30 | pass | pass |
+| impl/reference/src/scripts/iterateTorah/runtime.ts | yes | 6205 | 35 | pass | pass |
 | impl/reference/src/compile/tokenizer.ts | no | 3539 | 25 | pass | pass |
 | impl/reference/src/vm/select.ts | no | 3533 | 26 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/diff.ts | no | 3532 | 15 | pass | pass |
@@ -80,7 +80,8 @@
 | impl/reference/src/letters/yod.ts | no | 993 | 1 | pass | pass |
 | impl/reference/src/letters/types.ts | no | 905 | 1 | pass | pass |
 | scripts/torah-corpus.mjs | no | 837 | 7 | pass | pass |
-| scripts/download-torah.mjs | yes | 831 | 7 | pass | pass |
+| scripts/download-torah.mjs | no | 831 | 7 | pass | pass |
+| scripts/iterate-torah.mjs | yes | 824 | 7 | pass | pass |
 | impl/reference/src/letters/stub.ts | no | 816 | 1 | pass | pass |
 | impl/reference/src/compile/validate.ts | no | 390 | 4 | pass | pass |
 | impl/reference/src/letters/finals.ts | no | 390 | 1 | pass | pass |
