@@ -332,8 +332,8 @@ function normalizeRow(raw, index) {
     raw?.flow ?? raw?.one_liner ?? (skeleton.join(" -> ") || "(no semantic events)")
   );
   const semantic_version =
-    String(raw?.semantic_version ?? "unknown").trim().length > 0
-      ? String(raw.semantic_version).trim()
+    String(raw?.semantic_version ?? raw?.semantics_version ?? "unknown").trim().length > 0
+      ? String(raw.semantic_version ?? raw.semantics_version).trim()
       : "unknown";
 
   return {

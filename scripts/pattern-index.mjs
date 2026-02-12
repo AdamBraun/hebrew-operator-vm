@@ -823,7 +823,8 @@ async function runBuild(argv) {
       eventsBySkeletonKey.set(skeletonKey, events);
     }
 
-    const semanticVersion = String(row?.semantic_version ?? "unknown").trim() || "unknown";
+    const semanticVersion =
+      String(row?.semantic_version ?? row?.semantics_version ?? "unknown").trim() || "unknown";
     semanticVersions.add(semanticVersion);
   }
 

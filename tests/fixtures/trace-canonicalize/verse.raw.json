@@ -1,0 +1,77 @@
+{
+  "notable_motifs": [
+    {
+      "count": 1,
+      "motif": "BETA"
+    },
+    {
+      "ops": ["X", "A"],
+      "count": 2,
+      "motif": "ALPHA"
+    }
+  ],
+  "cross_word_events": [
+    {
+      "token_index": 2,
+      "ref_key": "Genesis/1/1/2",
+      "baseline_skeleton": ["MEM.OPEN", "FINAL_MEM.CLOSE"],
+      "observed_skeleton": ["MEM.OPEN", "SPACE.MEM_AUTO_CLOSE"],
+      "explanation": "delta-2"
+    },
+    {
+      "token_index": 1,
+      "ref_key": "Genesis/1/1/1",
+      "baseline_skeleton": ["NUN.SUPPORT_DEBT"],
+      "observed_skeleton": ["SAMEKH.SUPPORT_DISCHARGE"],
+      "explanation": "delta-1"
+    }
+  ],
+  "boundary_events": {
+    "by_type": {
+      "RESH.BOUNDARY_CLOSE": 1,
+      "DALET.BOUNDARY_CLOSE": 2
+    },
+    "verse_end": ["RESH.BOUNDARY_CLOSE", "DALET.BOUNDARY_CLOSE"],
+    "total": 3,
+    "verse_boundary_operator": {
+      "finalize_refs": ["Genesis/1/1/2", "Genesis/1/1/1"],
+      "mem_resolved_at_boundary": 0,
+      "mem_closed": 0,
+      "trigger": "explicit_verse_boundary",
+      "support_discharged": 1,
+      "action": "confirm_stable_closure",
+      "op_family": "VERSE.BOUNDARY_RESOLUTION",
+      "boundary_ops_seen": 3,
+      "support_opened": 1,
+      "support_resolved_at_boundary": 0,
+      "mem_opened": 0
+    }
+  },
+  "total_events": 4,
+  "words_total": 2,
+  "mode": "WINDOW(2)",
+  "ref_key": "Genesis/1/1",
+  "ref": {
+    "verse": 1,
+    "chapter": 1,
+    "book": "Genesis"
+  },
+  "trace_version": "1.0.0",
+  "render_version": "1.0.0",
+  "semantics_version": "1.2.3",
+  "record_kind": "VERSE_TRACE",
+  "window_size": 2,
+  "safety_rail": {
+    "threshold": 0.3,
+    "provisional_delta_rate": 0.5,
+    "provisional_delta_count": 1,
+    "active": true
+  },
+  "extensions": {
+    "zeta": 1,
+    "alpha": {
+      "b": 2,
+      "a": 1
+    }
+  }
+}

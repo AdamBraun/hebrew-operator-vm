@@ -92,6 +92,10 @@ describe("torah corpus verse execution modes", () => {
       .filter((line) => line.trim().length > 0)
       .map((line) => JSON.parse(line));
     expect(verseRows).toHaveLength(2);
+    expect(verseRows[0].record_kind).toBe("VERSE_TRACE");
+    expect(verseRows[0].trace_version).toBe("1.0.0");
+    expect(verseRows[0].render_version).toBe("1.0.0");
+    expect(String(verseRows[0].canonical_hash)).toMatch(/^[a-f0-9]{64}$/);
     expect(verseRows[0].mode).toBe("VERSE");
     expect(Array.isArray(verseRows[0].cross_word_events)).toBe(true);
     expect(Array.isArray(verseRows[0].notable_motifs)).toBe(true);
@@ -141,6 +145,7 @@ describe("torah corpus verse execution modes", () => {
       .filter((line) => line.trim().length > 0)
       .map((line) => JSON.parse(line));
     expect(windowRows).toHaveLength(2);
+    expect(windowRows[0].record_kind).toBe("VERSE_TRACE");
     expect(windowRows[0].mode).toBe("WINDOW(2)");
     expect(windowRows[0].window_size).toBe(2);
 

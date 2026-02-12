@@ -36,6 +36,8 @@ const DEFAULT_SEMANTICS_DEFS_PATH = path.resolve(process.cwd(), "registry", "tok
 const DEFAULT_EXECUTION_MODE = "WORD";
 const DEFAULT_WINDOW_SIZE = 4;
 const DEFAULT_SAFETY_RAIL_THRESHOLD = 0.35;
+const TRACE_VERSION = "1.0.0";
+const TRACE_RENDER_VERSION = "1.0.0";
 const SPACE_TOKEN = "□";
 
 const FINAL_MAP = {
@@ -1023,112 +1025,249 @@ function summarizeEvent(type, event, traceEntry) {
   }
 }
 
+function asHandleId(value, fallback = "unknown") {
+  const text = String(value ?? "").trim();
+  return text.length > 0 ? text : fallback;
+}
+
 function mapRawEventToFlow(event, traceEntry) {
+  const data = event?.data ?? {};
   switch (event.type) {
     case "align":
       return {
         op_family: "TSADI.ALIGN",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id),
+          focus: asHandleId(data.focus),
+          exemplar: asHandleId(data.exemplar)
+        }
       };
     case "align_final":
       return {
         op_family: "FINAL_TSADI.ALIGN_FINAL",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id),
+          focus: asHandleId(data.focus),
+          exemplar: asHandleId(data.exemplar)
+        }
       };
     case "finalize":
       return {
         op_family: "TAV.FINALIZE",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id),
+          target: asHandleId(data.target),
+          outside: asHandleId(data.outside),
+          boundaryId: asHandleId(data.boundaryId),
+          residueId: asHandleId(data.residueId)
+        }
       };
     case "bestow":
       return {
         op_family: "GIMEL.BESTOW",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          from: asHandleId(data.from),
+          to: asHandleId(data.to),
+          payload: data.payload
+        }
       };
     case "declare":
       return {
         op_family: "HE.DECLARE",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id),
+          target: asHandleId(data.target),
+          mode: data.mode === "pinned" || data.mode === "alias" ? data.mode : "public"
+        }
       };
     case "declare_breath":
       return {
         op_family: "HE.DECLARE_BREATH",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          target: asHandleId(data.target)
+        }
       };
     case "declare_pin":
       return {
         op_family: "HE.DECLARE_PIN",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          declaration: asHandleId(data.declaration),
+          pin: asHandleId(data.pin)
+        }
       };
     case "declare_alias":
       return {
         op_family: "HE.DECLARE_ALIAS",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          declaration: asHandleId(data.declaration),
+          referent: asHandleId(data.referent),
+          alias: asHandleId(data.alias)
+        }
       };
     case "alias":
       return {
         op_family: "ALEPH.ALIAS",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id),
+          left: asHandleId(data.left),
+          right: asHandleId(data.right)
+        }
       };
     case "support":
       return {
         op_family: "SAMEKH.SUPPORT_DISCHARGE",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          child: asHandleId(data.child),
+          parent: asHandleId(data.parent)
+        }
       };
     case "fall":
       return {
         op_family: "SPACE.SUPPORT_DISCHARGE",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          child: asHandleId(data.child),
+          parent: asHandleId(data.parent)
+        }
       };
     case "boundary_auto_close":
       return {
         op_family: "SPACE.BOUNDARY_AUTO_CLOSE",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id),
+          inside: asHandleId(data.inside),
+          outside: asHandleId(data.outside)
+        }
       };
-    case "boundary_close":
+    case "boundary_close": {
+      const payload = {
+        id: asHandleId(data.id),
+        inside: asHandleId(data.inside),
+        outside: asHandleId(data.outside)
+      };
+      if (data.anchor === 0 || data.anchor === 1) {
+        payload.anchor = data.anchor;
+      }
       return {
         op_family: traceEntry.read_op === "ד" ? "DALET.BOUNDARY_CLOSE" : "RESH.BOUNDARY_CLOSE",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload
       };
+    }
     case "utter":
       return {
         op_family: "PE.UTTER",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id),
+          source: asHandleId(data.source),
+          payload: data.payload,
+          target: asHandleId(data.target)
+        }
       };
     case "utter_close":
       return {
         op_family: "FINAL_PE.UTTER_CLOSE",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id)
+        }
       };
     case "compartment":
       return {
         op_family: "HET.COMPARTMENT",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id),
+          inside: asHandleId(data.inside),
+          outside: asHandleId(data.outside),
+          boundaryId: asHandleId(data.boundaryId)
+        }
       };
     case "endpoint":
       return {
         op_family: "LAMED.ENDPOINT",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id),
+          endpoint: asHandleId(data.endpoint),
+          domain: asHandleId(data.domain),
+          boundaryId: asHandleId(data.boundaryId)
+        }
       };
     case "covert":
       return {
         op_family: "TET.COVERT",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id),
+          target: asHandleId(data.target),
+          patch: data.patch
+        }
       };
     case "gate":
       return {
         op_family: "ZAYIN.GATE",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id),
+          target: asHandleId(data.target)
+        }
       };
     case "approx":
       return {
         op_family: "QOF.APPROX",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id),
+          left: asHandleId(data.left),
+          right: asHandleId(data.right)
+        }
       };
     case "shin":
       return {
         op_family: "SHIN.FORK",
-        params_summary: summarizeEvent(event.type, event, traceEntry)
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id),
+          focus: asHandleId(data.focus),
+          spine: asHandleId(data.spine),
+          left: asHandleId(data.left),
+          right: asHandleId(data.right),
+          active: asHandleId(data.active)
+        }
       };
     default:
       return null;
@@ -1147,17 +1286,51 @@ function compileOneLiner(flowCompact) {
   return compileFlowString(flowCompact, " -> ");
 }
 
+function makeRuntimeErrorTraceEvent(message) {
+  return {
+    kind: "ERROR.RUNTIME",
+    index: 0,
+    tau: 0,
+    source: "error",
+    payload: {
+      message: String(message ?? "RuntimeError")
+    }
+  };
+}
+
+function makeUnknownSignatureTraceEvent(signature) {
+  return {
+    kind: "ERROR.UNKNOWN_SIGNATURE",
+    index: 0,
+    tau: 0,
+    source: "error",
+    payload: {
+      signature: String(signature ?? "unknown")
+    }
+  };
+}
+
 function extractWordFlow(trace) {
   const events = [];
   const flow_skeleton = [];
   const flow_compact = [];
+  const trace_events = [];
 
   let prevOStackLength = 0;
 
-  const addFlow = (op_family, params_summary, source) => {
+  const addFlow = (op_family, params_summary, source, traceEvent = null) => {
     events.push({ type: op_family, source, params_summary });
     flow_skeleton.push([op_family, params_summary]);
     flow_compact.push(op_family);
+    if (traceEvent) {
+      trace_events.push({
+        kind: op_family,
+        index: trace_events.length,
+        tau: Number(traceEvent.tau ?? 0),
+        source: traceEvent.source,
+        payload: traceEvent.payload
+      });
+    }
   };
 
   for (const traceEntry of trace) {
@@ -1165,21 +1338,59 @@ function extractWordFlow(trace) {
     prevOStackLength = traceEntry.OStackLength;
 
     if (traceEntry.read_op === "מ" && delta > 0) {
-      addFlow("MEM.OPEN", "open mem zone debt", "derived");
+      addFlow("MEM.OPEN", "open mem zone debt", "derived", {
+        tau: traceEntry.tauAfter,
+        source: "derived_obligation",
+        payload: {
+          obligation_kind: "MEM_ZONE",
+          action: "open"
+        }
+      });
     }
     if (traceEntry.read_op === "ם") {
       addFlow(
         "FINAL_MEM.CLOSE",
         delta < 0 ? "close existing mem zone" : "close/synthesize mem zone",
-        "derived"
+        "derived",
+        {
+          tau: traceEntry.tauAfter,
+          source: "derived_obligation",
+          payload: {
+            obligation_kind: "MEM_ZONE",
+            action: "close",
+            mode: delta < 0 ? "existing" : "synthetic"
+          }
+        }
       );
     }
     if (traceEntry.read_op === "נ" && delta > 0) {
-      addFlow("NUN.SUPPORT_DEBT", "open support debt", "derived");
+      addFlow("NUN.SUPPORT_DEBT", "open support debt", "derived", {
+        tau: traceEntry.tauAfter,
+        source: "derived_obligation",
+        payload: {
+          obligation_kind: "SUPPORT",
+          action: "open"
+        }
+      });
     }
     if (traceEntry.read_op === "ן") {
-      addFlow("FINAL_NUN.SUPPORT_DEBT", "open support debt", "derived");
-      addFlow("FINAL_NUN.SUPPORT_DISCHARGE", "immediate same-word discharge", "derived");
+      addFlow("FINAL_NUN.SUPPORT_DEBT", "open support debt", "derived", {
+        tau: traceEntry.tauAfter,
+        source: "derived_obligation",
+        payload: {
+          obligation_kind: "SUPPORT",
+          action: "open"
+        }
+      });
+      addFlow("FINAL_NUN.SUPPORT_DISCHARGE", "immediate same-word discharge", "derived", {
+        tau: traceEntry.tauAfter,
+        source: "derived_obligation",
+        payload: {
+          obligation_kind: "SUPPORT",
+          action: "discharge",
+          mode: "same_word"
+        }
+      });
     }
 
     for (const event of traceEntry.events ?? []) {
@@ -1190,7 +1401,11 @@ function extractWordFlow(trace) {
       if (!mapped) {
         continue;
       }
-      addFlow(mapped.op_family, mapped.params_summary, "vm_event");
+      addFlow(mapped.op_family, mapped.params_summary, "vm_event", {
+        tau: event.tau,
+        source: mapped.trace_source,
+        payload: mapped.payload
+      });
     }
 
     if (traceEntry.token === SPACE_TOKEN && delta < 0) {
@@ -1202,12 +1417,26 @@ function extractWordFlow(trace) {
       ).length;
       const memAutoClose = Math.max(0, -delta - supportFalls - boundaryAuto);
       for (let i = 0; i < memAutoClose; i += 1) {
-        addFlow("SPACE.MEM_AUTO_CLOSE", "auto-close mem zone at boundary", "derived");
+        addFlow("SPACE.MEM_AUTO_CLOSE", "auto-close mem zone at boundary", "derived", {
+          tau: traceEntry.tauAfter,
+          source: "derived_boundary",
+          payload: {
+            obligation_kind: "MEM_ZONE",
+            action: "auto_close",
+            count: 1
+          }
+        });
       }
     }
   }
 
-  return { events, flow_skeleton, flow_compact, one_liner: compileOneLiner(flow_compact) };
+  return {
+    events,
+    flow_skeleton,
+    flow_compact,
+    trace_events,
+    one_liner: compileOneLiner(flow_compact)
+  };
 }
 
 function isBoundaryFlowOp(op) {
@@ -1345,6 +1574,7 @@ function runIsolatedWordFlow({
     return {
       flowRaw: flow.flow_compact,
       flowCompact: dedupeConsecutive(flow.flow_compact),
+      traceEvents: flow.trace_events,
       runtimeErrorMessage: "",
       windowStart: 1
     };
@@ -1352,10 +1582,12 @@ function runIsolatedWordFlow({
     if (!allowRuntimeErrors || err?.name !== "RuntimeError") {
       throw err;
     }
+    const message = String(err?.message ?? "RuntimeError");
     return {
       flowRaw: ["ERROR.RUNTIME"],
       flowCompact: ["ERROR.RUNTIME"],
-      runtimeErrorMessage: String(err?.message ?? "RuntimeError"),
+      traceEvents: [makeRuntimeErrorTraceEvent(message)],
+      runtimeErrorMessage: message,
       windowStart: 1
     };
   }
@@ -1382,6 +1614,7 @@ function runVerseWordFlows({
       return {
         flowRaw: flow.flow_compact,
         flowCompact: dedupeConsecutive(flow.flow_compact),
+        traceEvents: flow.trace_events,
         runtimeErrorMessage: "",
         windowStart: 1
       };
@@ -1394,6 +1627,7 @@ function runVerseWordFlows({
     return words.map(() => ({
       flowRaw: ["ERROR.RUNTIME"],
       flowCompact: ["ERROR.RUNTIME"],
+      traceEvents: [makeRuntimeErrorTraceEvent(message)],
       runtimeErrorMessage: message,
       windowStart: 1
     }));
@@ -1427,6 +1661,7 @@ function runWindowWordFlows({
       out.push({
         flowRaw: flow.flow_compact,
         flowCompact: dedupeConsecutive(flow.flow_compact),
+        traceEvents: flow.trace_events,
         runtimeErrorMessage: "",
         windowStart: windowStart + 1
       });
@@ -1434,10 +1669,12 @@ function runWindowWordFlows({
       if (!allowRuntimeErrors || err?.name !== "RuntimeError") {
         throw err;
       }
+      const message = String(err?.message ?? "RuntimeError");
       out.push({
         flowRaw: ["ERROR.RUNTIME"],
         flowCompact: ["ERROR.RUNTIME"],
-        runtimeErrorMessage: String(err?.message ?? "RuntimeError"),
+        traceEvents: [makeRuntimeErrorTraceEvent(message)],
+        runtimeErrorMessage: message,
         windowStart: windowStart + 1
       });
     }
@@ -2024,6 +2261,8 @@ function normalizeTraceRow(row, index, sourcePath) {
     semantic_version:
       typeof row?.semantic_version === "string" && row.semantic_version.length > 0
         ? row.semantic_version
+        : typeof row?.semantics_version === "string" && row.semantics_version.length > 0
+          ? row.semantics_version
         : "unknown",
     token_ids: normalizeTokenIds(row?.token_ids ?? row?.tokens ?? []),
     source_path: workspaceRelativePath(sourcePath),
@@ -3098,6 +3337,12 @@ async function runExecute(argv) {
   const { createInitialState } = require(
     path.resolve(process.cwd(), "impl/reference/dist/state/state")
   );
+  const {
+    canonicalizeWordTraceRecord,
+    canonicalizeVerseTraceRecord,
+    compareWordTraceRecords,
+    compareVerseTraceRecords
+  } = require(path.resolve(process.cwd(), "impl/reference/dist/trace/canonicalize"));
 
   const startNs = process.hrtime.bigint();
   const rows = [];
@@ -3183,6 +3428,7 @@ async function runExecute(argv) {
         return {
           flowRaw: ["ERROR.UNKNOWN_SIGNATURE"],
           flowCompact: ["ERROR.UNKNOWN_SIGNATURE"],
+          traceEvents: [makeUnknownSignatureTraceEvent(meta.unknown_signatures[0] ?? "unknown")],
           runtimeErrorMessage: "",
           windowStart: 1
         };
@@ -3195,6 +3441,7 @@ async function runExecute(argv) {
       modeExecutions = baselineExecutions.map((execution) => ({
         flowRaw: [...execution.flowRaw],
         flowCompact: [...execution.flowCompact],
+        traceEvents: [...execution.traceEvents],
         runtimeErrorMessage: execution.runtimeErrorMessage,
         windowStart: execution.windowStart
       }));
@@ -3255,6 +3502,7 @@ async function runExecute(argv) {
         execution = {
           flowRaw: ["ERROR.UNKNOWN_SIGNATURE"],
           flowCompact: ["ERROR.UNKNOWN_SIGNATURE"],
+          traceEvents: [makeUnknownSignatureTraceEvent(meta.unknown_signatures[0] ?? "unknown")],
           runtimeErrorMessage: "",
           windowStart: execution?.windowStart ?? baselineExecution.windowStart
         };
@@ -3269,6 +3517,7 @@ async function runExecute(argv) {
           execution = {
             flowRaw: [...baselineExecution.flowRaw],
             flowCompact: [...baselineExecution.flowCompact],
+            traceEvents: [...baselineExecution.traceEvents],
             runtimeErrorMessage: baselineExecution.runtimeErrorMessage,
             windowStart: execution.windowStart,
             safetyRailClamped: true,
@@ -3294,15 +3543,24 @@ async function runExecute(argv) {
       const skeletonKey = skeleton.join(" -> ");
       skeletonCounts.set(skeletonKey, (skeletonCounts.get(skeletonKey) ?? 0) + 1);
 
-      const row = {
+      const rawWordRecord = {
+        record_kind: "WORD_TRACE",
+        trace_version: TRACE_VERSION,
+        semantics_version: semanticVersion,
+        render_version: TRACE_RENDER_VERSION,
         ref: meta.ref,
         ref_key: meta.ref_key,
         surface: meta.surface,
         token_ids: meta.token_ids,
+        events: execution.traceEvents,
         skeleton,
         flow,
-        semantic_version: semanticVersion
+        mode: opts.mode
       };
+      if (opts.mode === "WINDOW") {
+        rawWordRecord.window_start = execution.windowStart ?? 1;
+      }
+      const row = canonicalizeWordTraceRecord(rawWordRecord);
       if (opts.debugRawEvents) {
         row.skeleton_raw = execution.flowRaw;
       }
@@ -3314,7 +3572,7 @@ async function runExecute(argv) {
         skeleton: baselineExecution.flowCompact
       });
 
-      totalEventsInVerse += skeleton.length;
+      totalEventsInVerse += execution.traceEvents.length;
       const boundaryOps = extractBoundaryOps(skeleton);
       for (const op of boundaryOps) {
         boundaryByType[op] = (boundaryByType[op] ?? 0) + 1;
@@ -3352,6 +3610,10 @@ async function runExecute(argv) {
       verseWordRows.length > 0 ? verseWordRows[verseWordRows.length - 1].boundary_ops : [];
     const verseBoundaryResolution = buildVerseBoundaryResolution(verseWordRows, boundaryByType);
     const verseRecord = {
+      record_kind: "VERSE_TRACE",
+      trace_version: TRACE_VERSION,
+      semantics_version: semanticVersion,
+      render_version: TRACE_RENDER_VERSION,
       ref: verseEntry.ref,
       ref_key: verseEntry.ref_key,
       mode: opts.modeLabel,
@@ -3381,8 +3643,11 @@ async function runExecute(argv) {
     if (opts.mode === "WINDOW") {
       verseRecord.window_size = opts.windowSize;
     }
-    verseRows.push(verseRecord);
+    verseRows.push(canonicalizeVerseTraceRecord(verseRecord));
   }
+
+  rows.sort(compareWordTraceRecords);
+  verseRows.sort(compareVerseTraceRecords);
 
   const traceContent = rows.map((row) => JSON.stringify(row)).join("\n") + "\n";
   const verseTraceContent = verseRows.map((row) => JSON.stringify(row)).join("\n") + "\n";

@@ -1,0 +1,58 @@
+{
+  "record_kind": "VERSE_TRACE",
+  "trace_version": "1.0.0",
+  "semantics_version": "1.2.3",
+  "render_version": "1.0.0",
+  "ref": { "book": "Genesis", "chapter": 1, "verse": 1 },
+  "ref_key": "Genesis/1/1",
+  "mode": "WINDOW(2)",
+  "words_total": 2,
+  "total_events": 4,
+  "boundary_events": {
+    "total": 3,
+    "by_type": { "DALET.BOUNDARY_CLOSE": 2, "RESH.BOUNDARY_CLOSE": 1 },
+    "verse_end": ["DALET.BOUNDARY_CLOSE", "RESH.BOUNDARY_CLOSE"],
+    "verse_boundary_operator": {
+      "op_family": "VERSE.BOUNDARY_RESOLUTION",
+      "trigger": "explicit_verse_boundary",
+      "support_opened": 1,
+      "support_discharged": 1,
+      "support_resolved_at_boundary": 0,
+      "mem_opened": 0,
+      "mem_closed": 0,
+      "mem_resolved_at_boundary": 0,
+      "boundary_ops_seen": 3,
+      "finalize_refs": ["Genesis/1/1/1", "Genesis/1/1/2"],
+      "action": "confirm_stable_closure"
+    }
+  },
+  "cross_word_events": [
+    {
+      "ref_key": "Genesis/1/1/1",
+      "token_index": 1,
+      "baseline_skeleton": ["NUN.SUPPORT_DEBT"],
+      "observed_skeleton": ["SAMEKH.SUPPORT_DISCHARGE"],
+      "explanation": "delta-1"
+    },
+    {
+      "ref_key": "Genesis/1/1/2",
+      "token_index": 2,
+      "baseline_skeleton": ["MEM.OPEN", "FINAL_MEM.CLOSE"],
+      "observed_skeleton": ["MEM.OPEN", "SPACE.MEM_AUTO_CLOSE"],
+      "explanation": "delta-2"
+    }
+  ],
+  "notable_motifs": [
+    { "motif": "ALPHA", "count": 2, "ops": ["A", "X"] },
+    { "motif": "BETA", "count": 1 }
+  ],
+  "window_size": 2,
+  "safety_rail": {
+    "active": true,
+    "provisional_delta_count": 1,
+    "provisional_delta_rate": 0.5,
+    "threshold": 0.3
+  },
+  "canonical_hash": "d8028c2dd86eec67c7cc74f9fb40c6770c3ba73eed6ad872f36a3ed9c65eec6a",
+  "extensions": { "alpha": { "a": 1, "b": 2 }, "zeta": 1 }
+}
