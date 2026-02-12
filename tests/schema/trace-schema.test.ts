@@ -43,7 +43,7 @@ describe("trace schema", () => {
       },
       {
         file: "invalid.trace-major.json",
-        expected: "match pattern \"^1\\.[0-9]+\\.[0-9]+$\""
+        expected: 'match pattern "^1\\.[0-9]+\\.[0-9]+$"'
       }
     ] as const;
 
