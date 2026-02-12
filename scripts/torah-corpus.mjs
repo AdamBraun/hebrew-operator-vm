@@ -13,6 +13,16 @@ const DEFAULT_PROMOTE_OUT = path.resolve(
   "07_golden",
   "torah_flow_promoted.json"
 );
+const DEFAULT_TRACE_OUT = path.resolve(process.cwd(), "corpus", "word_traces.jsonl");
+const DEFAULT_FLOWS_OUT = path.resolve(process.cwd(), "corpus", "word_flows.txt");
+const DEFAULT_EXECUTION_REPORT_OUT = path.resolve(
+  process.cwd(),
+  "reports",
+  "execution_report.md"
+);
+const DEFAULT_TOKEN_REGISTRY_PATH = path.resolve(process.cwd(), "data", "tokens.registry.json");
+const DEFAULT_COMPILED_BUNDLES_PATH = path.resolve(process.cwd(), "data", "tokens.compiled.json");
+const DEFAULT_SEMANTICS_DEFS_PATH = path.resolve(process.cwd(), "registry", "token-semantics.json");
 const SPACE_TOKEN = "□";
 
 const FINAL_MAP = {
@@ -149,6 +159,12 @@ const IMPORTANT_EVENT_TYPES = new Set([
 function printHelp() {
   console.log("Usage:");
   console.log(
+    "  node scripts/torah-corpus.mjs execute [--input=path] [--trace-out=path] [--flows-out=path] [--report-out=path]"
+  );
+  console.log(
+    "  node scripts/torah-corpus.mjs execute [--token-registry=path] [--compiled-bundles=path] [--semantic-version=value] [--debug-raw-events]"
+  );
+  console.log(
     "  node scripts/torah-corpus.mjs run-all [--input=path] [--out-dir=path] [--lang=he|en|both]"
   );
   console.log(
@@ -163,6 +179,11 @@ function printHelp() {
   console.log("Defaults:");
   console.log(`  --input=${DEFAULT_INPUT}`);
   console.log(`  --out-dir=${DEFAULT_OUT_DIR}`);
+  console.log(`  --trace-out=${DEFAULT_TRACE_OUT}`);
+  console.log(`  --flows-out=${DEFAULT_FLOWS_OUT}`);
+  console.log(`  --report-out=${DEFAULT_EXECUTION_REPORT_OUT}`);
+  console.log(`  --token-registry=${DEFAULT_TOKEN_REGISTRY_PATH}`);
+  console.log(`  --compiled-bundles=${DEFAULT_COMPILED_BUNDLES_PATH}`);
   console.log("  --lang=he");
   console.log("  normalize-finals=false");
   console.log("  allow-runtime-errors=false");
@@ -232,6 +253,70 @@ function parseCommonRunArgs(argv) {
 
   if (!["he", "en", "both"].includes(opts.lang)) {
     throw new Error(`Invalid --lang value: ${opts.lang}`);
+  }
+
+  return opts;
+}
+
+function parseExecuteArgs(argv) {
+  const runOpts = parseCommonRunArgs(argv);
+  const opts = {
+    ...runOpts,
+    traceOut: DEFAULT_TRACE_OUT,
+    flowsOut: DEFAULT_FLOWS_OUT,
+    reportOut: DEFAULT_EXECUTION_REPORT_OUT,
+    tokenRegistry: DEFAULT_TOKEN_REGISTRY_PATH,
+    compiledBundles: DEFAULT_COMPILED_BUNDLES_PATH,
+    semanticVersion: "",
+    debugRawEvents: false
+  };
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === "--help" || arg === "-h") {
+      printHelp();
+      process.exit(0);
+    }
+    const traceOutOpt = readOptionValue(argv, index, "--trace-out");
+    if (traceOutOpt) {
+      opts.traceOut = traceOutOpt.value;
+      index = traceOutOpt.nextIndex;
+      continue;
+    }
+    const flowsOutOpt = readOptionValue(argv, index, "--flows-out");
+    if (flowsOutOpt) {
+      opts.flowsOut = flowsOutOpt.value;
+      index = flowsOutOpt.nextIndex;
+      continue;
+    }
+    const reportOutOpt = readOptionValue(argv, index, "--report-out");
+    if (reportOutOpt) {
+      opts.reportOut = reportOutOpt.value;
+      index = reportOutOpt.nextIndex;
+      continue;
+    }
+    const tokenRegistryOpt = readOptionValue(argv, index, "--token-registry");
+    if (tokenRegistryOpt) {
+      opts.tokenRegistry = tokenRegistryOpt.value;
+      index = tokenRegistryOpt.nextIndex;
+      continue;
+    }
+    const compiledBundlesOpt = readOptionValue(argv, index, "--compiled-bundles");
+    if (compiledBundlesOpt) {
+      opts.compiledBundles = compiledBundlesOpt.value;
+      index = compiledBundlesOpt.nextIndex;
+      continue;
+    }
+    const semanticVersionOpt = readOptionValue(argv, index, "--semantic-version");
+    if (semanticVersionOpt) {
+      opts.semanticVersion = semanticVersionOpt.value;
+      index = semanticVersionOpt.nextIndex;
+      continue;
+    }
+    if (arg === "--debug-raw-events") {
+      opts.debugRawEvents = true;
+      continue;
+    }
   }
 
   return opts;
@@ -494,6 +579,61 @@ function signatureKey(signature) {
   ].join("|");
 }
 
+function toCodepoint(codepoint) {
+  return `U+${codepoint.toString(16).toUpperCase().padStart(4, "0")}`;
+}
+
+function encodeRegistrySignature(base, markCodepoints) {
+  const marksValue =
+    markCodepoints.length === 0 ? "NONE" : markCodepoints.map(toCodepoint).join(",");
+  return `BASE=${base}|MARKS=${marksValue}`;
+}
+
+function tokenRegistrySignature(token) {
+  const raw = String(token.raw ?? token.letter ?? "").normalize("NFD");
+  const chars = [...raw];
+  const base = chars[0] ?? tokenBaseLetter(token);
+  const markCodepoints = chars
+    .slice(1)
+    .map((mark) => mark.codePointAt(0))
+    .filter((codepoint) => codepoint !== undefined)
+    .sort((left, right) => left - right);
+  return encodeRegistrySignature(base, markCodepoints);
+}
+
+function buildTokenIdBySignature(registryPayload) {
+  const map = new Map();
+  for (const [tokenIdRaw, descriptor] of Object.entries(registryPayload?.tokens ?? {})) {
+    const tokenId = Number(tokenIdRaw);
+    if (!Number.isFinite(tokenId)) {
+      continue;
+    }
+    const signature =
+      descriptor?.signature ??
+      encodeRegistrySignature(
+        descriptor?.base,
+        Array.isArray(descriptor?.marks)
+          ? descriptor.marks
+              .map((mark) => Number.parseInt(String(mark).replace(/^U\+/u, ""), 16))
+              .filter((codepoint) => Number.isFinite(codepoint))
+          : []
+      );
+    map.set(signature, tokenId);
+  }
+  return map;
+}
+
+function dedupeConsecutive(values) {
+  const out = [];
+  for (const value of values) {
+    if (out.length > 0 && out[out.length - 1] === value) {
+      continue;
+    }
+    out.push(value);
+  }
+  return out;
+}
+
 function summarizeEvent(type, event, traceEntry) {
   switch (type) {
     case "declare":
@@ -623,12 +763,16 @@ function mapRawEventToFlow(event, traceEntry) {
   }
 }
 
-function compileOneLiner(flowCompact) {
+function compileFlowString(flowCompact, separator = " -> ") {
   if (flowCompact.length === 0) {
     return "(no semantic events)";
   }
   const labels = flowCompact.map((op) => OP_FLOW_LABEL[op] ?? op.toLowerCase());
-  return labels.join(" -> ");
+  return labels.join(separator);
+}
+
+function compileOneLiner(flowCompact) {
+  return compileFlowString(flowCompact, " -> ");
 }
 
 function extractWordFlow(trace) {
@@ -1184,6 +1328,257 @@ async function runAll(argv) {
   );
 }
 
+async function runExecute(argv) {
+  const opts = parseExecuteArgs(argv);
+  const inputPath = path.resolve(opts.input);
+  const tokenRegistryPath = path.resolve(opts.tokenRegistry);
+  const compiledBundlesPath = path.resolve(opts.compiledBundles);
+  const traceOutPath = path.resolve(opts.traceOut);
+  const flowsOutPath = path.resolve(opts.flowsOut);
+  const reportOutPath = path.resolve(opts.reportOut);
+
+  const [rawBuffer, tokenRegistryPayload, compiledPayload, semanticsDefsPayload] = await Promise.all([
+    fs.readFile(inputPath),
+    readJson(tokenRegistryPath),
+    readJson(compiledBundlesPath),
+    readJson(DEFAULT_SEMANTICS_DEFS_PATH).catch(() => null)
+  ]);
+  const raw = rawBuffer.toString("utf8");
+  const data = JSON.parse(raw);
+
+  const semanticVersion =
+    opts.semanticVersion ||
+    compiledPayload?.semantics?.semver ||
+    semanticsDefsPayload?.semver ||
+    "unknown";
+
+  const tokenIdBySignature = buildTokenIdBySignature(tokenRegistryPayload);
+  const compiledTokenIdSet = new Set(Object.keys(compiledPayload?.tokens ?? {}));
+
+  if (tokenIdBySignature.size === 0) {
+    throw new Error(`No tokens loaded from token registry at ${tokenRegistryPath}`);
+  }
+  if (compiledTokenIdSet.size === 0) {
+    throw new Error(`No compiled bundles loaded from ${compiledBundlesPath}`);
+  }
+
+  const require = createRequire(import.meta.url);
+  const { tokenize } = require(path.resolve(process.cwd(), "impl/reference/dist/compile/tokenizer"));
+  const { runProgramWithTrace } = require(path.resolve(process.cwd(), "impl/reference/dist/vm/vm"));
+  const { createInitialState } = require(
+    path.resolve(process.cwd(), "impl/reference/dist/state/state")
+  );
+
+  const startNs = process.hrtime.bigint();
+  const rows = [];
+  const flowLines = [];
+  const skeletonCounts = new Map();
+
+  const unknownSignatures = [];
+  const missingBundles = [];
+  const runtimeErrors = [];
+
+  let versesTotal = 0;
+  let versesSanitized = 0;
+  let versesSkipped = 0;
+  let wordsTotal = 0;
+
+  for (const book of data.books ?? []) {
+    for (const chapter of book.chapters ?? []) {
+      for (const verse of chapter.verses ?? []) {
+        versesTotal += 1;
+        const rawText =
+          opts.lang === "en"
+            ? verse.en
+            : opts.lang === "both"
+              ? verse.he ?? verse.en
+              : verse.he;
+        const cleaned = sanitizeText(rawText, opts);
+        if (!cleaned) {
+          versesSkipped += 1;
+          continue;
+        }
+        if (cleaned !== rawText) {
+          versesSanitized += 1;
+        }
+
+        const words = cleaned.split(" ").filter(Boolean);
+        for (let wordIndex = 0; wordIndex < words.length; wordIndex += 1) {
+          const surface = words[wordIndex];
+          wordsTotal += 1;
+
+          const ref = {
+            book: book.name,
+            chapter: chapter.n,
+            verse: verse.n,
+            token_index: wordIndex + 1
+          };
+          const refKey = buildRefKey(ref);
+
+          const tokens = tokenize(surface).filter((token) => token.letter !== SPACE_TOKEN);
+          const token_ids = [];
+          const localUnknownSignatures = [];
+
+          for (const token of tokens) {
+            const signature = tokenRegistrySignature(token);
+            const tokenId = tokenIdBySignature.get(signature);
+            if (tokenId === undefined) {
+              localUnknownSignatures.push(signature);
+              continue;
+            }
+            token_ids.push(tokenId);
+            if (!compiledTokenIdSet.has(String(tokenId))) {
+              missingBundles.push({ ref_key: refKey, surface, token_id: tokenId });
+            }
+          }
+
+          let flowCompact = [];
+          let flowRaw = [];
+          let runtimeErrorMessage = "";
+          if (localUnknownSignatures.length === 0) {
+            try {
+              const { trace } = runProgramWithTrace(surface, createInitialState());
+              const flow = extractWordFlow(trace);
+              flowRaw = flow.flow_compact;
+              flowCompact = dedupeConsecutive(flow.flow_compact);
+            } catch (err) {
+              if (!opts.allowRuntimeErrors || err?.name !== "RuntimeError") {
+                throw err;
+              }
+              runtimeErrorMessage = String(err?.message ?? "RuntimeError");
+              runtimeErrors.push({ ref_key: refKey, surface, message: runtimeErrorMessage });
+              flowRaw = ["ERROR.RUNTIME"];
+              flowCompact = ["ERROR.RUNTIME"];
+            }
+          } else {
+            unknownSignatures.push({ ref_key: refKey, surface, signatures: localUnknownSignatures });
+            flowRaw = ["ERROR.UNKNOWN_SIGNATURE"];
+            flowCompact = ["ERROR.UNKNOWN_SIGNATURE"];
+          }
+
+          const flow = compileFlowString(flowCompact, " ⇢ ");
+          const skeletonKey = flowCompact.join(" -> ");
+          skeletonCounts.set(skeletonKey, (skeletonCounts.get(skeletonKey) ?? 0) + 1);
+
+          const row = {
+            ref,
+            ref_key: refKey,
+            surface,
+            token_ids,
+            skeleton: flowCompact,
+            flow,
+            semantic_version: semanticVersion
+          };
+          if (opts.debugRawEvents) {
+            row.skeleton_raw = flowRaw;
+          }
+          rows.push(row);
+          flowLines.push(`${refKey}\t${surface}\t${flow}`);
+        }
+      }
+    }
+  }
+
+  const traceContent = rows.map((row) => JSON.stringify(row)).join("\n") + "\n";
+  await Promise.all([
+    fs.mkdir(path.dirname(traceOutPath), { recursive: true }),
+    fs.mkdir(path.dirname(flowsOutPath), { recursive: true }),
+    fs.mkdir(path.dirname(reportOutPath), { recursive: true })
+  ]);
+  await Promise.all([
+    fs.writeFile(traceOutPath, traceContent, "utf8"),
+    fs.writeFile(flowsOutPath, flowLines.join("\n") + "\n", "utf8")
+  ]);
+
+  const elapsedMs = Number(process.hrtime.bigint() - startNs) / 1_000_000;
+  const topSkeletons = Array.from(skeletonCounts.entries())
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "en"))
+    .slice(0, 20);
+
+  const traceSha256 = sha256FromBuffer(Buffer.from(traceContent, "utf8"));
+  const flowDeterminismFailures = rows.filter(
+    (row) => row.flow !== compileFlowString(row.skeleton, " ⇢ ")
+  ).length;
+
+  const reportLines = [
+    "# Corpus Execution Report",
+    "",
+    "## Summary",
+    `- input: ${workspaceRelativePath(inputPath)}`,
+    `- token_registry: ${workspaceRelativePath(tokenRegistryPath)}`,
+    `- compiled_bundles: ${workspaceRelativePath(compiledBundlesPath)}`,
+    `- semantic_version: ${semanticVersion}`,
+    `- words_total: ${wordsTotal}`,
+    `- words_emitted: ${rows.length}`,
+    `- verses_total: ${versesTotal}`,
+    `- verses_sanitized: ${versesSanitized}`,
+    `- verses_skipped: ${versesSkipped}`,
+    `- unique_skeletons: ${skeletonCounts.size}`,
+    `- trace_sha256: ${traceSha256}`,
+    `- elapsed_ms: ${elapsedMs.toFixed(2)}`,
+    `- words_per_second: ${(elapsedMs > 0 ? (rows.length * 1000) / elapsedMs : 0).toFixed(2)}`,
+    "",
+    "## Quality Gates",
+    `- coverage: ${rows.length === wordsTotal ? "PASS" : "FAIL"} (${rows.length}/${wordsTotal})`,
+    `- determinism_basis: trace checksum captured (${traceSha256})`,
+    `- flow_derivation: ${flowDeterminismFailures === 0 ? "PASS" : "FAIL"} (${flowDeterminismFailures} mismatches)`,
+    "",
+    "## Errors",
+    `- unknown_signatures: ${unknownSignatures.length}`,
+    `- missing_compiled_bundles: ${missingBundles.length}`,
+    `- runtime_errors: ${runtimeErrors.length}`,
+    "",
+    "## Top Skeletons",
+    ...topSkeletons.map(([skeleton, count]) => `- ${count} x ${skeleton || "(empty)"}`),
+    "",
+    "## Outputs",
+    `- traces: ${workspaceRelativePath(traceOutPath)}`,
+    `- flows: ${workspaceRelativePath(flowsOutPath)}`,
+    `- report: ${workspaceRelativePath(reportOutPath)}`
+  ];
+
+  if (unknownSignatures.length > 0) {
+    reportLines.push("", "### Unknown Signature Samples");
+    for (const sample of unknownSignatures.slice(0, 20)) {
+      reportLines.push(`- ${sample.ref_key}: ${sample.signatures.join(", ")}`);
+    }
+  }
+
+  if (missingBundles.length > 0) {
+    reportLines.push("", "### Missing Bundle Samples");
+    for (const sample of missingBundles.slice(0, 20)) {
+      reportLines.push(`- ${sample.ref_key}: token_id=${sample.token_id}`);
+    }
+  }
+
+  if (runtimeErrors.length > 0) {
+    reportLines.push("", "### Runtime Error Samples");
+    for (const sample of runtimeErrors.slice(0, 20)) {
+      reportLines.push(`- ${sample.ref_key}: ${sample.message}`);
+    }
+  }
+
+  await fs.writeFile(reportOutPath, reportLines.join("\n") + "\n", "utf8");
+
+  const hasHardErrors = unknownSignatures.length > 0 || missingBundles.length > 0;
+  if (hasHardErrors) {
+    throw new Error(
+      `execute failed: unknownSignatures=${unknownSignatures.length} missingBundles=${missingBundles.length}`
+    );
+  }
+
+  console.log(
+    [
+      `execute: words=${rows.length}`,
+      `uniqueSkeletons=${skeletonCounts.size}`,
+      `runtimeErrors=${runtimeErrors.length}`,
+      `traceOut=${traceOutPath}`,
+      `flowsOut=${flowsOutPath}`,
+      `reportOut=${reportOutPath}`
+    ].join(" ")
+  );
+}
+
 function normalizeComparableRow(row) {
   return {
     ref_key: row.ref_key,
@@ -1440,6 +1835,10 @@ async function main() {
 
   if (command === "run-all") {
     await runAll(argv);
+    return;
+  }
+  if (command === "execute") {
+    await runExecute(argv);
     return;
   }
   if (command === "diff") {

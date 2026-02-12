@@ -125,6 +125,21 @@ Artifacts:
 - `manifest.json`: deterministic checksums/bytes for review + integrity checks.
 - `review_snapshot.json`: compact peer-review surface (top patterns + exemplar preview).
 
+### Corpus Execution (Word Trace Skeletons + Flow Strings)
+
+For the compact per-word execution artifacts (`jsonl` traces + human scan text):
+
+```bash
+npm run build
+npm run torah-corpus:execute -- --input data/torah.json --lang=he
+```
+
+Outputs:
+
+- `corpus/word_traces.jsonl`: one record per word (`ref`, `ref_key`, `surface`, `token_ids`, `skeleton`, `flow`, `semantic_version`).
+- `corpus/word_flows.txt`: aligned one-line flow strings (`ref_key<TAB>surface<TAB>flow`).
+- `reports/execution_report.md`: coverage, determinism checksum basis, error counts, top skeletons, performance.
+
 Integrity check:
 
 ```bash
