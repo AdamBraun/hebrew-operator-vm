@@ -1,0 +1,1035 @@
+{
+  "schema_version": 1,
+  "source": {
+    "trace_path": "corpus/word_traces.jsonl",
+    "trace_sha256": "055ed803ff422cb93bb4a667a6ca31e5bcd018be74da60e606a6b707815ea354",
+    "skeleton_counts_path": "index/skeleton_counts.json",
+    "motif_index_path": "index/motif_index.json"
+  },
+  "selection_policy": {
+    "minimum_exemplars": 30,
+    "top_skeleton_target": 10,
+    "top_skeleton_examples_per_skeleton": 1,
+    "motif_examples_per_motif": 2,
+    "operator_coverage_target": "all observed skeleton events"
+  },
+  "semantic_versions": [
+    "1.0.0"
+  ],
+  "stats": {
+    "rows_scanned": 80856,
+    "selected_exemplars": 30,
+    "observed_operator_events": [
+      "ALEPH.ALIAS",
+      "GIMEL.BESTOW",
+      "DALET.BOUNDARY_CLOSE",
+      "HE.DECLARE",
+      "HE.DECLARE_BREATH",
+      "HE.DECLARE_PIN",
+      "ZAYIN.GATE",
+      "HET.COMPARTMENT",
+      "TET.COVERT",
+      "LAMED.ENDPOINT",
+      "MEM.OPEN",
+      "NUN.SUPPORT_DEBT",
+      "SAMEKH.SUPPORT_DISCHARGE",
+      "PE.UTTER",
+      "TSADI.ALIGN",
+      "QOF.APPROX",
+      "RESH.BOUNDARY_CLOSE",
+      "SHIN.FORK",
+      "TAV.FINALIZE",
+      "FINAL_MEM.CLOSE",
+      "FINAL_NUN.SUPPORT_DEBT",
+      "FINAL_NUN.SUPPORT_DISCHARGE",
+      "FINAL_PE.UTTER_CLOSE",
+      "FINAL_TSADI.ALIGN_FINAL",
+      "SPACE.SUPPORT_DISCHARGE",
+      "SPACE.MEM_AUTO_CLOSE"
+    ],
+    "covered_operator_events": [
+      "ALEPH.ALIAS",
+      "GIMEL.BESTOW",
+      "DALET.BOUNDARY_CLOSE",
+      "HE.DECLARE",
+      "HE.DECLARE_BREATH",
+      "HE.DECLARE_PIN",
+      "ZAYIN.GATE",
+      "HET.COMPARTMENT",
+      "TET.COVERT",
+      "LAMED.ENDPOINT",
+      "MEM.OPEN",
+      "NUN.SUPPORT_DEBT",
+      "SAMEKH.SUPPORT_DISCHARGE",
+      "PE.UTTER",
+      "TSADI.ALIGN",
+      "QOF.APPROX",
+      "RESH.BOUNDARY_CLOSE",
+      "SHIN.FORK",
+      "TAV.FINALIZE",
+      "FINAL_MEM.CLOSE",
+      "FINAL_NUN.SUPPORT_DEBT",
+      "FINAL_NUN.SUPPORT_DISCHARGE",
+      "FINAL_PE.UTTER_CLOSE",
+      "FINAL_TSADI.ALIGN_FINAL",
+      "SPACE.SUPPORT_DISCHARGE",
+      "SPACE.MEM_AUTO_CLOSE"
+    ],
+    "motifs_available": 2
+  },
+  "categories": [
+    {
+      "id": "high_frequency_skeletons",
+      "title": "High-frequency skeleton exemplars",
+      "description": "Top recurring skeletons; baseline references for broad stability checks."
+    },
+    {
+      "id": "special_marks",
+      "title": "Special mark exemplars",
+      "description": "Mappiq, shin/sin dots, and dagesh-sensitive words."
+    },
+    {
+      "id": "operator_family",
+      "title": "Operator-family exemplars",
+      "description": "Coverage-oriented picks that ensure every observed operator remains represented."
+    },
+    {
+      "id": "boundary_finals",
+      "title": "Boundary and final-form exemplars",
+      "description": "Word-edge behavior, auto-discharge/auto-close behavior, and final-letter form semantics."
+    },
+    {
+      "id": "motif_driven",
+      "title": "Motif-driven exemplars",
+      "description": "Representative examples selected from the motif index."
+    }
+  ],
+  "maintenance_rule": {
+    "trigger": "semantic_version change",
+    "steps": [
+      "Run corpus diff/regression and rebuild exemplars.",
+      "Update exemplar explanations only when skeleton meaning changes.",
+      "Keep prior semantic-version notes in version_notes; append new notes instead of overwriting history."
+    ]
+  },
+  "version_notes": [
+    {
+      "semantic_version": "1.0.0",
+      "note": "Auto-generated exemplar set for this semantic version. Update this note when semantics change materially."
+    }
+  ],
+  "top_skeleton_preview": [
+    {
+      "skeleton_key": "LAMED.ENDPOINT",
+      "count": 4219
+    },
+    {
+      "skeleton_key": "ALEPH.ALIAS|TAV.FINALIZE",
+      "count": 3964
+    },
+    {
+      "skeleton_key": "HE.DECLARE|HE.DECLARE_BREATH",
+      "count": 2013
+    },
+    {
+      "skeleton_key": "ALEPH.ALIAS|SHIN.FORK|RESH.BOUNDARY_CLOSE",
+      "count": 1920
+    },
+    {
+      "skeleton_key": "ALEPH.ALIAS|LAMED.ENDPOINT",
+      "count": 1915
+    },
+    {
+      "skeleton_key": "LAMED.ENDPOINT|ALEPH.ALIAS",
+      "count": 1360
+    },
+    {
+      "skeleton_key": "NUN.SUPPORT_DEBT|SPACE.SUPPORT_DISCHARGE",
+      "count": 1171
+    },
+    {
+      "skeleton_key": "RESH.BOUNDARY_CLOSE",
+      "count": 1107
+    },
+    {
+      "skeleton_key": "DALET.BOUNDARY_CLOSE",
+      "count": 1019
+    },
+    {
+      "skeleton_key": "ALEPH.ALIAS",
+      "count": 948
+    }
+  ],
+  "exemplars": [
+    {
+      "id": "ex-001",
+      "category": "high_frequency_skeletons",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 1,
+        "token_index": 5
+      },
+      "ref_key": "Genesis/1/1/5",
+      "surface": "אֵת",
+      "token_ids": [
+        11,
+        724
+      ],
+      "skeleton": [
+        "ALEPH.ALIAS",
+        "TAV.FINALIZE"
+      ],
+      "flow": "א alias ⇢ ת finalize+stamp",
+      "semantic_version": "1.0.0",
+      "explanation": "High-frequency baseline skeleton used as a broad regression anchor.",
+      "tags": [
+        "high_frequency",
+        "skeleton_rank:2"
+      ]
+    },
+    {
+      "id": "ex-002",
+      "category": "high_frequency_skeletons",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 2,
+        "token_index": 6
+      },
+      "ref_key": "Genesis/1/2/6",
+      "surface": "עַל",
+      "token_ids": [
+        521,
+        364
+      ],
+      "skeleton": [
+        "LAMED.ENDPOINT"
+      ],
+      "flow": "ל endpoint bind",
+      "semantic_version": "1.0.0",
+      "explanation": "High-frequency baseline skeleton used as a broad regression anchor.",
+      "tags": [
+        "high_frequency",
+        "skeleton_rank:1"
+      ]
+    },
+    {
+      "id": "ex-003",
+      "category": "high_frequency_skeletons",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 3,
+        "token_index": 1
+      },
+      "ref_key": "Genesis/1/3/1",
+      "surface": "וַיֹּאמֶר",
+      "token_ids": [
+        179,
+        307,
+        1,
+        414,
+        639
+      ],
+      "skeleton": [
+        "ALEPH.ALIAS",
+        "MEM.OPEN",
+        "RESH.BOUNDARY_CLOSE",
+        "SPACE.MEM_AUTO_CLOSE"
+      ],
+      "flow": "א alias ⇢ מ open mem-zone ⇢ ר boundary close ⇢ □ mem auto-close",
+      "semantic_version": "1.0.0",
+      "explanation": "High-frequency baseline skeleton used as a broad regression anchor.",
+      "tags": [
+        "coverage_fill",
+        "high_frequency"
+      ]
+    },
+    {
+      "id": "ex-004",
+      "category": "high_frequency_skeletons",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 5,
+        "token_index": 9
+      },
+      "ref_key": "Genesis/1/5/9",
+      "surface": "עֶרֶב",
+      "token_ids": [
+        519,
+        646,
+        30
+      ],
+      "skeleton": [
+        "RESH.BOUNDARY_CLOSE"
+      ],
+      "flow": "ר boundary close",
+      "semantic_version": "1.0.0",
+      "explanation": "High-frequency baseline skeleton used as a broad regression anchor.",
+      "tags": [
+        "high_frequency",
+        "skeleton_rank:8"
+      ]
+    },
+    {
+      "id": "ex-005",
+      "category": "high_frequency_skeletons",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 7,
+        "token_index": 8
+      },
+      "ref_key": "Genesis/1/7/8",
+      "surface": "אֲשֶׁר",
+      "token_ids": [
+        6,
+        687,
+        639
+      ],
+      "skeleton": [
+        "ALEPH.ALIAS",
+        "SHIN.FORK",
+        "RESH.BOUNDARY_CLOSE"
+      ],
+      "flow": "א alias ⇢ ש fork route ⇢ ר boundary close",
+      "semantic_version": "1.0.0",
+      "explanation": "High-frequency baseline skeleton used as a broad regression anchor.",
+      "tags": [
+        "high_frequency",
+        "skeleton_rank:4"
+      ]
+    },
+    {
+      "id": "ex-006",
+      "category": "high_frequency_skeletons",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 9,
+        "token_index": 7
+      },
+      "ref_key": "Genesis/1/9/7",
+      "surface": "אֶל",
+      "token_ids": [
+        14,
+        364
+      ],
+      "skeleton": [
+        "ALEPH.ALIAS",
+        "LAMED.ENDPOINT"
+      ],
+      "flow": "א alias ⇢ ל endpoint bind",
+      "semantic_version": "1.0.0",
+      "explanation": "High-frequency baseline skeleton used as a broad regression anchor.",
+      "tags": [
+        "high_frequency",
+        "skeleton_rank:5"
+      ]
+    },
+    {
+      "id": "ex-007",
+      "category": "high_frequency_skeletons",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 29,
+        "token_index": 26
+      },
+      "ref_key": "Genesis/1/29/26",
+      "surface": "יִהְיֶה",
+      "token_ids": [
+        285,
+        137,
+        294,
+        136
+      ],
+      "skeleton": [
+        "HE.DECLARE",
+        "HE.DECLARE_BREATH"
+      ],
+      "flow": "ה declare(public) ⇢ ה breath tail",
+      "semantic_version": "1.0.0",
+      "explanation": "High-frequency baseline skeleton used as a broad regression anchor.",
+      "tags": [
+        "high_frequency",
+        "skeleton_rank:3"
+      ]
+    },
+    {
+      "id": "ex-008",
+      "category": "high_frequency_skeletons",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 2,
+        "verse": 5,
+        "token_index": 13
+      },
+      "ref_key": "Genesis/2/5/13",
+      "surface": "לֹא",
+      "token_ids": [
+        390,
+        1
+      ],
+      "skeleton": [
+        "LAMED.ENDPOINT",
+        "ALEPH.ALIAS"
+      ],
+      "flow": "ל endpoint bind ⇢ א alias",
+      "semantic_version": "1.0.0",
+      "explanation": "High-frequency baseline skeleton used as a broad regression anchor.",
+      "tags": [
+        "high_frequency",
+        "skeleton_rank:6"
+      ]
+    },
+    {
+      "id": "ex-009",
+      "category": "high_frequency_skeletons",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 2,
+        "verse": 19,
+        "token_index": 13
+      },
+      "ref_key": "Genesis/2/19/13",
+      "surface": "וַיָּבֵא",
+      "token_ids": [
+        179,
+        303,
+        39,
+        1
+      ],
+      "skeleton": [
+        "ALEPH.ALIAS"
+      ],
+      "flow": "א alias",
+      "semantic_version": "1.0.0",
+      "explanation": "High-frequency baseline skeleton used as a broad regression anchor.",
+      "tags": [
+        "high_frequency",
+        "skeleton_rank:10"
+      ]
+    },
+    {
+      "id": "ex-010",
+      "category": "high_frequency_skeletons",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 3,
+        "verse": 5,
+        "token_index": 2
+      },
+      "ref_key": "Genesis/3/5/2",
+      "surface": "יֹדֵעַ",
+      "token_ids": [
+        306,
+        110,
+        521
+      ],
+      "skeleton": [
+        "DALET.BOUNDARY_CLOSE"
+      ],
+      "flow": "ד boundary close",
+      "semantic_version": "1.0.0",
+      "explanation": "High-frequency baseline skeleton used as a broad regression anchor.",
+      "tags": [
+        "high_frequency",
+        "skeleton_rank:9"
+      ]
+    },
+    {
+      "id": "ex-011",
+      "category": "high_frequency_skeletons",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 3,
+        "verse": 7,
+        "token_index": 2
+      },
+      "ref_key": "Genesis/3/7/2",
+      "surface": "עֵינֵי",
+      "token_ids": [
+        517,
+        280,
+        450,
+        280
+      ],
+      "skeleton": [
+        "NUN.SUPPORT_DEBT",
+        "SPACE.SUPPORT_DISCHARGE"
+      ],
+      "flow": "נ support debt ⇢ □ boundary support discharge",
+      "semantic_version": "1.0.0",
+      "explanation": "High-frequency baseline skeleton used as a broad regression anchor.",
+      "tags": [
+        "high_frequency",
+        "skeleton_rank:7"
+      ]
+    },
+    {
+      "id": "ex-012",
+      "category": "special_marks",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 1,
+        "token_index": 2
+      },
+      "ref_key": "Genesis/1/1/2",
+      "surface": "רֵאשִׁית",
+      "token_ids": [
+        644,
+        1,
+        672,
+        280,
+        724
+      ],
+      "skeleton": [
+        "RESH.BOUNDARY_CLOSE",
+        "ALEPH.ALIAS",
+        "SHIN.FORK",
+        "TAV.FINALIZE"
+      ],
+      "flow": "ר boundary close ⇢ א alias ⇢ ש fork route ⇢ ת finalize+stamp",
+      "semantic_version": "1.0.0",
+      "explanation": "Contains shin-dot (U+05C1), validating right-dot fork routing semantics.",
+      "tags": [
+        "mark:shin_dot",
+        "motif",
+        "motif:ENDS_WITH_FINALIZE"
+      ]
+    },
+    {
+      "id": "ex-013",
+      "category": "special_marks",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 1,
+        "token_index": 3
+      },
+      "ref_key": "Genesis/1/1/3",
+      "surface": "בָּרָא",
+      "token_ids": [
+        52,
+        650,
+        1
+      ],
+      "skeleton": [
+        "RESH.BOUNDARY_CLOSE",
+        "ALEPH.ALIAS"
+      ],
+      "flow": "ר boundary close ⇢ א alias",
+      "semantic_version": "1.0.0",
+      "explanation": "Contains dagesh (U+05BC), checking hardened-mark tokenization without trace drift.",
+      "tags": [
+        "mark:dagesh"
+      ]
+    },
+    {
+      "id": "ex-014",
+      "category": "special_marks",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 11,
+        "token_index": 11
+      },
+      "ref_key": "Genesis/1/11/11",
+      "surface": "עֹשֶׂה",
+      "token_ids": [
+        526,
+        688,
+        136
+      ],
+      "skeleton": [
+        "HE.DECLARE_BREATH"
+      ],
+      "flow": "ה breath tail",
+      "semantic_version": "1.0.0",
+      "explanation": "Contains sin-dot (U+05C2), validating left-dot shin/sin disambiguation.",
+      "tags": [
+        "mark:sin_dot"
+      ]
+    },
+    {
+      "id": "ex-015",
+      "category": "special_marks",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 24,
+        "token_index": 7
+      },
+      "ref_key": "Genesis/1/24/7",
+      "surface": "לְמִינָהּ",
+      "token_ids": [
+        365,
+        406,
+        280,
+        463,
+        157
+      ],
+      "skeleton": [
+        "LAMED.ENDPOINT",
+        "MEM.OPEN",
+        "NUN.SUPPORT_DEBT",
+        "HE.DECLARE",
+        "HE.DECLARE_PIN",
+        "SPACE.SUPPORT_DISCHARGE",
+        "SPACE.MEM_AUTO_CLOSE"
+      ],
+      "flow": "ל endpoint bind ⇢ מ open mem-zone ⇢ נ support debt ⇢ ה declare(public) ⇢ ה pin export ⇢ □ boundary support discharge ⇢ □ mem auto-close",
+      "semantic_version": "1.0.0",
+      "explanation": "Contains mappiq (הּ), so the trace must include HE.DECLARE_PIN in a stable place.",
+      "tags": [
+        "mark:mappiq"
+      ]
+    },
+    {
+      "id": "ex-016",
+      "category": "operator_family",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 4,
+        "token_index": 6
+      },
+      "ref_key": "Genesis/1/4/6",
+      "surface": "טוֹב",
+      "token_ids": [
+        249,
+        187,
+        30
+      ],
+      "skeleton": [
+        "TET.COVERT"
+      ],
+      "flow": "ט covert",
+      "semantic_version": "1.0.0",
+      "explanation": "Representative operator-family case for TET.COVERT (covert behavior).",
+      "tags": [
+        "operator_family",
+        "operator:TET.COVERT"
+      ]
+    },
+    {
+      "id": "ex-017",
+      "category": "operator_family",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 5,
+        "token_index": 1
+      },
+      "ref_key": "Genesis/1/5/1",
+      "surface": "וַיִּקְרָא",
+      "token_ids": [
+        179,
+        286,
+        602,
+        650,
+        1
+      ],
+      "skeleton": [
+        "QOF.APPROX",
+        "RESH.BOUNDARY_CLOSE",
+        "ALEPH.ALIAS"
+      ],
+      "flow": "ק approximate ⇢ ר boundary close ⇢ א alias",
+      "semantic_version": "1.0.0",
+      "explanation": "Representative operator-family case for QOF.APPROX (approximation).",
+      "tags": [
+        "operator_family",
+        "operator:QOF.APPROX"
+      ]
+    },
+    {
+      "id": "ex-018",
+      "category": "operator_family",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 11,
+        "token_index": 7
+      },
+      "ref_key": "Genesis/1/11/7",
+      "surface": "מַזְרִיעַ",
+      "token_ids": [
+        418,
+        200,
+        642,
+        280,
+        521
+      ],
+      "skeleton": [
+        "MEM.OPEN",
+        "ZAYIN.GATE",
+        "RESH.BOUNDARY_CLOSE",
+        "SPACE.MEM_AUTO_CLOSE"
+      ],
+      "flow": "מ open mem-zone ⇢ ז gate ⇢ ר boundary close ⇢ □ mem auto-close",
+      "semantic_version": "1.0.0",
+      "explanation": "Representative operator-family case for ZAYIN.GATE (gate routing).",
+      "tags": [
+        "operator_family",
+        "operator:ZAYIN.GATE"
+      ]
+    },
+    {
+      "id": "ex-019",
+      "category": "operator_family",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 12,
+        "token_index": 1
+      },
+      "ref_key": "Genesis/1/12/1",
+      "surface": "וַתּוֹצֵא",
+      "token_ids": [
+        179,
+        757,
+        187,
+        579,
+        1
+      ],
+      "skeleton": [
+        "TAV.FINALIZE",
+        "TSADI.ALIGN",
+        "ALEPH.ALIAS"
+      ],
+      "flow": "ת finalize+stamp ⇢ צ normalize-to-exemplar ⇢ א alias",
+      "semantic_version": "1.0.0",
+      "explanation": "Representative operator-family case for TSADI.ALIGN (alignment).",
+      "tags": [
+        "operator_family",
+        "operator:TSADI.ALIGN"
+      ]
+    },
+    {
+      "id": "ex-020",
+      "category": "operator_family",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 4,
+        "verse": 13,
+        "token_index": 7
+      },
+      "ref_key": "Genesis/4/13/7",
+      "surface": "מִנְּשֹׂא",
+      "token_ids": [
+        406,
+        445,
+        710,
+        1
+      ],
+      "skeleton": [
+        "MEM.OPEN",
+        "NUN.SUPPORT_DEBT",
+        "SAMEKH.SUPPORT_DISCHARGE",
+        "ALEPH.ALIAS",
+        "SPACE.MEM_AUTO_CLOSE"
+      ],
+      "flow": "מ open mem-zone ⇢ נ support debt ⇢ ס support discharge ⇢ א alias ⇢ □ mem auto-close",
+      "semantic_version": "1.0.0",
+      "explanation": "Representative operator-family case for SAMEKH.SUPPORT_DISCHARGE (support discharge).",
+      "tags": [
+        "operator_family",
+        "operator:SAMEKH.SUPPORT_DISCHARGE"
+      ]
+    },
+    {
+      "id": "ex-021",
+      "category": "boundary_finals",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 1,
+        "token_index": 4
+      },
+      "ref_key": "Genesis/1/1/4",
+      "surface": "אֱלֹהִים",
+      "token_ids": [
+        5,
+        390,
+        143,
+        280,
+        400
+      ],
+      "skeleton": [
+        "ALEPH.ALIAS",
+        "LAMED.ENDPOINT",
+        "HE.DECLARE",
+        "FINAL_MEM.CLOSE"
+      ],
+      "flow": "א alias ⇢ ל endpoint bind ⇢ ה declare(public) ⇢ ם close mem-zone",
+      "semantic_version": "1.0.0",
+      "explanation": "Representative final-mem close behavior; word-final closure should stay deterministic.",
+      "tags": [
+        "final:mem"
+      ]
+    },
+    {
+      "id": "ex-022",
+      "category": "boundary_finals",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 1,
+        "token_index": 8
+      },
+      "ref_key": "Genesis/1/1/8",
+      "surface": "הָאָרֶץ",
+      "token_ids": [
+        152,
+        20,
+        646,
+        569
+      ],
+      "skeleton": [
+        "HE.DECLARE",
+        "ALEPH.ALIAS",
+        "RESH.BOUNDARY_CLOSE",
+        "FINAL_TSADI.ALIGN_FINAL"
+      ],
+      "flow": "ה declare(public) ⇢ א alias ⇢ ר boundary close ⇢ ץ final align",
+      "semantic_version": "1.0.0",
+      "explanation": "Representative final-tsadi align-final behavior at word end.",
+      "tags": [
+        "final:tsadi"
+      ]
+    },
+    {
+      "id": "ex-023",
+      "category": "boundary_finals",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 2,
+        "token_index": 7
+      },
+      "ref_key": "Genesis/1/2/7",
+      "surface": "פְּנֵי",
+      "token_ids": [
+        535,
+        450,
+        280
+      ],
+      "skeleton": [
+        "PE.UTTER",
+        "NUN.SUPPORT_DEBT",
+        "SPACE.SUPPORT_DISCHARGE"
+      ],
+      "flow": "פ utterance ⇢ נ support debt ⇢ □ boundary support discharge",
+      "semantic_version": "1.0.0",
+      "explanation": "Shows support debt resolved at boundary via SPACE.SUPPORT_DISCHARGE.",
+      "tags": [
+        "boundary:support_discharge"
+      ]
+    },
+    {
+      "id": "ex-024",
+      "category": "boundary_finals",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 2,
+        "token_index": 11
+      },
+      "ref_key": "Genesis/1/2/11",
+      "surface": "מְרַחֶפֶת",
+      "token_ids": [
+        402,
+        648,
+        237,
+        545,
+        724
+      ],
+      "skeleton": [
+        "MEM.OPEN",
+        "RESH.BOUNDARY_CLOSE",
+        "HET.COMPARTMENT",
+        "PE.UTTER",
+        "TAV.FINALIZE",
+        "SPACE.MEM_AUTO_CLOSE"
+      ],
+      "flow": "מ open mem-zone ⇢ ר boundary close ⇢ ח compartment ⇢ פ utterance ⇢ ת finalize+stamp ⇢ □ mem auto-close",
+      "semantic_version": "1.0.0",
+      "explanation": "Shows boundary-triggered mem auto-close (SPACE.MEM_AUTO_CLOSE) at word end.",
+      "tags": [
+        "boundary:mem_auto_close"
+      ]
+    },
+    {
+      "id": "ex-025",
+      "category": "boundary_finals",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 4,
+        "token_index": 9
+      },
+      "ref_key": "Genesis/1/4/9",
+      "surface": "בֵּין",
+      "token_ids": [
+        40,
+        280,
+        439
+      ],
+      "skeleton": [
+        "FINAL_NUN.SUPPORT_DEBT",
+        "FINAL_NUN.SUPPORT_DISCHARGE"
+      ],
+      "flow": "ן support debt ⇢ ן same-word discharge",
+      "semantic_version": "1.0.0",
+      "explanation": "Representative final-nun discharge pair; both debt and discharge must remain coupled.",
+      "tags": [
+        "final:nun"
+      ]
+    },
+    {
+      "id": "ex-026",
+      "category": "boundary_finals",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 20,
+        "token_index": 8
+      },
+      "ref_key": "Genesis/1/20/8",
+      "surface": "וְעוֹף",
+      "token_ids": [
+        163,
+        510,
+        187,
+        532
+      ],
+      "skeleton": [
+        "FINAL_PE.UTTER_CLOSE"
+      ],
+      "flow": "ף close utterance",
+      "semantic_version": "1.0.0",
+      "explanation": "Representative final-pe utterance close behavior at word boundary.",
+      "tags": [
+        "final:pe"
+      ]
+    },
+    {
+      "id": "ex-027",
+      "category": "boundary_finals",
+      "ref": {
+        "book": "Numbers",
+        "chapter": 23,
+        "verse": 13,
+        "token_index": 4
+      },
+      "ref_key": "Numbers/23/13/4",
+      "surface": "לך",
+      "token_ids": [
+        364,
+        319
+      ],
+      "skeleton": [
+        "LAMED.ENDPOINT"
+      ],
+      "flow": "ל endpoint bind",
+      "semantic_version": "1.0.0",
+      "explanation": "Surface ends with final kaf (ך), preserving final-form boundary behavior.",
+      "tags": [
+        "final:kaf_surface"
+      ]
+    },
+    {
+      "id": "ex-028",
+      "category": "motif_driven",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 1,
+        "token_index": 7
+      },
+      "ref_key": "Genesis/1/1/7",
+      "surface": "וְאֵת",
+      "token_ids": [
+        163,
+        11,
+        724
+      ],
+      "skeleton": [
+        "ALEPH.ALIAS",
+        "TAV.FINALIZE"
+      ],
+      "flow": "א alias ⇢ ת finalize+stamp",
+      "semantic_version": "1.0.0",
+      "explanation": "Representative motif case (ENDS_WITH_FINALIZE) chosen for stable motif-level validation.",
+      "tags": [
+        "motif",
+        "motif:ENDS_WITH_FINALIZE"
+      ]
+    },
+    {
+      "id": "ex-029",
+      "category": "motif_driven",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 26,
+        "token_index": 8
+      },
+      "ref_key": "Genesis/1/26/8",
+      "surface": "בִדְגַת",
+      "token_ids": [
+        35,
+        103,
+        81,
+        724
+      ],
+      "skeleton": [
+        "DALET.BOUNDARY_CLOSE",
+        "GIMEL.BESTOW",
+        "TAV.FINALIZE"
+      ],
+      "flow": "ד boundary close ⇢ ג bestowal ⇢ ת finalize+stamp",
+      "semantic_version": "1.0.0",
+      "explanation": "Representative motif case (CONTAINS_BESTOW_THEN_SEAL) chosen for stable motif-level validation.",
+      "tags": [
+        "motif",
+        "motif:CONTAINS_BESTOW_THEN_SEAL"
+      ]
+    },
+    {
+      "id": "ex-030",
+      "category": "motif_driven",
+      "ref": {
+        "book": "Genesis",
+        "chapter": 1,
+        "verse": 28,
+        "token_index": 14
+      },
+      "ref_key": "Genesis/1/28/14",
+      "surface": "בִּדְגַת",
+      "token_ids": [
+        36,
+        103,
+        81,
+        724
+      ],
+      "skeleton": [
+        "DALET.BOUNDARY_CLOSE",
+        "GIMEL.BESTOW",
+        "TAV.FINALIZE"
+      ],
+      "flow": "ד boundary close ⇢ ג bestowal ⇢ ת finalize+stamp",
+      "semantic_version": "1.0.0",
+      "explanation": "Representative motif case (CONTAINS_BESTOW_THEN_SEAL) chosen for stable motif-level validation.",
+      "tags": [
+        "motif",
+        "motif:CONTAINS_BESTOW_THEN_SEAL"
+      ]
+    }
+  ]
+}

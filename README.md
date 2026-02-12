@@ -165,6 +165,34 @@ npm run pattern-query -- contains "BESTOW" --then "SEAL" --index-dir index
 npm run pattern-query -- motif ENDS_WITH_FINALIZE --index-dir index
 ```
 
+### Exemplar Library (Canonical Examples)
+
+Build a curated, deterministic exemplar set from the corpus trace (optionally informed by pattern index artifacts):
+
+```bash
+npm run exemplars -- --trace corpus/word_traces.jsonl --skeleton-counts index/skeleton_counts.json --motif-index index/motif_index.json
+```
+
+Verify that exemplar JSON, README rendering, and regression cases remain deterministic and consistent with the trace:
+
+```bash
+npm run exemplars:verify -- --trace corpus/word_traces.jsonl
+```
+
+Outputs:
+
+- `exemplars/exemplars.json`: canonical structured exemplar records (`id`, `ref`, `surface`, `token_ids`, `skeleton`, `flow`, `semantic_version`, `explanation`, `tags`).
+- `exemplars/README.md`: human-friendly grouped catalog by category/tag with flow and skeleton context.
+- `tests/exemplar_regression.json`: promoted subset of exemplar goldens for strict skeleton regression checks.
+
+Selection policy highlights:
+
+- top skeleton counts seed high-frequency exemplars,
+- motif index contributes motif representatives,
+- special marks include mappiq / shin-dot / sin-dot / dagesh,
+- boundary + final-form behaviors are explicitly represented,
+- every observed operator event in `corpus/word_traces.jsonl` is covered by at least one exemplar.
+
 Integrity check:
 
 ```bash

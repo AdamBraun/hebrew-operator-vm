@@ -119,4 +119,4 @@
 - ENDS_WITH_FINALIZE: skeletons=303, occurrences=8652
 
 ## Build Performance
-- elapsed_ms: 952.53
+- elapsed_ms: 977.11
