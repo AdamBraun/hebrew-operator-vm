@@ -18,7 +18,8 @@ type TraceRow = {
   token_ids: number[];
   skeleton: string[];
   flow: string;
-  semantic_version: string;
+  semantic_version?: string;
+  semantics_version?: string;
 };
 
 function runNode(args: string[]): string {
@@ -58,7 +59,7 @@ describe("exemplar library build + verify pipeline", () => {
         token_ids: [11, 12, 13],
         skeleton: ["RESH.BOUNDARY_CLOSE", "ALEPH.ALIAS", "SHIN.FORK", "TAV.FINALIZE"],
         flow: "ר boundary close ⇢ א alias ⇢ ש fork route ⇢ ת finalize+stamp",
-        semantic_version: "1.0.0"
+        semantics_version: "1.0.0"
       },
       {
         ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 2 },

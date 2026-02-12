@@ -3,6 +3,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import { createRequire } from "node:module";
+import traceSchemaAdapter from "./lib/trace-schema-adapter.cjs";
+
+const { getSemanticVersion } = traceSchemaAdapter;
 
 const DEFAULT_INPUT = path.resolve(process.cwd(), "data", "torah.json");
 const DEFAULT_OUT_DIR = path.resolve(process.cwd(), "outputs", "torah-corpus", "latest");
@@ -2258,12 +2261,7 @@ function normalizeTraceRow(row, index, sourcePath) {
     surface: String(row?.surface ?? ""),
     skeleton,
     flow,
-    semantic_version:
-      typeof row?.semantic_version === "string" && row.semantic_version.length > 0
-        ? row.semantic_version
-        : typeof row?.semantics_version === "string" && row.semantics_version.length > 0
-          ? row.semantics_version
-        : "unknown",
+    semantic_version: getSemanticVersion(row),
     token_ids: normalizeTokenIds(row?.token_ids ?? row?.tokens ?? []),
     source_path: workspaceRelativePath(sourcePath),
     row_index: index + 1

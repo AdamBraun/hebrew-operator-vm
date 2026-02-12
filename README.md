@@ -12,6 +12,36 @@ npm install
 npm run build
 ```
 
+## Language Policy (ADR-0001)
+
+Language policy for this repo is documented in
+[`docs/adr/0001-typescript-source-of-truth.md`](docs/adr/0001-typescript-source-of-truth.md).
+
+Rules:
+
+- TypeScript is the source of truth for business and domain logic.
+- `.mjs` files are allowed only as thin Node entrypoint wrappers.
+- New business logic in `.mjs` is not allowed.
+- When touching legacy `.mjs` files, move logic into TS modules and keep the
+  wrapper minimal.
+
+Guardrail commands (warn mode):
+
+```bash
+npm run ci:guardrails
+npm run ci:mjs-policy
+```
+
+Generated reports:
+
+- `reports/ci_guardrails_baseline.md`
+- `reports/mjs_policy_violations.md`
+
+Policy allowlists:
+
+- `config/guardrails-allowlist.json`
+- `config/mjs-policy-allowlist.json`
+
 ## Torah Corpus (Optional)
 
 The repo includes helper scripts to download the Torah and iterate it through the interpreter.

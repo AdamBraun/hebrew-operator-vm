@@ -81,7 +81,7 @@ describe("torah corpus regress pipeline", () => {
         token_ids: [1],
         skeleton: ["NUN.SUPPORT_DEBT"],
         flow: "נ support debt",
-        semantic_version: "1.0.0"
+        semantics_version: "1.0.0"
       },
       {
         ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 2 },

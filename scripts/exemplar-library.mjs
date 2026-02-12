@@ -2,6 +2,9 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import traceSchemaAdapter from "./lib/trace-schema-adapter.cjs";
+
+const { getSemanticVersion } = traceSchemaAdapter;
 
 const DEFAULT_TRACE = path.resolve(process.cwd(), "corpus", "word_traces.jsonl");
 const DEFAULT_SKELETON_COUNTS = path.resolve(process.cwd(), "index", "skeleton_counts.json");
@@ -331,10 +334,7 @@ function normalizeRow(raw, index) {
   const flow = String(
     raw?.flow ?? raw?.one_liner ?? (skeleton.join(" -> ") || "(no semantic events)")
   );
-  const semantic_version =
-    String(raw?.semantic_version ?? raw?.semantics_version ?? "unknown").trim().length > 0
-      ? String(raw.semantic_version ?? raw.semantics_version).trim()
-      : "unknown";
+  const semantic_version = getSemanticVersion(raw);
 
   return {
     _index: index,

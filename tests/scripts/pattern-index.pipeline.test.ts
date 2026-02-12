@@ -17,7 +17,8 @@ type TraceRow = {
   surface: string;
   skeleton: string[];
   flow: string;
-  semantic_version: string;
+  semantic_version?: string;
+  semantics_version?: string;
 };
 
 function runNode(args: string[]): string {
@@ -81,7 +82,7 @@ describe("pattern index build + query pipeline", () => {
         surface: "הגם",
         skeleton: ["HE.DECLARE", "GIMEL.BESTOW", "FINAL_MEM.CLOSE"],
         flow: "ה declare -> ג bestow -> ם close",
-        semantic_version: "1.1.0"
+        semantics_version: "1.1.0"
       },
       {
         ref: { book: "Genesis", chapter: 1, verse: 2, token_index: 2 },

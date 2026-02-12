@@ -22,6 +22,10 @@ jobs:
         run: npm ci
       - name: Lint
         run: npm run lint
+      - name: Guardrails (Warn Mode)
+        run: npm run ci:guardrails
+      - name: MJS Policy (Warn Mode)
+        run: npm run ci:mjs-policy
       - name: Format
         run: npm run format
       - name: Typecheck

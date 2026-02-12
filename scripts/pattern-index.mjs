@@ -2,6 +2,9 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import traceSchemaAdapter from "./lib/trace-schema-adapter.cjs";
+
+const { getSemanticVersion } = traceSchemaAdapter;
 
 const DEFAULT_INPUT = path.resolve(process.cwd(), "corpus", "word_traces.jsonl");
 const DEFAULT_INDEX_DIR = path.resolve(process.cwd(), "index");
@@ -823,9 +826,7 @@ async function runBuild(argv) {
       eventsBySkeletonKey.set(skeletonKey, events);
     }
 
-    const semanticVersion =
-      String(row?.semantic_version ?? row?.semantics_version ?? "unknown").trim() || "unknown";
-    semanticVersions.add(semanticVersion);
+    semanticVersions.add(getSemanticVersion(row));
   }
 
   const countsObject = {};
