@@ -11,14 +11,22 @@ export const DEFAULT_PROMOTE_OUT = path.resolve(
 );
 export const DEFAULT_TRACE_OUT = path.resolve(process.cwd(), "corpus", "word_traces.jsonl");
 export const DEFAULT_FLOWS_OUT = path.resolve(process.cwd(), "corpus", "word_flows.txt");
-export const DEFAULT_EXECUTION_REPORT_OUT = path.resolve(process.cwd(), "reports", "execution_report.md");
+export const DEFAULT_EXECUTION_REPORT_OUT = path.resolve(
+  process.cwd(),
+  "reports",
+  "execution_report.md"
+);
 export const DEFAULT_VERSE_TRACE_OUT = path.resolve(process.cwd(), "corpus", "verse_traces.jsonl");
 export const DEFAULT_VERSE_EXECUTION_REPORT_OUT = path.resolve(
   process.cwd(),
   "reports",
   "verse_execution_report.md"
 );
-export const DEFAULT_VERSE_MOTIF_INDEX_OUT = path.resolve(process.cwd(), "index", "verse_motif_index.json");
+export const DEFAULT_VERSE_MOTIF_INDEX_OUT = path.resolve(
+  process.cwd(),
+  "index",
+  "verse_motif_index.json"
+);
 export const DEFAULT_DIFF_REPORT_OUT = path.resolve(process.cwd(), "diffs", "runA_vs_runB.md");
 export const DEFAULT_GOLDENS_OUT = path.resolve(process.cwd(), "tests", "goldens.json");
 export const DEFAULT_REGRESSION_REPORT_OUT = path.resolve(
@@ -26,9 +34,21 @@ export const DEFAULT_REGRESSION_REPORT_OUT = path.resolve(
   "reports",
   "regression_report.md"
 );
-export const DEFAULT_TOKEN_REGISTRY_PATH = path.resolve(process.cwd(), "data", "tokens.registry.json");
-export const DEFAULT_COMPILED_BUNDLES_PATH = path.resolve(process.cwd(), "data", "tokens.compiled.json");
-export const DEFAULT_SEMANTICS_DEFS_PATH = path.resolve(process.cwd(), "registry", "token-semantics.json");
+export const DEFAULT_TOKEN_REGISTRY_PATH = path.resolve(
+  process.cwd(),
+  "data",
+  "tokens.registry.json"
+);
+export const DEFAULT_COMPILED_BUNDLES_PATH = path.resolve(
+  process.cwd(),
+  "data",
+  "tokens.compiled.json"
+);
+export const DEFAULT_SEMANTICS_DEFS_PATH = path.resolve(
+  process.cwd(),
+  "registry",
+  "token-semantics.json"
+);
 export const DEFAULT_EXECUTION_MODE = "WORD";
 export const DEFAULT_WINDOW_SIZE = 4;
 export const DEFAULT_SAFETY_RAIL_THRESHOLD = 0.35;

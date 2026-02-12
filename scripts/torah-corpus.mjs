@@ -48,6 +48,31 @@ const {
   parseVerifyArgs,
   parseRegressArgs
 } = torahCorpusArgs;
+
+function loadTorahCorpusReport() {
+  const reportModulePath = path.resolve(process.cwd(), "impl/reference/dist/scripts/torahCorpus/report");
+  try {
+    return cjsRequire(reportModulePath);
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "MODULE_NOT_FOUND") {
+      throw new Error(
+        "Missing compiled torah corpus report module. Run `npm run build` before `node scripts/torah-corpus.mjs`."
+      );
+    }
+    throw error;
+  }
+}
+
+const torahCorpusReport = loadTorahCorpusReport();
+const {
+  workspaceRelativePath,
+  totalFromCounts,
+  formatWarningCounts,
+  summarizeSemanticVersions,
+  prettyRef,
+  markdownSafe
+} = torahCorpusReport;
+
 const TRACE_VERSION = "1.0.0";
 const TRACE_RENDER_VERSION = "1.0.0";
 const SPACE_TOKEN = "□";
@@ -1572,19 +1597,6 @@ function buildExemplarLibrary(fullRows) {
   };
 }
 
-function toPortablePath(p) {
-  return String(p).split(path.sep).join("/");
-}
-
-function workspaceRelativePath(absPath) {
-  const resolved = path.resolve(absPath);
-  const rel = path.relative(process.cwd(), resolved);
-  if (rel && !rel.startsWith("..") && !path.isAbsolute(rel)) {
-    return toPortablePath(rel);
-  }
-  return toPortablePath(resolved);
-}
-
 function sha256FromBuffer(buffer) {
   return crypto.createHash("sha256").update(buffer).digest("hex");
 }
@@ -1857,21 +1869,6 @@ function mergeCountObjects(base, delta) {
     out[key] = (out[key] ?? 0) + Number(count ?? 0);
   }
   return out;
-}
-
-function totalFromCounts(byCode) {
-  return Object.values(byCode ?? {}).reduce((sum, value) => sum + Number(value ?? 0), 0);
-}
-
-function formatWarningCounts(byCode) {
-  const entries = Object.entries(byCode ?? {}).filter(([, count]) => Number(count) > 0);
-  if (entries.length === 0) {
-    return "none";
-  }
-  return entries
-    .sort((left, right) => sortRefLike(left[0], right[0]))
-    .map(([code, count]) => `${code} x${count}`)
-    .join(", ");
 }
 
 function buildTokenWarningIndex(compiledPayload) {
@@ -2252,35 +2249,6 @@ function classifySkeletonDelta(previousSkeleton, nextSkeleton) {
     summary: `Mixed delta: ${compact.join(", ")}`,
     operations
   };
-}
-
-function summarizeSemanticVersions(versions) {
-  if (!versions || versions.length === 0) {
-    return "unknown";
-  }
-  if (versions.length === 1) {
-    return versions[0];
-  }
-  return versions.join(", ");
-}
-
-function prettyRef(row) {
-  if (!row?.ref || typeof row.ref !== "object") {
-    return row?.key ?? "unknown";
-  }
-  const chapter = row.ref.chapter ?? "?";
-  const verse = row.ref.verse ?? "?";
-  const tokenIndex =
-    row.ref.token_index ??
-    row.ref.word_index_in_verse ??
-    row.ref.word_index ??
-    row.ref.index ??
-    "?";
-  return `${row.ref.book} ${chapter}:${verse} (word ${tokenIndex})`;
-}
-
-function markdownSafe(value) {
-  return String(value).replace(/\|/g, "\\|");
 }
 
 function compareDeltaGroupEntries(left, right) {
