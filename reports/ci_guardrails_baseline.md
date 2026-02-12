@@ -1,26 +1,29 @@
 # CI Guardrails Baseline Report
 
 - mode: warn
-- generated_at_utc: 2026-02-12T19:52:26.884Z
+- generated_at_utc: 2026-02-12T20:07:27.720Z
 - thresholds.max_bytes: 30000
 - thresholds.max_complexity_score: 220
-- files_scanned: 67
-- legacy_allowlisted_violations: 3
+- files_scanned: 71
+- legacy_allowlisted_violations: 2
 - new_violations: 0
 
 ## File Metrics
 
 | file | bytes | complexity_score | bytes_status | complexity_status |
 |---|---:|---:|---|---|
-| scripts/torah-corpus.mjs | 92113 | 376 | legacy_allowlisted | legacy_allowlisted |
 | scripts/exemplar-library.mjs | 41157 | 168 | legacy_allowlisted | pass |
 | scripts/pattern-index.mjs | 34252 | 174 | legacy_allowlisted | pass |
+| impl/reference/src/scripts/torahCorpus/runtimeCommands.ts | 29578 | 55 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/runtimePart1.ts | 28395 | 122 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/execute.ts | 27098 | 51 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/regress.ts | 21508 | 78 | pass | pass |
 | scripts/compile-token-operators.mjs | 20062 | 90 | pass | pass |
 | scripts/extract-token-registry.mjs | 19733 | 61 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/runtimePart2.ts | 18967 | 97 | pass | pass |
 | scripts/normalize-torah.mjs | 17870 | 64 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/args.ts | 17845 | 81 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/runtimePart3.ts | 15666 | 85 | pass | pass |
 | impl/reference/src/trace/canonicalize.ts | 12681 | 53 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/executeReports.ts | 11766 | 30 | pass | pass |
 | impl/reference/src/trace/types.ts | 10437 | 6 | pass | pass |
@@ -72,6 +75,7 @@
 | impl/reference/src/compile/types.ts | 1031 | 1 | pass | pass |
 | impl/reference/src/letters/yod.ts | 993 | 1 | pass | pass |
 | impl/reference/src/letters/types.ts | 905 | 1 | pass | pass |
+| scripts/torah-corpus.mjs | 837 | 7 | pass | pass |
 | impl/reference/src/letters/stub.ts | 816 | 1 | pass | pass |
 | impl/reference/src/compile/validate.ts | 390 | 4 | pass | pass |
 | impl/reference/src/letters/finals.ts | 390 | 1 | pass | pass |

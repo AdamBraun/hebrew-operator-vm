@@ -175,12 +175,32 @@ describe("torah corpus CLI parity checksums", () => {
         one_liner: "c"
       }
     ];
-    fs.writeFileSync(prevPath, prevRows.map((row) => JSON.stringify(row)).join("\n") + "\n", "utf8");
-    fs.writeFileSync(nextPath, nextRows.map((row) => JSON.stringify(row)).join("\n") + "\n", "utf8");
+    fs.writeFileSync(
+      prevPath,
+      prevRows.map((row) => JSON.stringify(row)).join("\n") + "\n",
+      "utf8"
+    );
+    fs.writeFileSync(
+      nextPath,
+      nextRows.map((row) => JSON.stringify(row)).join("\n") + "\n",
+      "utf8"
+    );
 
-    runNode([CORPUS_SCRIPT, "diff", `--prev=${prevPath}`, `--next=${nextPath}`, `--out=${outPath}`]);
+    runNode([
+      CORPUS_SCRIPT,
+      "diff",
+      `--prev=${prevPath}`,
+      `--next=${nextPath}`,
+      `--out=${outPath}`
+    ]);
     const runOne = sha256File(outPath);
-    runNode([CORPUS_SCRIPT, "diff", `--prev=${prevPath}`, `--next=${nextPath}`, `--out=${outPath}`]);
+    runNode([
+      CORPUS_SCRIPT,
+      "diff",
+      `--prev=${prevPath}`,
+      `--next=${nextPath}`,
+      `--out=${outPath}`
+    ]);
     const runTwo = sha256File(outPath);
 
     expect(runTwo).toBe(runOne);
