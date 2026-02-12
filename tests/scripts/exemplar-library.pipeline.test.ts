@@ -197,7 +197,13 @@ describe("exemplar library build + verify pipeline", () => {
         ref_key: "Genesis/1/2/12",
         surface: "הַגְּדֹלִים",
         token_ids: [151, 152],
-        skeleton: ["HE.DECLARE", "GIMEL.BESTOW", "DALET.BOUNDARY_CLOSE", "LAMED.ENDPOINT", "FINAL_MEM.CLOSE"],
+        skeleton: [
+          "HE.DECLARE",
+          "GIMEL.BESTOW",
+          "DALET.BOUNDARY_CLOSE",
+          "LAMED.ENDPOINT",
+          "FINAL_MEM.CLOSE"
+        ],
         flow: "ה declare(public) ⇢ ג bestowal ⇢ ד boundary close ⇢ ל endpoint bind ⇢ ם close mem-zone",
         semantic_version: "1.0.0"
       },
@@ -260,7 +266,9 @@ describe("exemplar library build + verify pipeline", () => {
         },
         CONTAINS_BESTOW_THEN_SEAL: {
           name: "CONTAINS_BESTOW_THEN_SEAL",
-          matching_skeleton_keys: ["HE.DECLARE|GIMEL.BESTOW|DALET.BOUNDARY_CLOSE|LAMED.ENDPOINT|FINAL_MEM.CLOSE"]
+          matching_skeleton_keys: [
+            "HE.DECLARE|GIMEL.BESTOW|DALET.BOUNDARY_CLOSE|LAMED.ENDPOINT|FINAL_MEM.CLOSE"
+          ]
         }
       }
     });
