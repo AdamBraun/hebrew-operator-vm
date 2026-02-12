@@ -28,7 +28,10 @@ describe("torah corpus execute pipeline", () => {
     const compileReportPath = path.join(tmpDir, "compile_report.md");
     const tracesPath = path.join(corpusDir, "word_traces.jsonl");
     const flowsPath = path.join(corpusDir, "word_flows.txt");
+    const verseTracesPath = path.join(corpusDir, "verse_traces.jsonl");
+    const verseMotifIndexPath = path.join(tmpDir, "index", "verse_motif_index.json");
     const executionReportPath = path.join(reportsDir, "execution_report.md");
+    const verseExecutionReportPath = path.join(reportsDir, "verse_execution_report.md");
 
     const fixture = {
       books: [
@@ -73,6 +76,9 @@ describe("torah corpus execute pipeline", () => {
       `--trace-out=${tracesPath}`,
       `--flows-out=${flowsPath}`,
       `--report-out=${executionReportPath}`,
+      `--verse-trace-out=${verseTracesPath}`,
+      `--verse-report-out=${verseExecutionReportPath}`,
+      `--verse-motif-index-out=${verseMotifIndexPath}`,
       `--token-registry=${tokenRegistryPath}`,
       `--compiled-bundles=${compiledBundlesPath}`
     ]);
@@ -103,6 +109,26 @@ describe("torah corpus execute pipeline", () => {
     expect(reportText).toContain("coverage: PASS (5/5)");
     expect(reportText).toContain("flow_derivation: PASS");
 
+    const verseTraceText = fs.readFileSync(verseTracesPath, "utf8");
+    const verseRows = verseTraceText
+      .split(/\r?\n/)
+      .filter((line) => line.trim().length > 0)
+      .map((line) => JSON.parse(line));
+    expect(verseRows).toHaveLength(2);
+    expect(verseRows[0].mode).toBe("WORD");
+    expect(verseRows[0].boundary_events).toBeDefined();
+    expect(verseRows[0].boundary_events.verse_boundary_operator.op_family).toBe(
+      "VERSE.BOUNDARY_RESOLUTION"
+    );
+
+    const verseMotifIndexPayload = JSON.parse(fs.readFileSync(verseMotifIndexPath, "utf8"));
+    expect(verseMotifIndexPayload.mode).toBe("WORD");
+    expect(Array.isArray(verseMotifIndexPayload.motifs)).toBe(true);
+
+    const verseReportText = fs.readFileSync(verseExecutionReportPath, "utf8");
+    expect(verseReportText).toContain("## Quality Gates");
+    expect(verseReportText).toContain("word_mode_equivalence: PASS");
+
     const secondRunOut = runNode([
       CORPUS_SCRIPT,
       "execute",
@@ -111,10 +137,14 @@ describe("torah corpus execute pipeline", () => {
       `--trace-out=${tracesPath}`,
       `--flows-out=${flowsPath}`,
       `--report-out=${executionReportPath}`,
+      `--verse-trace-out=${verseTracesPath}`,
+      `--verse-report-out=${verseExecutionReportPath}`,
+      `--verse-motif-index-out=${verseMotifIndexPath}`,
       `--token-registry=${tokenRegistryPath}`,
       `--compiled-bundles=${compiledBundlesPath}`
     ]);
     expect(secondRunOut).toContain("execute: words=5");
     expect(fs.readFileSync(tracesPath, "utf8")).toBe(tracesText);
+    expect(fs.readFileSync(verseTracesPath, "utf8")).toBe(verseTraceText);
   });
 });

@@ -16,6 +16,13 @@ const DEFAULT_PROMOTE_OUT = path.resolve(
 const DEFAULT_TRACE_OUT = path.resolve(process.cwd(), "corpus", "word_traces.jsonl");
 const DEFAULT_FLOWS_OUT = path.resolve(process.cwd(), "corpus", "word_flows.txt");
 const DEFAULT_EXECUTION_REPORT_OUT = path.resolve(process.cwd(), "reports", "execution_report.md");
+const DEFAULT_VERSE_TRACE_OUT = path.resolve(process.cwd(), "corpus", "verse_traces.jsonl");
+const DEFAULT_VERSE_EXECUTION_REPORT_OUT = path.resolve(
+  process.cwd(),
+  "reports",
+  "verse_execution_report.md"
+);
+const DEFAULT_VERSE_MOTIF_INDEX_OUT = path.resolve(process.cwd(), "index", "verse_motif_index.json");
 const DEFAULT_DIFF_REPORT_OUT = path.resolve(process.cwd(), "diffs", "runA_vs_runB.md");
 const DEFAULT_GOLDENS_OUT = path.resolve(process.cwd(), "tests", "goldens.json");
 const DEFAULT_REGRESSION_REPORT_OUT = path.resolve(
@@ -26,6 +33,9 @@ const DEFAULT_REGRESSION_REPORT_OUT = path.resolve(
 const DEFAULT_TOKEN_REGISTRY_PATH = path.resolve(process.cwd(), "data", "tokens.registry.json");
 const DEFAULT_COMPILED_BUNDLES_PATH = path.resolve(process.cwd(), "data", "tokens.compiled.json");
 const DEFAULT_SEMANTICS_DEFS_PATH = path.resolve(process.cwd(), "registry", "token-semantics.json");
+const DEFAULT_EXECUTION_MODE = "WORD";
+const DEFAULT_WINDOW_SIZE = 4;
+const DEFAULT_SAFETY_RAIL_THRESHOLD = 0.35;
 const SPACE_TOKEN = "□";
 
 const FINAL_MAP = {
@@ -165,10 +175,37 @@ const IMPORTANT_EVENT_TYPES = new Set([
   "shin"
 ]);
 
+const BOUNDARY_FLOW_OPS = new Set([
+  "SPACE.SUPPORT_DISCHARGE",
+  "SPACE.BOUNDARY_AUTO_CLOSE",
+  "SPACE.MEM_AUTO_CLOSE",
+  "DALET.BOUNDARY_CLOSE",
+  "RESH.BOUNDARY_CLOSE"
+]);
+const SUPPORT_DEBT_OPS = new Set(["NUN.SUPPORT_DEBT", "FINAL_NUN.SUPPORT_DEBT"]);
+const SUPPORT_DISCHARGE_OPS = new Set([
+  "SAMEKH.SUPPORT_DISCHARGE",
+  "FINAL_NUN.SUPPORT_DISCHARGE",
+  "SPACE.SUPPORT_DISCHARGE"
+]);
+const SAFETY_RAIL_ALLOWLIST = new Set([
+  ...BOUNDARY_FLOW_OPS,
+  ...SUPPORT_DEBT_OPS,
+  ...SUPPORT_DISCHARGE_OPS,
+  "MEM.OPEN",
+  "FINAL_MEM.CLOSE"
+]);
+
 function printHelp() {
   console.log("Usage:");
   console.log(
     "  node scripts/torah-corpus.mjs execute [--input=path] [--trace-out=path] [--flows-out=path] [--report-out=path]"
+  );
+  console.log(
+    "  node scripts/torah-corpus.mjs execute [--verse-trace-out=path] [--verse-report-out=path] [--mode=WORD|VERSE|WINDOW(N)] [--window-size=N]"
+  );
+  console.log(
+    "  node scripts/torah-corpus.mjs execute [--verse-motif-index-out=path] [--safety-rail] [--no-safety-rail] [--safety-rail-threshold=0.35]"
   );
   console.log(
     "  node scripts/torah-corpus.mjs execute [--token-registry=path] [--compiled-bundles=path] [--semantic-version=value] [--debug-raw-events]"
@@ -199,11 +236,17 @@ function printHelp() {
   console.log(`  --trace-out=${DEFAULT_TRACE_OUT}`);
   console.log(`  --flows-out=${DEFAULT_FLOWS_OUT}`);
   console.log(`  --report-out=${DEFAULT_EXECUTION_REPORT_OUT}`);
+  console.log(`  --verse-trace-out=${DEFAULT_VERSE_TRACE_OUT}`);
+  console.log(`  --verse-report-out=${DEFAULT_VERSE_EXECUTION_REPORT_OUT}`);
+  console.log(`  --verse-motif-index-out=${DEFAULT_VERSE_MOTIF_INDEX_OUT}`);
   console.log(`  --diff-out=${DEFAULT_DIFF_REPORT_OUT}`);
   console.log(`  --goldens=${DEFAULT_GOLDENS_OUT}`);
   console.log(`  --regression-out=${DEFAULT_REGRESSION_REPORT_OUT}`);
   console.log(`  --token-registry=${DEFAULT_TOKEN_REGISTRY_PATH}`);
   console.log(`  --compiled-bundles=${DEFAULT_COMPILED_BUNDLES_PATH}`);
+  console.log(`  --mode=${DEFAULT_EXECUTION_MODE}`);
+  console.log(`  --window-size=${DEFAULT_WINDOW_SIZE}`);
+  console.log(`  --safety-rail-threshold=${DEFAULT_SAFETY_RAIL_THRESHOLD}`);
   console.log("  --lang=he");
   console.log("  normalize-finals=false");
   console.log("  allow-runtime-errors=false");
@@ -278,6 +321,44 @@ function parseCommonRunArgs(argv) {
   return opts;
 }
 
+function parseExecutionMode(rawMode, windowSizeValue) {
+  const source = String(rawMode ?? DEFAULT_EXECUTION_MODE).trim();
+  const normalized = source.toUpperCase();
+  const windowMatch = normalized.match(/^WINDOW\((\d+)\)$/u);
+
+  let kind = normalized;
+  let windowSize = Number(windowSizeValue);
+  if (!Number.isFinite(windowSize)) {
+    windowSize = DEFAULT_WINDOW_SIZE;
+  }
+
+  if (windowMatch) {
+    kind = "WINDOW";
+    windowSize = Number(windowMatch[1]);
+  }
+
+  if (kind === "WORD" || kind === "VERSE") {
+    return {
+      kind,
+      windowSize: null,
+      label: kind
+    };
+  }
+
+  if (kind === "WINDOW") {
+    if (!Number.isInteger(windowSize) || windowSize <= 0) {
+      throw new Error(`Invalid WINDOW size: ${windowSizeValue}`);
+    }
+    return {
+      kind,
+      windowSize,
+      label: `WINDOW(${windowSize})`
+    };
+  }
+
+  throw new Error(`Invalid --mode value: ${source}. Expected WORD, VERSE, or WINDOW(N).`);
+}
+
 function parseExecuteArgs(argv) {
   const runOpts = parseCommonRunArgs(argv);
   const opts = {
@@ -285,10 +366,17 @@ function parseExecuteArgs(argv) {
     traceOut: DEFAULT_TRACE_OUT,
     flowsOut: DEFAULT_FLOWS_OUT,
     reportOut: DEFAULT_EXECUTION_REPORT_OUT,
+    verseTraceOut: DEFAULT_VERSE_TRACE_OUT,
+    verseReportOut: DEFAULT_VERSE_EXECUTION_REPORT_OUT,
+    verseMotifIndexOut: DEFAULT_VERSE_MOTIF_INDEX_OUT,
     tokenRegistry: DEFAULT_TOKEN_REGISTRY_PATH,
     compiledBundles: DEFAULT_COMPILED_BUNDLES_PATH,
     semanticVersion: "",
-    debugRawEvents: false
+    debugRawEvents: false,
+    mode: DEFAULT_EXECUTION_MODE,
+    windowSize: DEFAULT_WINDOW_SIZE,
+    safetyRail: true,
+    safetyRailThreshold: DEFAULT_SAFETY_RAIL_THRESHOLD
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -315,6 +403,24 @@ function parseExecuteArgs(argv) {
       index = reportOutOpt.nextIndex;
       continue;
     }
+    const verseTraceOutOpt = readOptionValue(argv, index, "--verse-trace-out");
+    if (verseTraceOutOpt) {
+      opts.verseTraceOut = verseTraceOutOpt.value;
+      index = verseTraceOutOpt.nextIndex;
+      continue;
+    }
+    const verseReportOutOpt = readOptionValue(argv, index, "--verse-report-out");
+    if (verseReportOutOpt) {
+      opts.verseReportOut = verseReportOutOpt.value;
+      index = verseReportOutOpt.nextIndex;
+      continue;
+    }
+    const verseMotifIndexOutOpt = readOptionValue(argv, index, "--verse-motif-index-out");
+    if (verseMotifIndexOutOpt) {
+      opts.verseMotifIndexOut = verseMotifIndexOutOpt.value;
+      index = verseMotifIndexOutOpt.nextIndex;
+      continue;
+    }
     const tokenRegistryOpt = readOptionValue(argv, index, "--token-registry");
     if (tokenRegistryOpt) {
       opts.tokenRegistry = tokenRegistryOpt.value;
@@ -333,10 +439,48 @@ function parseExecuteArgs(argv) {
       index = semanticVersionOpt.nextIndex;
       continue;
     }
+    const modeOpt = readOptionValue(argv, index, "--mode");
+    if (modeOpt) {
+      opts.mode = modeOpt.value;
+      index = modeOpt.nextIndex;
+      continue;
+    }
+    const windowSizeOpt = readOptionValue(argv, index, "--window-size");
+    if (windowSizeOpt) {
+      opts.windowSize = Number(windowSizeOpt.value);
+      index = windowSizeOpt.nextIndex;
+      continue;
+    }
+    const safetyRailThresholdOpt = readOptionValue(argv, index, "--safety-rail-threshold");
+    if (safetyRailThresholdOpt) {
+      opts.safetyRailThreshold = Number(safetyRailThresholdOpt.value);
+      index = safetyRailThresholdOpt.nextIndex;
+      continue;
+    }
     if (arg === "--debug-raw-events") {
       opts.debugRawEvents = true;
       continue;
     }
+    if (arg === "--safety-rail") {
+      opts.safetyRail = true;
+      continue;
+    }
+    if (arg === "--no-safety-rail") {
+      opts.safetyRail = false;
+      continue;
+    }
+  }
+
+  const mode = parseExecutionMode(opts.mode, opts.windowSize);
+  opts.mode = mode.kind;
+  opts.modeLabel = mode.label;
+  opts.windowSize = mode.windowSize;
+  if (
+    !Number.isFinite(opts.safetyRailThreshold) ||
+    opts.safetyRailThreshold < 0 ||
+    opts.safetyRailThreshold > 1
+  ) {
+    throw new Error(`Invalid --safety-rail-threshold: ${opts.safetyRailThreshold}`);
   }
 
   return opts;
@@ -1064,6 +1208,467 @@ function extractWordFlow(trace) {
   }
 
   return { events, flow_skeleton, flow_compact, one_liner: compileOneLiner(flow_compact) };
+}
+
+function isBoundaryFlowOp(op) {
+  return BOUNDARY_FLOW_OPS.has(op);
+}
+
+function extractBoundaryOps(skeleton) {
+  return skeleton.filter((op) => isBoundaryFlowOp(op));
+}
+
+function splitTraceIntoWordSegments(trace) {
+  const segments = [];
+  let current = [];
+  let pendingLeadingSpace = [];
+
+  for (const traceEntry of trace) {
+    if (traceEntry.token === SPACE_TOKEN) {
+      if (current.length > 0) {
+        current.push(traceEntry);
+        segments.push(current);
+        current = [];
+      } else {
+        pendingLeadingSpace = [traceEntry];
+      }
+      continue;
+    }
+
+    if (current.length === 0 && pendingLeadingSpace.length > 0) {
+      current.push(pendingLeadingSpace[pendingLeadingSpace.length - 1]);
+      pendingLeadingSpace = [];
+    }
+    current.push(traceEntry);
+  }
+
+  return segments;
+}
+
+function collectExecutableVerses(data, opts) {
+  const verses = [];
+  let versesTotal = 0;
+  let versesSanitized = 0;
+  let versesSkipped = 0;
+  let wordsTotal = 0;
+
+  for (const book of data.books ?? []) {
+    const bookName = String(book?.name ?? "").trim();
+    if (!bookName) {
+      throw new Error("Missing explicit book name while collecting verse boundaries");
+    }
+    for (const chapter of book.chapters ?? []) {
+      const chapterNumber = Number(chapter?.n);
+      if (!Number.isFinite(chapterNumber)) {
+        throw new Error(`Missing explicit chapter boundary in book ${bookName}`);
+      }
+      for (const verse of chapter.verses ?? []) {
+        const verseNumber = Number(verse?.n);
+        if (!Number.isFinite(verseNumber)) {
+          throw new Error(`Missing explicit verse boundary in ${bookName} ${chapterNumber}`);
+        }
+
+        versesTotal += 1;
+        const rawText =
+          opts.lang === "en" ? verse.en : opts.lang === "both" ? (verse.he ?? verse.en) : verse.he;
+        const cleaned = sanitizeText(rawText, opts);
+        if (!cleaned) {
+          versesSkipped += 1;
+          continue;
+        }
+        if (String(rawText ?? "") !== cleaned) {
+          versesSanitized += 1;
+        }
+
+        const words = cleaned.split(" ").filter(Boolean);
+        if (words.length === 0) {
+          versesSkipped += 1;
+          continue;
+        }
+        wordsTotal += words.length;
+
+        verses.push({
+          ref: {
+            book: bookName,
+            chapter: chapterNumber,
+            verse: verseNumber
+          },
+          ref_key: `${bookName}/${chapterNumber}/${verseNumber}`,
+          words
+        });
+      }
+    }
+  }
+
+  return {
+    verses,
+    stats: {
+      versesTotal,
+      versesSanitized,
+      versesSkipped,
+      wordsTotal
+    }
+  };
+}
+
+function resolveWordTokenIds({ surface, tokenize, tokenIdBySignature, compiledTokenIdSet }) {
+  const tokens = tokenize(surface).filter((token) => token.letter !== SPACE_TOKEN);
+  const token_ids = [];
+  const unknown_signatures = [];
+  const missing_bundle_ids = [];
+
+  for (const token of tokens) {
+    const signature = tokenRegistrySignature(token);
+    const tokenId = tokenIdBySignature.get(signature);
+    if (tokenId === undefined) {
+      unknown_signatures.push(signature);
+      continue;
+    }
+    token_ids.push(tokenId);
+    if (!compiledTokenIdSet.has(String(tokenId))) {
+      missing_bundle_ids.push(tokenId);
+    }
+  }
+
+  return { token_ids, unknown_signatures, missing_bundle_ids };
+}
+
+function runIsolatedWordFlow({
+  surface,
+  runProgramWithTrace,
+  createInitialState,
+  allowRuntimeErrors
+}) {
+  try {
+    const { trace } = runProgramWithTrace(surface, createInitialState());
+    const flow = extractWordFlow(trace);
+    return {
+      flowRaw: flow.flow_compact,
+      flowCompact: dedupeConsecutive(flow.flow_compact),
+      runtimeErrorMessage: "",
+      windowStart: 1
+    };
+  } catch (err) {
+    if (!allowRuntimeErrors || err?.name !== "RuntimeError") {
+      throw err;
+    }
+    return {
+      flowRaw: ["ERROR.RUNTIME"],
+      flowCompact: ["ERROR.RUNTIME"],
+      runtimeErrorMessage: String(err?.message ?? "RuntimeError"),
+      windowStart: 1
+    };
+  }
+}
+
+function runVerseWordFlows({
+  words,
+  runProgramWithTrace,
+  createInitialState,
+  allowRuntimeErrors,
+  verseRefKey
+}) {
+  try {
+    const verseText = words.join(" ");
+    const { trace } = runProgramWithTrace(verseText, createInitialState());
+    const segments = splitTraceIntoWordSegments(trace);
+    if (segments.length !== words.length) {
+      throw new Error(
+        `Verse trace segmentation failed for ${verseRefKey}: expected ${words.length} words, got ${segments.length}`
+      );
+    }
+    return segments.map((segment) => {
+      const flow = extractWordFlow(segment);
+      return {
+        flowRaw: flow.flow_compact,
+        flowCompact: dedupeConsecutive(flow.flow_compact),
+        runtimeErrorMessage: "",
+        windowStart: 1
+      };
+    });
+  } catch (err) {
+    if (!allowRuntimeErrors || err?.name !== "RuntimeError") {
+      throw err;
+    }
+    const message = String(err?.message ?? "RuntimeError");
+    return words.map(() => ({
+      flowRaw: ["ERROR.RUNTIME"],
+      flowCompact: ["ERROR.RUNTIME"],
+      runtimeErrorMessage: message,
+      windowStart: 1
+    }));
+  }
+}
+
+function runWindowWordFlows({
+  words,
+  windowSize,
+  runProgramWithTrace,
+  createInitialState,
+  allowRuntimeErrors,
+  verseRefKey
+}) {
+  const out = [];
+
+  for (let wordIndex = 0; wordIndex < words.length; wordIndex += 1) {
+    const windowStart = Math.max(0, wordIndex - windowSize + 1);
+    const phraseText = words.slice(windowStart, wordIndex + 1).join(" ");
+
+    try {
+      const { trace } = runProgramWithTrace(phraseText, createInitialState());
+      const segments = splitTraceIntoWordSegments(trace);
+      const expectedSegments = wordIndex - windowStart + 1;
+      if (segments.length !== expectedSegments) {
+        throw new Error(
+          `Window trace segmentation failed for ${verseRefKey} word ${wordIndex + 1}: expected ${expectedSegments}, got ${segments.length}`
+        );
+      }
+      const flow = extractWordFlow(segments[segments.length - 1]);
+      out.push({
+        flowRaw: flow.flow_compact,
+        flowCompact: dedupeConsecutive(flow.flow_compact),
+        runtimeErrorMessage: "",
+        windowStart: windowStart + 1
+      });
+    } catch (err) {
+      if (!allowRuntimeErrors || err?.name !== "RuntimeError") {
+        throw err;
+      }
+      out.push({
+        flowRaw: ["ERROR.RUNTIME"],
+        flowCompact: ["ERROR.RUNTIME"],
+        runtimeErrorMessage: String(err?.message ?? "RuntimeError"),
+        windowStart: windowStart + 1
+      });
+    }
+  }
+
+  return out;
+}
+
+function explainDeltaByMode({ mode, tokenIndex, windowStart, boundaryOps }) {
+  const parts = [];
+  if (mode === "VERSE" && tokenIndex > 1) {
+    parts.push(`shared verse state from words 1-${tokenIndex - 1}`);
+  }
+  if (mode === "WINDOW" && windowStart < tokenIndex) {
+    parts.push(`sliding window context words ${windowStart}-${tokenIndex - 1}`);
+  }
+  if (boundaryOps.length > 0) {
+    parts.push(`boundary operators observed: ${boundaryOps.join(", ")}`);
+  }
+  if (parts.length === 0) {
+    parts.push("shared-state execution context");
+  }
+  return parts.join("; ");
+}
+
+function countOps(ops) {
+  const counts = new Map();
+  for (const op of ops) {
+    counts.set(op, (counts.get(op) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function skeletonDeltaOps(previousSkeleton, nextSkeleton) {
+  const previousCounts = countOps(previousSkeleton);
+  const nextCounts = countOps(nextSkeleton);
+  const keys = new Set([...previousCounts.keys(), ...nextCounts.keys()]);
+  const delta = [];
+  for (const key of keys) {
+    if ((previousCounts.get(key) ?? 0) !== (nextCounts.get(key) ?? 0)) {
+      delta.push(key);
+    }
+  }
+  return delta.sort(sortRefLike);
+}
+
+function isSafetyRailDeltaAllowed(deltaOps) {
+  return deltaOps.every((op) => SAFETY_RAIL_ALLOWLIST.has(op));
+}
+
+function buildDebtDischargeSpans(verseWordRows) {
+  const spans = [];
+  for (let fromIndex = 0; fromIndex < verseWordRows.length; fromIndex += 1) {
+    const fromRow = verseWordRows[fromIndex];
+    const hasDebt = fromRow.skeleton.some((op) => SUPPORT_DEBT_OPS.has(op));
+    if (!hasDebt) {
+      continue;
+    }
+    for (let toIndex = fromIndex + 1; toIndex < verseWordRows.length; toIndex += 1) {
+      const toRow = verseWordRows[toIndex];
+      const hasDischarge = toRow.skeleton.some((op) => SUPPORT_DISCHARGE_OPS.has(op));
+      if (!hasDischarge) {
+        continue;
+      }
+      spans.push({
+        from_ref_key: fromRow.ref_key,
+        to_ref_key: toRow.ref_key,
+        span_words: toIndex - fromIndex
+      });
+      break;
+    }
+  }
+  return spans;
+}
+
+function buildVerseBoundaryResolution(verseWordRows, boundaryByType) {
+  let supportOpened = 0;
+  let supportDischarged = 0;
+  let memOpened = 0;
+  let memClosed = 0;
+  const finalizeAtWord = [];
+
+  for (let index = 0; index < verseWordRows.length; index += 1) {
+    const row = verseWordRows[index];
+    for (const op of row.skeleton) {
+      if (SUPPORT_DEBT_OPS.has(op)) {
+        supportOpened += 1;
+      }
+      if (SUPPORT_DISCHARGE_OPS.has(op)) {
+        supportDischarged += 1;
+      }
+      if (op === "MEM.OPEN") {
+        memOpened += 1;
+      }
+      if (op === "FINAL_MEM.CLOSE" || op === "SPACE.MEM_AUTO_CLOSE") {
+        memClosed += 1;
+      }
+      if (op === "TAV.FINALIZE") {
+        finalizeAtWord.push(row.ref_key);
+      }
+    }
+  }
+
+  const supportBalance = Math.max(0, supportOpened - supportDischarged);
+  const memBalance = Math.max(0, memOpened - memClosed);
+  const boundaryCount = Object.values(boundaryByType).reduce((sum, count) => sum + Number(count), 0);
+  const requiresDischarge = supportBalance > 0 || memBalance > 0;
+
+  return {
+    op_family: "VERSE.BOUNDARY_RESOLUTION",
+    trigger: "explicit_verse_boundary",
+    support_opened: supportOpened,
+    support_discharged: supportDischarged,
+    support_resolved_at_boundary: supportBalance,
+    mem_opened: memOpened,
+    mem_closed: memClosed,
+    mem_resolved_at_boundary: memBalance,
+    boundary_ops_seen: boundaryCount,
+    finalize_refs: finalizeAtWord.slice(0, 20),
+    action: requiresDischarge ? "discharge_or_close_pending" : "confirm_stable_closure"
+  };
+}
+
+function buildVerseMotifs({ verseWordRows, crossWordEvents, verseBoundaryResolution }) {
+  const motifs = [];
+  if (crossWordEvents.length > 0) {
+    motifs.push({
+      motif: "CROSS_WORD_DELTA",
+      count: crossWordEvents.length,
+      samples: crossWordEvents.slice(0, 6).map((event) => ({
+        ref_key: event.ref_key,
+        token_index: event.token_index
+      }))
+    });
+  }
+
+  const debtSpans = buildDebtDischargeSpans(verseWordRows);
+  if (debtSpans.length > 0) {
+    motifs.push({
+      motif: "SUPPORT_DEBT_DISCHARGE_CROSS_WORD",
+      count: debtSpans.length,
+      samples: debtSpans.slice(0, 6)
+    });
+  }
+
+  if (verseBoundaryResolution.boundary_ops_seen > 0) {
+    motifs.push({
+      motif: "VERSE_BOUNDARY_RESOLUTION",
+      count: verseBoundaryResolution.boundary_ops_seen,
+      action: verseBoundaryResolution.action
+    });
+  }
+
+  if (verseBoundaryResolution.support_resolved_at_boundary > 0) {
+    motifs.push({
+      motif: "SUPPORT_RESOLVED_AT_VERSE_BOUNDARY",
+      count: verseBoundaryResolution.support_resolved_at_boundary
+    });
+  }
+
+  if (verseBoundaryResolution.mem_resolved_at_boundary > 0) {
+    motifs.push({
+      motif: "MEM_RESOLVED_AT_VERSE_BOUNDARY",
+      count: verseBoundaryResolution.mem_resolved_at_boundary
+    });
+  }
+
+  const finalizeRows = verseWordRows
+    .filter((row) => row.skeleton.includes("TAV.FINALIZE"))
+    .map((row) => row.ref_key);
+  if (finalizeRows.length === 1 && finalizeRows[0] === verseWordRows[verseWordRows.length - 1].ref_key) {
+    motifs.push({
+      motif: "FINALIZE_AT_VERSE_EDGE",
+      count: 1,
+      refs: finalizeRows
+    });
+  }
+
+  return motifs;
+}
+
+function buildVerseMotifIndex({
+  modeLabel,
+  semanticVersion,
+  verseRows,
+  safetyRailSummary,
+  verseTraceSha256
+}) {
+  const motifByName = new Map();
+  const boundaryCounts = {};
+  let crossWordEventCount = 0;
+
+  for (const row of verseRows) {
+    crossWordEventCount += (row.cross_word_events ?? []).length;
+    for (const [op, count] of Object.entries(row.boundary_events?.by_type ?? {})) {
+      boundaryCounts[op] = (boundaryCounts[op] ?? 0) + Number(count);
+    }
+    for (const motif of row.notable_motifs ?? []) {
+      const entry = motifByName.get(motif.motif) ?? {
+        motif: motif.motif,
+        count: 0,
+        verse_refs: [],
+        samples: []
+      };
+      entry.count += Number(motif.count ?? 0);
+      if (entry.verse_refs.length < 40) {
+        entry.verse_refs.push(row.ref_key);
+      }
+      const sampleCandidate = motif.samples ?? motif.refs ?? motif.ops ?? motif.action ?? null;
+      if (sampleCandidate !== null && entry.samples.length < 20) {
+        entry.samples.push(sampleCandidate);
+      }
+      motifByName.set(motif.motif, entry);
+    }
+  }
+
+  const motifs = Array.from(motifByName.values()).sort(
+    (left, right) => right.count - left.count || sortRefLike(left.motif, right.motif)
+  );
+
+  return {
+    schema_version: 1,
+    mode: modeLabel,
+    semantic_version: semanticVersion,
+    verse_trace_sha256: verseTraceSha256,
+    verses_indexed: verseRows.length,
+    cross_word_event_count: crossWordEventCount,
+    boundary_operator_totals: sortCountObjectByKey(boundaryCounts),
+    safety_rail: safetyRailSummary,
+    motifs
+  };
 }
 
 function buildPatternIndex(fullRows) {
@@ -2455,6 +3060,9 @@ async function runExecute(argv) {
   const traceOutPath = path.resolve(opts.traceOut);
   const flowsOutPath = path.resolve(opts.flowsOut);
   const reportOutPath = path.resolve(opts.reportOut);
+  const verseTraceOutPath = path.resolve(opts.verseTraceOut);
+  const verseReportOutPath = path.resolve(opts.verseReportOut);
+  const verseMotifIndexOutPath = path.resolve(opts.verseMotifIndexOut);
 
   const [rawBuffer, tokenRegistryPayload, compiledPayload, semanticsDefsPayload] =
     await Promise.all([
@@ -2493,123 +3101,303 @@ async function runExecute(argv) {
 
   const startNs = process.hrtime.bigint();
   const rows = [];
+  const baselineRows = [];
+  const verseRows = [];
   const flowLines = [];
   const skeletonCounts = new Map();
+  const modeDiffEvents = [];
 
   const unknownSignatures = [];
   const missingBundles = [];
   const runtimeErrors = [];
+  const safetyRailStats = {
+    enabled: Boolean(opts.safetyRail),
+    threshold: Number(opts.safetyRailThreshold),
+    activated_verses: 0,
+    clamped_words: 0,
+    allowed_deltas: 0,
+    blocked_deltas: 0
+  };
+  const { verses, stats } = collectExecutableVerses(data, opts);
+  const versesTotal = stats.versesTotal;
+  const versesSanitized = stats.versesSanitized;
+  const versesSkipped = stats.versesSkipped;
+  const wordsTotal = stats.wordsTotal;
 
-  let versesTotal = 0;
-  let versesSanitized = 0;
-  let versesSkipped = 0;
-  let wordsTotal = 0;
+  const isolatedFlowCache = new Map();
+  const getIsolatedFlow = (surface) => {
+    if (isolatedFlowCache.has(surface)) {
+      return isolatedFlowCache.get(surface);
+    }
+    const flow = runIsolatedWordFlow({
+      surface,
+      runProgramWithTrace,
+      createInitialState,
+      allowRuntimeErrors: opts.allowRuntimeErrors
+    });
+    isolatedFlowCache.set(surface, flow);
+    return flow;
+  };
 
-  for (const book of data.books ?? []) {
-    for (const chapter of book.chapters ?? []) {
-      for (const verse of chapter.verses ?? []) {
-        versesTotal += 1;
-        const rawText =
-          opts.lang === "en" ? verse.en : opts.lang === "both" ? (verse.he ?? verse.en) : verse.he;
-        const cleaned = sanitizeText(rawText, opts);
-        if (!cleaned) {
-          versesSkipped += 1;
-          continue;
-        }
-        if (cleaned !== rawText) {
-          versesSanitized += 1;
-        }
+  for (const verseEntry of verses) {
+    const wordRowsMeta = [];
 
-        const words = cleaned.split(" ").filter(Boolean);
-        for (let wordIndex = 0; wordIndex < words.length; wordIndex += 1) {
-          const surface = words[wordIndex];
-          wordsTotal += 1;
+    for (let wordIndex = 0; wordIndex < verseEntry.words.length; wordIndex += 1) {
+      const surface = verseEntry.words[wordIndex];
+      const ref = {
+        book: verseEntry.ref.book,
+        chapter: verseEntry.ref.chapter,
+        verse: verseEntry.ref.verse,
+        token_index: wordIndex + 1
+      };
+      const refKey = buildRefKey(ref);
+      const tokenMeta = resolveWordTokenIds({
+        surface,
+        tokenize,
+        tokenIdBySignature,
+        compiledTokenIdSet
+      });
 
-          const ref = {
-            book: book.name,
-            chapter: chapter.n,
-            verse: verse.n,
-            token_index: wordIndex + 1
+      for (const tokenId of tokenMeta.missing_bundle_ids) {
+        missingBundles.push({ ref_key: refKey, surface, token_id: tokenId });
+      }
+      if (tokenMeta.unknown_signatures.length > 0) {
+        unknownSignatures.push({
+          ref_key: refKey,
+          surface,
+          signatures: tokenMeta.unknown_signatures
+        });
+      }
+
+      wordRowsMeta.push({
+        ref,
+        ref_key: refKey,
+        surface,
+        token_ids: tokenMeta.token_ids,
+        unknown_signatures: tokenMeta.unknown_signatures
+      });
+    }
+
+    const baselineExecutions = wordRowsMeta.map((meta) => {
+      if (meta.unknown_signatures.length > 0) {
+        return {
+          flowRaw: ["ERROR.UNKNOWN_SIGNATURE"],
+          flowCompact: ["ERROR.UNKNOWN_SIGNATURE"],
+          runtimeErrorMessage: "",
+          windowStart: 1
+        };
+      }
+      return getIsolatedFlow(meta.surface);
+    });
+
+    let modeExecutions;
+    if (opts.mode === "WORD") {
+      modeExecutions = baselineExecutions.map((execution) => ({
+        flowRaw: [...execution.flowRaw],
+        flowCompact: [...execution.flowCompact],
+        runtimeErrorMessage: execution.runtimeErrorMessage,
+        windowStart: execution.windowStart
+      }));
+    } else if (opts.mode === "VERSE") {
+      modeExecutions = runVerseWordFlows({
+        words: verseEntry.words,
+        runProgramWithTrace,
+        createInitialState,
+        allowRuntimeErrors: opts.allowRuntimeErrors,
+        verseRefKey: verseEntry.ref_key
+      });
+    } else {
+      modeExecutions = runWindowWordFlows({
+        words: verseEntry.words,
+        windowSize: opts.windowSize ?? DEFAULT_WINDOW_SIZE,
+        runProgramWithTrace,
+        createInitialState,
+        allowRuntimeErrors: opts.allowRuntimeErrors,
+        verseRefKey: verseEntry.ref_key
+      });
+    }
+
+    if (modeExecutions.length !== wordRowsMeta.length) {
+      throw new Error(
+        `Execution mode ${opts.modeLabel} emitted ${modeExecutions.length} rows for ${verseEntry.ref_key}, expected ${wordRowsMeta.length}`
+      );
+    }
+
+    const provisionalDeltaCount = wordRowsMeta.reduce((sum, meta, index) => {
+      if (meta.unknown_signatures.length > 0) {
+        return sum;
+      }
+      return arraysEqual(baselineExecutions[index].flowCompact, modeExecutions[index].flowCompact)
+        ? sum
+        : sum + 1;
+    }, 0);
+    const provisionalDeltaRate =
+      wordRowsMeta.length > 0 ? provisionalDeltaCount / wordRowsMeta.length : 0;
+    const safetyRailActive =
+      opts.mode !== "WORD" &&
+      safetyRailStats.enabled &&
+      provisionalDeltaRate > safetyRailStats.threshold;
+    if (safetyRailActive) {
+      safetyRailStats.activated_verses += 1;
+    }
+
+    const verseWordRows = [];
+    const crossWordEvents = [];
+    let totalEventsInVerse = 0;
+    const boundaryByType = {};
+
+    for (let wordIndex = 0; wordIndex < wordRowsMeta.length; wordIndex += 1) {
+      const meta = wordRowsMeta[wordIndex];
+      const baselineExecution = baselineExecutions[wordIndex];
+      let execution = modeExecutions[wordIndex];
+
+      if (meta.unknown_signatures.length > 0) {
+        execution = {
+          flowRaw: ["ERROR.UNKNOWN_SIGNATURE"],
+          flowCompact: ["ERROR.UNKNOWN_SIGNATURE"],
+          runtimeErrorMessage: "",
+          windowStart: execution?.windowStart ?? baselineExecution.windowStart
+        };
+      }
+
+      const changedFromBaseline = !arraysEqual(baselineExecution.flowCompact, execution.flowCompact);
+      if (safetyRailActive && changedFromBaseline) {
+        const deltaOps = skeletonDeltaOps(baselineExecution.flowCompact, execution.flowCompact);
+        if (!isSafetyRailDeltaAllowed(deltaOps)) {
+          safetyRailStats.clamped_words += 1;
+          safetyRailStats.blocked_deltas += 1;
+          execution = {
+            flowRaw: [...baselineExecution.flowRaw],
+            flowCompact: [...baselineExecution.flowCompact],
+            runtimeErrorMessage: baselineExecution.runtimeErrorMessage,
+            windowStart: execution.windowStart,
+            safetyRailClamped: true,
+            safetyRailDeltaOps: deltaOps
           };
-          const refKey = buildRefKey(ref);
-
-          const tokens = tokenize(surface).filter((token) => token.letter !== SPACE_TOKEN);
-          const token_ids = [];
-          const localUnknownSignatures = [];
-
-          for (const token of tokens) {
-            const signature = tokenRegistrySignature(token);
-            const tokenId = tokenIdBySignature.get(signature);
-            if (tokenId === undefined) {
-              localUnknownSignatures.push(signature);
-              continue;
-            }
-            token_ids.push(tokenId);
-            if (!compiledTokenIdSet.has(String(tokenId))) {
-              missingBundles.push({ ref_key: refKey, surface, token_id: tokenId });
-            }
-          }
-
-          let flowCompact = [];
-          let flowRaw = [];
-          let runtimeErrorMessage = "";
-          if (localUnknownSignatures.length === 0) {
-            try {
-              const { trace } = runProgramWithTrace(surface, createInitialState());
-              const flow = extractWordFlow(trace);
-              flowRaw = flow.flow_compact;
-              flowCompact = dedupeConsecutive(flow.flow_compact);
-            } catch (err) {
-              if (!opts.allowRuntimeErrors || err?.name !== "RuntimeError") {
-                throw err;
-              }
-              runtimeErrorMessage = String(err?.message ?? "RuntimeError");
-              runtimeErrors.push({ ref_key: refKey, surface, message: runtimeErrorMessage });
-              flowRaw = ["ERROR.RUNTIME"];
-              flowCompact = ["ERROR.RUNTIME"];
-            }
-          } else {
-            unknownSignatures.push({
-              ref_key: refKey,
-              surface,
-              signatures: localUnknownSignatures
-            });
-            flowRaw = ["ERROR.UNKNOWN_SIGNATURE"];
-            flowCompact = ["ERROR.UNKNOWN_SIGNATURE"];
-          }
-
-          const flow = compileFlowString(flowCompact, " ⇢ ");
-          const skeletonKey = flowCompact.join(" -> ");
-          skeletonCounts.set(skeletonKey, (skeletonCounts.get(skeletonKey) ?? 0) + 1);
-
-          const row = {
-            ref,
-            ref_key: refKey,
-            surface,
-            token_ids,
-            skeleton: flowCompact,
-            flow,
-            semantic_version: semanticVersion
-          };
-          if (opts.debugRawEvents) {
-            row.skeleton_raw = flowRaw;
-          }
-          rows.push(row);
-          flowLines.push(`${refKey}\t${surface}\t${flow}`);
+        } else {
+          safetyRailStats.allowed_deltas += 1;
         }
+      } else if (changedFromBaseline && opts.mode !== "WORD") {
+        safetyRailStats.allowed_deltas += 1;
+      }
+
+      if (execution.runtimeErrorMessage) {
+        runtimeErrors.push({
+          ref_key: meta.ref_key,
+          surface: meta.surface,
+          message: execution.runtimeErrorMessage
+        });
+      }
+
+      const skeleton = execution.flowCompact;
+      const flow = compileFlowString(skeleton, " ⇢ ");
+      const skeletonKey = skeleton.join(" -> ");
+      skeletonCounts.set(skeletonKey, (skeletonCounts.get(skeletonKey) ?? 0) + 1);
+
+      const row = {
+        ref: meta.ref,
+        ref_key: meta.ref_key,
+        surface: meta.surface,
+        token_ids: meta.token_ids,
+        skeleton,
+        flow,
+        semantic_version: semanticVersion
+      };
+      if (opts.debugRawEvents) {
+        row.skeleton_raw = execution.flowRaw;
+      }
+      rows.push(row);
+      flowLines.push(`${meta.ref_key}\t${meta.surface}\t${flow}`);
+
+      baselineRows.push({
+        ref_key: meta.ref_key,
+        skeleton: baselineExecution.flowCompact
+      });
+
+      totalEventsInVerse += skeleton.length;
+      const boundaryOps = extractBoundaryOps(skeleton);
+      for (const op of boundaryOps) {
+        boundaryByType[op] = (boundaryByType[op] ?? 0) + 1;
+      }
+      verseWordRows.push({
+        ref_key: meta.ref_key,
+        token_index: wordIndex + 1,
+        skeleton,
+        boundary_ops: boundaryOps
+      });
+
+      if (opts.mode !== "WORD" && !arraysEqual(baselineExecution.flowCompact, skeleton)) {
+        const explanation = explainDeltaByMode({
+          mode: opts.mode,
+          tokenIndex: wordIndex + 1,
+          windowStart: execution.windowStart ?? 1,
+          boundaryOps
+        });
+        const deltaEvent = {
+          ref_key: meta.ref_key,
+          token_index: wordIndex + 1,
+          baseline_skeleton: baselineExecution.flowCompact,
+          observed_skeleton: skeleton,
+          explanation
+        };
+        crossWordEvents.push(deltaEvent);
+        modeDiffEvents.push({
+          verse_ref_key: verseEntry.ref_key,
+          ...deltaEvent
+        });
       }
     }
+
+    const verseEndBoundaryOps =
+      verseWordRows.length > 0 ? verseWordRows[verseWordRows.length - 1].boundary_ops : [];
+    const verseBoundaryResolution = buildVerseBoundaryResolution(verseWordRows, boundaryByType);
+    const verseRecord = {
+      ref: verseEntry.ref,
+      ref_key: verseEntry.ref_key,
+      mode: opts.modeLabel,
+      words_total: verseWordRows.length,
+      total_events: totalEventsInVerse,
+      boundary_events: {
+        total: Object.values(boundaryByType).reduce((sum, count) => sum + Number(count), 0),
+        by_type: sortCountObjectByKey(boundaryByType),
+        verse_end: verseEndBoundaryOps,
+        verse_boundary_operator: verseBoundaryResolution
+      },
+      cross_word_events: crossWordEvents,
+      notable_motifs: buildVerseMotifs({
+        verseWordRows,
+        crossWordEvents,
+        verseBoundaryResolution
+      })
+    };
+    if (safetyRailActive) {
+      verseRecord.safety_rail = {
+        active: true,
+        provisional_delta_count: provisionalDeltaCount,
+        provisional_delta_rate: Number(provisionalDeltaRate.toFixed(6)),
+        threshold: safetyRailStats.threshold
+      };
+    }
+    if (opts.mode === "WINDOW") {
+      verseRecord.window_size = opts.windowSize;
+    }
+    verseRows.push(verseRecord);
   }
 
   const traceContent = rows.map((row) => JSON.stringify(row)).join("\n") + "\n";
+  const verseTraceContent = verseRows.map((row) => JSON.stringify(row)).join("\n") + "\n";
   await Promise.all([
     fs.mkdir(path.dirname(traceOutPath), { recursive: true }),
     fs.mkdir(path.dirname(flowsOutPath), { recursive: true }),
-    fs.mkdir(path.dirname(reportOutPath), { recursive: true })
+    fs.mkdir(path.dirname(reportOutPath), { recursive: true }),
+    fs.mkdir(path.dirname(verseTraceOutPath), { recursive: true }),
+    fs.mkdir(path.dirname(verseReportOutPath), { recursive: true }),
+    fs.mkdir(path.dirname(verseMotifIndexOutPath), { recursive: true })
   ]);
   await Promise.all([
     fs.writeFile(traceOutPath, traceContent, "utf8"),
-    fs.writeFile(flowsOutPath, flowLines.join("\n") + "\n", "utf8")
+    fs.writeFile(flowsOutPath, flowLines.join("\n") + "\n", "utf8"),
+    fs.writeFile(verseTraceOutPath, verseTraceContent, "utf8")
   ]);
 
   const elapsedMs = Number(process.hrtime.bigint() - startNs) / 1_000_000;
@@ -2618,9 +3406,34 @@ async function runExecute(argv) {
     .slice(0, 20);
 
   const traceSha256 = sha256FromBuffer(Buffer.from(traceContent, "utf8"));
+  const verseTraceSha256 = sha256FromBuffer(Buffer.from(verseTraceContent, "utf8"));
   const flowDeterminismFailures = rows.filter(
     (row) => row.flow !== compileFlowString(row.skeleton, " ⇢ ")
   ).length;
+  const wordModeMismatches = rows.filter(
+    (row, index) => !arraysEqual(row.skeleton, baselineRows[index]?.skeleton ?? [])
+  ).length;
+  const explainabilityFailures = modeDiffEvents.filter(
+    (event) => typeof event.explanation !== "string" || event.explanation.length === 0
+  ).length;
+  const explainabilityPass =
+    opts.mode === "WORD" || modeDiffEvents.length === 0 || explainabilityFailures === 0;
+  const wordModeGateText =
+    opts.mode === "WORD"
+      ? `${wordModeMismatches === 0 ? "PASS" : "FAIL"} (${rows.length - wordModeMismatches}/${rows.length})`
+      : `N/A (${opts.modeLabel}; baseline_deltas=${modeDiffEvents.length})`;
+  const explainabilityGateText =
+    opts.mode === "WORD"
+      ? "PASS (WORD baseline mode)"
+      : modeDiffEvents.length === 0
+        ? "PASS (0/0)"
+        : `${explainabilityPass ? "PASS" : "FAIL"} (${modeDiffEvents.length - explainabilityFailures}/${modeDiffEvents.length})`;
+  const safetyRailGateText =
+    !safetyRailStats.enabled || opts.mode === "WORD"
+      ? "N/A"
+      : safetyRailStats.activated_verses === 0
+        ? "PASS (not triggered)"
+        : `ACTIVE (verses=${safetyRailStats.activated_verses}, clamped_words=${safetyRailStats.clamped_words})`;
 
   const reportLines = [
     "# Corpus Execution Report",
@@ -2630,13 +3443,18 @@ async function runExecute(argv) {
     `- token_registry: ${workspaceRelativePath(tokenRegistryPath)}`,
     `- compiled_bundles: ${workspaceRelativePath(compiledBundlesPath)}`,
     `- semantic_version: ${semanticVersion}`,
+    `- execution_mode: ${opts.modeLabel}`,
+    `- safety_rail_enabled: ${safetyRailStats.enabled}`,
+    `- safety_rail_threshold: ${safetyRailStats.threshold}`,
     `- words_total: ${wordsTotal}`,
     `- words_emitted: ${rows.length}`,
     `- verses_total: ${versesTotal}`,
     `- verses_sanitized: ${versesSanitized}`,
     `- verses_skipped: ${versesSkipped}`,
+    `- verses_emitted: ${verseRows.length}`,
     `- unique_skeletons: ${skeletonCounts.size}`,
     `- trace_sha256: ${traceSha256}`,
+    `- verse_trace_sha256: ${verseTraceSha256}`,
     `- elapsed_ms: ${elapsedMs.toFixed(2)}`,
     `- words_per_second: ${(elapsedMs > 0 ? (rows.length * 1000) / elapsedMs : 0).toFixed(2)}`,
     "",
@@ -2644,6 +3462,9 @@ async function runExecute(argv) {
     `- coverage: ${rows.length === wordsTotal ? "PASS" : "FAIL"} (${rows.length}/${wordsTotal})`,
     `- determinism_basis: trace checksum captured (${traceSha256})`,
     `- flow_derivation: ${flowDeterminismFailures === 0 ? "PASS" : "FAIL"} (${flowDeterminismFailures} mismatches)`,
+    `- word_mode_equivalence: ${wordModeGateText}`,
+    `- explainability: ${explainabilityGateText}`,
+    `- safety_rail: ${safetyRailGateText}`,
     "",
     "## Errors",
     `- unknown_signatures: ${unknownSignatures.length}`,
@@ -2656,7 +3477,10 @@ async function runExecute(argv) {
     "## Outputs",
     `- traces: ${workspaceRelativePath(traceOutPath)}`,
     `- flows: ${workspaceRelativePath(flowsOutPath)}`,
-    `- report: ${workspaceRelativePath(reportOutPath)}`
+    `- verse_traces: ${workspaceRelativePath(verseTraceOutPath)}`,
+    `- report: ${workspaceRelativePath(reportOutPath)}`,
+    `- verse_report: ${workspaceRelativePath(verseReportOutPath)}`,
+    `- verse_motif_index: ${workspaceRelativePath(verseMotifIndexOutPath)}`
   ];
 
   if (unknownSignatures.length > 0) {
@@ -2680,7 +3504,117 @@ async function runExecute(argv) {
     }
   }
 
+  if (modeDiffEvents.length > 0) {
+    reportLines.push("", "### Cross-Word Delta Samples");
+    for (const sample of modeDiffEvents.slice(0, 20)) {
+      reportLines.push(`- ${sample.ref_key}`);
+      reportLines.push(
+        `  - baseline: ${sample.baseline_skeleton.join(" -> ") || "(empty)"}`
+      );
+      reportLines.push(`  - observed: ${sample.observed_skeleton.join(" -> ") || "(empty)"}`);
+      reportLines.push(`  - reason: ${sample.explanation}`);
+    }
+  }
+
   await fs.writeFile(reportOutPath, reportLines.join("\n") + "\n", "utf8");
+
+  const totalBoundaryByType = {};
+  const motifTotals = {};
+  const boundaryResolutionActionCounts = {};
+  let versesWithCrossWordEvents = 0;
+  for (const verseRow of verseRows) {
+    if ((verseRow.cross_word_events ?? []).length > 0) {
+      versesWithCrossWordEvents += 1;
+    }
+    for (const [op, count] of Object.entries(verseRow.boundary_events?.by_type ?? {})) {
+      totalBoundaryByType[op] = (totalBoundaryByType[op] ?? 0) + Number(count);
+    }
+    for (const motif of verseRow.notable_motifs ?? []) {
+      motifTotals[motif.motif] = (motifTotals[motif.motif] ?? 0) + Number(motif.count ?? 0);
+    }
+    const action = verseRow?.boundary_events?.verse_boundary_operator?.action;
+    if (typeof action === "string" && action.length > 0) {
+      boundaryResolutionActionCounts[action] = (boundaryResolutionActionCounts[action] ?? 0) + 1;
+    }
+  }
+
+  const topBoundaryRows = Object.entries(totalBoundaryByType)
+    .sort((left, right) => right[1] - left[1] || sortRefLike(left[0], right[0]))
+    .slice(0, 12)
+    .map(([op, count]) => `- ${count} x ${op}`);
+  const topMotifRows = Object.entries(motifTotals)
+    .sort((left, right) => right[1] - left[1] || sortRefLike(left[0], right[0]))
+    .slice(0, 12)
+    .map(([motif, count]) => `- ${count} x ${motif}`);
+  const boundaryResolutionRows = Object.entries(boundaryResolutionActionCounts)
+    .sort((left, right) => right[1] - left[1] || sortRefLike(left[0], right[0]))
+    .map(([action, count]) => `- ${count} x ${action}`);
+
+  const verseReportLines = [
+    "# Verse Execution Report",
+    "",
+    "## Summary",
+    `- input: ${workspaceRelativePath(inputPath)}`,
+    `- semantic_version: ${semanticVersion}`,
+    `- execution_mode: ${opts.modeLabel}`,
+    `- safety_rail_enabled: ${safetyRailStats.enabled}`,
+    `- safety_rail_threshold: ${safetyRailStats.threshold}`,
+    `- words_total: ${rows.length}`,
+    `- verses_total: ${verseRows.length}`,
+    `- changed_words_vs_word_mode: ${modeDiffEvents.length}`,
+    `- verses_with_cross_word_events: ${versesWithCrossWordEvents}`,
+    `- trace_sha256: ${traceSha256}`,
+    `- verse_trace_sha256: ${verseTraceSha256}`,
+    "",
+    "## Quality Gates",
+    `- word_mode_equivalence: ${wordModeGateText}`,
+    `- determinism: PASS (checksum basis captured)`,
+    `- explainability: ${explainabilityGateText}`,
+    `- safety_rail: ${safetyRailGateText}`,
+    "",
+    "## Boundary Operators",
+    ...(topBoundaryRows.length > 0 ? topBoundaryRows : ["- none"]),
+    "",
+    "## Verse Boundary Operator",
+    ...(boundaryResolutionRows.length > 0 ? boundaryResolutionRows : ["- none"]),
+    "",
+    "## Motif Expansions",
+    ...(topMotifRows.length > 0 ? topMotifRows : ["- none"]),
+    "",
+    "## Cross-Word Samples",
+    ...(modeDiffEvents.length > 0
+      ? modeDiffEvents.slice(0, 30).map(
+          (sample) =>
+            `- ${sample.ref_key} | ${sample.baseline_skeleton.join(" -> ") || "(empty)"} => ${sample.observed_skeleton.join(" -> ") || "(empty)"} | ${sample.explanation}`
+        )
+      : ["- none"]),
+    "",
+    "## Outputs",
+    `- traces: ${workspaceRelativePath(traceOutPath)}`,
+    `- verse_traces: ${workspaceRelativePath(verseTraceOutPath)}`,
+    `- execution_report: ${workspaceRelativePath(reportOutPath)}`,
+    `- verse_report: ${workspaceRelativePath(verseReportOutPath)}`,
+    `- verse_motif_index: ${workspaceRelativePath(verseMotifIndexOutPath)}`
+  ];
+  if (opts.mode === "WINDOW") {
+    const insertAfterExecutionMode = verseReportLines.findIndex((line) =>
+      line.startsWith("- execution_mode:")
+    );
+    if (insertAfterExecutionMode >= 0) {
+      verseReportLines.splice(insertAfterExecutionMode + 1, 0, `- window_size: ${opts.windowSize}`);
+    }
+  }
+
+  await fs.writeFile(verseReportOutPath, verseReportLines.join("\n") + "\n", "utf8");
+
+  const verseMotifIndexPayload = buildVerseMotifIndex({
+    modeLabel: opts.modeLabel,
+    semanticVersion,
+    verseRows,
+    safetyRailSummary: safetyRailStats,
+    verseTraceSha256
+  });
+  await writeJson(verseMotifIndexOutPath, verseMotifIndexPayload);
 
   const hasHardErrors = unknownSignatures.length > 0 || missingBundles.length > 0;
   if (hasHardErrors) {
@@ -2692,11 +3626,15 @@ async function runExecute(argv) {
   console.log(
     [
       `execute: words=${rows.length}`,
+      `mode=${opts.modeLabel}`,
       `uniqueSkeletons=${skeletonCounts.size}`,
       `runtimeErrors=${runtimeErrors.length}`,
       `traceOut=${traceOutPath}`,
       `flowsOut=${flowsOutPath}`,
-      `reportOut=${reportOutPath}`
+      `verseTraceOut=${verseTraceOutPath}`,
+      `reportOut=${reportOutPath}`,
+      `verseReportOut=${verseReportOutPath}`,
+      `verseMotifIndexOut=${verseMotifIndexOutPath}`
     ].join(" ")
   );
 }

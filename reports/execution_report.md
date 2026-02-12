@@ -5,20 +5,28 @@
 - token_registry: data/tokens.registry.json
 - compiled_bundles: data/tokens.compiled.json
 - semantic_version: 1.0.0
+- execution_mode: VERSE
+- safety_rail_enabled: true
+- safety_rail_threshold: 0.35
 - words_total: 80856
 - words_emitted: 80856
 - verses_total: 5846
 - verses_sanitized: 5846
 - verses_skipped: 0
+- verses_emitted: 5846
 - unique_skeletons: 4294
 - trace_sha256: 055ed803ff422cb93bb4a667a6ca31e5bcd018be74da60e606a6b707815ea354
-- elapsed_ms: 1306.12
-- words_per_second: 61905.31
+- verse_trace_sha256: a28c103910dd2ac4eab30af94dbf951aa205974f9c491ec3a25b89f8466e7b9f
+- elapsed_ms: 1806.15
+- words_per_second: 44766.97
 
 ## Quality Gates
 - coverage: PASS (80856/80856)
 - determinism_basis: trace checksum captured (055ed803ff422cb93bb4a667a6ca31e5bcd018be74da60e606a6b707815ea354)
 - flow_derivation: PASS (0 mismatches)
+- word_mode_equivalence: N/A (VERSE; baseline_deltas=0)
+- explainability: PASS (0/0)
+- safety_rail: PASS (not triggered)
 
 ## Errors
 - unknown_signatures: 0
@@ -50,4 +58,7 @@
 ## Outputs
 - traces: corpus/word_traces.jsonl
 - flows: corpus/word_flows.txt
+- verse_traces: corpus/verse_traces.jsonl
 - report: reports/execution_report.md
+- verse_report: reports/verse_execution_report.md
+- verse_motif_index: index/verse_motif_index.json
