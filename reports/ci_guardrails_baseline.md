@@ -1,12 +1,12 @@
 # CI Guardrails Baseline Report
 
 - mode: fail
-- generated_at_utc: 2026-02-12T20:24:42.911Z
+- generated_at_utc: 2026-02-12T20:31:12.204Z
 - touched_source: working_tree
 - touched_files: 7
 - thresholds.max_bytes: 30000
 - thresholds.max_complexity_score: 220
-- files_scanned: 71
+- files_scanned: 72
 - legacy_allowlisted_violations: 2
 - touched_legacy_violations: 0
 - new_violations: 0
@@ -18,22 +18,22 @@
 |---|---|---:|---:|---|---|
 | scripts/exemplar-library.mjs | no | 41157 | 168 | legacy_allowlisted | pass |
 | scripts/pattern-index.mjs | no | 34252 | 174 | legacy_allowlisted | pass |
-| impl/reference/src/scripts/torahCorpus/runtimeCommands.ts | yes | 29570 | 55 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/runtimeCommands.ts | no | 29570 | 55 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/runtimePart1.ts | no | 28394 | 122 | pass | pass |
-| impl/reference/src/scripts/torahCorpus/execute.ts | yes | 27099 | 51 | pass | pass |
-| impl/reference/src/scripts/torahCorpus/regress.ts | yes | 21536 | 78 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/execute.ts | no | 27099 | 51 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/regress.ts | no | 21536 | 78 | pass | pass |
 | scripts/compile-token-operators.mjs | no | 20062 | 90 | pass | pass |
 | scripts/extract-token-registry.mjs | no | 19733 | 61 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/runtimePart2.ts | no | 18990 | 97 | pass | pass |
 | scripts/normalize-torah.mjs | no | 17870 | 64 | pass | pass |
 | impl/reference/src/scripts/torahCorpus/args.ts | no | 17845 | 81 | pass | pass |
-| impl/reference/src/scripts/torahCorpus/runtimePart3.ts | yes | 15671 | 85 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/runtimePart3.ts | no | 15671 | 85 | pass | pass |
 | impl/reference/src/trace/canonicalize.ts | no | 12681 | 53 | pass | pass |
-| impl/reference/src/scripts/torahCorpus/executeReports.ts | yes | 11768 | 30 | pass | pass |
+| impl/reference/src/scripts/torahCorpus/executeReports.ts | no | 11768 | 30 | pass | pass |
 | impl/reference/src/trace/types.ts | no | 10437 | 6 | pass | pass |
 | impl/reference/src/vm/vm.ts | no | 9029 | 57 | pass | pass |
 | impl/reference/src/dispatch/dispatcher.ts | no | 7345 | 42 | pass | pass |
-| scripts/download-torah.mjs | no | 5440 | 29 | pass | pass |
+| impl/reference/src/scripts/downloadTorah/runtime.ts | yes | 7024 | 30 | pass | pass |
 | scripts/iterate-torah.mjs | no | 5094 | 29 | pass | pass |
 | impl/reference/src/compile/tokenizer.ts | no | 3539 | 25 | pass | pass |
 | impl/reference/src/vm/select.ts | no | 3533 | 26 | pass | pass |
@@ -80,6 +80,7 @@
 | impl/reference/src/letters/yod.ts | no | 993 | 1 | pass | pass |
 | impl/reference/src/letters/types.ts | no | 905 | 1 | pass | pass |
 | scripts/torah-corpus.mjs | no | 837 | 7 | pass | pass |
+| scripts/download-torah.mjs | yes | 831 | 7 | pass | pass |
 | impl/reference/src/letters/stub.ts | no | 816 | 1 | pass | pass |
 | impl/reference/src/compile/validate.ts | no | 390 | 4 | pass | pass |
 | impl/reference/src/letters/finals.ts | no | 390 | 1 | pass | pass |

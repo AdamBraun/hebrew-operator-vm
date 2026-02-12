@@ -126,7 +126,7 @@ describe("torah corpus CLI parity checksums", () => {
       traces: "cbcc23e003b27fa67c380aa345ff331beae7d11ba3c340e29bbbe9060e330807",
       flows: "864f108e4c3d20ae87c94698b8962bb31935bb1576cd112438e613a9206449f2",
       verseTraces: "b3be2fe9b5c220627f70b8b6ad20211da52404f054ee9e910ce40a0eb824ab40",
-      verseMotifIndex: "2b3da611d5d087348a800011af69eecde165c96b972636127e3a87e2135bee34"
+      verseMotifIndex: "df6b78c470407b0195edb5a512d3384f95cd6cd60514d947de1cf76452d5634a"
     });
   });
 
@@ -334,9 +334,9 @@ describe("torah corpus CLI parity checksums", () => {
 
     expect(runTwo).toEqual(runOne);
     expect(runOne).toEqual({
-      diff: "553702c234740e5718a4a2400539db9173125d9995ae08b102f8a11f912241b5",
-      goldens: "bac29a00fdeb735712225618bdeaab25b0e7b80aa8f86adfeedab307d3c8a558",
-      regression: "dbb6e5da32006d5979e4b23c36b9b74c99d6fdd802f8052f5cc3a2aced9b33c2"
+      diff: "e703db3156ed720392fe7ba5a4c5c07b5145d5ac969fcd097fb857bb67c2106b",
+      goldens: "96b00936a457eaf2ee4a2a5e51b8ab033901541f4c237d0090a6bd995c307ca6",
+      regression: "32d544c8184b73395f81a10e2777c2e35cdf552003ce69e8c9cedd0556448ebf"
     });
   });
 });

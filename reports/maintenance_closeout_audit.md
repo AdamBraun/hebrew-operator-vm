@@ -22,7 +22,7 @@
 
 | ID | Debt Item | Scope | Owner | Due Date | Tracking |
 |---|---|---|---|---|---|
-| D-001 | Migrate legacy `.mjs` business-logic scripts to TS modules + thin wrappers | `scripts/compile-token-operators.mjs`, `scripts/download-torah.mjs`, `scripts/extract-token-registry.mjs`, `scripts/iterate-torah.mjs`, `scripts/normalize-torah.mjs`, `scripts/pattern-index.mjs`, `scripts/exemplar-library.mjs` | Owner C | 2026-04-24 | keep `config/mjs-policy-allowlist.json` shrinking each PR |
+| D-001 | Migrate legacy `.mjs` business-logic scripts to TS modules + thin wrappers | `scripts/compile-token-operators.mjs`, `scripts/extract-token-registry.mjs`, `scripts/iterate-torah.mjs`, `scripts/normalize-torah.mjs`, `scripts/pattern-index.mjs`, `scripts/exemplar-library.mjs` | Owner C | 2026-04-24 | keep `config/mjs-policy-allowlist.json` shrinking each PR; `scripts/download-torah.mjs` completed on 2026-02-12 |
 | D-002 | Remove remaining max-bytes allowlist exceptions via modularization | `scripts/pattern-index.mjs`, `scripts/exemplar-library.mjs` | Owner B + Owner C | 2026-04-10 | monitor `reports/ci_guardrails_baseline.md` until allowlist empty |
 | D-003 | Consolidate downstream artifact naming around `semantics_version` where contract-compatible | non-trace report/index/exemplar payload keys | Owner A + Owner C | 2026-05-08 | staged contract review + migration notes in ADR follow-up |
 | D-004 | Remove `@ts-nocheck` from torah-corpus runtime modules after type hardening | `impl/reference/src/scripts/torahCorpus/runtime*.ts` | Owner D | 2026-05-22 | add strict type tests + incremental lint gates |
