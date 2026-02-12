@@ -126,7 +126,7 @@ describe("torah corpus CLI parity checksums", () => {
       traces: "cbcc23e003b27fa67c380aa345ff331beae7d11ba3c340e29bbbe9060e330807",
       flows: "864f108e4c3d20ae87c94698b8962bb31935bb1576cd112438e613a9206449f2",
       verseTraces: "b3be2fe9b5c220627f70b8b6ad20211da52404f054ee9e910ce40a0eb824ab40",
-      verseMotifIndex: "df6b78c470407b0195edb5a512d3384f95cd6cd60514d947de1cf76452d5634a"
+      verseMotifIndex: "38863637c8805be4eac70ca96975ea63e80698cff0edd7854bf6105da0174809"
     });
   });
 

@@ -2,6 +2,9 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import versionContractUtils from "./lib/version-contract.cjs";
+
+const { readVersionContractFromFile } = versionContractUtils;
 
 const DEFAULT_REGISTRY = path.resolve(process.cwd(), "data", "tokens.registry.json");
 const DEFAULT_OUT = path.resolve(process.cwd(), "data", "tokens.compiled.json");
@@ -476,6 +479,7 @@ function increment(map, key, by = 1) {
 }
 
 function compileRegistry(registry, defs, options) {
+  const versionContract = options.versionContract;
   const tokenRows = registry.tokens ?? {};
   const tokenIds = Object.keys(tokenRows).sort(compareKeys);
 
@@ -509,6 +513,11 @@ function compileRegistry(registry, defs, options) {
 
   const normalizedOut = {
     schema_version: 1,
+    version_contract: {
+      trace_version: versionContract.trace_version,
+      semantics_version: versionContract.semantics_version,
+      render_version: versionContract.render_version
+    },
     source: {
       registry_path: path.resolve(options.registry),
       registry_sha256: registry.input?.sha256 ?? null
@@ -516,7 +525,8 @@ function compileRegistry(registry, defs, options) {
     semantics: {
       definitions_path: path.resolve(options.defs),
       schema_version: defs.schema_version ?? null,
-      semver: defs.semver ?? "0.0.0",
+      semver: versionContract.semantics_version,
+      definitions_declared_semver: defs.semver ?? null,
       definitions_sha256: sha256Hex(JSON.stringify(sortObjectKeysDeep(defs)))
     },
     compile_policy: {
@@ -547,6 +557,8 @@ function buildReport(compiled, registry, options, compiledSha256) {
   lines.push(`- definitions: ${toPortablePath(path.resolve(options.defs))}`);
   lines.push(`- output: ${toPortablePath(path.resolve(options.out))}`);
   lines.push(`- semver: ${compiled.semantics.semver}`);
+  lines.push(`- trace_version: ${compiled.version_contract.trace_version}`);
+  lines.push(`- render_version: ${compiled.version_contract.render_version}`);
   lines.push(`- definitions sha256: ${compiled.semantics.definitions_sha256}`);
   lines.push(`- compiled sha256: ${compiledSha256}`);
   lines.push(`- tokens compiled: ${compiled.stats.tokens_total}`);
@@ -594,6 +606,7 @@ function buildReport(compiled, registry, options, compiledSha256) {
 
   lines.push("## Notes");
   lines.push("");
+  lines.push("- Version contract is sourced from impl/reference/src/version.ts.");
   lines.push("- Compilation is deterministic over registry + semantics definition table.");
   lines.push("- Runtime dispatch uses precompiled runtime fields and avoids Unicode mark parsing.");
   lines.push(
@@ -609,14 +622,32 @@ async function readJson(pathName) {
   return JSON.parse(raw);
 }
 
+function assertSemanticsVersionAlignment(defs, versionContract, defsPath) {
+  const defsSemver = typeof defs?.semver === "string" ? defs.semver.trim() : "";
+  const contractSemver = versionContract.semantics_version;
+  if (!defsSemver) {
+    throw new Error(`Missing semver in semantic definitions at ${toPortablePath(defsPath)}`);
+  }
+  if (defsSemver !== contractSemver) {
+    throw new Error(
+      `Semantics version mismatch: registry/token-semantics.json declares ${defsSemver} but impl/reference/src/version.ts declares ${contractSemver}`
+    );
+  }
+}
+
 async function run(command, opts) {
   const registryPath = path.resolve(opts.registry);
   const outPath = path.resolve(opts.out);
   const reportPath = path.resolve(opts.report);
   const defsPath = path.resolve(opts.defs);
 
-  const [registry, defs] = await Promise.all([readJson(registryPath), readJson(defsPath)]);
-  const compiled = compileRegistry(registry, defs, opts);
+  const [registry, defs, versionContract] = await Promise.all([
+    readJson(registryPath),
+    readJson(defsPath),
+    readVersionContractFromFile()
+  ]);
+  assertSemanticsVersionAlignment(defs, versionContract, defsPath);
+  const compiled = compileRegistry(registry, defs, { ...opts, versionContract });
   const compiledText = `${JSON.stringify(compiled, null, 2)}\n`;
   const compiledSha256 = sha256Hex(compiledText);
   const reportText = buildReport(compiled, registry, opts, compiledSha256);

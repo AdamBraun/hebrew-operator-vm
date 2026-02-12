@@ -9,6 +9,7 @@ import {
   compareWordTraceRecords
 } from "../../trace/canonicalize";
 import { runProgramWithTrace } from "../../vm/vm";
+import { VERSION_CONTRACT } from "../../version";
 import {
   DEFAULT_COMPILED_BUNDLES_PATH,
   DEFAULT_GOLDENS_OUT,
@@ -85,6 +86,7 @@ import {
   countLines,
   explainDeltaByMode,
   sha256FromBuffer,
+  sha256FromFile,
   skeletonDeltaOps,
   writeJsonl,
   writeJson
@@ -103,9 +105,6 @@ import {
 } from "./runtimePart3";
 import fs from "node:fs/promises";
 import path from "node:path";
-
-const TRACE_VERSION = "1.0.0";
-const TRACE_RENDER_VERSION = "1.0.0";
 
 async function runAll(argv) {
   const opts = parseCommonRunArgs(argv);
@@ -274,6 +273,11 @@ async function runAll(argv) {
 
   const patternIndex = buildPatternIndex(fullRows);
   const exemplars = buildExemplarLibrary(fullRows);
+  const versionContract = {
+    trace_version: VERSION_CONTRACT.trace_version,
+    semantics_version: VERSION_CONTRACT.semantics_version,
+    render_version: VERSION_CONTRACT.render_version
+  };
 
   await fs.mkdir(outDir, { recursive: true });
   const artifactPaths = {
@@ -291,6 +295,7 @@ async function runAll(argv) {
     schema_version: 1,
     input: inputMeta,
     run_config: runConfig,
+    version_contract: versionContract,
     signatures: tokenRegistry
   });
   await writeJsonl(artifactPaths["word_flows.skeleton.jsonl"], skeletonRows);
@@ -325,10 +330,16 @@ async function runAll(argv) {
     word_flows_full_sha256: artifactChecksums["word_flows.full.jsonl"].sha256,
     token_registry_sha256: artifactChecksums["token_registry.json"].sha256
   };
+  const semanticsIdentity = {
+    version: versionContract.semantics_version,
+    ...semanticFingerprint
+  };
 
   await writeJson(artifactPaths["review_snapshot.json"], {
     schema_version: 1,
+    version_contract: versionContract,
     semantic_fingerprint: semanticFingerprint,
+    semantics_identity: semanticsIdentity,
     token_signature_count: sortedSignatureKeys.length,
     word_count: wordsTotal,
     explicit_pattern_counts: Object.fromEntries(
@@ -351,6 +362,7 @@ async function runAll(argv) {
     input: inputMeta,
     output_dir: workspaceRelativePath(outDir),
     run_config: runConfig,
+    version_contract: versionContract,
     stats: {
       verses_total: versesTotal,
       verses_sanitized: versesSanitized,
@@ -363,6 +375,7 @@ async function runAll(argv) {
       cache_misses: cacheMisses
     },
     semantic_fingerprint: semanticFingerprint,
+    semantics_identity: semanticsIdentity,
     artifact_checksums: artifactChecksums
   };
   await writeJson(artifactPaths["summary.json"], summaryPayload);
@@ -380,7 +393,9 @@ async function runAll(argv) {
     input: inputMeta,
     output_dir: workspaceRelativePath(outDir),
     run_config: runConfig,
+    version_contract: versionContract,
     semantic_fingerprint: summaryPayload.semantic_fingerprint,
+    semantics_identity: summaryPayload.semantics_identity,
     artifacts: artifactChecksums
   });
 
@@ -558,8 +573,8 @@ async function runExecute(argv) {
       safetyRailStats.clamped_words += clampedWordIncrement;
 
       const artifacts = buildWordExecutionArtifacts({
-        traceVersion: TRACE_VERSION,
-        traceRenderVersion: TRACE_RENDER_VERSION,
+        traceVersion: VERSION_CONTRACT.trace_version,
+        traceRenderVersion: VERSION_CONTRACT.render_version,
         semanticVersion,
         mode: opts.mode,
         debugRawEvents: opts.debugRawEvents,
@@ -591,8 +606,8 @@ async function runExecute(argv) {
     }
 
     const verseRecord = buildVerseTraceRecord({
-      traceVersion: TRACE_VERSION,
-      traceRenderVersion: TRACE_RENDER_VERSION,
+      traceVersion: VERSION_CONTRACT.trace_version,
+      traceRenderVersion: VERSION_CONTRACT.render_version,
       semanticVersion,
       verseRef: verseEntry.ref,
       verseRefKey: verseEntry.ref_key,
@@ -640,7 +655,9 @@ async function runExecute(argv) {
     verseTraceOutPath,
     verseReportOutPath,
     verseMotifIndexOutPath,
+    traceVersion: VERSION_CONTRACT.trace_version,
     semanticVersion,
+    renderVersion: VERSION_CONTRACT.render_version,
     mode: opts.mode,
     modeLabel: opts.modeLabel,
     windowSize: opts.windowSize,
@@ -667,6 +684,8 @@ async function runExecute(argv) {
 
   const verseMotifIndexPayload = buildVerseMotifIndex({
     modeLabel: opts.modeLabel,
+    traceVersion: VERSION_CONTRACT.trace_version,
+    renderVersion: VERSION_CONTRACT.render_version,
     semanticVersion,
     verseRows: sortedVerseRows,
     safetyRailSummary: safetyRailStats,

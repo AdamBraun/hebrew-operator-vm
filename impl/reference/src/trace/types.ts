@@ -1,5 +1,5 @@
-export type SemVer = `${number}.${number}.${number}`;
-export type TraceVersion = `1.${number}.${number}`;
+import type { SemVer, TraceVersion } from "../version";
+export type { SemVer, TraceVersion } from "../version";
 
 export type HandleId = string;
 

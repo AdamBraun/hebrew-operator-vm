@@ -438,6 +438,8 @@ describe("torah corpus execute module helpers", () => {
   it("builds verse motif index aggregates", () => {
     const result = buildVerseMotifIndex({
       modeLabel: "WINDOW(2)",
+      traceVersion: "1.0.0",
+      renderVersion: "1.0.0",
       semanticVersion: "2.0.0",
       verseRows: [
         {

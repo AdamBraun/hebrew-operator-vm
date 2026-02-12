@@ -63,7 +63,9 @@ type BuildExecuteReportsInput = {
   verseTraceOutPath: string;
   verseReportOutPath: string;
   verseMotifIndexOutPath: string;
+  traceVersion: string;
   semanticVersion: string;
+  renderVersion: string;
   mode: string;
   modeLabel: string;
   windowSize: number | null;
@@ -142,7 +144,9 @@ export function buildExecuteReports(input: BuildExecuteReportsInput): BuildExecu
     `- input: ${workspaceRelativePath(input.inputPath)}`,
     `- token_registry: ${workspaceRelativePath(input.tokenRegistryPath)}`,
     `- compiled_bundles: ${workspaceRelativePath(input.compiledBundlesPath)}`,
+    `- trace_version: ${input.traceVersion}`,
     `- semantics_version: ${input.semanticVersion}`,
+    `- render_version: ${input.renderVersion}`,
     `- execution_mode: ${input.modeLabel}`,
     `- safety_rail_enabled: ${input.safetyRailStats.enabled}`,
     `- safety_rail_threshold: ${input.safetyRailStats.threshold}`,
@@ -254,7 +258,9 @@ export function buildExecuteReports(input: BuildExecuteReportsInput): BuildExecu
     "",
     "## Summary",
     `- input: ${workspaceRelativePath(input.inputPath)}`,
+    `- trace_version: ${input.traceVersion}`,
     `- semantics_version: ${input.semanticVersion}`,
+    `- render_version: ${input.renderVersion}`,
     `- execution_mode: ${input.modeLabel}`,
     `- safety_rail_enabled: ${input.safetyRailStats.enabled}`,
     `- safety_rail_threshold: ${input.safetyRailStats.threshold}`,

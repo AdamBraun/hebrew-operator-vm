@@ -73,6 +73,7 @@ type BuildWordExecutionArtifactsInput = {
   traceVersion: string;
   traceRenderVersion: string;
   semanticVersion: string;
+  traceExtensions?: Record<string, unknown>;
   mode: string;
   debugRawEvents: boolean;
   meta: {
@@ -218,6 +219,8 @@ type BuildExecuteCompletionOutput = {
 
 type BuildVerseMotifIndexInput = {
   modeLabel: string;
+  traceVersion: string;
+  renderVersion: string;
   semanticVersion: string;
   verseRows: Array<{
     ref_key?: string;
@@ -278,6 +281,7 @@ type BuildVerseTraceRecordInput = {
   traceVersion: string;
   traceRenderVersion: string;
   semanticVersion: string;
+  traceExtensions?: Record<string, unknown>;
   verseRef: {
     book: string;
     chapter: number;
@@ -637,6 +641,9 @@ export function buildVerseTraceRecord(args: BuildVerseTraceRecordInput): Record<
   if (args.mode === "WINDOW") {
     verseRecord.window_size = args.windowSize;
   }
+  if (args.traceExtensions && Object.keys(args.traceExtensions).length > 0) {
+    verseRecord.extensions = args.traceExtensions;
+  }
 
   return verseRecord;
 }
@@ -663,6 +670,9 @@ export function buildWordExecutionArtifacts(
     flow,
     mode: args.mode
   };
+  if (args.traceExtensions && Object.keys(args.traceExtensions).length > 0) {
+    rawWordRecord.extensions = args.traceExtensions;
+  }
   if (args.mode === "WINDOW") {
     rawWordRecord.window_start = args.execution.windowStart ?? 1;
   }
@@ -853,7 +863,14 @@ export function buildVerseMotifIndex(args: BuildVerseMotifIndexInput): Record<st
   return {
     schema_version: 1,
     mode: args.modeLabel,
+    trace_version: args.traceVersion,
     semantics_version: args.semanticVersion,
+    render_version: args.renderVersion,
+    version_contract: {
+      trace_version: args.traceVersion,
+      semantics_version: args.semanticVersion,
+      render_version: args.renderVersion
+    },
     verse_trace_sha256: args.verseTraceSha256,
     verses_indexed: args.verseRows.length,
     cross_word_event_count: crossWordEventCount,

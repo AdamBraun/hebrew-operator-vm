@@ -26,6 +26,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint \"impl/reference/src/**/*.ts\" \"tests/**/*.ts\"",
     "ci:guardrails": "node scripts/ci-guardrails.cjs --mode=fail --allowlist=config/guardrails-allowlist.json --report=reports/ci_guardrails_baseline.md",
+    "ci:version-contract": "node scripts/check-version-contract.cjs --mode=fail",
     "ci:mjs-policy": "node scripts/check-mjs-policy.cjs --mode=fail --allowlist=config/mjs-policy-allowlist.json --report=reports/mjs_policy_violations.md",
     "format": "prettier --check \"impl/reference/src/**/*.{ts,md,json,yaml,yml}\" \"tests/**/*.{ts,md,json,yaml,yml}\" \"spec/**/*.md\" \"registry/**/*.{yml,yaml}\" \"letters/**/*.md\" \"modifiers/**/*.md\" \"profiles/**/*.md\" \"theory/**/*.md\" \"examples/**/*.md\" \"README.md\" \".github/**/*.{yml,yaml,md}\"",
     "format:write": "prettier --write \"impl/reference/src/**/*.{ts,md,json,yaml,yml}\" \"tests/**/*.{ts,md,json,yaml,yml}\" \"spec/**/*.md\" \"registry/**/*.{yml,yaml}\" \"letters/**/*.md\" \"modifiers/**/*.md\" \"profiles/**/*.md\" \"theory/**/*.md\" \"examples/**/*.md\" \"README.md\" \".github/**/*.{yml,yaml,md}\"",
