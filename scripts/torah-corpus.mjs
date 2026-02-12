@@ -67,10 +67,7 @@ const torahCorpusReport = loadTorahCorpusReport();
 const {
   workspaceRelativePath,
   totalFromCounts,
-  formatWarningCounts,
-  summarizeSemanticVersions,
-  prettyRef,
-  markdownSafe
+  formatWarningCounts
 } = torahCorpusReport;
 
 function loadTorahCorpusExecute() {
@@ -128,7 +125,13 @@ function loadTorahCorpusRegress() {
 }
 
 const torahCorpusRegress = loadTorahCorpusRegress();
-const { buildCuratedGoldens, buildRegressionReport, buildRegressDiffLines } = torahCorpusRegress;
+const {
+  buildCuratedGoldens,
+  buildRegressionReport,
+  buildRegressDiffLines,
+  compareRegressRuns,
+  evaluateGoldenCases
+} = torahCorpusRegress;
 
 const TRACE_VERSION = "1.0.0";
 const TRACE_RENDER_VERSION = "1.0.0";
@@ -2308,13 +2311,6 @@ function classifySkeletonDelta(previousSkeleton, nextSkeleton) {
   };
 }
 
-function compareDeltaGroupEntries(left, right) {
-  if (left.count !== right.count) {
-    return right.count - left.count;
-  }
-  return sortRefLike(left.signature, right.signature);
-}
-
 function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
@@ -3270,84 +3266,18 @@ async function runRegress(argv) {
     loadCompileContext(opts.compiledB, runB)
   ]);
 
-  const allKeys = Array.from(new Set([...runA.map.keys(), ...runB.map.keys()])).sort(sortRefLike);
-  const addedKeys = [];
-  const removedKeys = [];
-  const renderingChanges = [];
-  const skeletonChanges = [];
-  const groupedDeltaMap = new Map();
-
-  for (const key of allKeys) {
-    const rowA = runA.map.get(key);
-    const rowB = runB.map.get(key);
-    if (!rowA && rowB) {
-      addedKeys.push(key);
-      continue;
-    }
-    if (rowA && !rowB) {
-      removedKeys.push(key);
-      continue;
-    }
-    if (!rowA || !rowB) {
-      continue;
-    }
-
-    if (!arraysEqual(rowA.skeleton, rowB.skeleton)) {
-      const delta = classifySkeletonDelta(rowA.skeleton, rowB.skeleton);
-      const warningsA = wordWarningSummary(rowA, compileA);
-      const warningsB = wordWarningSummary(rowB, compileB);
-      const semanticReason =
-        rowA.semantic_version === rowB.semantic_version
-          ? `semantic_version unchanged (${rowA.semantic_version})`
-          : `semantic_version ${rowA.semantic_version} -> ${rowB.semantic_version}`;
-      const warningReason = warningDeltaText(warningsA, warningsB);
-
-      const change = {
-        key,
-        row_a: rowA,
-        row_b: rowB,
-        delta,
-        semantic_reason: semanticReason,
-        warning_reason: warningReason
-      };
-      skeletonChanges.push(change);
-
-      const group = groupedDeltaMap.get(delta.signature) ?? {
-        signature: delta.signature,
-        change_type: delta.change_type,
-        summary: delta.summary,
-        count: 0,
-        sample_keys: []
-      };
-      group.count += 1;
-      if (group.sample_keys.length < 20) {
-        group.sample_keys.push(key);
-      }
-      groupedDeltaMap.set(delta.signature, group);
-      continue;
-    }
-
-    if (rowA.flow !== rowB.flow) {
-      const semanticReason =
-        rowA.semantic_version === rowB.semantic_version
-          ? `semantic_version unchanged (${rowB.semantic_version})`
-          : `semantic_version ${rowA.semantic_version} -> ${rowB.semantic_version}`;
-      const warningReason = warningDeltaText(
-        wordWarningSummary(rowA, compileA),
-        wordWarningSummary(rowB, compileB)
-      );
-      renderingChanges.push({
-        key,
-        row_a: rowA,
-        row_b: rowB,
-        semantic_reason: semanticReason,
-        warning_reason: warningReason
-      });
-    }
-  }
-
-  const groupedDeltas = Array.from(groupedDeltaMap.values()).sort(compareDeltaGroupEntries);
-  const topGroupedDeltas = groupedDeltas.slice(0, 20);
+  const { addedKeys, removedKeys, renderingChanges, skeletonChanges, topGroupedDeltas } =
+    compareRegressRuns({
+      runA,
+      runB,
+      compileA,
+      compileB,
+      sortRefLike,
+      arraysEqual,
+      classifySkeletonDelta,
+      wordWarningSummary,
+      warningDeltaText
+    });
   const diffLines = buildRegressDiffLines({
     runA,
     runB,
@@ -3384,40 +3314,12 @@ async function runRegress(argv) {
     });
   }
 
-  const regressionFailures = [];
-  const regressionPasses = [];
-  for (const golden of goldenCases) {
-    const actual = runB.map.get(golden.key);
-    const refText = actual ? prettyRef(actual) : prettyRef(golden);
-    if (!actual) {
-      regressionFailures.push({
-        key: golden.key,
-        surface: golden.surface,
-        ref: refText,
-        reason: "missing key in run B",
-        expected_skeleton: golden.expected_skeleton,
-        actual_skeleton: null,
-        delta_summary: ""
-      });
-      continue;
-    }
-
-    if (!arraysEqual(golden.expected_skeleton, actual.skeleton)) {
-      const delta = classifySkeletonDelta(golden.expected_skeleton, actual.skeleton);
-      regressionFailures.push({
-        key: golden.key,
-        surface: actual.surface,
-        ref: refText,
-        reason: "skeleton mismatch",
-        expected_skeleton: golden.expected_skeleton,
-        actual_skeleton: actual.skeleton,
-        delta_summary: delta.summary
-      });
-      continue;
-    }
-
-    regressionPasses.push(golden.key);
-  }
+  const { regressionFailures, regressionPasses } = evaluateGoldenCases({
+    goldenCases,
+    runBMap: runB.map,
+    arraysEqual,
+    classifySkeletonDelta
+  });
 
   const regressionLines = buildRegressionReport({
     runB,

@@ -118,6 +118,41 @@ type BuildRegressDiffLinesInput = {
   topGroupedDeltas: RegressDeltaGroup[];
 };
 
+type CompareRunsInput = {
+  runA: RegressDiffRun;
+  runB: RegressDiffRun;
+  compileA: unknown;
+  compileB: unknown;
+  sortRefLike: (left: string, right: string) => number;
+  arraysEqual: (left: string[], right: string[]) => boolean;
+  classifySkeletonDelta: (
+    previousSkeleton: string[],
+    nextSkeleton: string[]
+  ) => {
+    change_type: string;
+    signature: string;
+    summary: string;
+  };
+  wordWarningSummary: (row: RegressDiffRow, compileContext: unknown) => unknown;
+  warningDeltaText: (leftSummary: unknown, rightSummary: unknown) => string;
+};
+
+type EvaluateGoldenCasesInput = {
+  goldenCases: Array<{
+    key: string;
+    surface: string;
+    expected_skeleton: string[];
+  }>;
+  runBMap: Map<string, RegressDiffRow>;
+  arraysEqual: (left: string[], right: string[]) => boolean;
+  classifySkeletonDelta: (
+    previousSkeleton: string[],
+    nextSkeleton: string[]
+  ) => {
+    summary: string;
+  };
+};
+
 function sortRefLike(left: string, right: string): number {
   return String(left).localeCompare(String(right), "en", { numeric: true });
 }
@@ -559,7 +594,14 @@ export function buildRegressDiffLines({
     diffLines.push("- none");
   } else {
     for (const sample of interesting.slice(0, 20)) {
-      const rowForRef = sample.row_b ?? sample.row_a ?? { key: sample.key, surface: "", flow: "", skeleton: [], semantic_version: "unknown" };
+      const rowForRef = sample.row_b ??
+        sample.row_a ?? {
+          key: sample.key,
+          surface: "",
+          flow: "",
+          skeleton: [],
+          semantic_version: "unknown"
+        };
       diffLines.push(`- [${sample.kind}] ${sample.key} | ${prettyRef(rowForRef)}`);
       diffLines.push(`  - summary: ${sample.summary}`);
       diffLines.push(`  - why: ${sample.semantic_reason}; ${sample.warning_reason}`);
@@ -573,4 +615,167 @@ export function buildRegressDiffLines({
   }
 
   return diffLines;
+}
+
+export function compareRegressRuns({
+  runA,
+  runB,
+  compileA,
+  compileB,
+  sortRefLike,
+  arraysEqual,
+  classifySkeletonDelta,
+  wordWarningSummary,
+  warningDeltaText
+}: CompareRunsInput): {
+  addedKeys: string[];
+  removedKeys: string[];
+  renderingChanges: RegressRenderingChange[];
+  skeletonChanges: RegressSkeletonChange[];
+  groupedDeltas: RegressDeltaGroup[];
+  topGroupedDeltas: RegressDeltaGroup[];
+} {
+  const allKeys = Array.from(new Set([...runA.map.keys(), ...runB.map.keys()])).sort(sortRefLike);
+  const addedKeys: string[] = [];
+  const removedKeys: string[] = [];
+  const renderingChanges: RegressRenderingChange[] = [];
+  const skeletonChanges: RegressSkeletonChange[] = [];
+  const groupedDeltaMap = new Map<string, RegressDeltaGroup>();
+
+  for (const key of allKeys) {
+    const rowA = runA.map.get(key);
+    const rowB = runB.map.get(key);
+    if (!rowA && rowB) {
+      addedKeys.push(key);
+      continue;
+    }
+    if (rowA && !rowB) {
+      removedKeys.push(key);
+      continue;
+    }
+    if (!rowA || !rowB) {
+      continue;
+    }
+
+    if (!arraysEqual(rowA.skeleton, rowB.skeleton)) {
+      const delta = classifySkeletonDelta(rowA.skeleton, rowB.skeleton);
+      const warningsA = wordWarningSummary(rowA, compileA);
+      const warningsB = wordWarningSummary(rowB, compileB);
+      const semanticReason =
+        rowA.semantic_version === rowB.semantic_version
+          ? `semantic_version unchanged (${rowA.semantic_version})`
+          : `semantic_version ${rowA.semantic_version} -> ${rowB.semantic_version}`;
+      const warningReason = warningDeltaText(warningsA, warningsB);
+
+      const change = {
+        key,
+        row_a: rowA,
+        row_b: rowB,
+        delta,
+        semantic_reason: semanticReason,
+        warning_reason: warningReason
+      };
+      skeletonChanges.push(change);
+
+      const group = groupedDeltaMap.get(delta.signature) ?? {
+        signature: delta.signature,
+        change_type: delta.change_type,
+        summary: delta.summary,
+        count: 0,
+        sample_keys: []
+      };
+      group.count += 1;
+      if (group.sample_keys.length < 20) {
+        group.sample_keys.push(key);
+      }
+      groupedDeltaMap.set(delta.signature, group);
+      continue;
+    }
+
+    if (rowA.flow !== rowB.flow) {
+      const semanticReason =
+        rowA.semantic_version === rowB.semantic_version
+          ? `semantic_version unchanged (${rowB.semantic_version})`
+          : `semantic_version ${rowA.semantic_version} -> ${rowB.semantic_version}`;
+      const warningReason = warningDeltaText(
+        wordWarningSummary(rowA, compileA),
+        wordWarningSummary(rowB, compileB)
+      );
+      renderingChanges.push({
+        key,
+        row_a: rowA,
+        row_b: rowB,
+        semantic_reason: semanticReason,
+        warning_reason: warningReason
+      });
+    }
+  }
+
+  const groupedDeltas = Array.from(groupedDeltaMap.values()).sort((left, right) => {
+    if (left.count !== right.count) {
+      return right.count - left.count;
+    }
+    return sortRefLike(left.signature, right.signature);
+  });
+  const topGroupedDeltas = groupedDeltas.slice(0, 20);
+
+  return {
+    addedKeys,
+    removedKeys,
+    renderingChanges,
+    skeletonChanges,
+    groupedDeltas,
+    topGroupedDeltas
+  };
+}
+
+export function evaluateGoldenCases({
+  goldenCases,
+  runBMap,
+  arraysEqual,
+  classifySkeletonDelta
+}: EvaluateGoldenCasesInput): {
+  regressionFailures: RegressionFailure[];
+  regressionPasses: string[];
+} {
+  const regressionFailures: RegressionFailure[] = [];
+  const regressionPasses: string[] = [];
+
+  for (const golden of goldenCases) {
+    const actual = runBMap.get(golden.key);
+    const refText = actual ? prettyRef(actual) : prettyRef(golden);
+    if (!actual) {
+      regressionFailures.push({
+        key: golden.key,
+        surface: golden.surface,
+        ref: refText,
+        reason: "missing key in run B",
+        expected_skeleton: golden.expected_skeleton,
+        actual_skeleton: null,
+        delta_summary: ""
+      });
+      continue;
+    }
+
+    if (!arraysEqual(golden.expected_skeleton, actual.skeleton)) {
+      const delta = classifySkeletonDelta(golden.expected_skeleton, actual.skeleton);
+      regressionFailures.push({
+        key: golden.key,
+        surface: actual.surface,
+        ref: refText,
+        reason: "skeleton mismatch",
+        expected_skeleton: golden.expected_skeleton,
+        actual_skeleton: actual.skeleton,
+        delta_summary: delta.summary
+      });
+      continue;
+    }
+
+    regressionPasses.push(golden.key);
+  }
+
+  return {
+    regressionFailures,
+    regressionPasses
+  };
 }

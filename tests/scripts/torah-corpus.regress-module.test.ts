@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCuratedGoldens,
+  compareRegressRuns,
+  evaluateGoldenCases,
   buildRegressionReport,
   buildRegressDiffLines
 } from "@ref/scripts/torahCorpus/regress";
@@ -160,5 +162,110 @@ describe("torah corpus regress module", () => {
     expect(text).toContain("## Top Skeleton Delta Groups");
     expect(text).toContain("## Most Interesting Samples");
     expect(text).toContain("ADD:TAV.FINALIZE");
+  });
+
+  it("compares runs into skeleton/rendering/ingestion buckets", () => {
+    const result = compareRegressRuns({
+      runA: {
+        trace_path: "a",
+        trace_sha256: "a",
+        semantic_versions: ["1.0.0"],
+        rows: [{}],
+        map: new Map([
+          [
+            "Genesis/1/1/1",
+            {
+              key: "Genesis/1/1/1",
+              ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 1 },
+              surface: "אב",
+              flow: "a",
+              skeleton: ["ALEPH.ALIAS"],
+              semantic_version: "1.0.0"
+            }
+          ]
+        ])
+      },
+      runB: {
+        trace_path: "b",
+        trace_sha256: "b",
+        semantic_versions: ["1.1.0"],
+        rows: [{}, {}],
+        map: new Map([
+          [
+            "Genesis/1/1/1",
+            {
+              key: "Genesis/1/1/1",
+              ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 1 },
+              surface: "אב",
+              flow: "b",
+              skeleton: ["ALEPH.ALIAS", "TAV.FINALIZE"],
+              semantic_version: "1.1.0"
+            }
+          ],
+          [
+            "Genesis/1/1/2",
+            {
+              key: "Genesis/1/1/2",
+              ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 2 },
+              surface: "גד",
+              flow: "c",
+              skeleton: ["GIMEL.BESTOW"],
+              semantic_version: "1.1.0"
+            }
+          ]
+        ])
+      },
+      compileA: {},
+      compileB: {},
+      sortRefLike: (left, right) => left.localeCompare(right, "en", { numeric: true }),
+      arraysEqual: (left, right) => JSON.stringify(left) === JSON.stringify(right),
+      classifySkeletonDelta: (left, right) => ({
+        change_type: "event_added",
+        signature: `${left.join("|")}=>${right.join("|")}`,
+        summary: "changed"
+      }),
+      wordWarningSummary: () => ({ by_code: {} }),
+      warningDeltaText: () => "warnings unchanged"
+    });
+
+    expect(result.addedKeys).toEqual(["Genesis/1/1/2"]);
+    expect(result.skeletonChanges).toHaveLength(1);
+    expect(result.topGroupedDeltas).toHaveLength(1);
+  });
+
+  it("evaluates golden cases into passes/failures", () => {
+    const result = evaluateGoldenCases({
+      goldenCases: [
+        {
+          key: "Genesis/1/1/1",
+          surface: "אב",
+          expected_skeleton: ["ALEPH.ALIAS"]
+        },
+        {
+          key: "Genesis/1/1/2",
+          surface: "גד",
+          expected_skeleton: ["GIMEL.BESTOW"]
+        }
+      ],
+      runBMap: new Map([
+        [
+          "Genesis/1/1/1",
+          {
+            key: "Genesis/1/1/1",
+            ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 1 },
+            surface: "אב",
+            flow: "x",
+            skeleton: ["ALEPH.ALIAS"],
+            semantic_version: "1.0.0"
+          }
+        ]
+      ]),
+      arraysEqual: (left, right) => JSON.stringify(left) === JSON.stringify(right),
+      classifySkeletonDelta: () => ({ summary: "delta" })
+    });
+
+    expect(result.regressionPasses).toEqual(["Genesis/1/1/1"]);
+    expect(result.regressionFailures).toHaveLength(1);
+    expect(result.regressionFailures[0].reason).toBe("missing key in run B");
   });
 });
