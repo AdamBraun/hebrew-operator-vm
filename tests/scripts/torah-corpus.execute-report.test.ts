@@ -15,7 +15,7 @@ describe("torah corpus execute report builder", () => {
       verseMotifIndexOutPath: `${process.cwd()}/index/verse_motif_index.json`,
       traceVersion: "1.0.0",
       semanticVersion: "1.0.0",
-      renderVersion: "1.0.0",
+      renderVersion: "1.1.0",
       mode: "WORD",
       modeLabel: "WORD",
       windowSize: null,

@@ -3,7 +3,7 @@ export type TraceVersion = `1.${number}.${number}`;
 
 export const TRACE_VERSION: TraceVersion = "1.0.0";
 export const SEMANTICS_VERSION: SemVer = "1.0.0";
-export const RENDER_VERSION: SemVer = "1.0.0";
+export const RENDER_VERSION: SemVer = "1.1.0";
 
 export type VersionContract = {
   trace_version: TraceVersion;

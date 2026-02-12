@@ -215,7 +215,7 @@ describe("torah corpus execute module helpers", () => {
   it("builds verse trace records with mode/safety metadata", () => {
     const verseRecord = buildVerseTraceRecord({
       traceVersion: "1.0.0",
-      traceRenderVersion: "1.0.0",
+      traceRenderVersion: "1.1.0",
       semanticVersion: "2.1.0",
       verseRef: { book: "Genesis", chapter: 1, verse: 1 },
       verseRefKey: "Genesis/1/1",
@@ -253,7 +253,7 @@ describe("torah corpus execute module helpers", () => {
   it("builds word execution artifacts with delta and runtime samples", () => {
     const result = buildWordExecutionArtifacts({
       traceVersion: "1.0.0",
-      traceRenderVersion: "1.0.0",
+      traceRenderVersion: "1.1.0",
       semanticVersion: "2.0.0",
       mode: "WINDOW",
       debugRawEvents: true,
@@ -439,7 +439,7 @@ describe("torah corpus execute module helpers", () => {
     const result = buildVerseMotifIndex({
       modeLabel: "WINDOW(2)",
       traceVersion: "1.0.0",
-      renderVersion: "1.0.0",
+      renderVersion: "1.1.0",
       semanticVersion: "2.0.0",
       verseRows: [
         {

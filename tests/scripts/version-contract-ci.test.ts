@@ -19,8 +19,8 @@ function runGit(cwd: string, args: string[]): string {
 function writeVersionFile(cwd: string, values: VersionValues): void {
   const versionFilePath = path.join(cwd, "impl", "reference", "src", "version.ts");
   const source = [
-    'export type SemVer = `${number}.${number}.${number}`;',
-    'export type TraceVersion = `1.${number}.${number}`;',
+    "export type SemVer = `${number}.${number}.${number}`;",
+    "export type TraceVersion = `1.${number}.${number}`;",
     "",
     `export const TRACE_VERSION: TraceVersion = "${values.trace}";`,
     `export const SEMANTICS_VERSION: SemVer = "${values.semantics}";`,
@@ -72,7 +72,11 @@ function initRepo(): { repoDir: string; baseSha: string } {
   };
 }
 
-function runCheck(repoDir: string, baseSha: string, headSha: string): { ok: boolean; output: string } {
+function runCheck(
+  repoDir: string,
+  baseSha: string,
+  headSha: string
+): { ok: boolean; output: string } {
   try {
     const output = execFileSync(
       "node",

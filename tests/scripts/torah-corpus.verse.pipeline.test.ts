@@ -94,7 +94,7 @@ describe("torah corpus verse execution modes", () => {
     expect(verseRows).toHaveLength(2);
     expect(verseRows[0].record_kind).toBe("VERSE_TRACE");
     expect(verseRows[0].trace_version).toBe("1.0.0");
-    expect(verseRows[0].render_version).toBe("1.0.0");
+    expect(verseRows[0].render_version).toBe("1.1.0");
     expect(String(verseRows[0].canonical_hash)).toMatch(/^[a-f0-9]{64}$/);
     expect(verseRows[0].mode).toBe("VERSE");
     expect(Array.isArray(verseRows[0].cross_word_events)).toBe(true);
