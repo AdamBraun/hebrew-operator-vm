@@ -17,6 +17,9 @@ npm run build
 Language policy for this repo is documented in
 [`docs/adr/0001-typescript-source-of-truth.md`](docs/adr/0001-typescript-source-of-truth.md).
 
+Sprint 2 modularization contract for `torah-corpus` is documented in
+[`docs/adr/0002-torah-corpus-modularization.md`](docs/adr/0002-torah-corpus-modularization.md).
+
 Rules:
 
 - TypeScript is the source of truth for business and domain logic.
