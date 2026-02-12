@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import path from "node:path";
 import { workspaceRelativePath } from "./report";
 
 type SkeletonRow = {
@@ -94,6 +95,172 @@ type BuildExecuteReportsOutput = {
   reportLines: string[];
   verseReportLines: string[];
 };
+
+type ExecutePathOpts = {
+  input: string;
+  tokenRegistry: string;
+  compiledBundles: string;
+  traceOut: string;
+  flowsOut: string;
+  reportOut: string;
+  verseTraceOut: string;
+  verseReportOut: string;
+  verseMotifIndexOut: string;
+};
+
+export type ExecutePaths = {
+  inputPath: string;
+  tokenRegistryPath: string;
+  compiledBundlesPath: string;
+  traceOutPath: string;
+  flowsOutPath: string;
+  reportOutPath: string;
+  verseTraceOutPath: string;
+  verseReportOutPath: string;
+  verseMotifIndexOutPath: string;
+};
+
+type BuildVerseWordRowsMetaInput = {
+  verseEntry: {
+    ref: {
+      book: string;
+      chapter: number;
+      verse: number;
+    };
+    words: string[];
+  };
+  tokenize: (surface: string) => unknown[];
+  tokenIdBySignature: Map<string, number>;
+  compiledTokenIdSet: Set<string>;
+  buildRefKey: (ref: { book: string; chapter: number; verse: number; token_index: number }) => string;
+  resolveWordTokenIds: (args: {
+    surface: string;
+    tokenize: (surface: string) => unknown[];
+    tokenIdBySignature: Map<string, number>;
+    compiledTokenIdSet: Set<string>;
+  }) => {
+    token_ids: number[];
+    unknown_signatures: string[];
+    missing_bundle_ids: number[];
+  };
+};
+
+export function resolveExecutePaths(opts: ExecutePathOpts): ExecutePaths {
+  return {
+    inputPath: path.resolve(opts.input),
+    tokenRegistryPath: path.resolve(opts.tokenRegistry),
+    compiledBundlesPath: path.resolve(opts.compiledBundles),
+    traceOutPath: path.resolve(opts.traceOut),
+    flowsOutPath: path.resolve(opts.flowsOut),
+    reportOutPath: path.resolve(opts.reportOut),
+    verseTraceOutPath: path.resolve(opts.verseTraceOut),
+    verseReportOutPath: path.resolve(opts.verseReportOut),
+    verseMotifIndexOutPath: path.resolve(opts.verseMotifIndexOut)
+  };
+}
+
+export function resolveSemanticVersion(
+  cliSemanticVersion: string,
+  compiledPayload: unknown,
+  semanticsDefsPayload: unknown
+): string {
+  const compiledVersion =
+    compiledPayload &&
+    typeof compiledPayload === "object" &&
+    "semantics" in compiledPayload &&
+    compiledPayload.semantics &&
+    typeof compiledPayload.semantics === "object" &&
+    "semver" in compiledPayload.semantics
+      ? String((compiledPayload.semantics as { semver?: string }).semver ?? "")
+      : "";
+  const defsVersion =
+    semanticsDefsPayload &&
+    typeof semanticsDefsPayload === "object" &&
+    "semver" in semanticsDefsPayload
+      ? String((semanticsDefsPayload as { semver?: string }).semver ?? "")
+      : "";
+  return cliSemanticVersion || compiledVersion || defsVersion || "unknown";
+}
+
+export function assertExecuteTokenSources(args: {
+  tokenIdBySignatureSize: number;
+  compiledTokenCount: number;
+  tokenRegistryPath: string;
+  compiledBundlesPath: string;
+}): void {
+  if (args.tokenIdBySignatureSize === 0) {
+    throw new Error(`No tokens loaded from token registry at ${args.tokenRegistryPath}`);
+  }
+  if (args.compiledTokenCount === 0) {
+    throw new Error(`No compiled bundles loaded from ${args.compiledBundlesPath}`);
+  }
+}
+
+export function buildVerseWordRowsMeta({
+  verseEntry,
+  tokenize,
+  tokenIdBySignature,
+  compiledTokenIdSet,
+  buildRefKey,
+  resolveWordTokenIds
+}: BuildVerseWordRowsMetaInput): {
+  wordRowsMeta: Array<{
+    ref: {
+      book: string;
+      chapter: number;
+      verse: number;
+      token_index: number;
+    };
+    ref_key: string;
+    surface: string;
+    token_ids: number[];
+    unknown_signatures: string[];
+  }>;
+  missingBundles: Array<{ ref_key: string; surface: string; token_id: number }>;
+  unknownSignatures: Array<{ ref_key: string; surface: string; signatures: string[] }>;
+} {
+  const wordRowsMeta = [];
+  const missingBundles: Array<{ ref_key: string; surface: string; token_id: number }> = [];
+  const unknownSignatures: Array<{ ref_key: string; surface: string; signatures: string[] }> = [];
+
+  for (let wordIndex = 0; wordIndex < verseEntry.words.length; wordIndex += 1) {
+    const surface = verseEntry.words[wordIndex];
+    const ref = {
+      book: verseEntry.ref.book,
+      chapter: verseEntry.ref.chapter,
+      verse: verseEntry.ref.verse,
+      token_index: wordIndex + 1
+    };
+    const refKey = buildRefKey(ref);
+    const tokenMeta = resolveWordTokenIds({
+      surface,
+      tokenize,
+      tokenIdBySignature,
+      compiledTokenIdSet
+    });
+
+    for (const tokenId of tokenMeta.missing_bundle_ids) {
+      missingBundles.push({ ref_key: refKey, surface, token_id: tokenId });
+    }
+    if (tokenMeta.unknown_signatures.length > 0) {
+      unknownSignatures.push({
+        ref_key: refKey,
+        surface,
+        signatures: tokenMeta.unknown_signatures
+      });
+    }
+
+    wordRowsMeta.push({
+      ref,
+      ref_key: refKey,
+      surface,
+      token_ids: tokenMeta.token_ids,
+      unknown_signatures: tokenMeta.unknown_signatures
+    });
+  }
+
+  return { wordRowsMeta, missingBundles, unknownSignatures };
+}
 
 function sortRefLike(left: string, right: string): number {
   return String(left).localeCompare(String(right), "en", { numeric: true });

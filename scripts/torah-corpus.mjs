@@ -88,7 +88,13 @@ function loadTorahCorpusExecute() {
 }
 
 const torahCorpusExecute = loadTorahCorpusExecute();
-const { buildExecuteReports } = torahCorpusExecute;
+const {
+  buildExecuteReports,
+  resolveExecutePaths,
+  resolveSemanticVersion,
+  assertExecuteTokenSources,
+  buildVerseWordRowsMeta
+} = torahCorpusExecute;
 
 function loadTorahCorpusDiff() {
   const diffModulePath = path.resolve(process.cwd(), "impl/reference/dist/scripts/torahCorpus/diff");
@@ -2644,15 +2650,17 @@ async function runAll(argv) {
 
 async function runExecute(argv) {
   const opts = parseExecuteArgs(argv);
-  const inputPath = path.resolve(opts.input);
-  const tokenRegistryPath = path.resolve(opts.tokenRegistry);
-  const compiledBundlesPath = path.resolve(opts.compiledBundles);
-  const traceOutPath = path.resolve(opts.traceOut);
-  const flowsOutPath = path.resolve(opts.flowsOut);
-  const reportOutPath = path.resolve(opts.reportOut);
-  const verseTraceOutPath = path.resolve(opts.verseTraceOut);
-  const verseReportOutPath = path.resolve(opts.verseReportOut);
-  const verseMotifIndexOutPath = path.resolve(opts.verseMotifIndexOut);
+  const {
+    inputPath,
+    tokenRegistryPath,
+    compiledBundlesPath,
+    traceOutPath,
+    flowsOutPath,
+    reportOutPath,
+    verseTraceOutPath,
+    verseReportOutPath,
+    verseMotifIndexOutPath
+  } = resolveExecutePaths(opts);
 
   const [rawBuffer, tokenRegistryPayload, compiledPayload, semanticsDefsPayload] =
     await Promise.all([
@@ -2664,21 +2672,21 @@ async function runExecute(argv) {
   const raw = rawBuffer.toString("utf8");
   const data = JSON.parse(raw);
 
-  const semanticVersion =
-    opts.semanticVersion ||
-    compiledPayload?.semantics?.semver ||
-    semanticsDefsPayload?.semver ||
-    "unknown";
+  const semanticVersion = resolveSemanticVersion(
+    opts.semanticVersion,
+    compiledPayload,
+    semanticsDefsPayload
+  );
 
   const tokenIdBySignature = buildTokenIdBySignature(tokenRegistryPayload);
   const compiledTokenIdSet = new Set(Object.keys(compiledPayload?.tokens ?? {}));
 
-  if (tokenIdBySignature.size === 0) {
-    throw new Error(`No tokens loaded from token registry at ${tokenRegistryPath}`);
-  }
-  if (compiledTokenIdSet.size === 0) {
-    throw new Error(`No compiled bundles loaded from ${compiledBundlesPath}`);
-  }
+  assertExecuteTokenSources({
+    tokenIdBySignatureSize: tokenIdBySignature.size,
+    compiledTokenCount: compiledTokenIdSet.size,
+    tokenRegistryPath,
+    compiledBundlesPath
+  });
 
   const require = createRequire(import.meta.url);
   const { tokenize } = require(
@@ -2736,43 +2744,20 @@ async function runExecute(argv) {
   };
 
   for (const verseEntry of verses) {
-    const wordRowsMeta = [];
-
-    for (let wordIndex = 0; wordIndex < verseEntry.words.length; wordIndex += 1) {
-      const surface = verseEntry.words[wordIndex];
-      const ref = {
-        book: verseEntry.ref.book,
-        chapter: verseEntry.ref.chapter,
-        verse: verseEntry.ref.verse,
-        token_index: wordIndex + 1
-      };
-      const refKey = buildRefKey(ref);
-      const tokenMeta = resolveWordTokenIds({
-        surface,
-        tokenize,
-        tokenIdBySignature,
-        compiledTokenIdSet
-      });
-
-      for (const tokenId of tokenMeta.missing_bundle_ids) {
-        missingBundles.push({ ref_key: refKey, surface, token_id: tokenId });
-      }
-      if (tokenMeta.unknown_signatures.length > 0) {
-        unknownSignatures.push({
-          ref_key: refKey,
-          surface,
-          signatures: tokenMeta.unknown_signatures
-        });
-      }
-
-      wordRowsMeta.push({
-        ref,
-        ref_key: refKey,
-        surface,
-        token_ids: tokenMeta.token_ids,
-        unknown_signatures: tokenMeta.unknown_signatures
-      });
-    }
+    const {
+      wordRowsMeta,
+      missingBundles: verseMissingBundles,
+      unknownSignatures: verseUnknownSignatures
+    } = buildVerseWordRowsMeta({
+      verseEntry,
+      tokenize,
+      tokenIdBySignature,
+      compiledTokenIdSet,
+      buildRefKey,
+      resolveWordTokenIds
+    });
+    missingBundles.push(...verseMissingBundles);
+    unknownSignatures.push(...verseUnknownSignatures);
 
     const baselineExecutions = wordRowsMeta.map((meta) => {
       if (meta.unknown_signatures.length > 0) {
