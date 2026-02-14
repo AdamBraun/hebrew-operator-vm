@@ -153,7 +153,9 @@ function tokenizeWordsWithBoundaries(input: string): ParsedWord[] {
     const char = normalized[index];
 
     if (char === SPACE_TOKEN || WHITESPACE.test(char)) {
-      finalizeWord(char === SPACE_TOKEN ? { mode: "hard", source: "whitespace" } : boundaryFromWhitespace(char));
+      finalizeWord(
+        char === SPACE_TOKEN ? { mode: "hard", source: "whitespace" } : boundaryFromWhitespace(char)
+      );
       index += 1;
       continue;
     }

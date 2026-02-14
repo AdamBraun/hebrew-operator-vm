@@ -277,10 +277,7 @@ function prepareTokens(input: string): Token[] {
   const tokens = tokenize(input);
   validateTokens(tokens, letterRegistry);
 
-  const withLeading = [
-    makeSpaceToken({ mode: "hard", source: "implicit_leading" }),
-    ...tokens
-  ];
+  const withLeading = [makeSpaceToken({ mode: "hard", source: "implicit_leading" }), ...tokens];
 
   if (tokens.length === 0 || tokens[tokens.length - 1].letter !== "□") {
     withLeading.push(makeSpaceToken({ mode: "hard", source: "implicit_trailing" }));

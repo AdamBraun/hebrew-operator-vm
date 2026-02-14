@@ -5,7 +5,9 @@ import { runProgram, runProgramWithTrace } from "@ref/vm/vm";
 describe("trope-driven space modes", () => {
   it("glue creates/consumes pending join without hard-default resolution", () => {
     const { state, trace } = runProgramWithTrace("נ֣ ס", createInitialState());
-    const glueBoundary = trace.find((entry) => entry.token === "□" && entry.boundary_mode === "glue");
+    const glueBoundary = trace.find(
+      (entry) => entry.token === "□" && entry.boundary_mode === "glue"
+    );
     expect(glueBoundary).toBeDefined();
     expect(glueBoundary?.continuation).toBe(true);
     expect(glueBoundary?.pending_join_created).toBeDefined();
@@ -29,7 +31,9 @@ describe("trope-driven space modes", () => {
     const tau = cutBoundary?.tauAfter ?? -1;
 
     expect(state.vm.H.some((event) => event.type === "mem_spill" && event.tau === tau)).toBe(true);
-    expect(state.vm.H.some((event) => event.type === "support_debt" && event.tau === tau)).toBe(true);
+    expect(state.vm.H.some((event) => event.type === "support_debt" && event.tau === tau)).toBe(
+      true
+    );
     expect(state.vm.H.some((event) => event.type === "fall" && event.tau === tau)).toBe(false);
   });
 
