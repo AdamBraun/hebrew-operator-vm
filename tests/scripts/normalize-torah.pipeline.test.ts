@@ -6,7 +6,13 @@ import { describe, expect, it } from "vitest";
 
 const SCRIPT = path.resolve(process.cwd(), "scripts", "normalize-torah.mjs");
 
-function writeFixtureJson(outPath: string): void {
+function writeFixtureJson(
+  outPath: string,
+  verses: Array<{ n: number; he: string }> = [
+    { n: 1, he: "<big>בְּ</big>רֵאשִׁ֖ית" },
+    { n: 2, he: "וְהָאָֽרֶץ" }
+  ]
+): void {
   const fixture = {
     books: [
       {
@@ -14,10 +20,7 @@ function writeFixtureJson(outPath: string): void {
         chapters: [
           {
             n: 1,
-            verses: [
-              { n: 1, he: "<big>בְּ</big>רֵאשִׁ֖ית" },
-              { n: 2, he: "וְהָאָֽרֶץ" }
-            ]
+            verses
           }
         ]
       }
@@ -87,5 +90,69 @@ describe("normalize-torah pipeline", () => {
     expect(() =>
       runNode([SCRIPT, "verify", `--input=${input}`, `--out=${out}`, `--sha-out=${sha}`])
     ).toThrow(/verify failed/);
+  });
+
+  it("writes deterministic keep-teamim artifacts and verifies with --keep-teamim", () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "normalize-torah-test-"));
+    const input = path.join(tmpDir, "torah.json");
+    const out = path.join(tmpDir, "torah.normalized.teamim.txt");
+    const sha = path.join(tmpDir, "torah.normalized.teamim.sha256");
+    const report = path.join(tmpDir, "normalization_teamim_report.md");
+
+    writeFixtureJson(input);
+
+    const runArgs = [
+      SCRIPT,
+      "--keep-teamim",
+      `--input=${input}`,
+      `--out=${out}`,
+      `--sha-out=${sha}`,
+      `--report-out=${report}`
+    ];
+
+    const firstRun = runNode(runArgs);
+    expect(firstRun).toContain("teAmimPolicy=keep");
+    const firstOut = fs.readFileSync(out, "utf8");
+    const firstSha = fs.readFileSync(sha, "utf8");
+
+    const secondRun = runNode(runArgs);
+    expect(secondRun).toContain("teAmimPolicy=keep");
+    expect(fs.readFileSync(out, "utf8")).toBe(firstOut);
+    expect(fs.readFileSync(sha, "utf8")).toBe(firstSha);
+
+    const verifyOut = runNode([
+      SCRIPT,
+      "verify",
+      "--keep-teamim",
+      `--input=${input}`,
+      `--out=${out}`,
+      `--sha-out=${sha}`
+    ]);
+    expect(verifyOut).toContain("verify: ok");
+    expect(verifyOut).toContain("teAmimPolicy=keep");
+
+    const reportText = fs.readFileSync(report, "utf8");
+    expect(reportText).toContain("## Teamim Codepoints Observed");
+    expect(reportText).toContain("## Policy Transformations Applied");
+  });
+
+  it("fails fast with codepoint and context for unsupported combining marks", () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "normalize-torah-test-"));
+    const input = path.join(tmpDir, "torah.json");
+    const out = path.join(tmpDir, "torah.normalized.txt");
+    const sha = path.join(tmpDir, "torah.normalized.sha256");
+    const report = path.join(tmpDir, "normalization_report.md");
+
+    writeFixtureJson(input, [{ n: 1, he: "אָ\u0301רֶץ" }]);
+
+    expect(() =>
+      runNode([
+        SCRIPT,
+        `--input=${input}`,
+        `--out=${out}`,
+        `--sha-out=${sha}`,
+        `--report-out=${report}`
+      ])
+    ).toThrow(/Unsupported combining mark U\+0301[\s\S]*Context:/);
   });
 });

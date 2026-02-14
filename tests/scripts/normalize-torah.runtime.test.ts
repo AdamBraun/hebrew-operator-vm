@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_REPORT,
+  DEFAULT_SHA,
+  DEFAULT_TEAMIM_OUT,
+  DEFAULT_TEAMIM_REPORT,
+  DEFAULT_TEAMIM_SHA,
+  DEFAULT_OUT,
   buildNormalizationResult,
   normalizeVerse,
   parseArgs
@@ -26,6 +32,20 @@ describe("normalize torah runtime", () => {
     });
   });
 
+  it("uses canonical teamim artifact defaults when --keep-teamim is set", () => {
+    const parsedStrip = parseArgs([]);
+    expect(parsedStrip.opts.out).toBe(DEFAULT_OUT);
+    expect(parsedStrip.opts.shaOut).toBe(DEFAULT_SHA);
+    expect(parsedStrip.opts.reportOut).toBe(DEFAULT_REPORT);
+    expect(parsedStrip.opts.keepTeamim).toBe(false);
+
+    const parsedKeep = parseArgs(["--keep-teamim"]);
+    expect(parsedKeep.opts.out).toBe(DEFAULT_TEAMIM_OUT);
+    expect(parsedKeep.opts.shaOut).toBe(DEFAULT_TEAMIM_SHA);
+    expect(parsedKeep.opts.reportOut).toBe(DEFAULT_TEAMIM_REPORT);
+    expect(parsedKeep.opts.keepTeamim).toBe(true);
+  });
+
   it("normalizes a verse and strips teamim by default", () => {
     const verse = "בְּרֵאשִׁ֖ית";
     const stripped = normalizeVerse(verse, false);
@@ -35,6 +55,14 @@ describe("normalize torah runtime", () => {
     expect(kept.normalized).toBe("בְּרֵאשִׁ֖ית");
     expect(stripped.stats.removedTeamim).toBe(1);
     expect(kept.stats.removedTeamim).toBe(0);
+    expect(kept.stats.teamimObservedByCodepoint.get("֖".codePointAt(0) ?? 0)).toBe(1);
+  });
+
+  it("fails loudly on unsupported combining marks", () => {
+    expect(() => normalizeVerse("א\u0301", true, "Genesis 1:1")).toThrow(
+      /Unsupported combining mark U\+0301/
+    );
+    expect(() => normalizeVerse("א\u0301", true, "Genesis 1:1")).toThrow(/Context:/);
   });
 
   it("builds deterministic normalization output", () => {

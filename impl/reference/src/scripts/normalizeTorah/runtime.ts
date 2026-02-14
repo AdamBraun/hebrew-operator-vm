@@ -6,12 +6,69 @@ export const DEFAULT_INPUT = path.resolve(process.cwd(), "data", "torah.json");
 export const DEFAULT_OUT = path.resolve(process.cwd(), "data", "torah.normalized.txt");
 export const DEFAULT_SHA = path.resolve(process.cwd(), "data", "torah.normalized.sha256");
 export const DEFAULT_REPORT = path.resolve(process.cwd(), "reports", "normalization_report.md");
+export const DEFAULT_TEAMIM_OUT = path.resolve(
+  process.cwd(),
+  "data",
+  "torah.normalized.teamim.txt"
+);
+export const DEFAULT_TEAMIM_SHA = path.resolve(
+  process.cwd(),
+  "data",
+  "torah.normalized.teamim.sha256"
+);
+export const DEFAULT_TEAMIM_REPORT = path.resolve(
+  process.cwd(),
+  "reports",
+  "normalization_teamim_report.md"
+);
 
 const TEAMIM_RANGES = [{ start: 0x0591, end: 0x05af }];
 const COMBINING_MARK = /\p{M}/u;
 const HEBREW_BASE_LETTER = /[\u05D0-\u05EA]/u;
+const COMBINING_GRAPHEME_JOINER = 0x034f;
+const HEBREW_QAMATS_QATAN = 0x05c7;
+const MAQAF = "\u05BE";
+const SOF_PASUQ = "\u05C3";
+const CONTEXT_SPAN = 12;
 const ORDER_SAMPLE_LIMIT = 10;
 const IDEMPOTENCE_SAMPLE_LIMIT = 10;
+
+const SUPPORTED_COMBINING_MARKS = buildSupportedCombiningMarks();
+const MARK_NAME_BY_CODEPOINT = new Map<number, string>([
+  [0x034f, "COMBINING GRAPHEME JOINER"],
+  [0x05b0, "HEBREW POINT SHEVA"],
+  [0x05b1, "HEBREW POINT HATAF SEGOL"],
+  [0x05b2, "HEBREW POINT HATAF PATAH"],
+  [0x05b3, "HEBREW POINT HATAF QAMATS"],
+  [0x05b4, "HEBREW POINT HIRIQ"],
+  [0x05b5, "HEBREW POINT TSERE"],
+  [0x05b6, "HEBREW POINT SEGOL"],
+  [0x05b7, "HEBREW POINT PATAH"],
+  [0x05b8, "HEBREW POINT QAMATS"],
+  [0x05b9, "HEBREW POINT HOLAM"],
+  [0x05ba, "HEBREW POINT HOLAM HASER FOR VAV"],
+  [0x05bb, "HEBREW POINT QUBUTS"],
+  [0x05bc, "HEBREW POINT DAGESH OR MAPIQ"],
+  [0x05bd, "HEBREW POINT METEG"],
+  [0x05bf, "HEBREW POINT RAFE"],
+  [0x05c1, "HEBREW POINT SHIN DOT"],
+  [0x05c2, "HEBREW POINT SIN DOT"],
+  [0x05c4, "HEBREW MARK UPPER DOT"],
+  [0x05c5, "HEBREW MARK LOWER DOT"],
+  [0x05c7, "HEBREW POINT QAMATS QATAN"]
+]);
+
+const POLICY_TRANSFORMATION_KEYS = [
+  "line_breaks_to_lf",
+  "markup_tags_removed",
+  "html_entities_removed",
+  "nbsp_to_space",
+  "collapsed_horizontal_whitespace",
+  "trimmed_line_edges",
+  "qamats_qatan_to_qamats"
+] as const;
+
+type PolicyTransformationKey = (typeof POLICY_TRANSFORMATION_KEYS)[number];
 
 type Command = "run" | "verify";
 
@@ -71,6 +128,12 @@ type NormalizeStats = {
   removedTeamim: number;
   keptByCategory: Map<string, number>;
   removedByCategory: Map<string, number>;
+  teamimObservedByCodepoint: Map<number, number>;
+  policyTransformations: Map<PolicyTransformationKey, number>;
+  maqafObserved: number;
+  sofPasuqObserved: number;
+  qamatsQatanObserved: number;
+  qamatsQatanNormalized: number;
   sourceIdempotenceFailures: number;
   outputIdempotenceFailures: number;
   outputIdempotenceSamples: OutputIdempotenceSample[];
@@ -98,10 +161,17 @@ export function printHelp(): void {
   console.log("");
   console.log("Defaults:");
   console.log(`  --input=${DEFAULT_INPUT}`);
-  console.log(`  --out=${DEFAULT_OUT}`);
-  console.log(`  --sha-out=${DEFAULT_SHA}`);
-  console.log(`  --report-out=${DEFAULT_REPORT}`);
+  console.log("  strip profile (default):");
+  console.log(`    --out=${DEFAULT_OUT}`);
+  console.log(`    --sha-out=${DEFAULT_SHA}`);
+  console.log(`    --report-out=${DEFAULT_REPORT}`);
+  console.log("  keep-teamim profile:");
+  console.log(`    --out=${DEFAULT_TEAMIM_OUT}`);
+  console.log(`    --sha-out=${DEFAULT_TEAMIM_SHA}`);
+  console.log(`    --report-out=${DEFAULT_TEAMIM_REPORT}`);
   console.log("  keep-teamim=false (strip U+0591-U+05AF)");
+  console.log("  punctuation policy=retain (including maqaf U+05BE, sof pasuq U+05C3)");
+  console.log("  qamats-qatan policy=preserve U+05C7");
 }
 
 export function parseArgs(argv: string[]): ParseResult {
@@ -116,11 +186,16 @@ export function parseArgs(argv: string[]): ParseResult {
     }
   }
 
+  let outExplicit = false;
+  let shaOutExplicit = false;
+  let reportOutExplicit = false;
+  let keepTeamim = false;
+
   const opts: NormalizeOptions = {
     input: DEFAULT_INPUT,
-    out: DEFAULT_OUT,
-    shaOut: DEFAULT_SHA,
-    reportOut: DEFAULT_REPORT,
+    out: "",
+    shaOut: "",
+    reportOut: "",
     keepTeamim: false
   };
 
@@ -135,25 +210,40 @@ export function parseArgs(argv: string[]): ParseResult {
     }
     if (arg.startsWith("--out=")) {
       opts.out = arg.slice("--out=".length);
+      outExplicit = true;
       continue;
     }
     if (arg.startsWith("--sha-out=")) {
       opts.shaOut = arg.slice("--sha-out=".length);
+      shaOutExplicit = true;
       continue;
     }
     if (arg.startsWith("--report-out=")) {
       opts.reportOut = arg.slice("--report-out=".length);
+      reportOutExplicit = true;
       continue;
     }
     if (arg === "--keep-teamim") {
-      opts.keepTeamim = true;
+      keepTeamim = true;
       continue;
     }
     if (arg === "--strip-teamim") {
-      opts.keepTeamim = false;
+      keepTeamim = false;
       continue;
     }
     throw new Error(`Unknown argument '${arg}'`);
+  }
+
+  opts.keepTeamim = keepTeamim;
+  const defaults = defaultArtifactPaths(keepTeamim);
+  if (!outExplicit) {
+    opts.out = defaults.out;
+  }
+  if (!shaOutExplicit) {
+    opts.shaOut = defaults.shaOut;
+  }
+  if (!reportOutExplicit) {
+    opts.reportOut = defaults.reportOut;
   }
 
   return { command, opts };
@@ -196,7 +286,61 @@ function categoryForMark(mark: string): string {
   return "other_mark";
 }
 
-function increment(map: Map<string, number>, key: string, by = 1): void {
+function addRange(target: Set<number>, start: number, end: number): void {
+  for (let codepoint = start; codepoint <= end; codepoint += 1) {
+    target.add(codepoint);
+  }
+}
+
+function buildSupportedCombiningMarks(): Set<number> {
+  const supported = new Set<number>([COMBINING_GRAPHEME_JOINER]);
+  addRange(supported, 0x0591, 0x05af);
+  addRange(supported, 0x05b0, 0x05bc);
+  supported.add(0x05bd);
+  supported.add(0x05bf);
+  supported.add(0x05c1);
+  supported.add(0x05c2);
+  supported.add(0x05c4);
+  supported.add(0x05c5);
+  supported.add(HEBREW_QAMATS_QATAN);
+  return supported;
+}
+
+function defaultArtifactPaths(keepTeamim: boolean): {
+  out: string;
+  shaOut: string;
+  reportOut: string;
+} {
+  if (keepTeamim) {
+    return {
+      out: DEFAULT_TEAMIM_OUT,
+      shaOut: DEFAULT_TEAMIM_SHA,
+      reportOut: DEFAULT_TEAMIM_REPORT
+    };
+  }
+  return {
+    out: DEFAULT_OUT,
+    shaOut: DEFAULT_SHA,
+    reportOut: DEFAULT_REPORT
+  };
+}
+
+function toCodepoint(codepoint: number): string {
+  return `U+${codepoint.toString(16).toUpperCase().padStart(4, "0")}`;
+}
+
+function markNameForCodepoint(codepoint: number): string {
+  const known = MARK_NAME_BY_CODEPOINT.get(codepoint);
+  if (known) {
+    return known;
+  }
+  if (codepoint >= 0x0591 && codepoint <= 0x05af) {
+    return `HEBREW ACCENT ${toCodepoint(codepoint)}`;
+  }
+  return `UNKNOWN MARK ${toCodepoint(codepoint)}`;
+}
+
+function increment<K>(map: Map<K, number>, key: K, by = 1): void {
   map.set(key, (map.get(key) ?? 0) + by);
 }
 
@@ -204,17 +348,89 @@ function sortedEntries(map: Map<string, number>): Array<[string, number]> {
   return [...map.entries()].sort((left, right) => left[0].localeCompare(right[0], "en"));
 }
 
-function normalizeLineBreaks(text: string): string {
-  return String(text ?? "").replace(/\r\n?/g, "\n");
+function sortedCodepointEntries(map: Map<number, number>): Array<[number, number]> {
+  return [...map.entries()].sort((left, right) => left[0] - right[0]);
 }
 
-function stripMarkupAndEntities(text: string): string {
+function contextSnippet(chars: string[], index: number): string {
+  const start = Math.max(0, index - CONTEXT_SPAN);
+  const end = Math.min(chars.length, index + CONTEXT_SPAN + 1);
+  const prefix = start > 0 ? "…" : "";
+  const suffix = end < chars.length ? "…" : "";
+  return `${prefix}${chars.slice(start, end).join("")}${suffix}`.replace(/\s+/g, " ");
+}
+
+function countMatches(text: string, pattern: RegExp): number {
+  return (text.match(pattern) ?? []).length;
+}
+
+function normalizeLineBreaks(text: string): {
+  normalized: string;
+  replacements: number;
+} {
+  const source = String(text ?? "");
+  const replacements = countMatches(source, /\r\n?/g);
+  return {
+    normalized: source.replace(/\r\n?/g, "\n"),
+    replacements
+  };
+}
+
+function stripMarkupAndEntities(text: string): {
+  normalized: string;
+  transformations: Map<PolicyTransformationKey, number>;
+} {
+  const transformations = new Map<PolicyTransformationKey, number>();
+
+  const markupTagsRemoved = countMatches(text, /<[^>]*>/g);
+  const htmlEntitiesRemoved = countMatches(text, /&[^;]+;/g);
+  const nbspToSpace = countMatches(text, /\u00A0/g);
+  const collapsedHorizontalWhitespace = countMatches(text, /[ \t\f\v]{2,}/g);
+  const trimmedLineEdges = countMatches(text, / *\n */g);
+
   let out = text.replace(/<[^>]*>/g, " ");
   out = out.replace(/&[^;]+;/g, " ");
   out = out.replace(/\u00A0/g, " ");
   out = out.replace(/[ \t\f\v]+/g, " ");
   out = out.replace(/ *\n */g, "\n");
-  return out.trim();
+  const trimmed = out.trim();
+
+  if (markupTagsRemoved > 0) {
+    transformations.set("markup_tags_removed", markupTagsRemoved);
+  }
+  if (htmlEntitiesRemoved > 0) {
+    transformations.set("html_entities_removed", htmlEntitiesRemoved);
+  }
+  if (nbspToSpace > 0) {
+    transformations.set("nbsp_to_space", nbspToSpace);
+  }
+  if (collapsedHorizontalWhitespace > 0) {
+    transformations.set("collapsed_horizontal_whitespace", collapsedHorizontalWhitespace);
+  }
+  if (trimmedLineEdges > 0 || trimmed.length !== out.length) {
+    transformations.set(
+      "trimmed_line_edges",
+      trimmedLineEdges + (trimmed.length !== out.length ? 1 : 0)
+    );
+  }
+
+  return {
+    normalized: trimmed,
+    transformations
+  };
+}
+
+function throwUnsupportedCombiningMark(
+  ref: string,
+  chars: string[],
+  index: number,
+  codepoint: number
+): never {
+  throw new Error(
+    `Unsupported combining mark ${toCodepoint(codepoint)} (${markNameForCodepoint(
+      codepoint
+    )}) at ${ref} (char ${index + 1}). Context: "${contextSnippet(chars, index)}"`
+  );
 }
 
 function toCodepoints(text: string): string {
@@ -295,7 +511,8 @@ function verifyCombiningOrder(text: string): {
 
 export function normalizeVerse(
   text: string,
-  keepTeamim: boolean
+  keepTeamim: boolean,
+  ref = "(unknown)"
 ): {
   normalized: string;
   stats: {
@@ -306,27 +523,69 @@ export function normalizeVerse(
     removedTeamim: number;
     keptByCategory: Map<string, number>;
     removedByCategory: Map<string, number>;
+    teamimObservedByCodepoint: Map<number, number>;
+    policyTransformations: Map<PolicyTransformationKey, number>;
+    maqafObserved: number;
+    sofPasuqObserved: number;
+    qamatsQatanObserved: number;
+    qamatsQatanNormalized: number;
   };
 } {
   const lineStable = normalizeLineBreaks(text);
-  const stripped = stripMarkupAndEntities(lineStable);
-  const nfd = stripped.normalize("NFD");
+  const stripped = stripMarkupAndEntities(lineStable.normalized);
+  const nfd = stripped.normalized.normalize("NFD");
 
   let out = "";
   let removedTeamim = 0;
   const keptByCategory = new Map<string, number>();
   const removedByCategory = new Map<string, number>();
+  const teamimObservedByCodepoint = new Map<number, number>();
+  const policyTransformations = new Map<PolicyTransformationKey, number>();
   let combiningBefore = 0;
   let combiningAfter = 0;
+  let maqafObserved = 0;
+  let sofPasuqObserved = 0;
+  let qamatsQatanObserved = 0;
+  let qamatsQatanNormalized = 0;
 
-  for (const ch of nfd) {
+  if (lineStable.replacements > 0) {
+    policyTransformations.set("line_breaks_to_lf", lineStable.replacements);
+  }
+  for (const [key, value] of stripped.transformations.entries()) {
+    increment(policyTransformations, key, value);
+  }
+
+  const chars = [...nfd];
+  for (let index = 0; index < chars.length; index += 1) {
+    const ch = chars[index] ?? "";
+
     if (!COMBINING_MARK.test(ch)) {
       out += ch;
+      if (ch === MAQAF) {
+        maqafObserved += 1;
+      } else if (ch === SOF_PASUQ) {
+        sofPasuqObserved += 1;
+      }
       continue;
     }
 
+    const codepoint = ch.codePointAt(0);
+    if (codepoint === undefined) {
+      continue;
+    }
+    if (!SUPPORTED_COMBINING_MARKS.has(codepoint)) {
+      throwUnsupportedCombiningMark(ref, chars, index, codepoint);
+    }
+
     combiningBefore += 1;
+    if (codepoint === HEBREW_QAMATS_QATAN) {
+      qamatsQatanObserved += 1;
+    }
+
     const category = categoryForMark(ch);
+    if (isTeamim(ch)) {
+      increment(teamimObservedByCodepoint, codepoint);
+    }
     const shouldRemove = !keepTeamim && isTeamim(ch);
 
     if (shouldRemove) {
@@ -349,7 +608,13 @@ export function normalizeVerse(
       combiningAfter,
       removedTeamim,
       keptByCategory,
-      removedByCategory
+      removedByCategory,
+      teamimObservedByCodepoint,
+      policyTransformations,
+      maqafObserved,
+      sofPasuqObserved,
+      qamatsQatanObserved,
+      qamatsQatanNormalized
     }
   };
 }
@@ -360,6 +625,23 @@ function formatMapTable(map: Map<string, number>): string {
     return "- (none)";
   }
   return rows.map(([key, value]) => `- ${key}: ${value}`).join("\n");
+}
+
+function formatPolicyTransformationTable(map: Map<PolicyTransformationKey, number>): string {
+  return POLICY_TRANSFORMATION_KEYS.map((key) => `- ${key}: ${map.get(key) ?? 0}`).join("\n");
+}
+
+function formatCodepointCountTable(map: Map<number, number>): string {
+  const rows = sortedCodepointEntries(map);
+  if (rows.length === 0) {
+    return "- (none)";
+  }
+  return rows
+    .map(
+      ([codepoint, value]) =>
+        `- ${toCodepoint(codepoint)} (${markNameForCodepoint(codepoint)}): ${value}`
+    )
+    .join("\n");
 }
 
 function sha256Hex(buffer: Buffer): string {
@@ -393,7 +675,7 @@ function verifyNormalizedOutputIdempotence(
   const samples: OutputIdempotenceSample[] = [];
   for (const line of lines) {
     const { ref, text } = parseNormalizedLine(line);
-    const renormalized = normalizeVerse(text, keepTeamim).normalized;
+    const renormalized = normalizeVerse(text, keepTeamim, ref || "(unknown)").normalized;
     if (renormalized !== text) {
       failures += 1;
       if (samples.length < IDEMPOTENCE_SAMPLE_LIMIT) {
@@ -412,6 +694,8 @@ export function buildNormalizationResult(
   const lines: string[] = [];
   const keptByCategory = new Map<string, number>();
   const removedByCategory = new Map<string, number>();
+  const teamimObservedByCodepoint = new Map<number, number>();
+  const policyTransformations = new Map<PolicyTransformationKey, number>();
 
   let verses = 0;
   let codepointsBefore = 0;
@@ -419,6 +703,10 @@ export function buildNormalizationResult(
   let combiningBefore = 0;
   let combiningAfter = 0;
   let removedTeamim = 0;
+  let maqafObserved = 0;
+  let sofPasuqObserved = 0;
+  let qamatsQatanObserved = 0;
+  let qamatsQatanNormalized = 0;
   let sourceIdempotenceFailures = 0;
   let hebrewBasesChecked = 0;
   let markSequencesChecked = 0;
@@ -429,8 +717,9 @@ export function buildNormalizationResult(
     for (const chapter of book.chapters ?? []) {
       for (const verse of chapter.verses ?? []) {
         verses += 1;
+        const ref = `${book.name} ${chapter.n}:${verse.n}`;
         const text = verse.he ?? "";
-        const { normalized, stats } = normalizeVerse(text, keepTeamim);
+        const { normalized, stats } = normalizeVerse(text, keepTeamim, ref);
         const orderCheck = verifyCombiningOrder(normalized);
 
         codepointsBefore += stats.codepointsBefore;
@@ -438,6 +727,10 @@ export function buildNormalizationResult(
         combiningBefore += stats.combiningBefore;
         combiningAfter += stats.combiningAfter;
         removedTeamim += stats.removedTeamim;
+        maqafObserved += stats.maqafObserved;
+        sofPasuqObserved += stats.sofPasuqObserved;
+        qamatsQatanObserved += stats.qamatsQatanObserved;
+        qamatsQatanNormalized += stats.qamatsQatanNormalized;
         hebrewBasesChecked += orderCheck.hebrewBasesChecked;
         markSequencesChecked += orderCheck.markSequencesChecked;
         outOfOrderMarkSequences += orderCheck.outOfOrderCount;
@@ -448,22 +741,27 @@ export function buildNormalizationResult(
         for (const [key, value] of stats.removedByCategory.entries()) {
           increment(removedByCategory, key, value);
         }
+        for (const [codepoint, value] of stats.teamimObservedByCodepoint.entries()) {
+          increment(teamimObservedByCodepoint, codepoint, value);
+        }
+        for (const [key, value] of stats.policyTransformations.entries()) {
+          increment(policyTransformations, key, value);
+        }
         for (const sample of orderCheck.samples) {
           if (outOfOrderSamples.length >= ORDER_SAMPLE_LIMIT) {
             break;
           }
           outOfOrderSamples.push({
-            ref: `${book.name} ${chapter.n}:${verse.n}`,
+            ref,
             ...sample
           });
         }
 
-        const renormalized = normalizeVerse(normalized, keepTeamim).normalized;
+        const renormalized = normalizeVerse(normalized, keepTeamim, ref).normalized;
         if (renormalized !== normalized) {
           sourceIdempotenceFailures += 1;
         }
 
-        const ref = `${book.name} ${chapter.n}:${verse.n}`;
         const lineValue = normalized.replace(/\n/g, "\\n");
         lines.push(`${ref}\t${lineValue}`);
       }
@@ -488,6 +786,12 @@ export function buildNormalizationResult(
       removedTeamim,
       keptByCategory,
       removedByCategory,
+      teamimObservedByCodepoint,
+      policyTransformations,
+      maqafObserved,
+      sofPasuqObserved,
+      qamatsQatanObserved,
+      qamatsQatanNormalized,
       sourceIdempotenceFailures,
       outputIdempotenceFailures: outputIdempotence.failures,
       outputIdempotenceSamples: outputIdempotence.samples,
@@ -515,6 +819,12 @@ function buildReport(
     removedTeamim,
     keptByCategory,
     removedByCategory,
+    teamimObservedByCodepoint,
+    policyTransformations,
+    maqafObserved,
+    sofPasuqObserved,
+    qamatsQatanObserved,
+    qamatsQatanNormalized,
     sourceIdempotenceFailures,
     outputIdempotenceFailures,
     outputIdempotenceSamples,
@@ -550,6 +860,9 @@ function buildReport(
     `- normalization form: NFD`,
     `- te'amim policy: ${opts.keepTeamim ? "keep" : "strip"}`,
     `- te'amim ranges: U+0591-U+05AF`,
+    `- punctuation policy: retain`,
+    `- maqaf policy (U+05BE): retain`,
+    `- qamats-qatan policy (U+05C7): preserve (no rewrite)`,
     `- verses processed: ${verses}`,
     `- source idempotence failures: ${sourceIdempotenceFailures}`,
     `- output idempotence failures: ${outputIdempotenceFailures}`,
@@ -561,6 +874,10 @@ function buildReport(
     `- total combining marks before: ${combiningBefore}`,
     `- total combining marks after: ${combiningAfter}`,
     `- total te'amim removed: ${removedTeamim}`,
+    `- maqaf observed: ${maqafObserved}`,
+    `- sof pasuq observed: ${sofPasuqObserved}`,
+    `- qamats-qatan observed: ${qamatsQatanObserved}`,
+    `- qamats-qatan normalized to qamats: ${qamatsQatanNormalized}`,
     "",
     "## Category Totals",
     "",
@@ -582,6 +899,14 @@ function buildReport(
     "## Removed Mark Categories",
     "",
     formatMapTable(removedByCategory),
+    "",
+    "## Teamim Codepoints Observed",
+    "",
+    formatCodepointCountTable(teamimObservedByCodepoint),
+    "",
+    "## Policy Transformations Applied",
+    "",
+    formatPolicyTransformationTable(policyTransformations),
     "",
     "## Combining Mark Order Verification",
     "",

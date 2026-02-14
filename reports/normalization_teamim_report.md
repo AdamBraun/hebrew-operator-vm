@@ -1,10 +1,10 @@
 # Normalization Report
 
 - input: /Users/adambraun/projects/letters/data/torah.json
-- output: /Users/adambraun/projects/letters/data/torah.normalized.txt
-- checksum file: /Users/adambraun/projects/letters/data/torah.normalized.sha256
+- output: /Users/adambraun/projects/letters/data/torah.normalized.teamim.txt
+- checksum file: /Users/adambraun/projects/letters/data/torah.normalized.teamim.sha256
 - normalization form: NFD
-- te'amim policy: strip
+- te'amim policy: keep
 - te'amim ranges: U+0591-U+05AF
 - punctuation policy: retain
 - maqaf policy (U+05BE): retain
@@ -16,10 +16,10 @@
 ## Codepoint Counts
 
 - total codepoints before: 724216
-- total codepoints after: 659454
+- total codepoints after: 724216
 - total combining marks before: 334675
-- total combining marks after: 269913
-- total te'amim removed: 64762
+- total combining marks after: 334675
+- total te'amim removed: 0
 - maqaf observed: 11474
 - sof pasuq observed: 5853
 - qamats-qatan observed: 1961
@@ -30,12 +30,12 @@
 - kept:
   - niqqud: 201578
   - dots (dagesh/mappiq + shin/sin): 58153
-  - te'amim: 0
+  - te'amim: 64762
   - other combining marks: 10182
 - removed:
   - niqqud: 0
   - dots (dagesh/mappiq + shin/sin): 0
-  - te'amim: 64762
+  - te'amim: 0
   - other combining marks: 0
 
 ## Kept Mark Categories
@@ -45,10 +45,11 @@
 - other_hebrew_mark: 10168
 - other_mark: 14
 - shin_or_sin_dot: 15582
+- teamim: 64762
 
 ## Removed Mark Categories
 
-- teamim: 64762
+- (none)
 
 ## Teamim Codepoints Observed
 
@@ -91,7 +92,7 @@
 ## Combining Mark Order Verification
 
 - hebrew base letters checked: 306269
-- base letters with combining marks checked: 215075
+- base letters with combining marks checked: 225665
 - out-of-order sequences detected: 0
 - out-of-order samples: (none)
 
@@ -101,4 +102,4 @@
 
 ## Output SHA-256
 
-- c1b28315feb648ad6cd085cf3083724dbebc9e560dd2c87518776cadb5b238e8
+- 01d642a52a769f8287d0c31dffdf88da44212d1f057abff23d96b99bfaaf8a77

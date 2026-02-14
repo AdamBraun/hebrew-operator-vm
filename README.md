@@ -86,11 +86,15 @@ Outputs:
 - `data/torah.normalized.txt`
 - `data/torah.normalized.sha256`
 - `reports/normalization_report.md`
+- `data/torah.normalized.teamim.txt` (when `--keep-teamim`)
+- `data/torah.normalized.teamim.sha256` (when `--keep-teamim`)
+- `reports/normalization_teamim_report.md` (when `--keep-teamim`)
 
 Options:
 
-- `--keep-teamim` to keep cantillation marks.
-- `--strip-teamim` to explicitly strip cantillation marks (default, U+0591-U+05AF).
+- `--keep-teamim` to build the canonical teamim-preserving artifact set.
+- `--strip-teamim` to build the canonical strip-teamim artifact set (default, U+0591-U+05AF).
+- Unsupported combining marks fail fast with codepoint + context window.
 
 ### Grapheme Signature Token Registry (Observed-Only)
 
