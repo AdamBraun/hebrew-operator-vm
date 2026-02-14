@@ -9,7 +9,11 @@ export const DEFAULT_CLASSIFICATION = path.resolve(
   "teamim.classification.json"
 );
 export const DEFAULT_REGISTRY_OUT = path.resolve(process.cwd(), "data", "teamim.registry.json");
-export const DEFAULT_REPORT_OUT = path.resolve(process.cwd(), "reports", "teamim_registry_report.md");
+export const DEFAULT_REPORT_OUT = path.resolve(
+  process.cwd(),
+  "reports",
+  "teamim_registry_report.md"
+);
 
 const TEAMIM_MIN = 0x0591;
 const TEAMIM_MAX = 0x05af;
@@ -208,7 +212,8 @@ function parseClassificationSource(sourceText: string): TeamimClassification {
       classification.selection_policy && typeof classification.selection_policy === "object"
         ? { ...classification.selection_policy }
         : undefined,
-    other_policy: typeof classification.other_policy === "string" ? classification.other_policy : undefined,
+    other_policy:
+      typeof classification.other_policy === "string" ? classification.other_policy : undefined,
     entries: validatedEntries
   };
 }
@@ -330,7 +335,9 @@ export function buildArtifacts(
     }
   }
 
-  const observedCodepoints = Array.from(observedByCodepoint.keys()).sort((left, right) => left - right);
+  const observedCodepoints = Array.from(observedByCodepoint.keys()).sort(
+    (left, right) => left - right
+  );
   const observedKeys = observedCodepoints.map((codepoint) => toCodepoint(codepoint));
   const classificationKeys = Object.keys(classification.entries).sort(compareCodepointKey);
 
@@ -485,10 +492,14 @@ export function buildArtifacts(
 
 export function assertDeterminism(first: BuildArtifactsResult, second: BuildArtifactsResult): void {
   if (first.registryJson !== second.registryJson) {
-    throw new Error("Determinism check failed: teamim registry JSON differs across repeated extraction");
+    throw new Error(
+      "Determinism check failed: teamim registry JSON differs across repeated extraction"
+    );
   }
   if (first.reportText !== second.reportText) {
-    throw new Error("Determinism check failed: teamim registry report differs across repeated extraction");
+    throw new Error(
+      "Determinism check failed: teamim registry report differs across repeated extraction"
+    );
   }
 }
 
@@ -504,7 +515,12 @@ export async function runCommand(opts: TeamimRegistryOptions): Promise<void> {
   ]);
 
   const generated = buildArtifacts(sourceText, classificationText, inputPath, classificationPath);
-  const generatedAgain = buildArtifacts(sourceText, classificationText, inputPath, classificationPath);
+  const generatedAgain = buildArtifacts(
+    sourceText,
+    classificationText,
+    inputPath,
+    classificationPath
+  );
   assertDeterminism(generated, generatedAgain);
 
   await Promise.all([
@@ -542,7 +558,12 @@ export async function verifyCommand(opts: TeamimRegistryOptions): Promise<void> 
   ]);
 
   const expected = buildArtifacts(sourceText, classificationText, inputPath, classificationPath);
-  const expectedAgain = buildArtifacts(sourceText, classificationText, inputPath, classificationPath);
+  const expectedAgain = buildArtifacts(
+    sourceText,
+    classificationText,
+    inputPath,
+    classificationPath
+  );
   assertDeterminism(expected, expectedAgain);
 
   const failures: string[] = [];

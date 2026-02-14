@@ -92,8 +92,18 @@ describe("teamim registry runtime", () => {
     });
 
     const input = ["Genesis 1:1\tא֖ ב֣", "Genesis 1:2\tג֤ ד֪", ""].join("\n");
-    const first = buildArtifacts(input, classification, DEFAULT_OPTS.input, DEFAULT_OPTS.classification);
-    const second = buildArtifacts(input, classification, DEFAULT_OPTS.input, DEFAULT_OPTS.classification);
+    const first = buildArtifacts(
+      input,
+      classification,
+      DEFAULT_OPTS.input,
+      DEFAULT_OPTS.classification
+    );
+    const second = buildArtifacts(
+      input,
+      classification,
+      DEFAULT_OPTS.input,
+      DEFAULT_OPTS.classification
+    );
 
     expect(second.registryJson).toBe(first.registryJson);
     expect(second.reportText).toBe(first.reportText);
@@ -128,7 +138,12 @@ describe("teamim registry runtime", () => {
     });
 
     expect(() =>
-      buildArtifacts("Genesis 1:1\tא֖ ב֣\n", classification, DEFAULT_OPTS.input, DEFAULT_OPTS.classification)
+      buildArtifacts(
+        "Genesis 1:1\tא֖ ב֣\n",
+        classification,
+        DEFAULT_OPTS.input,
+        DEFAULT_OPTS.classification
+      )
     ).toThrow(/Coverage check failed/);
   });
 });

@@ -65,7 +65,12 @@ function loadRegistry(): Record<string, TeamimClassificationEntry> {
 
   const raw = fs.readFileSync(REGISTRY_PATH, "utf8");
   const parsed = JSON.parse(raw) as TeamimClassificationFile;
-  if (!parsed || typeof parsed !== "object" || !parsed.entries || typeof parsed.entries !== "object") {
+  if (
+    !parsed ||
+    typeof parsed !== "object" ||
+    !parsed.entries ||
+    typeof parsed.entries !== "object"
+  ) {
     throw new Error(`Invalid teamim classification file at ${REGISTRY_PATH}`);
   }
 
