@@ -27,6 +27,11 @@ const RULES = [
     triggerLabel: "registry/token-semantics.json"
   },
   {
+    key: "semantics_version",
+    triggerPattern: /^registry\/teamim\.classification\.json$/u,
+    triggerLabel: "registry/teamim.classification.json"
+  },
+  {
     key: "render_version",
     triggerPattern: /^render\//u,
     triggerLabel: "render/"

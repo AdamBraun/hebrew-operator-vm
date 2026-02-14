@@ -38,6 +38,7 @@ Every artifact family must carry version metadata:
 `npm run ci:version-contract` enforces required bumps by changed files:
 
 - If `registry/token-semantics.json` changes, `semantics_version` must increase.
+- If `registry/teamim.classification.json` changes, `semantics_version` must increase.
 - If any `render/` file changes, `render_version` must increase.
 - If `spec/70-TRACE-FORMAT.schema.json` changes, `trace_version` must increase.
 

@@ -122,6 +122,31 @@ Notes:
 - Supported combining marks are explicit; unsupported combining marks fail loudly with codepoint + context.
 - TokenIDs are assigned deterministically by sorted signature order.
 
+### Teamim Registry + Classification (Observed-Only)
+
+Extract observed teamim codepoints from the teamim-preserving normalized corpus and validate coverage against the parser classification table:
+
+```bash
+npm run teamim-registry -- --input data/torah.normalized.teamim.txt
+```
+
+Verify deterministic outputs:
+
+```bash
+npm run teamim-registry:verify -- --input data/torah.normalized.teamim.txt
+```
+
+Outputs:
+
+- `data/teamim.registry.json`
+- `registry/teamim.classification.json` (normative parser table)
+- `reports/teamim_registry_report.md`
+
+Notes:
+
+- Coverage gate fails if any observed teamim lacks classification metadata.
+- Primary accent selection is deterministic: disjunctive-first, then conjunctive, with precedence + codepoint tie-break.
+
 ### Token Operator Compilation Cache
 
 Compile each TokenID into a deterministic operator bundle with runtime-ready dispatch metadata:

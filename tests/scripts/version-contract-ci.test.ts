@@ -54,6 +54,24 @@ function initRepo(): { repoDir: string; baseSha: string } {
     "utf8"
   );
   fs.writeFileSync(
+    path.join(repoDir, "registry", "teamim.classification.json"),
+    JSON.stringify(
+      {
+        schema_version: 1,
+        entries: {
+          "U+0596": {
+            codepoint: "U+0596",
+            class: "DISJUNCTIVE",
+            precedence: 100
+          }
+        }
+      },
+      null,
+      2
+    ) + "\n",
+    "utf8"
+  );
+  fs.writeFileSync(
     path.join(repoDir, "spec", "70-TRACE-FORMAT.schema.json"),
     JSON.stringify({ title: "trace schema", version: 1 }, null, 2) + "\n",
     "utf8"
@@ -132,6 +150,40 @@ describe("version contract CI checks", () => {
     const result = runCheck(repoDir, baseSha, headSha);
     expect(result.ok).toBe(true);
     expect(result.output).toContain("semantics_version bumped");
+  });
+
+  it("fails when teamim classification changes without semantics version bump", () => {
+    const { repoDir, baseSha } = initRepo();
+    fs.writeFileSync(
+      path.join(repoDir, "registry", "teamim.classification.json"),
+      JSON.stringify(
+        {
+          schema_version: 1,
+          entries: {
+            "U+0596": {
+              codepoint: "U+0596",
+              class: "DISJUNCTIVE",
+              precedence: 100
+            },
+            "U+05A3": {
+              codepoint: "U+05A3",
+              class: "CONJUNCTIVE",
+              precedence: 100
+            }
+          }
+        },
+        null,
+        2
+      ) + "\n",
+      "utf8"
+    );
+    runGit(repoDir, ["add", "registry/teamim.classification.json"]);
+    runGit(repoDir, ["commit", "-m", "update teamim classification"]);
+    const headSha = runGit(repoDir, ["rev-parse", "HEAD"]);
+
+    const result = runCheck(repoDir, baseSha, headSha);
+    expect(result.ok).toBe(false);
+    expect(result.output).toContain("semantics_version must bump");
   });
 
   it("fails when render files change without render version bump", () => {

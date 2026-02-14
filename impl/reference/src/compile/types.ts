@@ -39,6 +39,7 @@ export type Trope = {
   kind: TropeKind;
   name?: string;
   rank?: number;
+  codepoint?: string;
 };
 
 export type SpaceBoundaryMode = "hard" | "glue" | "glue_maqqef" | "cut";

@@ -198,7 +198,7 @@ function tokenizeWordsWithBoundaries(input: string): ParsedWord[] {
         continue;
       }
       if (isCantillationMark(mark)) {
-        // Unknown cantillation marks are treated as trope-none and ignored by execution.
+        // Teamim marked as OTHER are ignored by execution.
         continue;
       }
 

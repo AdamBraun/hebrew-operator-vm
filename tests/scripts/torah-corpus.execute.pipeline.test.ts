@@ -100,7 +100,7 @@ describe("torah corpus execute pipeline", () => {
       expect(Array.isArray(row.events)).toBe(true);
       expect(Array.isArray(row.skeleton)).toBe(true);
       expect(typeof row.flow).toBe("string");
-      expect(row.semantics_version).toBe("1.0.0");
+      expect(row.semantics_version).toBe("1.1.0");
       expect(String(row.canonical_hash)).toMatch(/^[a-f0-9]{64}$/);
     }
 
