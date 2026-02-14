@@ -4,8 +4,10 @@
 - definitions: /Users/adambraun/projects/letters/registry/token-semantics.json
 - output: /Users/adambraun/projects/letters/data/tokens.compiled.json
 - semver: 1.0.0
+- trace_version: 1.0.0
+- render_version: 1.1.0
 - definitions sha256: 107ad13730c2f8f0412250cd34d82d66eb8ee054bd2f762baac1414012439c39
-- compiled sha256: 75c41eef8db60054a6d5bdc83b379006d1cd74f60a7c47ac9f82d0d9f6a2e825
+- compiled sha256: 47253cd84eeb3d88d2279825659897f552cf20d27c96f1dee9450c776fadbd77
 - tokens compiled: 763
 - warnings: 336
 
@@ -70,6 +72,7 @@
 
 ## Notes
 
+- Version contract is sourced from impl/reference/src/version.ts.
 - Compilation is deterministic over registry + semantics definition table.
 - Runtime dispatch uses precompiled runtime fields and avoids Unicode mark parsing.
 - Illegal combinations are strict errors (compile stops); orthographic marks are ignored with warnings.

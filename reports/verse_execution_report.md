@@ -2,27 +2,29 @@
 
 ## Summary
 - input: data/torah.json
-- semantic_version: 1.0.0
-- execution_mode: VERSE
+- trace_version: 1.0.0
+- semantics_version: 1.0.0
+- render_version: 1.1.0
+- execution_mode: WORD
 - safety_rail_enabled: true
 - safety_rail_threshold: 0.35
 - words_total: 80856
 - verses_total: 5846
 - changed_words_vs_word_mode: 0
 - verses_with_cross_word_events: 0
-- trace_sha256: 055ed803ff422cb93bb4a667a6ca31e5bcd018be74da60e606a6b707815ea354
-- verse_trace_sha256: a28c103910dd2ac4eab30af94dbf951aa205974f9c491ec3a25b89f8466e7b9f
+- trace_sha256: 02ad0d7f0938ba151e9101cea4178b0503fc19ee2828aedacef31a8035046776
+- verse_trace_sha256: d2c555c6bf57dd1fca5e75bf949c7908ae35619a89bece9f6bc80b47b33b33db
 
 ## Quality Gates
-- word_mode_equivalence: N/A (VERSE; baseline_deltas=0)
+- word_mode_equivalence: FAIL (823/80856)
 - determinism: PASS (checksum basis captured)
-- explainability: PASS (0/0)
-- safety_rail: PASS (not triggered)
+- explainability: PASS (WORD baseline mode)
+- safety_rail: N/A
 
 ## Boundary Operators
 - 18098 x RESH.BOUNDARY_CLOSE
 - 11891 x SPACE.MEM_AUTO_CLOSE
-- 9343 x SPACE.SUPPORT_DISCHARGE
+- 9336 x SPACE.SUPPORT_DISCHARGE
 - 7020 x DALET.BOUNDARY_CLOSE
 
 ## Verse Boundary Operator
@@ -30,7 +32,7 @@
 - 178 x discharge_or_close_pending
 
 ## Motif Expansions
-- 46352 x VERSE_BOUNDARY_RESOLUTION
+- 46345 x VERSE_BOUNDARY_RESOLUTION
 - 8530 x SUPPORT_DEBT_DISCHARGE_CROSS_WORD
 - 127 x SUPPORT_RESOLVED_AT_VERSE_BOUNDARY
 - 117 x FINALIZE_AT_VERSE_EDGE

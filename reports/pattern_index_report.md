@@ -2,11 +2,11 @@
 
 ## Summary
 - input_trace: corpus/word_traces.jsonl
-- input_trace_sha256: 055ed803ff422cb93bb4a667a6ca31e5bcd018be74da60e606a6b707815ea354
+- input_trace_sha256: 02ad0d7f0938ba151e9101cea4178b0503fc19ee2828aedacef31a8035046776
 - semantic_versions: 1.0.0
 - words_indexed: 80856
-- unique_skeletons: 4294
-- skeleton_counts_sha256: 37e849362f32e8b933007dc3feadb801d6747b085b1eb29c1a0b840a5346d587
+- unique_skeletons: 4295
+- skeleton_counts_sha256: 30fa356276b94041a7b5ec01d59a9378a24cbfd8dd104f1c28e3876af5c34968
 - skeleton_counts: index/skeleton_counts.json
 - skeleton_to_occurrences: index/skeleton_to_occurrences.bin (json-v1)
 - motif_index: index/motif_index.json
@@ -116,7 +116,7 @@
 
 ## Motif Match Counts
 - CONTAINS_BESTOW_THEN_SEAL: skeletons=60, occurrences=149
-- ENDS_WITH_FINALIZE: skeletons=303, occurrences=8652
+- ENDS_WITH_FINALIZE: skeletons=304, occurrences=8653
 
 ## Build Performance
-- elapsed_ms: 977.11
+- elapsed_ms: 1079.09

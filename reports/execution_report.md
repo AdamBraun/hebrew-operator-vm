@@ -4,8 +4,10 @@
 - input: data/torah.json
 - token_registry: data/tokens.registry.json
 - compiled_bundles: data/tokens.compiled.json
-- semantic_version: 1.0.0
-- execution_mode: VERSE
+- trace_version: 1.0.0
+- semantics_version: 1.0.0
+- render_version: 1.1.0
+- execution_mode: WORD
 - safety_rail_enabled: true
 - safety_rail_threshold: 0.35
 - words_total: 80856
@@ -14,19 +16,19 @@
 - verses_sanitized: 5846
 - verses_skipped: 0
 - verses_emitted: 5846
-- unique_skeletons: 4294
-- trace_sha256: 055ed803ff422cb93bb4a667a6ca31e5bcd018be74da60e606a6b707815ea354
-- verse_trace_sha256: a28c103910dd2ac4eab30af94dbf951aa205974f9c491ec3a25b89f8466e7b9f
-- elapsed_ms: 1806.15
-- words_per_second: 44766.97
+- unique_skeletons: 4295
+- trace_sha256: 02ad0d7f0938ba151e9101cea4178b0503fc19ee2828aedacef31a8035046776
+- verse_trace_sha256: d2c555c6bf57dd1fca5e75bf949c7908ae35619a89bece9f6bc80b47b33b33db
+- elapsed_ms: 1906.78
+- words_per_second: 42404.52
 
 ## Quality Gates
 - coverage: PASS (80856/80856)
-- determinism_basis: trace checksum captured (055ed803ff422cb93bb4a667a6ca31e5bcd018be74da60e606a6b707815ea354)
+- determinism_basis: trace checksum captured (02ad0d7f0938ba151e9101cea4178b0503fc19ee2828aedacef31a8035046776)
 - flow_derivation: PASS (0 mismatches)
-- word_mode_equivalence: N/A (VERSE; baseline_deltas=0)
-- explainability: PASS (0/0)
-- safety_rail: PASS (not triggered)
+- word_mode_equivalence: FAIL (823/80856)
+- explainability: PASS (WORD baseline mode)
+- safety_rail: N/A
 
 ## Errors
 - unknown_signatures: 0

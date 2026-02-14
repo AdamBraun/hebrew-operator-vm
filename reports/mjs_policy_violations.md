@@ -1,9 +1,9 @@
 # MJS Policy Violations
 
 - mode: fail
-- generated_at_utc: 2026-02-12T20:56:20.549Z
+- generated_at_utc: 2026-02-14T22:19:53.785Z
 - touched_source: working_tree
-- touched_files: 4
+- touched_files: 28
 - files_scanned: 8
 - wrappers_detected: 5
 - legacy_business_logic: 3
@@ -18,7 +18,7 @@
 | scripts/compile-token-operators.mjs | no | legacy_business_logic |
 | scripts/download-torah.mjs | no | wrapper_allowlisted |
 | scripts/exemplar-library.mjs | no | legacy_business_logic |
-| scripts/extract-token-registry.mjs | yes | wrapper_allowlisted |
+| scripts/extract-token-registry.mjs | no | wrapper_allowlisted |
 | scripts/iterate-torah.mjs | no | wrapper_allowlisted |
 | scripts/normalize-torah.mjs | no | wrapper_allowlisted |
 | scripts/pattern-index.mjs | no | legacy_business_logic |

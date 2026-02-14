@@ -54,10 +54,12 @@ import {
 } from "./regress";
 import { workspaceRelativePath } from "./report";
 import {
+  SPACE_TOKEN,
   compileFlowString,
   compileOneLiner,
   deriveSignatureNotes,
   encodeRegistrySignature,
+  extractWordFlow,
   extractBoundaryOps,
   makeSignature,
   mapTochKinds,
