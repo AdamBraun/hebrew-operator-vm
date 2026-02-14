@@ -57,6 +57,10 @@ const ALLOWED_MARKS = new Set([
   "\u05C1",
   "\u05C2"
 ]);
+const TEAMIM_MIN = 0x0591;
+const TEAMIM_MAX = 0x05af;
+const MAQQEF = "\u05BE";
+const SOF_PASUQ = "\u05C3";
 const ALLOWED_MARK_CODEPOINTS = new Set(
   Array.from(ALLOWED_MARKS)
     .map((mark) => mark.codePointAt(0))
@@ -161,6 +165,11 @@ const SAFETY_RAIL_ALLOWLIST = new Set([
   "FINAL_MEM.CLOSE"
 ]);
 
+function isTeamim(mark) {
+  const codepoint = mark.codePointAt(0);
+  return codepoint !== undefined && codepoint >= TEAMIM_MIN && codepoint <= TEAMIM_MAX;
+}
+
 function sanitizeText(text, opts) {
   if (!text) {
     return "";
@@ -171,10 +180,12 @@ function sanitizeText(text, opts) {
   cleaned = cleaned.normalize("NFD");
 
   cleaned = cleaned.replace(/\u05C7/g, "\u05B8");
-  cleaned = cleaned.replace(/\u05BE/g, " ");
-  cleaned = cleaned.replace(/\u05C3/g, " ");
   cleaned = cleaned.replace(/\u05C0/g, " ");
   cleaned = cleaned.replace(/\u05F3|\u05F4/g, "");
+  if (!opts.keepTeamim) {
+    cleaned = cleaned.replace(/\u05BE/g, " ");
+    cleaned = cleaned.replace(/\u05C3/g, " ");
+  }
 
   let out = "";
   let lastWasLetter = false;
@@ -188,10 +199,15 @@ function sanitizeText(text, opts) {
       lastWasLetter = true;
       continue;
     }
-    if (ALLOWED_MARKS.has(ch)) {
+    if (ALLOWED_MARKS.has(ch) || (opts.keepTeamim && isTeamim(ch))) {
       if (lastWasLetter) {
         out += ch;
       }
+      continue;
+    }
+    if (opts.keepTeamim && (ch === MAQQEF || ch === SOF_PASUQ)) {
+      out += ch;
+      lastWasLetter = false;
       continue;
     }
     if (/\s/u.test(ch)) {
@@ -200,7 +216,12 @@ function sanitizeText(text, opts) {
     }
   }
 
-  return out.replace(/\s+/g, " ").trim();
+  let normalized = out;
+  if (opts.keepTeamim) {
+    normalized = normalized.replace(/\s*־\s*/gu, "־");
+    normalized = normalized.replace(/\s*׃\s*/gu, "׃ ");
+  }
+  return normalized.replace(/\s+/g, " ").trim();
 }
 
 function uniqPreserveOrder(values) {

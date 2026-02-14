@@ -26,6 +26,12 @@ export function assertStateInvariants(state: State): void {
   if (state.vm.wordEntryFocus) {
     ensure(state.vm.wordEntryFocus);
   }
+  if (state.vm.PendingJoin) {
+    ensure(state.vm.PendingJoin.left_span_handle);
+  }
+  for (const value of state.vm.phraseWordValues) {
+    ensure(value);
+  }
 
   for (const obligation of state.vm.OStack_word) {
     ensure(obligation.parent);
@@ -50,6 +56,36 @@ export function assertStateInvariants(state: State): void {
   for (let i = 1; i < state.vm.H.length; i += 1) {
     if (state.vm.H[i].tau < state.vm.H[i - 1].tau) {
       throw new Error("Event tau values must be nondecreasing");
+    }
+  }
+
+  for (const chunk of state.vm.H_phrase) {
+    if (chunk.start_event_index < 0 || chunk.end_event_index < chunk.start_event_index) {
+      throw new Error(`Invalid H_phrase range for chunk ${chunk.id}`);
+    }
+    ensure(chunk.word_value);
+  }
+  for (const chunk of state.vm.H_committed) {
+    if (chunk.start_event_index < 0 || chunk.end_event_index < chunk.start_event_index) {
+      throw new Error(`Invalid H_committed range for chunk ${chunk.id}`);
+    }
+    ensure(chunk.word_value);
+  }
+
+  const nodeIds = new Set(Object.keys(state.vm.CNodes));
+  for (const frame of state.vm.CStack) {
+    if (!nodeIds.has(frame.node_id)) {
+      throw new Error(`CStack references missing node ${frame.node_id}`);
+    }
+  }
+  for (const node of Object.values(state.vm.CNodes)) {
+    if (node.parent_id && !nodeIds.has(node.parent_id)) {
+      throw new Error(`Constituent node ${node.id} has missing parent ${node.parent_id}`);
+    }
+    for (const childId of node.children) {
+      if (!nodeIds.has(childId)) {
+        throw new Error(`Constituent node ${node.id} has missing child ${childId}`);
+      }
     }
   }
 

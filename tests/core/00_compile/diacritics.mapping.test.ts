@@ -50,8 +50,8 @@ describe("diacritics mapping", () => {
     expect(sin[0].dot_kind).toBe("dagesh");
   });
 
-  it("unknown combining marks fail fast", () => {
-    expect(() => tokenize("נ\u0591")).toThrow(CompileError);
+  it("unknown non-trope combining marks fail fast", () => {
+    expect(() => tokenize("נ\u05C4")).toThrow(CompileError);
   });
 
   it("hataf marks normalize to shva + base vowel", () => {

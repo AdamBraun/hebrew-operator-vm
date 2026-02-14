@@ -4,7 +4,7 @@ import { CompileError } from "@ref/compile/types";
 
 describe("compile-time errors", () => {
   it("unknown diacritic mark throws CompileError", () => {
-    expect(() => tokenize("נ\u0591")).toThrow(CompileError);
+    expect(() => tokenize("נ\u05C4")).toThrow(CompileError);
   });
 
   it("illegal character outside Σ throws CompileError", () => {

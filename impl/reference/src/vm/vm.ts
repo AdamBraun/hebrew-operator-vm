@@ -1,8 +1,9 @@
 import { tokenize, makeSpaceToken } from "../compile/tokenizer";
 import { validateTokens } from "../compile/validate";
-import { HehMode, LetterMode, Token } from "../compile/types";
+import { HehMode, LetterMode, SpaceBoundaryMode, Token } from "../compile/types";
 import { compositeRegistry, letterRegistry } from "../letters/registry";
 import { Construction, LetterOp, SelectOperands } from "../letters/types";
+import { BOT_ID } from "../state/handles";
 import { hardenHandle } from "../state/policies";
 import { State, createInitialState } from "../state/state";
 import { applySpace } from "./space";
@@ -20,6 +21,12 @@ export type TraceEntry = {
   route_arity?: number;
   KLength: number;
   OStackLength: number;
+  boundary_mode?: SpaceBoundaryMode;
+  rank?: number | null;
+  continuation?: boolean;
+  pending_join_created?: string;
+  pending_join_consumed?: string;
+  barrier?: number | null;
   events: Array<{ type: string; tau: number; data: any }>;
 };
 
@@ -212,6 +219,29 @@ function executeLetter(
   context: { isWordFinal: boolean }
 ): { read_op: string; shape_op: string | null } {
   if (!state.vm.wordHasContent) {
+    if (state.vm.LeftContextBarrier !== null) {
+      state.vm.F = state.vm.Omega;
+      state.vm.R = BOT_ID;
+      state.vm.K = [state.vm.F, state.vm.R];
+    } else if (state.vm.PendingJoin) {
+      const consumed = state.vm.PendingJoin;
+      state.vm.F = consumed.left_span_handle;
+      state.vm.wordEntryFocus = consumed.left_span_handle;
+      state.vm.lastPendingJoinConsumedId = consumed.id;
+      state.vm.H.push({
+        type: "join_consume",
+        tau: state.vm.tau,
+        data: {
+          id: consumed.id,
+          left: consumed.left_span_handle,
+          strength: consumed.join_strength
+        }
+      });
+      state.vm.PendingJoin = undefined;
+    }
+  }
+
+  if (!state.vm.wordHasContent) {
     state.vm.wordEntryFocus = state.vm.F;
   }
   state.vm.wordHasContent = true;
@@ -247,9 +277,13 @@ function prepareTokens(input: string): Token[] {
   const tokens = tokenize(input);
   validateTokens(tokens, letterRegistry);
 
-  const withLeading = [makeSpaceToken(), ...tokens];
+  const withLeading = [
+    makeSpaceToken({ mode: "hard", source: "implicit_leading" }),
+    ...tokens
+  ];
+
   if (tokens.length === 0 || tokens[tokens.length - 1].letter !== "□") {
-    withLeading.push(makeSpaceToken());
+    withLeading.push(makeSpaceToken({ mode: "hard", source: "implicit_trailing" }));
   }
   return withLeading;
 }
@@ -259,7 +293,7 @@ export function runProgram(input: string, state: State = createInitialState()): 
   for (let index = 0; index < tokens.length; index += 1) {
     const token = tokens[index];
     if (token.letter === "□") {
-      applySpace(state);
+      applySpace(state, { mode: token.boundary?.mode, rank: token.boundary?.rank });
     } else {
       const isWordFinal = index === tokens.length - 1 || tokens[index + 1].letter === "□";
       executeLetter(state, token, { isWordFinal });
@@ -280,8 +314,18 @@ export function runProgramWithTrace(
     const eventStart = state.vm.H.length;
     let readOp: string | null = null;
     let shapeOp: string | null = null;
+    let boundaryMode: SpaceBoundaryMode | undefined;
+    let boundaryRank: number | null | undefined;
+    let continuation: boolean | undefined;
+    let pendingJoinCreated: string | undefined;
     if (token.letter === "□") {
-      applySpace(state);
+      boundaryMode = token.boundary?.mode ?? "hard";
+      boundaryRank = token.boundary?.rank ?? null;
+      continuation = boundaryMode === "glue" || boundaryMode === "glue_maqqef";
+      applySpace(state, { mode: boundaryMode, rank: boundaryRank });
+      if (continuation) {
+        pendingJoinCreated = state.vm.PendingJoin?.id;
+      }
     } else {
       const isWordFinal = index === tokens.length - 1 || tokens[index + 1].letter === "□";
       const execution = executeLetter(state, token, { isWordFinal });
@@ -302,6 +346,12 @@ export function runProgramWithTrace(
       route_arity: state.vm.route_arity,
       KLength: state.vm.K.length,
       OStackLength: state.vm.OStack_word.length,
+      boundary_mode: boundaryMode,
+      rank: boundaryRank,
+      continuation,
+      pending_join_created: pendingJoinCreated,
+      pending_join_consumed: state.vm.lastPendingJoinConsumedId,
+      barrier: state.vm.LeftContextBarrier,
       events: state.vm.H.slice(eventStart, eventEnd)
     });
   });

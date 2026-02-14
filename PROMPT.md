@@ -65,15 +65,68 @@ If a diacritic is unrecognized, note it and continue with the rest of the word.
 
 ---
 
+## Tropes (Cantillation) and Boundary Selection
+
+- Tropes are extracted from combining marks and attached to the **word** as metadata:
+  - `trope.kind ∈ {none, conj, disj}`
+  - `trope.rank` is used only for disjunctives (1=minor, 2=major, 3=terminal)
+- Tropes are data-driven via `registry/tropes.json` (codepoint -> kind/rank/name).
+- Unknown cantillation marks are treated as `trope.kind=none` until mapped.
+- Maqqef (`־`) is treated as a strong glue boundary (`□glue_maqqef`) even if the left word has no trope.
+
+Boundary selection for the space after a word:
+
+1. Maqqef boundary -> `□glue_maqqef`
+2. Left trope conjunctive -> `□glue`
+3. Left trope disjunctive -> `□cut(rank)`
+4. Otherwise -> `□hard`
+
+---
+
 ## Letter Definitions
 
 ---
 
 # Space (\square) — Time-step / boundary
 
-- **Select:** current scope.
-- **Bound:** optionally none; it is a boundary between constructions.
-- **Seal:** increment (\tau), resolve all pending obligations in (OStack_word) using boundary defaults (MEM_ZONE closes silently; SUPPORT falls), commit the micro-trace to (H), apply stack discipline (reset (K) to [F, R] or keep top-k + \Omega), and optionally close the current environment frame.
+- `□` is contextual and has four modes:
+  - `□hard` (default)
+  - `□glue` (conjunctive seam)
+  - `□glue_maqqef` (maqqef seam)
+  - `□cut(rank)` (disjunctive guillotine; ranked pause/closure)
+
+`□hard`:
+
+- Increment (\tau) by 1.
+- Resolve pending obligations by boundary defaults:
+  - `MEM_ZONE` closes silently.
+  - `SUPPORT` falls.
+- Commit chunk, clear pending join/barrier carryover, reset baseline stack/focus.
+
+`□glue` / `□glue_maqqef`:
+
+- Increment (\tau) by 1 as continuation.
+- Do **not** apply boundary-default obligation resolution.
+- Do **not** reset stack/environment baseline.
+- Append continuation chunk to phrase buffer (`H_phrase`).
+- Create `PendingJoin` so the next word binds to the previous span unless blocked by barrier.
+
+`□cut(rank)`:
+
+- Increment (\tau) by ranked pause.
+- Resolve pending obligations **strictly** (no silent close/fall):
+  - unresolved `MEM_ZONE` becomes explicit spill representation.
+  - unresolved `SUPPORT` becomes explicit debt representation.
+- Clear `PendingJoin`.
+- Set `LeftContextBarrier := rank`.
+- Emit sealed constituent node and attach by rank (`CStack`):
+  - same-rank consecutive cuts produce siblings under the same parent.
+  - higher-rank cuts close same/lower rank containers first.
+
+Terminal guidance:
+
+- Explicit terminal punctuation (`׃`) should be treated as `□cut(3)`.
+- For modern Hebrew, `,` may map to `□cut(1)` and `. : ;` to `□cut(2)`.
 
 ---
 

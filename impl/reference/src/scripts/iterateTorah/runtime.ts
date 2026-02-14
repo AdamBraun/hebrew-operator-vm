@@ -59,6 +59,10 @@ const ALLOWED_MARKS = new Set([
   "\u05C1",
   "\u05C2"
 ]);
+const TEAMIM_MIN = 0x0591;
+const TEAMIM_MAX = 0x05af;
+const MAQQEF = "\u05BE";
+const SOF_PASUQ = "\u05C3";
 
 type LangOption = "he" | "en" | "both";
 
@@ -66,6 +70,7 @@ export type IterateTorahOptions = {
   input: string;
   lang: LangOption;
   normalizeFinals: boolean;
+  keepTeamim: boolean;
   allowRuntimeErrors: boolean;
 };
 
@@ -105,12 +110,14 @@ export function printHelp(): void {
   console.log(
     "  node scripts/iterate-torah.mjs [--input=path] [--lang=he|en|both] [--normalize-finals]"
   );
+  console.log("  node scripts/iterate-torah.mjs [--keep-teamim|--strip-teamim]");
   console.log("  node scripts/iterate-torah.mjs [--allow-runtime-errors]");
   console.log("");
   console.log("Defaults:");
   console.log(`  --input=${DEFAULT_INPUT}`);
   console.log("  --lang=he");
   console.log("  normalize-finals=false");
+  console.log("  keep-teamim=false");
   console.log("  allow-runtime-errors=false (fail fast on RuntimeError)");
 }
 
@@ -119,6 +126,7 @@ export function parseArgs(argv: string[]): IterateTorahOptions {
     input: DEFAULT_INPUT,
     lang: "he",
     normalizeFinals: false,
+    keepTeamim: false,
     allowRuntimeErrors: false
   };
 
@@ -147,6 +155,14 @@ export function parseArgs(argv: string[]): IterateTorahOptions {
       opts.normalizeFinals = false;
       continue;
     }
+    if (arg === "--keep-teamim") {
+      opts.keepTeamim = true;
+      continue;
+    }
+    if (arg === "--strip-teamim") {
+      opts.keepTeamim = false;
+      continue;
+    }
     if (arg === "--allow-runtime-errors") {
       opts.allowRuntimeErrors = true;
       continue;
@@ -154,6 +170,14 @@ export function parseArgs(argv: string[]): IterateTorahOptions {
   }
 
   return opts;
+}
+
+function isTeamim(ch: string): boolean {
+  const codepoint = ch.codePointAt(0);
+  if (codepoint === undefined) {
+    return false;
+  }
+  return codepoint >= TEAMIM_MIN && codepoint <= TEAMIM_MAX;
 }
 
 export function sanitizeText(text: unknown, opts: IterateTorahOptions): string {
@@ -166,10 +190,12 @@ export function sanitizeText(text: unknown, opts: IterateTorahOptions): string {
   cleaned = cleaned.normalize("NFD");
 
   cleaned = cleaned.replace(/\u05C7/g, "\u05B8");
-  cleaned = cleaned.replace(/\u05BE/g, " ");
-  cleaned = cleaned.replace(/\u05C3/g, " ");
   cleaned = cleaned.replace(/\u05C0/g, " ");
   cleaned = cleaned.replace(/\u05F3|\u05F4/g, "");
+  if (!opts.keepTeamim) {
+    cleaned = cleaned.replace(/\u05BE/g, " ");
+    cleaned = cleaned.replace(/\u05C3/g, " ");
+  }
 
   let out = "";
   let lastWasLetter = false;
@@ -183,10 +209,15 @@ export function sanitizeText(text: unknown, opts: IterateTorahOptions): string {
       lastWasLetter = true;
       continue;
     }
-    if (ALLOWED_MARKS.has(ch)) {
+    if (ALLOWED_MARKS.has(ch) || (opts.keepTeamim && isTeamim(ch))) {
       if (lastWasLetter) {
         out += ch;
       }
+      continue;
+    }
+    if (opts.keepTeamim && (ch === MAQQEF || ch === SOF_PASUQ)) {
+      out += ch;
+      lastWasLetter = false;
       continue;
     }
     if (/\s/u.test(ch)) {
@@ -195,7 +226,12 @@ export function sanitizeText(text: unknown, opts: IterateTorahOptions): string {
     }
   }
 
-  return out.replace(/\s+/g, " ").trim();
+  let normalized = out;
+  if (opts.keepTeamim) {
+    normalized = normalized.replace(/\s*־\s*/gu, "־");
+    normalized = normalized.replace(/\s*׃\s*/gu, "׃ ");
+  }
+  return normalized.replace(/\s+/g, " ").trim();
 }
 
 function resolveRawText(verse: Verse | undefined, lang: LangOption): string | undefined {

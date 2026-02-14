@@ -18,6 +18,7 @@ describe("torah corpus args parser", () => {
       "--out-dir",
       "/tmp/out",
       "--normalize-finals",
+      "--keep-teamim",
       "--allow-runtime-errors"
     ]);
     expect(parsed).toEqual({
@@ -25,6 +26,7 @@ describe("torah corpus args parser", () => {
       outDir: "/tmp/out",
       lang: "both",
       normalizeFinals: true,
+      keepTeamim: true,
       allowRuntimeErrors: true
     });
   });

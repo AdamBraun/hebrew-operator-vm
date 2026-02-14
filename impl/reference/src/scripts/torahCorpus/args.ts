@@ -66,6 +66,7 @@ export type CommonRunArgs = {
   outDir: string;
   lang: RunLanguage;
   normalizeFinals: boolean;
+  keepTeamim: boolean;
   allowRuntimeErrors: boolean;
 };
 
@@ -151,6 +152,7 @@ export function printHelp(): void {
   console.log(
     "  node scripts/torah-corpus.mjs run-all [--normalize-finals] [--allow-runtime-errors]"
   );
+  console.log("  node scripts/torah-corpus.mjs run-all [--keep-teamim|--strip-teamim]");
   console.log(
     "  node scripts/torah-corpus.mjs diff --prev=dir-or-file --next=dir-or-file [--out=path]"
   );
@@ -184,6 +186,7 @@ export function printHelp(): void {
   console.log(`  --safety-rail-threshold=${DEFAULT_SAFETY_RAIL_THRESHOLD}`);
   console.log("  --lang=he");
   console.log("  normalize-finals=false");
+  console.log("  keep-teamim=false");
   console.log("  allow-runtime-errors=false");
 }
 
@@ -193,6 +196,7 @@ export function parseCommonRunArgs(argv: string[]): CommonRunArgs {
     outDir: DEFAULT_OUT_DIR,
     lang: "he",
     normalizeFinals: false,
+    keepTeamim: false,
     allowRuntimeErrors: false
   };
 
@@ -226,6 +230,14 @@ export function parseCommonRunArgs(argv: string[]): CommonRunArgs {
     }
     if (arg === "--no-normalize-finals") {
       opts.normalizeFinals = false;
+      continue;
+    }
+    if (arg === "--keep-teamim") {
+      opts.keepTeamim = true;
+      continue;
+    }
+    if (arg === "--strip-teamim") {
+      opts.keepTeamim = false;
       continue;
     }
     if (arg === "--allow-runtime-errors") {

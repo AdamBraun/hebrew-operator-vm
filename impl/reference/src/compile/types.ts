@@ -33,6 +33,37 @@ export type HehMode = "public" | "breath" | "pinned" | "alias";
 export type VavMode = "plain" | "seeded" | "transport";
 export type LetterMode = HehMode | VavMode;
 
+export type TropeKind = "none" | "conj" | "disj";
+
+export type Trope = {
+  kind: TropeKind;
+  name?: string;
+  rank?: number;
+};
+
+export type SpaceBoundaryMode = "hard" | "glue" | "glue_maqqef" | "cut";
+
+export type SpaceBoundarySource =
+  | "whitespace"
+  | "maqqef"
+  | "punctuation"
+  | "implicit_leading"
+  | "implicit_trailing";
+
+export type SpaceBoundary = {
+  mode: SpaceBoundaryMode;
+  rank?: number;
+  source: SpaceBoundarySource;
+  left_trope?: Trope;
+};
+
+export type WordToken = {
+  text_raw: string;
+  letters: Token[];
+  trope: Trope;
+  has_maqqef: boolean;
+};
+
 export type Token = {
   letter: string;
   diacritics: Diacritic[];
@@ -42,6 +73,9 @@ export type Token = {
   is_final: boolean;
   raw: string;
   meta?: Record<string, any>;
+  trope?: Trope;
+  boundary?: SpaceBoundary;
+  word_index?: number;
 };
 
 export class CompileError extends Error {

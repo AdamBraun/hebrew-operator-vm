@@ -10,6 +10,7 @@ const DEFAULT_OPTS: IterateTorahOptions = {
   input: "/tmp/torah.json",
   lang: "he",
   normalizeFinals: false,
+  keepTeamim: false,
   allowRuntimeErrors: false
 };
 
@@ -19,12 +20,14 @@ describe("iterate torah runtime", () => {
       "--input=/tmp/in.json",
       "--lang=both",
       "--normalize-finals",
+      "--keep-teamim",
       "--allow-runtime-errors"
     ]);
     expect(parsed).toEqual({
       input: "/tmp/in.json",
       lang: "both",
       normalizeFinals: true,
+      keepTeamim: true,
       allowRuntimeErrors: true
     });
 
@@ -35,9 +38,11 @@ describe("iterate torah runtime", () => {
     const raw = "<b>מָ</b>־לֶךְ׃";
     const keepFinals = sanitizeText(raw, { ...DEFAULT_OPTS, normalizeFinals: false });
     const normalizeFinals = sanitizeText(raw, { ...DEFAULT_OPTS, normalizeFinals: true });
+    const keepTeamim = sanitizeText(raw, { ...DEFAULT_OPTS, keepTeamim: true });
 
     expect(keepFinals).toBe("מָ לֶךְ");
     expect(normalizeFinals).toBe("מָ לֶכְ");
+    expect(keepTeamim).toBe("מָ־לֶךְ׃");
   });
 
   it("iterates payload and tracks summary counts", () => {

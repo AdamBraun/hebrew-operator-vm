@@ -13,6 +13,37 @@ export type Obligation = {
 
 export type VMEvent = { type: string; tau: number; data: any };
 
+export type PhraseChunk = {
+  id: string;
+  start_event_index: number;
+  end_event_index: number;
+  tau: number;
+  boundary_mode: "hard" | "glue" | "cut" | "glue_maqqef";
+  rank: number | null;
+  continuation: boolean;
+  word_value: string;
+  pending_join_created?: string;
+  pending_join_consumed?: string;
+  barrier: number | null;
+};
+
+export type PendingJoin = {
+  id: string;
+  left_span_handle: string;
+  join_strength: "conj" | "maqqef";
+  exported_pins: string[];
+};
+
+export type ConstituentNode = {
+  id: string;
+  rank: number;
+  parent_id: string | null;
+  children: string[];
+  word_values: string[];
+  chunk_ids: string[];
+  tau_sealed: number;
+};
+
 export type VM = {
   tau: number;
   Omega: string;
@@ -30,6 +61,16 @@ export type VM = {
   metaCounter?: Record<string, number>;
   route_mode?: "fork";
   route_arity?: number;
+  H_phrase: PhraseChunk[];
+  H_committed: PhraseChunk[];
+  PendingJoin?: PendingJoin;
+  LeftContextBarrier: number | null;
+  CStack: Array<{ rank: number; node_id: string }>;
+  CNodes: Record<string, ConstituentNode>;
+  phraseWordValues: string[];
+  phraseChunkIds: string[];
+  lastBoundaryEventIndex: number;
+  lastPendingJoinConsumedId?: string;
 };
 
 export type State = {
@@ -59,7 +100,27 @@ export function createInitialState(): State {
     A: [],
     wordHasContent: false,
     wordLastSealedArtifact: undefined,
-    wordEntryFocus: OMEGA_ID
+    wordEntryFocus: OMEGA_ID,
+    H_phrase: [],
+    H_committed: [],
+    PendingJoin: undefined,
+    LeftContextBarrier: null,
+    CStack: [{ rank: Number.MAX_SAFE_INTEGER, node_id: "ROOT" }],
+    CNodes: {
+      ROOT: {
+        id: "ROOT",
+        rank: Number.MAX_SAFE_INTEGER,
+        parent_id: null,
+        children: [],
+        word_values: [],
+        chunk_ids: [],
+        tau_sealed: 0
+      }
+    },
+    phraseWordValues: [],
+    phraseChunkIds: [],
+    lastBoundaryEventIndex: 0,
+    lastPendingJoinConsumedId: undefined
   };
 
   return {
@@ -83,6 +144,16 @@ export function serializeState(state: State): Record<string, any> {
     metaCounter,
     route_mode,
     route_arity,
+    H_phrase: _H_phrase,
+    H_committed: _H_committed,
+    PendingJoin: _PendingJoin,
+    LeftContextBarrier: _LeftContextBarrier,
+    CStack: _CStack,
+    CNodes: _CNodes,
+    phraseWordValues: _phraseWordValues,
+    phraseChunkIds: _phraseChunkIds,
+    lastBoundaryEventIndex: _lastBoundaryEventIndex,
+    lastPendingJoinConsumedId: _lastPendingJoinConsumedId,
     ...vmRest
   } = state.vm;
   const vm: Record<string, any> = { ...vmRest };
