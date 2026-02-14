@@ -90,15 +90,16 @@ Operational rule:
 
 ---
 
-# ב — Containment / “inside”
+# ב — בית / forward-only deepening
 
-- **Select:** an anchor (x) and an active containment relation (\operatorname{in}\_C) (what counts as “inside Dan” depends on context (C)).
-- **Bound:** shift the _reference frame_ to the interior of (x):
+- **Select:** current focus target (x).
+- **Bound:** create a new house-frame around the target with one forward opening (conceptually: three sealed faces, one open face).
+  - If this is word-entry baseline (no constructed referent yet), first allocate a minimal seed referent (X_0), then house (X_0).
+- **Seal:** enter that house-frame as the new ambient (`\Omega := House(x)`) and set focus to it.
+- **Non-idempotence:** repeating ב always deepens:
   [
-  B(x):;;\text{Context} := \operatorname{Int}_C(x)
+  ב(x)\to House(x),\qquad בב(x)\to House(House(x))
   ]
-  Meaning: subsequent names resolve **relative to (x)**.
-- **Seal:** commit the scoping boundary “inside (x)” as the current ambient world until changed.
 
 ---
 

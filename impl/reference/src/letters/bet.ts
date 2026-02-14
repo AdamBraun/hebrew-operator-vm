@@ -13,18 +13,40 @@ const meta: LetterMeta = {
   reflexive_ok: true
 };
 
+function isWordEntryBaseline(state: State): boolean {
+  const entryFocus = state.vm.wordEntryFocus ?? state.vm.F;
+  return (
+    state.vm.F === entryFocus &&
+    state.vm.R === BOT_ID &&
+    state.vm.K.length === 2 &&
+    state.vm.K[0] === state.vm.F &&
+    state.vm.K[1] === BOT_ID
+  );
+}
+
 export const betOp: LetterOp = {
   meta,
   select: (S: State) => ({ S, ops: { args: [S.vm.F], prefs: {} } }),
   bound: (S: State, ops: SelectOperands) => {
-    const anchor = ops.args[0];
-    const boundaryId = nextId(S, "ב");
     const outside = S.vm.F;
+    let anchor = ops.args[0];
+
+    if (isWordEntryBaseline(S)) {
+      const seedId = nextId(S, "ב");
+      S.handles.set(seedId, createHandle(seedId, "entity"));
+      anchor = seedId;
+    }
+
+    const boundaryId = nextId(S, "ב");
     S.handles.set(
       boundaryId,
       createHandle(boundaryId, "boundary", {
         anchor: 1,
-        meta: { inside: anchor, outside, openedBy: "ב" }
+        meta: {
+          inside: anchor,
+          outside,
+          openedBy: "ב"
+        }
       })
     );
     addBoundary(S, boundaryId, anchor, outside, 1);
