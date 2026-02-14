@@ -147,6 +147,32 @@ Notes:
 - Coverage gate fails if any observed teamim lacks classification metadata.
 - Primary accent selection is deterministic: disjunctive-first, then conjunctive, with precedence + codepoint tie-break.
 
+### Deterministic Phrase Trees (Per Verse)
+
+Build deterministic binary phrase trees from the teamim-preserving normalized corpus and classification table:
+
+```bash
+npm run phrase-tree -- --input data/torah.normalized.teamim.txt --book=Genesis
+```
+
+Verify deterministic phrase-tree outputs:
+
+```bash
+npm run phrase-tree:verify -- --input data/torah.normalized.teamim.txt --book=Genesis
+```
+
+Outputs:
+
+- `corpus/verse_phrase_trees.jsonl`
+- `corpus/word_phrase_roles.jsonl`
+- `reports/phrase_tree_report.md`
+
+Notes:
+
+- Split rule: strongest disjunctive in-span (precedence desc, codepoint asc, index asc), excluding terminal split positions.
+- No-split spans use deterministic left-associative fold (`JOIN`, `fold=LEFT`).
+- Every verse is validated for full leaf coverage (no overlap/gap) before write.
+
 ### Token Operator Compilation Cache
 
 Compile each TokenID into a deterministic operator bundle with runtime-ready dispatch metadata:
