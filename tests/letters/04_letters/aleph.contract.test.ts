@@ -13,7 +13,10 @@ describe("aleph contract", () => {
 
   it("does not reference invalid handles", () => {
     const state = createInitialState();
-    const { cons } = alephOp.bound(state, { args: [state.vm.F, state.vm.R], prefs: {} });
+    const { cons } = alephOp.bound(state, {
+      args: [state.vm.wordEntryFocus ?? state.vm.F],
+      prefs: {}
+    });
     const { h, r } = alephOp.seal(state, cons);
     expect(state.handles.has(h)).toBe(true);
     expect(state.handles.has(r) || r === "⊥").toBe(true);

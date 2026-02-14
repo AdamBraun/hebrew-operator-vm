@@ -26,6 +26,7 @@ export type VM = {
   A: string[];
   wordHasContent: boolean;
   wordLastSealedArtifact?: string;
+  wordEntryFocus?: string;
   metaCounter?: Record<string, number>;
   route_mode?: "fork";
   route_arity?: number;
@@ -57,7 +58,8 @@ export function createInitialState(): State {
     H: [],
     A: [],
     wordHasContent: false,
-    wordLastSealedArtifact: undefined
+    wordLastSealedArtifact: undefined,
+    wordEntryFocus: OMEGA_ID
   };
 
   return {
@@ -75,7 +77,14 @@ export function serializeState(state: State): Record<string, any> {
     ...envelope,
     ports: Array.from(envelope.ports).sort()
   });
-  const { wordLastSealedArtifact, metaCounter, route_mode, route_arity, ...vmRest } = state.vm;
+  const {
+    wordLastSealedArtifact,
+    wordEntryFocus: _wordEntryFocus,
+    metaCounter,
+    route_mode,
+    route_arity,
+    ...vmRest
+  } = state.vm;
   const vm: Record<string, any> = { ...vmRest };
   if (wordLastSealedArtifact !== undefined) {
     vm.wordLastSealedArtifact = wordLastSealedArtifact;

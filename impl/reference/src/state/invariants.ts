@@ -23,6 +23,9 @@ export function assertStateInvariants(state: State): void {
   if (state.vm.wordLastSealedArtifact) {
     ensure(state.vm.wordLastSealedArtifact);
   }
+  if (state.vm.wordEntryFocus) {
+    ensure(state.vm.wordEntryFocus);
+  }
 
   for (const obligation of state.vm.OStack_word) {
     ensure(obligation.parent);

@@ -196,6 +196,9 @@ function executeBundle(
   bundle: CompiledTokenBundle,
   context: ExecuteContext
 ): { read_op: string; shape_op: string | null } {
+  if (!state.vm.wordHasContent) {
+    state.vm.wordEntryFocus = state.vm.F;
+  }
   state.vm.wordHasContent = true;
 
   const readOp = letterRegistry[bundle.runtime.read_letter];

@@ -211,6 +211,9 @@ function executeLetter(
   token: Token,
   context: { isWordFinal: boolean }
 ): { read_op: string; shape_op: string | null } {
+  if (!state.vm.wordHasContent) {
+    state.vm.wordEntryFocus = state.vm.F;
+  }
   state.vm.wordHasContent = true;
 
   const composite = compositeRegistry[token.letter];

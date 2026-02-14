@@ -71,6 +71,7 @@ export function applySpace(state: State): void {
   delete state.vm.route_mode;
   delete state.vm.route_arity;
   state.vm.F = state.vm.Omega;
+  state.vm.wordEntryFocus = state.vm.F;
   state.vm.R = BOT_ID;
   state.vm.K = [state.vm.F, state.vm.R];
   collectGarbage(state);
