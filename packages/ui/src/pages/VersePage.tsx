@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
-import { readManifest, type ArtifactManifest } from '../lib/artifacts';
+import {
+  readValidatedDataset,
+  type ValidatedDataset
+} from '../lib/artifacts';
 
 export function VersePage(): JSX.Element {
-  const [manifest, setManifest] = useState<ArtifactManifest | null>(null);
+  const [dataset, setDataset] = useState<ValidatedDataset | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    void readManifest()
-      .then((nextManifest) => {
+    void readValidatedDataset()
+      .then((nextDataset) => {
         if (!cancelled) {
-          setManifest(nextManifest);
+          setDataset(nextDataset);
         }
       })
       .catch((nextError: unknown) => {
@@ -29,7 +32,7 @@ export function VersePage(): JSX.Element {
     return (
       <div>
         <p>Verse page placeholder.</p>
-        <p className="status status-error">Manifest load failed: {error}</p>
+        <p className="status status-error">Dataset load failed: {error}</p>
       </div>
     );
   }
@@ -37,15 +40,34 @@ export function VersePage(): JSX.Element {
   return (
     <div>
       <p>Verse page placeholder.</p>
-      {manifest ? (
+      {dataset ? (
         <div className="status">
           <p>
-            Loaded <code>/public/data/manifest.json</code> ({manifest.artifacts.length} artifacts)
+            Loaded and validated <code>/public/data/manifest.json</code> (
+            {dataset.artifactSummaries.length} artifacts)
           </p>
           <ul className="artifact-list">
-            {manifest.artifacts.map((artifact) => (
-              <li key={artifact.path}>
-                <code>{artifact.path}</code> - {artifact.records} records
+            {dataset.artifactSummaries.map((artifact) => (
+              <li key={artifact.kind}>
+                <code>{artifact.kind}</code> {'->'} <code>{artifact.path}</code> (
+                {artifact.records}{' '}
+                records)
+              </li>
+            ))}
+          </ul>
+          <ul className="artifact-list">
+            {dataset.versionStatuses.map((status) => (
+              <li
+                key={status.field}
+                className={
+                  status.level === 'error'
+                    ? 'status-error'
+                    : status.level === 'warning'
+                    ? 'status-warning'
+                    : undefined
+                }
+              >
+                <code>{status.field}</code>: {status.value} ({status.message})
               </li>
             ))}
           </ul>
