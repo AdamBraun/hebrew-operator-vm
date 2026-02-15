@@ -7,6 +7,7 @@ import {
   buildBaselineExecutions,
   buildExecuteCompletion,
   buildExecuteWritePlan,
+  buildVersePhraseBoundaryLookup,
   buildWordPhaseRows,
   buildWordPhraseRoleLookup,
   buildVerseMotifIndex,
@@ -15,6 +16,7 @@ import {
   buildWordExecutionArtifacts,
   computeSafetyRailActivation,
   finalizeExecuteOutputs,
+  resolveVersePhraseBreaks,
   resolveExecutePaths,
   resolveSemanticVersion,
   selectModeExecutions
@@ -229,6 +231,18 @@ describe("torah corpus execute module helpers", () => {
       provisionalDeltaRate: 0.5,
       safetyRailThreshold: 0.4,
       verseWordRows: [{ boundary_ops: ["DIVINE_NAME_STATE"] }, { boundary_ops: ["WORD_BOUNDARY"] }],
+      phraseBreaks: [
+        {
+          kind: "PHRASE_BREAK",
+          phrase_node_id: "n_1_2_split",
+          split_word_index: 1,
+          word_span: { start: 1, end: 2 },
+          evidence: {
+            verse_ref_key: "Genesis/1/1",
+            phrase_version: "phrase_tree.v1"
+          }
+        }
+      ],
       crossWordEvents: [{ ref_key: "Genesis/1/1/2" }],
       totalEventsInVerse: 5,
       boundaryByType: { WORD_BOUNDARY: 1, DIVINE_NAME_STATE: 1 },
@@ -250,6 +264,8 @@ describe("torah corpus execute module helpers", () => {
       provisional_delta_count: 2,
       threshold: 0.4
     });
+    expect(verseRecord.boundary_events.by_type.PHRASE_BREAK).toBe(1);
+    expect(verseRecord.boundary_events.phrase_breaks).toHaveLength(1);
   });
 
   it("builds word execution artifacts with delta and runtime samples", () => {
@@ -352,6 +368,68 @@ describe("torah corpus execute module helpers", () => {
     });
     expect(String(rows[1]?.phase_render)).toContain("Phrase role: UNASSIGNED");
     expect(String(rows[1]?.phase_render)).toContain("Clause: UNASSIGNED");
+  });
+
+  it("maps split phrase-tree nodes to deterministic PHRASE_BREAK events", () => {
+    const lookup = buildVersePhraseBoundaryLookup([
+      {
+        ref_key: "Genesis/1/1",
+        words: ["בְּרֵאשִׁ֖ית", "בָּרָ֣א", "אֱלֹהִ֑ים"],
+        phrase_version: "phrase_tree.v1",
+        tree: {
+          id: "n_1_3_split",
+          node_type: "SPLIT",
+          split_word_index: 2,
+          span: { start: 1, end: 3 },
+          left: {
+            id: "n_1_2_split",
+            node_type: "SPLIT",
+            split_word_index: 1,
+            span: { start: 1, end: 2 },
+            left: { id: "w_1", node_type: "LEAF", span: { start: 1, end: 1 } },
+            right: { id: "w_2", node_type: "LEAF", span: { start: 2, end: 2 } }
+          },
+          right: { id: "w_3", node_type: "LEAF", span: { start: 3, end: 3 } }
+        }
+      }
+    ]);
+
+    const phraseBreaks = resolveVersePhraseBreaks({
+      verseRefKey: "Genesis/1/1",
+      verseWords: ["בראשית", "ברא", "אלהים"],
+      phraseBoundaryLookup: lookup
+    });
+
+    expect(phraseBreaks).toEqual([
+      {
+        kind: "PHRASE_BREAK",
+        phrase_node_id: "n_1_2_split",
+        split_word_index: 1,
+        word_span: { start: 1, end: 2 },
+        evidence: {
+          verse_ref_key: "Genesis/1/1",
+          phrase_version: "phrase_tree.v1"
+        }
+      },
+      {
+        kind: "PHRASE_BREAK",
+        phrase_node_id: "n_1_3_split",
+        split_word_index: 2,
+        word_span: { start: 1, end: 3 },
+        evidence: {
+          verse_ref_key: "Genesis/1/1",
+          phrase_version: "phrase_tree.v1"
+        }
+      }
+    ]);
+
+    expect(
+      resolveVersePhraseBreaks({
+        verseRefKey: "Genesis/1/1",
+        verseWords: ["א", "ב", "ג", "ד"],
+        phraseBoundaryLookup: lookup
+      })
+    ).toEqual([]);
   });
 
   it("accumulates word execution artifacts into verse-level trackers", () => {

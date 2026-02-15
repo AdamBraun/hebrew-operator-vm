@@ -170,6 +170,55 @@ type WordPhraseRoleLookupRow = {
   phrase_version: string;
 };
 
+type VersePhraseTreeInputRow = {
+  ref_key?: string;
+  words?: unknown[];
+  phrase_version?: string;
+  tree?: unknown;
+};
+
+type PhraseTreeNodeInput = {
+  id?: unknown;
+  node_type?: unknown;
+  split_word_index?: unknown;
+  span?: {
+    start?: unknown;
+    end?: unknown;
+  };
+  left?: unknown;
+  right?: unknown;
+};
+
+type SplitNodeDescriptor = {
+  phrase_node_id: string;
+  split_word_index: number;
+  word_span: {
+    start: number;
+    end: number;
+  };
+};
+
+export type VersePhraseBreakEvent = {
+  kind: "PHRASE_BREAK";
+  phrase_node_id: string;
+  split_word_index: number;
+  word_span: {
+    start: number;
+    end: number;
+  };
+  evidence: {
+    verse_ref_key: string;
+    phrase_version: string;
+  };
+};
+
+type VersePhraseBoundaryLookupRow = {
+  ref_key: string;
+  phrase_word_key: string;
+  phrase_collapsed_key: string;
+  phrase_breaks: VersePhraseBreakEvent[];
+};
+
 type BuildWordPhaseRowsInput = {
   rows: WordPhaseSourceRow[];
   phraseRoleLookup: Map<string, WordPhraseRoleLookupRow>;
@@ -339,6 +388,7 @@ type BuildVerseTraceRecordInput = {
   provisionalDeltaRate: number;
   safetyRailThreshold: number;
   verseWordRows: VerseWordRow[];
+  phraseBreaks: VersePhraseBreakEvent[];
   crossWordEvents: unknown[];
   totalEventsInVerse: number;
   boundaryByType: Record<string, number>;
@@ -349,6 +399,7 @@ type BuildVerseTraceRecordInput = {
   ) => unknown;
   buildVerseMotifs: (args: {
     verseWordRows: VerseWordRow[];
+    phraseBreaks: VersePhraseBreakEvent[];
     crossWordEvents: unknown[];
     verseBoundaryResolution: unknown;
   }) => unknown[];
@@ -664,6 +715,161 @@ function phraseRoleLookupKey(refKey: string, wordIndex: number): string {
   return `${refKey}/${wordIndex}`;
 }
 
+function normalizeWordForPhraseBoundaryMatch(value: string): string {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u05BE\u05C3]/gu, "")
+    .replace(/\p{M}/gu, "")
+    .replace(/\s+/gu, "")
+    .trim();
+}
+
+function buildPhraseWordKey(words: string[]): string {
+  return words.map((word) => normalizeWordForPhraseBoundaryMatch(word)).join("|");
+}
+
+function buildPhraseCollapsedKey(words: string[]): string {
+  return words.map((word) => normalizeWordForPhraseBoundaryMatch(word)).join("");
+}
+
+function compareSplitNodeDescriptors(
+  left: SplitNodeDescriptor,
+  right: SplitNodeDescriptor
+): number {
+  if (left.split_word_index !== right.split_word_index) {
+    return left.split_word_index - right.split_word_index;
+  }
+  if (left.word_span.start !== right.word_span.start) {
+    return left.word_span.start - right.word_span.start;
+  }
+  if (left.word_span.end !== right.word_span.end) {
+    return left.word_span.end - right.word_span.end;
+  }
+  return sortRefLike(left.phrase_node_id, right.phrase_node_id);
+}
+
+function collectSplitNodeDescriptors(node: unknown, out: SplitNodeDescriptor[]): void {
+  if (!node || typeof node !== "object") {
+    return;
+  }
+
+  const row = node as PhraseTreeNodeInput;
+  if (row.node_type === "SPLIT") {
+    const phraseNodeId = typeof row.id === "string" ? row.id : "";
+    const splitWordIndex = Number(row.split_word_index);
+    const spanStart = Number(row.span?.start);
+    const spanEnd = Number(row.span?.end);
+    if (
+      phraseNodeId.length > 0 &&
+      Number.isInteger(splitWordIndex) &&
+      splitWordIndex > 0 &&
+      Number.isInteger(spanStart) &&
+      spanStart > 0 &&
+      Number.isInteger(spanEnd) &&
+      spanEnd >= spanStart
+    ) {
+      out.push({
+        phrase_node_id: phraseNodeId,
+        split_word_index: splitWordIndex,
+        word_span: {
+          start: spanStart,
+          end: spanEnd
+        }
+      });
+    }
+  }
+
+  collectSplitNodeDescriptors(row.left, out);
+  collectSplitNodeDescriptors(row.right, out);
+}
+
+export function buildVersePhraseBoundaryLookup(
+  rows: VersePhraseTreeInputRow[]
+): Map<string, VersePhraseBoundaryLookupRow> {
+  const lookup = new Map<string, VersePhraseBoundaryLookupRow>();
+
+  for (const row of rows) {
+    const verseRefKey = typeof row.ref_key === "string" ? row.ref_key : "";
+    if (verseRefKey.length === 0) {
+      continue;
+    }
+    if (lookup.has(verseRefKey)) {
+      throw new Error(`Duplicate phrase tree row for ${verseRefKey}`);
+    }
+
+    const words = Array.isArray(row.words) ? row.words.map((word) => String(word)) : [];
+    const phraseVersion =
+      typeof row.phrase_version === "string" && row.phrase_version.length > 0
+        ? row.phrase_version
+        : "phrase_tree.unknown";
+    const descriptors: SplitNodeDescriptor[] = [];
+    collectSplitNodeDescriptors(row.tree, descriptors);
+
+    const uniqueByNodeId = new Map<string, SplitNodeDescriptor>();
+    for (const descriptor of descriptors) {
+      if (!uniqueByNodeId.has(descriptor.phrase_node_id)) {
+        uniqueByNodeId.set(descriptor.phrase_node_id, descriptor);
+      }
+    }
+
+    const phraseBreaks = Array.from(uniqueByNodeId.values())
+      .sort(compareSplitNodeDescriptors)
+      .map((descriptor) => ({
+        kind: "PHRASE_BREAK" as const,
+        phrase_node_id: descriptor.phrase_node_id,
+        split_word_index: descriptor.split_word_index,
+        word_span: {
+          start: descriptor.word_span.start,
+          end: descriptor.word_span.end
+        },
+        evidence: {
+          verse_ref_key: verseRefKey,
+          phrase_version: phraseVersion
+        }
+      }));
+
+    lookup.set(verseRefKey, {
+      ref_key: verseRefKey,
+      phrase_word_key: buildPhraseWordKey(words),
+      phrase_collapsed_key: buildPhraseCollapsedKey(words),
+      phrase_breaks: phraseBreaks
+    });
+  }
+
+  return lookup;
+}
+
+export function resolveVersePhraseBreaks(args: {
+  verseRefKey: string;
+  verseWords: string[];
+  phraseBoundaryLookup: Map<string, VersePhraseBoundaryLookupRow>;
+}): VersePhraseBreakEvent[] {
+  const row = args.phraseBoundaryLookup.get(args.verseRefKey);
+  if (!row) {
+    return [];
+  }
+
+  const verseWordKey = buildPhraseWordKey(args.verseWords);
+  const verseCollapsedKey = buildPhraseCollapsedKey(args.verseWords);
+  if (verseWordKey !== row.phrase_word_key && verseCollapsedKey !== row.phrase_collapsed_key) {
+    return [];
+  }
+
+  return row.phrase_breaks.map((event) => ({
+    kind: "PHRASE_BREAK",
+    phrase_node_id: event.phrase_node_id,
+    split_word_index: event.split_word_index,
+    word_span: {
+      start: event.word_span.start,
+      end: event.word_span.end
+    },
+    evidence: {
+      verse_ref_key: event.evidence.verse_ref_key,
+      phrase_version: event.evidence.phrase_version
+    }
+  }));
+}
+
 function phraseLookupKeyFromWordRefKey(refKey: string): string {
   const pieces = String(refKey).split("/");
   if (pieces.length < 4) {
@@ -771,6 +977,13 @@ export function buildVerseTraceRecord(args: BuildVerseTraceRecordInput): Record<
     args.verseWordRows.length > 0
       ? args.verseWordRows[args.verseWordRows.length - 1].boundary_ops
       : [];
+  const boundaryByType: Record<string, number> = {
+    ...args.boundaryByType
+  };
+  if (args.phraseBreaks.length > 0) {
+    boundaryByType.PHRASE_BREAK =
+      Number(boundaryByType.PHRASE_BREAK ?? 0) + args.phraseBreaks.length;
+  }
   const verseBoundaryResolution = args.buildVerseBoundaryResolution(
     args.verseWordRows,
     args.boundaryByType
@@ -787,14 +1000,16 @@ export function buildVerseTraceRecord(args: BuildVerseTraceRecordInput): Record<
     words_total: args.verseWordRows.length,
     total_events: args.totalEventsInVerse,
     boundary_events: {
-      total: Object.values(args.boundaryByType).reduce((sum, count) => sum + Number(count), 0),
-      by_type: args.sortCountObjectByKey(args.boundaryByType),
+      total: Object.values(boundaryByType).reduce((sum, count) => sum + Number(count), 0),
+      by_type: args.sortCountObjectByKey(boundaryByType),
       verse_end: verseEndBoundaryOps,
+      phrase_breaks: args.phraseBreaks,
       verse_boundary_operator: verseBoundaryResolution
     },
     cross_word_events: args.crossWordEvents,
     notable_motifs: args.buildVerseMotifs({
       verseWordRows: args.verseWordRows,
+      phraseBreaks: args.phraseBreaks,
       crossWordEvents: args.crossWordEvents,
       verseBoundaryResolution
     })

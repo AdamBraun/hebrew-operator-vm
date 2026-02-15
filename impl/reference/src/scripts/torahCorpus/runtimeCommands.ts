@@ -35,6 +35,7 @@ import {
   buildExecuteCompletion,
   buildExecuteReports,
   buildExecuteWritePlan,
+  buildVersePhraseBoundaryLookup,
   buildWordPhaseRows,
   buildWordPhraseRoleLookup,
   buildVerseMotifIndex,
@@ -43,6 +44,7 @@ import {
   buildWordExecutionArtifacts,
   computeSafetyRailActivation,
   finalizeExecuteOutputs,
+  resolveVersePhraseBreaks,
   resolveExecutePaths,
   resolveSemanticVersion,
   selectModeExecutions
@@ -458,6 +460,12 @@ async function runExecute(argv) {
     ]);
   const raw = rawBuffer.toString("utf8");
   const data = JSON.parse(raw);
+  const phraseTreePath = path.resolve(process.cwd(), "corpus", "verse_phrase_trees.jsonl");
+  let phraseBoundaryLookup = new Map();
+  if (await pathExists(phraseTreePath)) {
+    const phraseTreeRows = await readJsonl(phraseTreePath);
+    phraseBoundaryLookup = buildVersePhraseBoundaryLookup(phraseTreeRows);
+  }
 
   const semanticVersion = resolveSemanticVersion(
     opts.semanticVersion,
@@ -630,6 +638,12 @@ async function runExecute(argv) {
       });
     }
 
+    const phraseBreaks = resolveVersePhraseBreaks({
+      verseRefKey: verseEntry.ref_key,
+      verseWords: verseEntry.words,
+      phraseBoundaryLookup
+    });
+
     const verseRecord = buildVerseTraceRecord({
       traceVersion: VERSION_CONTRACT.trace_version,
       traceRenderVersion: VERSION_CONTRACT.render_version,
@@ -644,6 +658,7 @@ async function runExecute(argv) {
       provisionalDeltaRate,
       safetyRailThreshold: safetyRailStats.threshold,
       verseWordRows,
+      phraseBreaks,
       crossWordEvents,
       totalEventsInVerse,
       boundaryByType,

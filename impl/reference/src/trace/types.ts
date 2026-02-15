@@ -436,10 +436,25 @@ export type VerseBoundaryOperator = {
   action: "discharge_or_close_pending" | "confirm_stable_closure";
 };
 
+export type PhraseBreakEvent = {
+  kind: "PHRASE_BREAK";
+  phrase_node_id: string;
+  split_word_index: number;
+  word_span: {
+    start: number;
+    end: number;
+  };
+  evidence: {
+    verse_ref_key: string;
+    phrase_version: string;
+  };
+};
+
 export type VerseBoundaryEvents = {
   total: number;
   by_type: Record<string, number>;
   verse_end: string[];
+  phrase_breaks: PhraseBreakEvent[];
   verse_boundary_operator: VerseBoundaryOperator;
 };
 

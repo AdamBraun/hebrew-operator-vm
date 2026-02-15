@@ -278,7 +278,12 @@ function buildVerseBoundaryResolution(verseWordRows, boundaryByType) {
   };
 }
 
-function buildVerseMotifs({ verseWordRows, crossWordEvents, verseBoundaryResolution }) {
+function buildVerseMotifs({
+  verseWordRows,
+  phraseBreaks,
+  crossWordEvents,
+  verseBoundaryResolution
+}) {
   const motifs = [];
   if (crossWordEvents.length > 0) {
     motifs.push({
@@ -305,6 +310,18 @@ function buildVerseMotifs({ verseWordRows, crossWordEvents, verseBoundaryResolut
       motif: "VERSE_BOUNDARY_RESOLUTION",
       count: verseBoundaryResolution.boundary_ops_seen,
       action: verseBoundaryResolution.action
+    });
+  }
+
+  if (phraseBreaks.length > 0) {
+    motifs.push({
+      motif: "PHRASE_BREAK",
+      count: phraseBreaks.length,
+      samples: phraseBreaks.slice(0, 6).map((event) => ({
+        phrase_node_id: event.phrase_node_id,
+        split_word_index: event.split_word_index,
+        word_span: event.word_span
+      }))
     });
   }
 

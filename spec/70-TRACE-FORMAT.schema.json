@@ -139,7 +139,7 @@
     },
     "BoundaryOpKind": {
       "type": "string",
-      "pattern": "^(?:[A-Z][A-Z0-9_]*\\.[A-Z][A-Z0-9_]*|ERROR\\.[A-Z_]+|EXTENSION)$"
+      "pattern": "^(?:PHRASE_BREAK|[A-Z][A-Z0-9_]*\\.[A-Z][A-Z0-9_]*|ERROR\\.[A-Z_]+|EXTENSION)$"
     },
     "FlowMode": {
       "type": "string",
@@ -1503,9 +1503,63 @@
         }
       }
     },
+    "PhraseBreakWordSpan": {
+      "type": "object",
+      "required": ["start", "end"],
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "PhraseBreakEvidence": {
+      "type": "object",
+      "required": ["verse_ref_key", "phrase_version"],
+      "additionalProperties": false,
+      "properties": {
+        "verse_ref_key": {
+          "type": "string",
+          "pattern": "^[^/]+/[0-9]+/[0-9]+$"
+        },
+        "phrase_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "PhraseBreakEvent": {
+      "type": "object",
+      "required": ["kind", "phrase_node_id", "split_word_index", "word_span", "evidence"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "PHRASE_BREAK"
+        },
+        "phrase_node_id": {
+          "type": "string",
+          "pattern": "^n_[0-9]+_[0-9]+_split$"
+        },
+        "split_word_index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "word_span": {
+          "$ref": "#/$defs/PhraseBreakWordSpan"
+        },
+        "evidence": {
+          "$ref": "#/$defs/PhraseBreakEvidence"
+        }
+      }
+    },
     "VerseBoundaryEvents": {
       "type": "object",
-      "required": ["total", "by_type", "verse_end", "verse_boundary_operator"],
+      "required": ["total", "by_type", "verse_end", "phrase_breaks", "verse_boundary_operator"],
       "additionalProperties": false,
       "properties": {
         "total": {
@@ -1526,6 +1580,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/BoundaryOpKind"
+          }
+        },
+        "phrase_breaks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PhraseBreakEvent"
           }
         },
         "verse_boundary_operator": {

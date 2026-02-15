@@ -156,6 +156,14 @@ Required fields:
 - `cross_word_events`
 - `notable_motifs`
 
+`boundary_events` includes:
+
+- `total`
+- `by_type`
+- `verse_end`
+- `phrase_breaks` (`PHRASE_BREAK` verse-level boundary events keyed to phrase tree split-node ids with word spans)
+- `verse_boundary_operator`
+
 Optional fields:
 
 - `window_size`

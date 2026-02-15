@@ -2,7 +2,7 @@
 
 ## Summary
 - input_trace: corpus/word_traces.jsonl
-- input_trace_sha256: 2b00b9882588950a7a71107620b531f903e7632d707dd8d0f16fdb03b1b44df0
+- input_trace_sha256: 18a2fa338f22883f0571cf70989f966a1757c95dc842e9c8367dbc095caacd06
 - semantic_versions: 1.1.0
 - words_indexed: 80856
 - unique_skeletons: 4295
@@ -119,4 +119,4 @@
 - ENDS_WITH_FINALIZE: skeletons=304, occurrences=8653
 
 ## Build Performance
-- elapsed_ms: 1077.44
+- elapsed_ms: 1247.53

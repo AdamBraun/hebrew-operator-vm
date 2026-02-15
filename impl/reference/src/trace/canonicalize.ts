@@ -142,6 +142,49 @@ function normalizeCountRecord(input: Record<string, number>): Record<string, num
   return out;
 }
 
+function normalizePhraseBreakEvents(
+  events: VerseTraceRecord["boundary_events"]["phrase_breaks"] | undefined
+): VerseTraceRecord["boundary_events"]["phrase_breaks"] {
+  if (!Array.isArray(events)) {
+    return [];
+  }
+
+  return [...events]
+    .map((event) => ({
+      kind: "PHRASE_BREAK" as const,
+      phrase_node_id: String(event.phrase_node_id),
+      split_word_index: asPositiveInt(event.split_word_index, 1),
+      word_span: {
+        start: asPositiveInt(event.word_span?.start, 1),
+        end: asPositiveInt(event.word_span?.end, 1)
+      },
+      evidence: {
+        verse_ref_key: String(event.evidence?.verse_ref_key ?? ""),
+        phrase_version: String(event.evidence?.phrase_version ?? "")
+      }
+    }))
+    .sort((left, right) => {
+      if (left.split_word_index !== right.split_word_index) {
+        return left.split_word_index - right.split_word_index;
+      }
+      if (left.word_span.start !== right.word_span.start) {
+        return left.word_span.start - right.word_span.start;
+      }
+      if (left.word_span.end !== right.word_span.end) {
+        return left.word_span.end - right.word_span.end;
+      }
+      const nodeCmp = compareText(left.phrase_node_id, right.phrase_node_id);
+      if (nodeCmp !== 0) {
+        return nodeCmp;
+      }
+      const refCmp = compareRefKeyLike(left.evidence.verse_ref_key, right.evidence.verse_ref_key);
+      if (refCmp !== 0) {
+        return refCmp;
+      }
+      return compareText(left.evidence.phrase_version, right.evidence.phrase_version);
+    });
+}
+
 function normalizeCrossWordEvents(
   events: VerseTraceRecord["cross_word_events"]
 ): VerseTraceRecord["cross_word_events"] {
@@ -289,6 +332,7 @@ export function canonicalizeVerseTraceRecord(input: VerseTraceRecord): VerseTrac
     total: Number(input.boundary_events.total ?? 0),
     by_type: normalizeCountRecord(input.boundary_events.by_type ?? {}),
     verse_end: [...(input.boundary_events.verse_end ?? [])].map(String).sort(compareText),
+    phrase_breaks: normalizePhraseBreakEvents(input.boundary_events.phrase_breaks ?? []),
     verse_boundary_operator: {
       op_family: "VERSE.BOUNDARY_RESOLUTION" as const,
       trigger: "explicit_verse_boundary" as const,

@@ -4,10 +4,10 @@
 - definitions: /Users/adambraun/projects/letters/registry/token-semantics.json
 - output: /Users/adambraun/projects/letters/data/tokens.compiled.json
 - semver: 1.1.0
-- trace_version: 1.0.0
+- trace_version: 1.1.0
 - render_version: 1.1.0
 - definitions sha256: f955b0834bc7201c6e10c6de128252c7e59438ae55b2cb1a9afe0ee718824da0
-- compiled sha256: 9a24ff436b35d42dfcab9ce90e2efe7027d327165816c174f613501c6a427705
+- compiled sha256: 03215341de63f660f7012d0de55d6a91eca21fe5a6e9ccab7b2a468241a5e229
 - tokens compiled: 763
 - warnings: 336
 

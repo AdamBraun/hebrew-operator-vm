@@ -4,7 +4,7 @@
 - input: data/torah.json
 - token_registry: data/tokens.registry.json
 - compiled_bundles: data/tokens.compiled.json
-- trace_version: 1.0.0
+- trace_version: 1.1.0
 - semantics_version: 1.1.0
 - render_version: 1.1.0
 - execution_mode: WORD
@@ -17,14 +17,14 @@
 - verses_skipped: 0
 - verses_emitted: 5846
 - unique_skeletons: 4295
-- trace_sha256: 2b00b9882588950a7a71107620b531f903e7632d707dd8d0f16fdb03b1b44df0
-- verse_trace_sha256: 3a6af8f620b3f09f613f4d484f53355768d34d76698a1455cd1a980360f024e3
-- elapsed_ms: 1932.32
-- words_per_second: 41843.94
+- trace_sha256: 18a2fa338f22883f0571cf70989f966a1757c95dc842e9c8367dbc095caacd06
+- verse_trace_sha256: 4a120fba328ecf7065ee739dede0b26cc7af1e791a65ba2d6902de8945cda134
+- elapsed_ms: 2149.04
+- words_per_second: 37624.19
 
 ## Quality Gates
 - coverage: PASS (80856/80856)
-- determinism_basis: trace checksum captured (2b00b9882588950a7a71107620b531f903e7632d707dd8d0f16fdb03b1b44df0)
+- determinism_basis: trace checksum captured (18a2fa338f22883f0571cf70989f966a1757c95dc842e9c8367dbc095caacd06)
 - flow_derivation: PASS (0 mismatches)
 - word_mode_equivalence: FAIL (823/80856)
 - explainability: PASS (WORD baseline mode)

@@ -4,7 +4,7 @@ Canonical, deterministic exemplars for publication and regression validation.
 
 ## Summary
 - source_trace: `corpus/word_traces.jsonl`
-- trace_sha256: `2b00b9882588950a7a71107620b531f903e7632d707dd8d0f16fdb03b1b44df0`
+- trace_sha256: `18a2fa338f22883f0571cf70989f966a1757c95dc842e9c8367dbc095caacd06`
 - semantic_versions: 1.1.0
 - exemplars: 30
 - regression_cases: 18

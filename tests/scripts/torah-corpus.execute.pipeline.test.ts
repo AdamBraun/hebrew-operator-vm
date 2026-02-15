@@ -92,7 +92,7 @@ describe("torah corpus execute pipeline", () => {
     expect(traceRows).toHaveLength(5);
     for (const row of traceRows) {
       expect(row.record_kind).toBe("WORD_TRACE");
-      expect(row.trace_version).toBe("1.0.0");
+      expect(row.trace_version).toBe("1.1.0");
       expect(row.render_version).toBe("1.1.0");
       expect(row.ref).toBeDefined();
       expect(Array.isArray(row.token_ids)).toBe(true);
@@ -121,7 +121,7 @@ describe("torah corpus execute pipeline", () => {
       .map((line) => JSON.parse(line));
     expect(verseRows).toHaveLength(2);
     expect(verseRows[0].record_kind).toBe("VERSE_TRACE");
-    expect(verseRows[0].trace_version).toBe("1.0.0");
+    expect(verseRows[0].trace_version).toBe("1.1.0");
     expect(verseRows[0].render_version).toBe("1.1.0");
     expect(String(verseRows[0].canonical_hash)).toMatch(/^[a-f0-9]{64}$/);
     expect(verseRows[0].mode).toBe("WORD");
