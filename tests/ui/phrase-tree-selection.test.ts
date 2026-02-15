@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { derivePhraseSelection, spanToWordIndices } from "../../packages/ui/src/components/phraseTreeSelection";
+import {
+  derivePhraseSelection,
+  spanToWordIndices
+} from "../../packages/ui/src/components/phraseTreeSelection";
 import type { PhraseNode } from "../../packages/ui/src/lib/contracts/versePhraseTrees";
 import type { WordPhraseRoleRecord } from "../../packages/ui/src/lib/contracts/wordPhraseRoles";
 
