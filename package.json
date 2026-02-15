@@ -2,8 +2,14 @@
   "name": "hebrew-operator-vm",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/ui"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "ui:dev": "npm run dev --workspace @letters/ui",
+    "ui:build": "npm run build --workspace @letters/ui",
+    "ui:preview": "npm run preview --workspace @letters/ui",
     "download-torah": "node scripts/download-torah.mjs",
     "iterate-torah": "node scripts/iterate-torah.mjs",
     "normalize-torah": "node scripts/normalize-torah.mjs",
