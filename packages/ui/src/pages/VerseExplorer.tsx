@@ -5,11 +5,10 @@ import {
   useRef,
   useState
 } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { PhraseTree } from '../components/PhraseTree';
 import { RefPicker } from '../components/RefPicker';
 import { VerseText } from '../components/VerseText';
-import { WordInspector } from '../components/WordInspector';
 import { derivePhraseSelection } from '../components/phraseTreeSelection';
 import {
   getReferenceCatalog,
@@ -38,6 +37,7 @@ export function VerseExplorer(): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
   const { refSlug } = useParams<{ refSlug?: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [catalog, setCatalog] = useState<ReferenceCatalog | null>(null);
@@ -48,7 +48,6 @@ export function VerseExplorer(): JSX.Element {
   const [refInputValue, setRefInputValue] = useState('');
   const [inputError, setInputError] = useState<string | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -275,7 +274,6 @@ export function VerseExplorer(): JSX.Element {
       setVerseBundle(null);
       setVerseError(null);
       setSelectedNodeId(null);
-      setSelectedWordIndex(null);
       return;
     }
 
@@ -308,6 +306,27 @@ export function VerseExplorer(): JSX.Element {
       cancelled = true;
     };
   }, [activeRefKey]);
+
+  useEffect(() => {
+    if (!activeRefKey) {
+      return;
+    }
+    const currentRef = searchParams.get('ref');
+    if (currentRef === activeRefKey) {
+      return;
+    }
+    const next = new URLSearchParams(searchParams);
+    next.set('ref', activeRefKey);
+    setSearchParams(next, { replace: true });
+  }, [activeRefKey, searchParams, setSearchParams]);
+
+  const selectedWordIndex = useMemo(() => {
+    const parsed = Number(searchParams.get('word'));
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return null;
+    }
+    return parsed;
+  }, [searchParams]);
 
   const selectedBook = activeReference?.ref.book ?? books[0] ?? '';
   const chapters = useMemo(() => {
@@ -419,43 +438,24 @@ export function VerseExplorer(): JSX.Element {
 
   const onWordClick = useCallback((wordIndex: number) => {
     setSelectedNodeId(null);
-    setSelectedWordIndex((current) => (current === wordIndex ? null : wordIndex));
-  }, []);
+    const next = new URLSearchParams(searchParams);
+    if (activeRefKey) {
+      next.set('ref', activeRefKey);
+    }
+    if (selectedWordIndex === wordIndex) {
+      next.delete('word');
+    } else {
+      next.set('word', String(wordIndex));
+    }
+    setSearchParams(next);
+  }, [activeRefKey, searchParams, selectedWordIndex, setSearchParams]);
 
   const onNodeClick = useCallback((nodeId: string) => {
-    setSelectedWordIndex(null);
     setSelectedNodeId((current) => (current === nodeId ? null : nodeId));
-  }, []);
-
-  const selectedWordTrace = useMemo(() => {
-    if (!selectedWordIndex) {
-      return null;
-    }
-    return alignedWordTraces[selectedWordIndex - 1] ?? null;
-  }, [alignedWordTraces, selectedWordIndex]);
-
-  const selectedWordPhraseRole = useMemo(() => {
-    if (!selectedWordIndex) {
-      return null;
-    }
-    return (
-      wordPhraseRoles.find((role) => role.word_index === selectedWordIndex) ??
-      wordPhraseRoles[selectedWordIndex - 1] ??
-      null
-    );
-  }, [selectedWordIndex, wordPhraseRoles]);
-
-  const selectedWordSurface = useMemo(() => {
-    if (!selectedWordIndex) {
-      return null;
-    }
-    return (
-      verseText[selectedWordIndex - 1] ??
-      selectedWordTrace?.surface ??
-      selectedWordPhraseRole?.surface ??
-      null
-    );
-  }, [selectedWordIndex, selectedWordPhraseRole, selectedWordTrace?.surface, verseText]);
+    const next = new URLSearchParams(searchParams);
+    next.delete('word');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   if (bundleError) {
     return (
@@ -547,13 +547,15 @@ export function VerseExplorer(): JSX.Element {
         </div>
 
         <section className="verse-panel verse-panel-inspector">
-          <h3>Word Inspector</h3>
-          <WordInspector
-            selectedWordIndex={selectedWordIndex}
-            surface={selectedWordSurface}
-            wordTrace={selectedWordTrace}
-            wordPhraseRole={selectedWordPhraseRole}
-          />
+          <h3>Inspect Selected Word</h3>
+          {selectedWordIndex ? (
+            <p className="status">
+              Selected word <code>#{selectedWordIndex}</code> in <code>{activeRefKey}</code>.
+              Switch to the Word or Trace tab to inspect it.
+            </p>
+          ) : (
+            <p className="status">Select a word to sync Word and Trace panes.</p>
+          )}
         </section>
       </div>
     </div>

@@ -1,4 +1,7 @@
-import { NavLink, useLocation, useOutlet } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
+import { TracePage } from '../pages/TracePage';
+import { VerseExplorer } from '../pages/VerseExplorer';
+import { WordPage } from '../pages/WordPage';
 
 type PaneKey = 'verse' | 'word' | 'trace';
 
@@ -21,8 +24,7 @@ const paneForPath = (pathname: string): PaneKey => {
 };
 
 export function Layout(): JSX.Element {
-  const outlet = useOutlet();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const activePane = paneForPath(pathname);
 
   return (
@@ -37,7 +39,7 @@ export function Layout(): JSX.Element {
             <NavLink
               key={pane.key}
               className={({ isActive }) => (isActive ? 'tab is-active' : 'tab')}
-              to={`/${pane.key}`}
+              to={{ pathname: `/${pane.key}`, search }}
             >
               {pane.label}
             </NavLink>
@@ -56,11 +58,9 @@ export function Layout(): JSX.Element {
               <h2>{pane.label}</h2>
             </header>
             <div className="pane-body">
-              {pane.key === activePane ? (
-                outlet
-              ) : (
-                <p className="placeholder">Navigate to {pane.label} to load this pane.</p>
-              )}
+              {pane.key === 'verse' ? <VerseExplorer /> : null}
+              {pane.key === 'word' ? <WordPage /> : null}
+              {pane.key === 'trace' ? <TracePage /> : null}
             </div>
           </section>
         ))}

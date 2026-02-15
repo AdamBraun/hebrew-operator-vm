@@ -304,6 +304,117 @@ body {
   cursor: pointer;
 }
 
+.trace-viewer {
+  margin-top: 0.7rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.trace-viewer-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.45rem;
+}
+
+.trace-viewer-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.trace-viewer-control {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 9rem;
+}
+
+.trace-viewer-control span {
+  font-size: 0.76rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.trace-viewer-control input,
+.trace-viewer-control select {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  padding: 0.34rem 0.45rem;
+  font-size: 0.8rem;
+}
+
+.trace-viewer-jump {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem;
+}
+
+.trace-viewer-phase-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.trace-viewer-list {
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.trace-event-row {
+  min-height: 5.2rem;
+  border-bottom: 1px solid var(--line);
+  padding: 0.48rem 0.55rem;
+  display: grid;
+  align-content: start;
+  gap: 0.22rem;
+}
+
+.trace-event-row:last-child {
+  border-bottom: none;
+}
+
+.trace-event-row.is-focused {
+  background: var(--accent-soft);
+}
+
+.trace-event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: baseline;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.trace-event-labels {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  font-size: 0.74rem;
+}
+
+.trace-event-labels span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.07rem 0.35rem;
+  background: #fff;
+  color: var(--ink);
+}
+
+.trace-event-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
 .verse-text-token-grid {
   display: flex;
   flex-wrap: wrap;
