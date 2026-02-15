@@ -209,9 +209,7 @@ function stripMarkupAndEntities(text: string): string {
     }
     return "";
   });
-  out = out.replace(/&[^;\s]+;/g, (match) =>
-    SPACE_ENTITIES.has(match.toLowerCase()) ? " " : ""
-  );
+  out = out.replace(/&[^;\s]+;/g, (match) => (SPACE_ENTITIES.has(match.toLowerCase()) ? " " : ""));
   out = out.replace(/[\u00A0\u2009]/g, " ");
   return out.replace(/\{\s*[פס]\s*\}/gu, " ");
 }

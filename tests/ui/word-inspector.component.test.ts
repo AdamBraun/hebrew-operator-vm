@@ -2,10 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { WordInspector } from "../../packages/ui/src/components/WordInspector";
-import type {
-  WordPhraseRoleRecord,
-  WordTraceRecord
-} from "../../packages/ui/src/lib/contracts";
+import type { WordPhraseRoleRecord, WordTraceRecord } from "../../packages/ui/src/lib/contracts";
 
 describe("word inspector component", () => {
   it("renders expected fields from a selected word record", () => {

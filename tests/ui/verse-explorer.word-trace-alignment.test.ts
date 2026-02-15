@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type {
-  WordPhraseRoleRecord,
-  WordTraceRecord
-} from "../../packages/ui/src/lib/contracts";
+import type { WordPhraseRoleRecord, WordTraceRecord } from "../../packages/ui/src/lib/contracts";
 import { alignWordTracesToDisplayWords } from "../../packages/ui/src/pages/VerseExplorer";
 
 function makeTrace(
@@ -80,12 +77,7 @@ describe("verse explorer trace alignment", () => {
         ["RESH.BOUNDARY_CLOSE", "ALEPH.ALIAS", "SHIN.FORK", "TAV.FINALIZE"],
         "ר boundary close ⇢ א alias ⇢ ש fork route ⇢ ת finalize+stamp"
       ),
-      makeTrace(
-        3,
-        "בָּרָא",
-        ["RESH.BOUNDARY_CLOSE", "ALEPH.ALIAS"],
-        "ר boundary close ⇢ א alias"
-      ),
+      makeTrace(3, "בָּרָא", ["RESH.BOUNDARY_CLOSE", "ALEPH.ALIAS"], "ר boundary close ⇢ א alias"),
       makeTrace(
         4,
         "אֱלֹהִים",

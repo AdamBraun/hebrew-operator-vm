@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  collectExecutableVerses,
-  sanitizeText
-} from "@ref/scripts/torahCorpus/runtimePart1";
+import { collectExecutableVerses, sanitizeText } from "@ref/scripts/torahCorpus/runtimePart1";
 
 describe("torah corpus sanitizer", () => {
   it("does not split inline-tagged Hebrew words", () => {
