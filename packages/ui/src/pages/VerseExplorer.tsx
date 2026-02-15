@@ -6,7 +6,10 @@ import {
   useState
 } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { PhraseTree } from '../components/PhraseTree';
 import { RefPicker } from '../components/RefPicker';
+import { VerseText } from '../components/VerseText';
+import { derivePhraseSelection } from '../components/phraseTreeSelection';
 import {
   getReferenceCatalog,
   getVerse,
@@ -39,6 +42,8 @@ export function VerseExplorer(): JSX.Element {
   const [isVerseLoading, setIsVerseLoading] = useState(false);
   const [refInputValue, setRefInputValue] = useState('');
   const [inputError, setInputError] = useState<string | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -264,6 +269,8 @@ export function VerseExplorer(): JSX.Element {
     if (!activeRefKey) {
       setVerseBundle(null);
       setVerseError(null);
+      setSelectedNodeId(null);
+      setSelectedWordIndex(null);
       return;
     }
 
@@ -366,17 +373,50 @@ export function VerseExplorer(): JSX.Element {
 
   const verseText = useMemo(() => {
     if (!verseBundle) {
-      return '';
+      return [];
     }
     const words = verseBundle.phrase_tree?.words ?? [];
     if (words.length > 0) {
-      return words.join(' ');
+      return words;
     }
     if (verseBundle.word_traces.length > 0) {
-      return verseBundle.word_traces.map((trace) => trace.surface).join(' ');
+      return verseBundle.word_traces.map((trace) => trace.surface);
     }
-    return '';
+    return [];
   }, [verseBundle]);
+
+  const phraseTree = verseBundle?.phrase_tree?.tree ?? null;
+  const wordPhraseRoles = verseBundle?.word_phrase_roles ?? [];
+  const wordTraces = verseBundle?.word_traces ?? [];
+
+  const phraseSelection = useMemo(() => {
+    return derivePhraseSelection({
+      tree: phraseTree,
+      wordCount: verseText.length,
+      wordPhraseRoles,
+      selectedNodeId,
+      selectedWordIndex
+    });
+  }, [phraseTree, verseText.length, wordPhraseRoles, selectedNodeId, selectedWordIndex]);
+
+  const highlightedWordIndexSet = useMemo(
+    () => new Set(phraseSelection.highlightedWordIndices),
+    [phraseSelection.highlightedWordIndices]
+  );
+  const highlightedNodeIdSet = useMemo(
+    () => new Set(phraseSelection.highlightedNodeIds),
+    [phraseSelection.highlightedNodeIds]
+  );
+
+  const onWordClick = useCallback((wordIndex: number) => {
+    setSelectedNodeId(null);
+    setSelectedWordIndex((current) => (current === wordIndex ? null : wordIndex));
+  }, []);
+
+  const onNodeClick = useCallback((nodeId: string) => {
+    setSelectedWordIndex(null);
+    setSelectedNodeId((current) => (current === nodeId ? null : nodeId));
+  }, []);
 
   if (bundleError) {
     return (
@@ -432,10 +472,35 @@ export function VerseExplorer(): JSX.Element {
           <p className="status">Loading verse text...</p>
         ) : verseError ? (
           <p className="status status-error">{verseError}</p>
+        ) : verseText.length === 0 ? (
+          <p className="status">No verse text available for this reference.</p>
         ) : (
-          <p data-testid="verse-text" className="verse-text">
-            {verseText || 'No verse text available for this reference.'}
-          </p>
+          <VerseText
+            words={verseText}
+            wordPhraseRoles={wordPhraseRoles}
+            wordTraces={wordTraces}
+            highlightedWordIndices={highlightedWordIndexSet}
+            activeWordIndex={selectedWordIndex}
+            onWordClick={onWordClick}
+          />
+        )}
+      </section>
+
+      <section className="verse-panel">
+        <h3>Phrase Tree</h3>
+        {isVerseLoading ? (
+          <p className="status">Loading phrase tree...</p>
+        ) : verseError ? (
+          <p className="status status-error">{verseError}</p>
+        ) : phraseTree ? (
+          <PhraseTree
+            tree={phraseTree}
+            highlightedNodeIds={highlightedNodeIdSet}
+            activeNodeId={selectedNodeId}
+            onNodeClick={onNodeClick}
+          />
+        ) : (
+          <p className="status">No phrase tree available for this reference.</p>
         )}
       </section>
     </div>

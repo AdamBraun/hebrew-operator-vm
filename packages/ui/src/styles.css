@@ -240,9 +240,81 @@ body {
   color: var(--muted);
 }
 
-.verse-text {
-  margin: 0;
+.verse-text-token-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.verse-word-token {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--ink);
+  padding: 0.42rem 0.52rem;
+  cursor: pointer;
+  display: grid;
+  gap: 0.22rem;
+  justify-items: start;
+}
+
+.verse-word-token.is-highlighted {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.verse-word-token.is-active {
+  box-shadow: 0 0 0 2px rgba(181, 81, 41, 0.24);
+}
+
+.verse-word-surface {
   font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.verse-word-role {
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
+
+.phrase-tree {
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.phrase-tree-node {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+}
+
+.phrase-tree-node-button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  padding: 0.25rem 0.6rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.phrase-tree-node-button.is-highlighted {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.phrase-tree-node-button.is-active {
+  box-shadow: 0 0 0 2px rgba(181, 81, 41, 0.24);
+}
+
+.phrase-tree-children {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 0.45rem;
+  align-items: start;
+  width: 100%;
 }
 
 code {
