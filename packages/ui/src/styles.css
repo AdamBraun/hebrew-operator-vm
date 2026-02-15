@@ -131,6 +131,120 @@ body {
   padding-left: 1rem;
 }
 
+.verse-explorer {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.ref-picker {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.75rem;
+}
+
+.ref-picker-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: flex-end;
+}
+
+.ref-picker-field {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 6.2rem;
+}
+
+.ref-picker-field span {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.ref-picker-field select {
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.38rem 0.45rem;
+  background: #fff;
+  color: var(--ink);
+}
+
+.nav-button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+}
+
+.nav-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ref-picker-direct {
+  margin-top: 0.7rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.ref-picker-direct label {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.ref-picker-direct input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+  background: #fff;
+  color: var(--ink);
+}
+
+.ref-picker-hints {
+  margin: 0.55rem 0 0;
+  font-size: 0.82rem;
+}
+
+.verse-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.verse-reference {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.015em;
+}
+
+.verse-panel {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.verse-panel h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.92rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.verse-text {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
 code {
   font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
 }
@@ -138,6 +252,11 @@ code {
 @media (max-width: 900px) {
   .pane-grid {
     grid-template-columns: 1fr;
+  }
+
+  .ref-picker-direct {
+    grid-template-columns: 1fr;
+    align-items: stretch;
   }
 }
 

@@ -1,5 +1,10 @@
 import { createLayeredTextCache } from './cache';
-import { BundleLoader, type BundleInfo, type VerseBundle } from './loader';
+import {
+  BundleLoader,
+  type BundleInfo,
+  type ReferenceCatalog,
+  type VerseBundle
+} from './loader';
 import type { VersePhraseTreeRecord, WordTraceRecord } from '../contracts';
 
 const loader = new BundleLoader({
@@ -10,6 +15,10 @@ const loader = new BundleLoader({
 
 export function getLoadedBundleInfo(): BundleInfo | null {
   return loader.getBundleInfo();
+}
+
+export function getReferenceCatalog(): ReferenceCatalog {
+  return loader.getReferenceCatalog();
 }
 
 export async function loadBundle(versionTag = 'latest'): Promise<BundleInfo> {

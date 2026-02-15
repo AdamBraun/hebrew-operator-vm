@@ -127,16 +127,31 @@ const bundleManifestSchema = z
     }
   });
 
+const refsIndexRefSchema = z
+  .object({
+    ref_key: verseRefKeySchema,
+    ref: verseRefSchema.optional()
+  })
+  .passthrough();
+
+const refsIndexMetadataSchema = z
+  .object({
+    books: z.array(navigationBookSchema).optional()
+  })
+  .passthrough();
+
 const refsIndexSchema = z
   .object({
     schema_version: z.literal(1),
     strategy: z.literal('book_chapter_verse'),
-    words: z.record(bundlePathSchema),
-    verses: z.record(bundlePathSchema),
-    roles: z.record(bundlePathSchema),
-    paraphrase: z.record(bundlePathSchema)
+    words: z.record(bundlePathSchema).default({}),
+    verses: z.record(bundlePathSchema).default({}),
+    roles: z.record(bundlePathSchema).default({}),
+    paraphrase: z.record(bundlePathSchema).default({}),
+    refs: z.array(refsIndexRefSchema).optional(),
+    metadata: refsIndexMetadataSchema.optional()
   })
-  .strict();
+  .passthrough();
 
 const wordTraceChunkSchema = z
   .object({
@@ -206,6 +221,18 @@ export type RefsIndex = z.infer<typeof refsIndexSchema>;
 export type WordTraceChunk = z.infer<typeof wordTraceChunkSchema>;
 export type VerseTreeChunk = z.infer<typeof verseTreeChunkSchema>;
 export type ParaphraseChunk = z.infer<typeof paraphraseChunkSchema>;
+export type BundleNavigationBook = z.infer<typeof navigationBookSchema>;
+export type BundleNavigationChapter = z.infer<typeof navigationChapterSchema>;
+
+export interface VerseReferenceEntry {
+  ref_key: string;
+  ref: VerseRef;
+}
+
+export interface ReferenceCatalog {
+  refs: VerseReferenceEntry[];
+  navigation: BundleManifest['navigation'];
+}
 
 export interface BundleLoaderOptions {
   fetcher?: typeof fetch;
@@ -270,7 +297,9 @@ export class BundleLoader {
   private readonly paraphraseChunks = new Map<string, ParaphraseChunk>();
 
   constructor(options: BundleLoaderOptions = {}) {
-    this.fetcher = options.fetcher ?? fetch;
+    this.fetcher =
+      options.fetcher ??
+      ((input: RequestInfo | URL, init?: RequestInit) => globalThis.fetch(input, init));
     this.baseDataPath = normalizeBaseDataPath(options.baseDataPath ?? '/data');
     this.cache =
       options.cache ??
@@ -282,6 +311,14 @@ export class BundleLoader {
 
   getBundleInfo(): BundleInfo | null {
     return this.state?.info ?? null;
+  }
+
+  getReferenceCatalog(): ReferenceCatalog {
+    const state = this.ensureLoaded();
+    return {
+      refs: deriveVerseReferenceEntries(state.refsIndex, state.manifest.navigation.books),
+      navigation: state.manifest.navigation
+    };
   }
 
   async loadBundle(versionTag = 'latest'): Promise<BundleInfo> {
@@ -459,7 +496,7 @@ export class BundleLoader {
 
   private async readJsonDocument<T>(
     path: string,
-    schema: z.ZodSchema<T>,
+    schema: z.ZodType<T, z.ZodTypeDef, unknown>,
     label: string
   ): Promise<T> {
     const raw = await this.readText(path, label);
@@ -520,6 +557,119 @@ export class BundleLoader {
   }
 }
 
+function deriveVerseReferenceEntries(
+  refsIndex: RefsIndex,
+  navigationBooks: BundleNavigationBook[]
+): VerseReferenceEntry[] {
+  const byRefKey = new Map<string, VerseReferenceEntry>();
+
+  const addRef = (candidateRefKey: string, providedRef?: VerseRef): void => {
+    const validatedRefKey = validateVerseRefKeyCandidate(candidateRefKey);
+    if (!validatedRefKey || byRefKey.has(validatedRefKey)) {
+      return;
+    }
+
+    const parsedRef = parseVerseRefKeyOrNull(validatedRefKey);
+    if (!parsedRef) {
+      return;
+    }
+
+    if (providedRef) {
+      const providedRefKey = `${providedRef.book}/${providedRef.chapter}/${providedRef.verse}`;
+      if (providedRefKey === validatedRefKey) {
+        byRefKey.set(validatedRefKey, {
+          ref_key: validatedRefKey,
+          ref: providedRef
+        });
+        return;
+      }
+    }
+
+    byRefKey.set(validatedRefKey, {
+      ref_key: validatedRefKey,
+      ref: parsedRef
+    });
+  };
+
+  for (const entry of refsIndex.refs ?? []) {
+    addRef(entry.ref_key, entry.ref);
+  }
+
+  for (const verseRefKey of Object.keys(refsIndex.verses)) {
+    addRef(verseRefKey);
+  }
+
+  for (const verseRefKey of Object.keys(refsIndex.roles)) {
+    addRef(verseRefKey);
+  }
+
+  for (const wordRefKey of Object.keys(refsIndex.words)) {
+    const derivedRefKey = toVerseRefKeyOrNull(wordRefKey);
+    if (derivedRefKey) {
+      addRef(derivedRefKey);
+    }
+  }
+
+  if (byRefKey.size === 0) {
+    for (const book of navigationBooks) {
+      for (const chapter of book.chapters) {
+        for (let verse = 1; verse <= chapter.verse_count; verse += 1) {
+          addRef(`${book.book}/${chapter.chapter}/${verse}`);
+        }
+      }
+    }
+  }
+
+  const bookOrder = buildBookOrder(navigationBooks);
+  return Array.from(byRefKey.values()).sort((left, right) =>
+    compareVerseReferenceEntries(left, right, bookOrder)
+  );
+}
+
+function buildBookOrder(books: BundleNavigationBook[]): Map<string, number> {
+  const order = new Map<string, number>();
+  for (let index = 0; index < books.length; index += 1) {
+    order.set(books[index].book, index);
+  }
+  return order;
+}
+
+function compareVerseReferenceEntries(
+  left: VerseReferenceEntry,
+  right: VerseReferenceEntry,
+  bookOrder: Map<string, number>
+): number {
+  const leftBookOrder = bookOrder.get(left.ref.book);
+  const rightBookOrder = bookOrder.get(right.ref.book);
+
+  if (leftBookOrder !== undefined || rightBookOrder !== undefined) {
+    if (leftBookOrder === undefined) {
+      return 1;
+    }
+    if (rightBookOrder === undefined) {
+      return -1;
+    }
+    if (leftBookOrder !== rightBookOrder) {
+      return leftBookOrder - rightBookOrder;
+    }
+  } else {
+    const bookCmp = left.ref.book.localeCompare(right.ref.book);
+    if (bookCmp !== 0) {
+      return bookCmp;
+    }
+  }
+
+  if (left.ref.chapter !== right.ref.chapter) {
+    return left.ref.chapter - right.ref.chapter;
+  }
+
+  if (left.ref.verse !== right.ref.verse) {
+    return left.ref.verse - right.ref.verse;
+  }
+
+  return left.ref_key.localeCompare(right.ref_key);
+}
+
 function normalizeBaseDataPath(input: string): string {
   const normalized = String(input).trim().replace(/\/+$/g, '');
   return normalized.length > 0 ? normalized : '/data';
@@ -550,6 +700,40 @@ function resolveBundleAssetPath(bundleRootPath: string, assetPath: string): stri
 function toVerseRefKey(wordRefKey: string): string {
   const parts = String(wordRefKey).split('/');
   return `${parts[0]}/${parts[1]}/${parts[2]}`;
+}
+
+function toVerseRefKeyOrNull(wordRefKey: string): string | null {
+  const parts = String(wordRefKey).split('/');
+  if (parts.length < 3) {
+    return null;
+  }
+  return `${parts[0]}/${parts[1]}/${parts[2]}`;
+}
+
+function parseVerseRefKeyOrNull(refKey: string): VerseRef | null {
+  const validatedRefKey = validateVerseRefKeyCandidate(refKey);
+  if (!validatedRefKey) {
+    return null;
+  }
+
+  const [book, chapterRaw, verseRaw] = validatedRefKey.split('/');
+  const chapter = Number(chapterRaw);
+  const verse = Number(verseRaw);
+
+  if (!book || !Number.isInteger(chapter) || !Number.isInteger(verse)) {
+    return null;
+  }
+
+  return {
+    book,
+    chapter,
+    verse
+  };
+}
+
+function validateVerseRefKeyCandidate(refKey: string): string | null {
+  const result = verseRefKeySchema.safeParse(refKey);
+  return result.success ? result.data : null;
 }
 
 function validateVerseRefKeyInput(refKey: string): string {

@@ -10,6 +10,7 @@
     "ui:dev": "npm run dev --workspace @letters/ui",
     "ui:build": "npm run build --workspace @letters/ui",
     "ui:preview": "npm run preview --workspace @letters/ui",
+    "ui:e2e": "playwright test -c playwright.config.ts",
     "ui:bundle": "node scripts/ui-bundle.mjs",
     "ui:bundle:verify": "node scripts/ui-bundle.mjs verify",
     "download-torah": "node scripts/download-torah.mjs",
@@ -46,11 +47,12 @@
     "prepare": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
-    "fast-check": "^3.23.2",
     "eslint": "^8.57.0",
+    "fast-check": "^3.23.2",
     "prettier": "^3.3.3",
     "typescript": "5.5.4",
     "vitest": "^1.5.0"

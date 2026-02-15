@@ -249,6 +249,25 @@ describe("ui data loader", () => {
     expect(calls.get("/data/latest/chunks/verses/genesis-fixture/001/001.json")).toBe(1);
   });
 
+  it("exposes normalized references from refs/index.json", async () => {
+    const { fetcher } = createFixtureFetcher(buildFixtureDocs());
+    const loader = createTestLoader(fetcher);
+    await loader.loadBundle("latest");
+
+    const catalog = loader.getReferenceCatalog();
+
+    expect(catalog.refs).toHaveLength(1);
+    expect(catalog.refs[0]).toEqual({
+      ref_key: "Genesis/1/1",
+      ref: {
+        book: "Genesis",
+        chapter: 1,
+        verse: 1
+      }
+    });
+    expect(catalog.navigation.books[0]?.book).toBe("Genesis");
+  });
+
   it("rejects chunk payloads that violate record contracts", async () => {
     const { fetcher } = createFixtureFetcher(
       buildFixtureDocs({
