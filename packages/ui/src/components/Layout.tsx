@@ -1,17 +1,23 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { PatternSearch } from '../pages/PatternSearch';
 import { TracePage } from '../pages/TracePage';
 import { VerseExplorer } from '../pages/VerseExplorer';
 import { WordPage } from '../pages/WordPage';
 
-type PaneKey = 'verse' | 'word' | 'trace';
+type PaneKey = 'verse' | 'word' | 'trace' | 'pattern';
 
 const panes: Array<{ key: PaneKey; label: string }> = [
   { key: 'verse', label: 'Verse' },
   { key: 'word', label: 'Word' },
-  { key: 'trace', label: 'Trace' }
+  { key: 'trace', label: 'Trace' },
+  { key: 'pattern', label: 'Pattern' }
 ];
 
 const paneForPath = (pathname: string): PaneKey => {
+  if (pathname.startsWith('/pattern')) {
+    return 'pattern';
+  }
+
   if (pathname.startsWith('/word')) {
     return 'word';
   }
@@ -32,7 +38,7 @@ export function Layout(): JSX.Element {
       <header className="header">
         <div className="header-copy">
           <h1>Corpus UI Skeleton</h1>
-          <p>Static-ready React shell for Verse, Word, and Trace views.</p>
+          <p>Static-ready React shell for Verse, Word, Trace, and Pattern views.</p>
         </div>
         <nav aria-label="Primary" className="nav-tabs">
           {panes.map((pane) => (
@@ -61,6 +67,7 @@ export function Layout(): JSX.Element {
               {pane.key === 'verse' ? <VerseExplorer /> : null}
               {pane.key === 'word' ? <WordPage /> : null}
               {pane.key === 'trace' ? <TracePage /> : null}
+              {pane.key === 'pattern' ? <PatternSearch /> : null}
             </div>
           </section>
         ))}

@@ -104,6 +104,11 @@ function buildFixtureOptions(tmpDir: string): UiBundleOptions {
     `${JSON.stringify({ schema_version: 1, motifs: [] })}\n`,
     "utf8"
   );
+  fs.writeFileSync(
+    path.join(indexDir, "skeleton_to_occurrences.bin"),
+    `${JSON.stringify({ schema_version: 1, skeleton_to_occurrences: {} })}\n`,
+    "utf8"
+  );
 
   fs.mkdirSync(outputsGenesisDir, { recursive: true });
   writeJsonl(path.join(outputsGenesisDir, "render_paraphrase.jsonl"), [
@@ -183,6 +188,9 @@ describe("ui bundle runtime", () => {
     const uiPublicManifestPath = path.join(opts.uiPublicDir, "ui-manifest.json");
     expect(fs.existsSync(bundleManifestPath)).toBe(true);
     expect(fs.existsSync(uiPublicManifestPath)).toBe(true);
+    expect(
+      fs.existsSync(path.join(opts.bundleDir, "optional", "index", "skeleton_to_occurrences.bin"))
+    ).toBe(true);
 
     const firstManifest = fs.readFileSync(bundleManifestPath, "utf8");
     const firstHashes = collectFileHashes(opts.bundleDir);

@@ -1726,7 +1726,8 @@ async function collectOptionalIndexAssets(
   const files = await listFilesRecursive(indexDir);
   const out: Array<{ relativePath: string; content: string }> = [];
   for (const filePath of files) {
-    if (path.extname(filePath).toLowerCase() !== ".json") {
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext !== ".json" && ext !== ".bin") {
       continue;
     }
     const raw = await fs.readFile(filePath, "utf8");

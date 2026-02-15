@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { PatternSearch } from './pages/PatternSearch';
 import { TracePage } from './pages/TracePage';
 import { VerseExplorer } from './pages/VerseExplorer';
 import { WordPage } from './pages/WordPage';
@@ -13,6 +14,7 @@ function App(): JSX.Element {
         <Route path="verse/:refSlug" element={<VerseExplorer />} />
         <Route path="word" element={<WordPage />} />
         <Route path="trace" element={<TracePage />} />
+        <Route path="pattern" element={<PatternSearch />} />
       </Route>
       <Route path="*" element={<Navigate to="/verse/Gen-1-1" replace />} />
     </Routes>
