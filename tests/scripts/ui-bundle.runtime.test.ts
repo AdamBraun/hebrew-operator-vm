@@ -13,7 +13,10 @@ import {
 const FIXTURE_DIR = path.resolve(process.cwd(), "tests", "fixtures", "ui-contract");
 
 function loadFixture(name: string): Record<string, unknown> {
-  return JSON.parse(fs.readFileSync(path.join(FIXTURE_DIR, name), "utf8")) as Record<string, unknown>;
+  return JSON.parse(fs.readFileSync(path.join(FIXTURE_DIR, name), "utf8")) as Record<
+    string,
+    unknown
+  >;
 }
 
 function writeJsonl(filePath: string, rows: unknown[]): void {
@@ -46,7 +49,10 @@ function collectFileHashes(rootDir: string): Record<string, string> {
 
   const out: Record<string, string> = {};
   for (const filePath of files) {
-    const rel = filePath.slice(rootDir.length + 1).split(path.sep).join("/");
+    const rel = filePath
+      .slice(rootDir.length + 1)
+      .split(path.sep)
+      .join("/");
     out[rel] = sha256File(filePath);
   }
   return out;
@@ -199,4 +205,3 @@ describe("ui bundle runtime", () => {
     await expect(verifyBundleCommand(opts)).rejects.toThrow(/checksum mismatch/);
   });
 });
-

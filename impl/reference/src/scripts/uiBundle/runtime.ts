@@ -784,12 +784,7 @@ function parseJsonlRows(text: string, sourcePath: string): JsonlRow[] {
   return rows;
 }
 
-function validateWordRef(
-  value: unknown,
-  sourcePath: string,
-  line: number,
-  label: string
-): WordRef {
+function validateWordRef(value: unknown, sourcePath: string, line: number, label: string): WordRef {
   const record = assertRecord(value, sourcePath, line, label);
   assertExactKeys(record, ["book", "chapter", "verse", "token_index"], sourcePath, line, label);
 
@@ -1024,13 +1019,7 @@ function validateWordTraceRecord(
 ): WordTraceRecord {
   const record = assertRecord(value, sourcePath, line, "word_traces record");
   assertExactKeys(record, WORD_TRACE_ALLOWED_KEYS, sourcePath, line, "word_traces record");
-  assertHasRequiredKeys(
-    record,
-    WORD_TRACE_REQUIRED_KEYS,
-    sourcePath,
-    line,
-    "word_traces record"
-  );
+  assertHasRequiredKeys(record, WORD_TRACE_REQUIRED_KEYS, sourcePath, line, "word_traces record");
 
   const recordKind = assertString(record.record_kind, sourcePath, line, "record_kind", true);
   if (recordKind !== "WORD_TRACE") {
@@ -1079,7 +1068,13 @@ function validateWordTraceRecord(
   const events: WordTraceEvent[] = [];
   for (let eventIndex = 0; eventIndex < eventsRaw.length; eventIndex += 1) {
     const event = assertRecord(eventsRaw[eventIndex], sourcePath, line, `events[${eventIndex}]`);
-    assertExactKeys(event, WORD_TRACE_EVENT_ALLOWED_KEYS, sourcePath, line, `events[${eventIndex}]`);
+    assertExactKeys(
+      event,
+      WORD_TRACE_EVENT_ALLOWED_KEYS,
+      sourcePath,
+      line,
+      `events[${eventIndex}]`
+    );
 
     const kind = assertString(event.kind, sourcePath, line, `events[${eventIndex}].kind`, true);
     if (!TRACE_EVENT_KINDS.has(kind)) {
@@ -1097,12 +1092,7 @@ function validateWordTraceRecord(
     if (!TRACE_EVENT_SOURCES.has(source)) {
       failContract(sourcePath, line, `events[${eventIndex}].source is unknown (${source})`);
     }
-    const payload = assertRecord(
-      event.payload,
-      sourcePath,
-      line,
-      `events[${eventIndex}].payload`
-    );
+    const payload = assertRecord(event.payload, sourcePath, line, `events[${eventIndex}].payload`);
 
     events.push({
       kind,
@@ -1223,7 +1213,13 @@ function validateVersePhraseTreeRecord(
   }
 
   const tree = validatePhraseNode(record.tree, sourcePath, line, "tree");
-  const phraseVersion = assertString(record.phrase_version, sourcePath, line, "phrase_version", true);
+  const phraseVersion = assertString(
+    record.phrase_version,
+    sourcePath,
+    line,
+    "phrase_version",
+    true
+  );
 
   return {
     ref_key: refKey,
@@ -1254,7 +1250,12 @@ function validateWordPhraseRoleRecord(
   assertPattern(refKey, VERSE_REF_KEY_PATTERN, sourcePath, line, "ref_key");
   const wordIndex = assertInt(record.word_index, sourcePath, line, "word_index", 1);
   const surface = assertString(record.surface, sourcePath, line, "surface", false);
-  const primaryAccent = validatePrimaryAccent(record.primary_accent, sourcePath, line, "primary_accent");
+  const primaryAccent = validatePrimaryAccent(
+    record.primary_accent,
+    sourcePath,
+    line,
+    "primary_accent"
+  );
   const phraseRole = assertString(record.phrase_role, sourcePath, line, "phrase_role", true);
   if (!PHRASE_ROLES.has(phraseRole)) {
     failContract(sourcePath, line, "phrase_role must be HEAD|TAIL|JOIN|SPLIT");
@@ -1269,7 +1270,13 @@ function validateWordPhraseRoleRecord(
 
   const clauseId = assertString(record.clause_id, sourcePath, line, "clause_id", true);
   const subclauseId = assertString(record.subclause_id, sourcePath, line, "subclause_id", true);
-  const phraseVersion = assertString(record.phrase_version, sourcePath, line, "phrase_version", true);
+  const phraseVersion = assertString(
+    record.phrase_version,
+    sourcePath,
+    line,
+    "phrase_version",
+    true
+  );
 
   return {
     ref_key: refKey,
@@ -1291,7 +1298,13 @@ function validateParaphraseRecord(
 ): ParaphraseRecord {
   const record = assertRecord(value, sourcePath, line, "paraphrase record");
   assertExactKeys(record, PARAPHRASE_ALLOWED_KEYS, sourcePath, line, "paraphrase record");
-  assertHasRequiredKeys(record, ["ref_key", "style", "text"], sourcePath, line, "paraphrase record");
+  assertHasRequiredKeys(
+    record,
+    ["ref_key", "style", "text"],
+    sourcePath,
+    line,
+    "paraphrase record"
+  );
 
   const refKey = assertString(record.ref_key, sourcePath, line, "ref_key", true);
   assertPattern(refKey, PARAPHRASE_REF_KEY_PATTERN, sourcePath, line, "ref_key");
@@ -1317,7 +1330,9 @@ async function readFileUtf8(filePath: string): Promise<string> {
   return fs.readFile(filePath, "utf8");
 }
 
-async function readValidatedWordTraces(filePath: string): Promise<ReadValidatedJsonlResult<WordTraceRecord>> {
+async function readValidatedWordTraces(
+  filePath: string
+): Promise<ReadValidatedJsonlResult<WordTraceRecord>> {
   const sourcePath = path.resolve(filePath);
   const text = await readFileUtf8(sourcePath);
   const rows = parseJsonlRows(text, sourcePath);
@@ -1378,9 +1393,7 @@ async function detectSourceManifest(explicitPath: string): Promise<SourceManifes
     try {
       parsed = JSON.parse(raw);
     } catch (error) {
-      throw new Error(
-        `ui:bundle failed to parse source manifest ${candidate} (${String(error)})`
-      );
+      throw new Error(`ui:bundle failed to parse source manifest ${candidate} (${String(error)})`);
     }
     if (!isObject(parsed)) {
       throw new Error(`ui:bundle source manifest ${candidate} must be a JSON object`);
@@ -1536,7 +1549,10 @@ function toChunkPath(kind: "words" | "verses" | "paraphrase", ref: VerseRef): st
   );
 }
 
-function toSortedObject(entries: Array<[string, string]>, compareFn: (a: string, b: string) => number) {
+function toSortedObject(
+  entries: Array<[string, string]>,
+  compareFn: (a: string, b: string) => number
+) {
   const out: Record<string, string> = {};
   const sorted = [...entries].sort((left, right) => compareFn(left[0], right[0]));
   for (const [key, value] of sorted) {
@@ -1774,10 +1790,7 @@ function ensureConsistentVerseCoverage(
   }
 }
 
-function groupBy<K extends string, T>(
-  rows: T[],
-  keyFn: (value: T) => K
-): Map<K, T[]> {
+function groupBy<K extends string, T>(rows: T[], keyFn: (value: T) => K): Map<K, T[]> {
   const grouped = new Map<K, T[]>();
   for (const row of rows) {
     const key = keyFn(row);
@@ -1868,7 +1881,9 @@ export async function runBundleCommand(options: UiBundleOptions): Promise<RunBun
   const artifactSet = sourceManifest?.artifactSet ?? "latest";
   const generatedAt = sourceManifest?.generatedAt ?? NULL_GENERATED_AT;
 
-  const wordByVerse = groupBy(wordTraceRecords, (record) => toVerseRefKeyFromWordRefKey(record.ref_key));
+  const wordByVerse = groupBy(wordTraceRecords, (record) =>
+    toVerseRefKeyFromWordRefKey(record.ref_key)
+  );
   const rolesByVerse = groupBy(wordRoleRecords, (record) => record.ref_key);
   const treesByVerse = new Map<string, VersePhraseTreeRecord>();
   for (const tree of verseTreeRecords) {
