@@ -61,6 +61,22 @@ const TEAMIM_MIN = 0x0591;
 const TEAMIM_MAX = 0x05af;
 const MAQQEF = "\u05BE";
 const SOF_PASUQ = "\u05C3";
+const STRUCTURAL_TAGS = new Set([
+  "br",
+  "p",
+  "div",
+  "li",
+  "tr",
+  "td",
+  "th",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6"
+]);
+const SPACE_ENTITIES = new Set(["&nbsp;", "&thinsp;", "&ensp;", "&emsp;"]);
 const ALLOWED_MARK_CODEPOINTS = new Set(
   Array.from(ALLOWED_MARKS)
     .map((mark) => mark.codePointAt(0))
@@ -170,13 +186,31 @@ function isTeamim(mark) {
   return codepoint !== undefined && codepoint >= TEAMIM_MIN && codepoint <= TEAMIM_MAX;
 }
 
+function extractTagName(markupTag) {
+  const match = String(markupTag ?? "").match(/^<\s*\/?\s*([A-Za-z0-9:-]+)/u);
+  return match?.[1]?.toLowerCase() ?? null;
+}
+
+function stripMarkupAndEntities(text) {
+  let out = String(text ?? "").replace(/<[^>]*>/g, (match) => {
+    const tagName = extractTagName(match);
+    if (tagName && STRUCTURAL_TAGS.has(tagName)) {
+      return " ";
+    }
+    return "";
+  });
+  out = out.replace(/&[^;\s]+;/g, (match) =>
+    SPACE_ENTITIES.has(match.toLowerCase()) ? " " : ""
+  );
+  out = out.replace(/[\u00A0\u2009]/g, " ");
+  return out.replace(/\{\s*[פס]\s*\}/gu, " ");
+}
+
 function sanitizeText(text, opts) {
   if (!text) {
     return "";
   }
-  let cleaned = String(text);
-  cleaned = cleaned.replace(/<[^>]*>/g, " ");
-  cleaned = cleaned.replace(/&[^;]+;/g, " ");
+  let cleaned = stripMarkupAndEntities(String(text));
   cleaned = cleaned.normalize("NFD");
 
   cleaned = cleaned.replace(/\u05C7/g, "\u05B8");

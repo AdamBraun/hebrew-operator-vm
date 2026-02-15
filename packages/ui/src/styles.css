@@ -134,6 +134,7 @@ body {
 .verse-explorer {
   display: grid;
   gap: 0.9rem;
+  container-type: inline-size;
 }
 
 .ref-picker {
@@ -240,6 +241,69 @@ body {
   color: var(--muted);
 }
 
+.verse-content-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+.verse-content-main {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.verse-panel-inspector {
+  position: static;
+}
+
+.word-inspector {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.word-inspector-row {
+  display: grid;
+  gap: 0.22rem;
+  padding-top: 0.25rem;
+}
+
+.word-inspector-row + .word-inspector-row {
+  border-top: 1px solid var(--line);
+}
+
+.word-inspector-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.word-inspector-value {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.word-inspector-action {
+  margin-top: 0.15rem;
+}
+
+.word-inspector-copy {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.76rem;
+  padding: 0.24rem 0.5rem;
+  cursor: pointer;
+}
+
 .verse-text-token-grid {
   display: flex;
   flex-wrap: wrap;
@@ -315,6 +379,12 @@ body {
   gap: 0.45rem;
   align-items: start;
   width: 100%;
+}
+
+@container (min-width: 1200px) {
+  .verse-content-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  }
 }
 
 code {

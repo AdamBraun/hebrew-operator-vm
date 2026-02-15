@@ -45,6 +45,16 @@ describe("iterate torah runtime", () => {
     expect(keepTeamim).toBe("מָ־לֶךְ׃");
   });
 
+  it("removes inline formatting markup without splitting a Hebrew word", () => {
+    const raw = '<big>בְּ</big>רֵאשִׁ֖ית&nbsp;<span class="mam-spi-pe">{פ}</span><br>';
+    const stripped = sanitizeText(raw, { ...DEFAULT_OPTS });
+    const kept = sanitizeText(raw, { ...DEFAULT_OPTS, keepTeamim: true });
+
+    expect(stripped).toBe("בְּרֵאשִׁית");
+    expect(kept).toBe("בְּרֵאשִׁ֖ית");
+    expect(kept).not.toContain("בְּ רֵאשִׁ֖ית");
+  });
+
   it("iterates payload and tracks summary counts", () => {
     const inputs: string[] = [];
     const summary = iteratePayload(

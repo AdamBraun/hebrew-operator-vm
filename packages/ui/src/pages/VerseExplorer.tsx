@@ -9,12 +9,17 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { PhraseTree } from '../components/PhraseTree';
 import { RefPicker } from '../components/RefPicker';
 import { VerseText } from '../components/VerseText';
+import { WordInspector } from '../components/WordInspector';
 import { derivePhraseSelection } from '../components/phraseTreeSelection';
 import {
   getReferenceCatalog,
   getVerse,
   loadBundle
 } from '../lib/data/api';
+import type {
+  WordTraceRecord,
+  WordPhraseRoleRecord
+} from '../lib/contracts';
 import type {
   ReferenceCatalog,
   VerseBundle,
@@ -388,6 +393,10 @@ export function VerseExplorer(): JSX.Element {
   const phraseTree = verseBundle?.phrase_tree?.tree ?? null;
   const wordPhraseRoles = verseBundle?.word_phrase_roles ?? [];
   const wordTraces = verseBundle?.word_traces ?? [];
+  const alignedWordTraces = useMemo(
+    () => alignWordTracesToDisplayWords(verseText, wordPhraseRoles, wordTraces),
+    [verseText, wordPhraseRoles, wordTraces]
+  );
 
   const phraseSelection = useMemo(() => {
     return derivePhraseSelection({
@@ -417,6 +426,36 @@ export function VerseExplorer(): JSX.Element {
     setSelectedWordIndex(null);
     setSelectedNodeId((current) => (current === nodeId ? null : nodeId));
   }, []);
+
+  const selectedWordTrace = useMemo(() => {
+    if (!selectedWordIndex) {
+      return null;
+    }
+    return alignedWordTraces[selectedWordIndex - 1] ?? null;
+  }, [alignedWordTraces, selectedWordIndex]);
+
+  const selectedWordPhraseRole = useMemo(() => {
+    if (!selectedWordIndex) {
+      return null;
+    }
+    return (
+      wordPhraseRoles.find((role) => role.word_index === selectedWordIndex) ??
+      wordPhraseRoles[selectedWordIndex - 1] ??
+      null
+    );
+  }, [selectedWordIndex, wordPhraseRoles]);
+
+  const selectedWordSurface = useMemo(() => {
+    if (!selectedWordIndex) {
+      return null;
+    }
+    return (
+      verseText[selectedWordIndex - 1] ??
+      selectedWordTrace?.surface ??
+      selectedWordPhraseRole?.surface ??
+      null
+    );
+  }, [selectedWordIndex, selectedWordPhraseRole, selectedWordTrace?.surface, verseText]);
 
   if (bundleError) {
     return (
@@ -466,43 +505,57 @@ export function VerseExplorer(): JSX.Element {
         <p className="status">Loaded {references.length} references from bundle index.</p>
       </div>
 
-      <section className="verse-panel">
-        <h3>Verse Text</h3>
-        {isVerseLoading ? (
-          <p className="status">Loading verse text...</p>
-        ) : verseError ? (
-          <p className="status status-error">{verseError}</p>
-        ) : verseText.length === 0 ? (
-          <p className="status">No verse text available for this reference.</p>
-        ) : (
-          <VerseText
-            words={verseText}
-            wordPhraseRoles={wordPhraseRoles}
-            wordTraces={wordTraces}
-            highlightedWordIndices={highlightedWordIndexSet}
-            activeWordIndex={selectedWordIndex}
-            onWordClick={onWordClick}
-          />
-        )}
-      </section>
+      <div className="verse-content-grid">
+        <div className="verse-content-main">
+          <section className="verse-panel">
+            <h3>Verse Text</h3>
+            {isVerseLoading ? (
+              <p className="status">Loading verse text...</p>
+            ) : verseError ? (
+              <p className="status status-error">{verseError}</p>
+            ) : verseText.length === 0 ? (
+              <p className="status">No verse text available for this reference.</p>
+            ) : (
+              <VerseText
+                words={verseText}
+                wordPhraseRoles={wordPhraseRoles}
+                wordTraces={alignedWordTraces}
+                highlightedWordIndices={highlightedWordIndexSet}
+                activeWordIndex={selectedWordIndex}
+                onWordClick={onWordClick}
+              />
+            )}
+          </section>
 
-      <section className="verse-panel">
-        <h3>Phrase Tree</h3>
-        {isVerseLoading ? (
-          <p className="status">Loading phrase tree...</p>
-        ) : verseError ? (
-          <p className="status status-error">{verseError}</p>
-        ) : phraseTree ? (
-          <PhraseTree
-            tree={phraseTree}
-            highlightedNodeIds={highlightedNodeIdSet}
-            activeNodeId={selectedNodeId}
-            onNodeClick={onNodeClick}
+          <section className="verse-panel">
+            <h3>Phrase Tree</h3>
+            {isVerseLoading ? (
+              <p className="status">Loading phrase tree...</p>
+            ) : verseError ? (
+              <p className="status status-error">{verseError}</p>
+            ) : phraseTree ? (
+              <PhraseTree
+                tree={phraseTree}
+                highlightedNodeIds={highlightedNodeIdSet}
+                activeNodeId={selectedNodeId}
+                onNodeClick={onNodeClick}
+              />
+            ) : (
+              <p className="status">No phrase tree available for this reference.</p>
+            )}
+          </section>
+        </div>
+
+        <section className="verse-panel verse-panel-inspector">
+          <h3>Word Inspector</h3>
+          <WordInspector
+            selectedWordIndex={selectedWordIndex}
+            surface={selectedWordSurface}
+            wordTrace={selectedWordTrace}
+            wordPhraseRole={selectedWordPhraseRole}
           />
-        ) : (
-          <p className="status">No phrase tree available for this reference.</p>
-        )}
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
@@ -548,6 +601,121 @@ function buildBookAliasLookup(books: string[]): Map<string, string> {
 
 function toAddressKey(book: string, chapter: number, verse: number): string {
   return `${book}|${chapter}|${verse}`;
+}
+
+export function alignWordTracesToDisplayWords(
+  displayWords: string[],
+  roles: WordPhraseRoleRecord[],
+  traces: WordTraceRecord[]
+): WordTraceRecord[] {
+  if (displayWords.length === 0 || traces.length === 0) {
+    return traces;
+  }
+
+  const roleByWordIndex = new Map<number, WordPhraseRoleRecord>();
+  for (const role of roles) {
+    roleByWordIndex.set(role.word_index, role);
+  }
+
+  const aligned: WordTraceRecord[] = [];
+  let traceCursor = 0;
+
+  for (let index = 0; index < displayWords.length; index += 1) {
+    const wordIndex = index + 1;
+    const roleSurface = roleByWordIndex.get(wordIndex)?.surface;
+    const target = normalizeForAlignment(roleSurface ?? displayWords[index]);
+    if (!target) {
+      aligned.push(traces[traceCursor] ?? traces[index] ?? traces[traces.length - 1]);
+      traceCursor = Math.min(traceCursor + 1, traces.length);
+      continue;
+    }
+
+    const fromCursor = matchTraceWindow(traces, traceCursor, target);
+    if (fromCursor) {
+      aligned.push(fromCursor.match);
+      traceCursor = fromCursor.nextCursor;
+      continue;
+    }
+
+    const fromAnywhere = matchTraceWindow(traces, 0, target);
+    if (fromAnywhere) {
+      aligned.push(fromAnywhere.match);
+      continue;
+    }
+
+    aligned.push(traces[traceCursor] ?? traces[index] ?? traces[traces.length - 1]);
+    traceCursor = Math.min(traceCursor + 1, traces.length);
+  }
+
+  return aligned;
+}
+
+function matchTraceWindow(
+  traces: WordTraceRecord[],
+  startIndex: number,
+  normalizedTarget: string
+): { match: WordTraceRecord; nextCursor: number } | null {
+  if (startIndex >= traces.length) {
+    return null;
+  }
+
+  for (let windowStart = startIndex; windowStart < traces.length; windowStart += 1) {
+    let combined = '';
+    let candidate: WordTraceRecord | null = null;
+
+    for (
+      let windowEnd = windowStart;
+      windowEnd < traces.length && windowEnd <= windowStart + 3;
+      windowEnd += 1
+    ) {
+      const trace = traces[windowEnd];
+      combined += normalizeForAlignment(trace.surface);
+
+      if (combined === normalizedTarget) {
+        candidate = chooseTraceCandidate(candidate, trace);
+        return {
+          match: candidate,
+          nextCursor: windowEnd + 1
+        };
+      }
+
+      if (normalizedTarget.startsWith(combined)) {
+        candidate = chooseTraceCandidate(candidate, trace);
+        continue;
+      }
+
+      break;
+    }
+  }
+
+  return null;
+}
+
+function chooseTraceCandidate(
+  current: WordTraceRecord | null,
+  incoming: WordTraceRecord
+): WordTraceRecord {
+  if (!current) {
+    return incoming;
+  }
+  const currentScore = traceSignalScore(current);
+  const incomingScore = traceSignalScore(incoming);
+  return incomingScore >= currentScore ? incoming : current;
+}
+
+function traceSignalScore(trace: WordTraceRecord): number {
+  const hasFlow = trace.flow ? 1 : 0;
+  const skeletonLength = trace.skeleton?.length ?? 0;
+  const eventsLength = trace.events.length;
+  return hasFlow * 1000 + skeletonLength * 10 + eventsLength;
+}
+
+function normalizeForAlignment(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0591-\u05C7]/gu, '')
+    .replace(/[^\p{L}\p{N}]/gu, '')
+    .toLowerCase();
 }
 
 function parseRouteRefSlug(
