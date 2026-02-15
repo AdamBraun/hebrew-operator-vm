@@ -258,8 +258,6 @@ describe("ui data loader", () => {
     const loader = createTestLoader(fetcher);
     await loader.loadBundle("latest");
 
-    await expect(loader.getWords("Genesis/1/1")).rejects.toThrow(
-      /Data contract violation/
-    );
+    await expect(loader.getWords("Genesis/1/1")).rejects.toThrow(/Data contract violation/);
   });
 });
