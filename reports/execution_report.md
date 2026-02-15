@@ -19,8 +19,8 @@
 - unique_skeletons: 4295
 - trace_sha256: 2b00b9882588950a7a71107620b531f903e7632d707dd8d0f16fdb03b1b44df0
 - verse_trace_sha256: 3a6af8f620b3f09f613f4d484f53355768d34d76698a1455cd1a980360f024e3
-- elapsed_ms: 1958.19
-- words_per_second: 41291.14
+- elapsed_ms: 1932.32
+- words_per_second: 41843.94
 
 ## Quality Gates
 - coverage: PASS (80856/80856)

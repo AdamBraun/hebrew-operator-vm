@@ -7,6 +7,8 @@ import {
   buildBaselineExecutions,
   buildExecuteCompletion,
   buildExecuteWritePlan,
+  buildWordPhaseRows,
+  buildWordPhraseRoleLookup,
   buildVerseMotifIndex,
   buildVerseTraceRecord,
   buildVerseWordRowsMeta,
@@ -296,6 +298,60 @@ describe("torah corpus execute module helpers", () => {
       token_index: 1,
       explanation: "window shift"
     });
+  });
+
+  it("renders word phases with phrase role and clause metadata", () => {
+    const phraseRoleLookup = buildWordPhraseRoleLookup([
+      {
+        ref_key: "Genesis/1/1",
+        word_index: 1,
+        phrase_role: "SPLIT",
+        phrase_path: ["w_1", "n_1_3_split"],
+        clause_id: "C1",
+        subclause_id: "C1.2",
+        phrase_version: "phrase_tree.v1"
+      }
+    ]);
+
+    const rows = buildWordPhaseRows({
+      rows: [
+        {
+          ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 1 },
+          ref_key: "Genesis/1/1/1",
+          surface: "בְּרֵאשִׁית",
+          tokens: [1, 2, 3],
+          flow_compact: ["RESH.BOUNDARY_CLOSE", "TAV.FINALIZE"],
+          one_liner: "ר boundary close -> ת finalize+stamp"
+        },
+        {
+          ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 2 },
+          ref_key: "Genesis/1/1/2",
+          surface: "בָּרָא",
+          tokens: [4, 5],
+          flow_compact: ["ALEPH.ALIAS"]
+        }
+      ],
+      phraseRoleLookup,
+      compileFlowString: (skeleton, separator) => skeleton.join(separator)
+    });
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({
+      phrase_role: "SPLIT",
+      phrase_path: ["w_1", "n_1_3_split"],
+      clause_id: "C1",
+      subclause_id: "C1.2",
+      phrase_group: "HEAD"
+    });
+    expect(String(rows[0]?.phase_render)).toContain("Phrase role: SPLIT");
+    expect(String(rows[0]?.phase_render)).toContain("Clause: C1 / C1.2");
+    expect(rows[1]).toMatchObject({
+      phrase_role: null,
+      clause_id: null,
+      subclause_id: null
+    });
+    expect(String(rows[1]?.phase_render)).toContain("Phrase role: UNASSIGNED");
+    expect(String(rows[1]?.phase_render)).toContain("Clause: UNASSIGNED");
   });
 
   it("accumulates word execution artifacts into verse-level trackers", () => {

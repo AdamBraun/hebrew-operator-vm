@@ -133,6 +133,49 @@ type BuildWordExecutionArtifactsOutput = {
   } | null;
 };
 
+type WordPhaseSourceRow = {
+  ref?: {
+    book?: string;
+    chapter?: number;
+    verse?: number;
+    token_index?: number;
+  };
+  ref_key?: string;
+  surface?: string;
+  tokens?: unknown[];
+  token_ids?: unknown[];
+  skeleton?: unknown[];
+  flow_compact?: unknown[];
+  one_liner?: unknown;
+};
+
+type WordPhraseRoleInputRow = {
+  ref_key?: string;
+  word_index?: number;
+  surface?: string;
+  phrase_role?: string;
+  phrase_path?: unknown[];
+  clause_id?: string;
+  subclause_id?: string;
+  phrase_version?: string;
+};
+
+type WordPhraseRoleLookupRow = {
+  ref_key: string;
+  word_index: number;
+  phrase_role: string;
+  phrase_path: string[];
+  clause_id: string;
+  subclause_id: string;
+  phrase_version: string;
+};
+
+type BuildWordPhaseRowsInput = {
+  rows: WordPhaseSourceRow[];
+  phraseRoleLookup: Map<string, WordPhraseRoleLookupRow>;
+  compileFlowString: (skeleton: string[], separator: string) => string;
+};
+
 type AccumulateWordExecutionArtifactsInput = {
   artifacts: BuildWordExecutionArtifactsOutput;
   verseRefKey: string;
@@ -594,6 +637,133 @@ export function applyWordExecutionPolicy(args: {
     blockedDeltaIncrement: 0,
     clampedWordIncrement: 0
   };
+}
+
+function normalizeWordPhaseSkeleton(row: WordPhaseSourceRow): string[] {
+  const source = Array.isArray(row.flow_compact)
+    ? row.flow_compact
+    : Array.isArray(row.skeleton)
+      ? row.skeleton
+      : [];
+  return source.map((entry) => String(entry)).filter((entry) => entry.length > 0);
+}
+
+function normalizeWordPhaseTokenIds(row: WordPhaseSourceRow): number[] {
+  const source = Array.isArray(row.tokens)
+    ? row.tokens
+    : Array.isArray(row.token_ids)
+      ? row.token_ids
+      : [];
+  return source
+    .map((entry) => Number(entry))
+    .filter((entry) => Number.isFinite(entry))
+    .map((entry) => Number(entry));
+}
+
+function phraseRoleLookupKey(refKey: string, wordIndex: number): string {
+  return `${refKey}/${wordIndex}`;
+}
+
+function phraseLookupKeyFromWordRefKey(refKey: string): string {
+  const pieces = String(refKey).split("/");
+  if (pieces.length < 4) {
+    return "";
+  }
+  const wordIndex = Number(pieces[pieces.length - 1]);
+  if (!Number.isInteger(wordIndex) || wordIndex <= 0) {
+    return "";
+  }
+  const verseRefKey = pieces.slice(0, -1).join("/");
+  return phraseRoleLookupKey(verseRefKey, wordIndex);
+}
+
+function clauseLabel(clauseId: string, subclauseId: string): string {
+  if (!clauseId && !subclauseId) {
+    return "UNASSIGNED";
+  }
+  if (!subclauseId || clauseId === subclauseId) {
+    return clauseId || subclauseId;
+  }
+  return `${clauseId} / ${subclauseId}`;
+}
+
+function phraseGroupForRole(role: string): string | null {
+  if (role === "HEAD" || role === "SPLIT") {
+    return "HEAD";
+  }
+  if (role === "JOIN") {
+    return "CONTINUATION";
+  }
+  if (role === "TAIL") {
+    return "ATTACHMENT";
+  }
+  return null;
+}
+
+export function buildWordPhraseRoleLookup(
+  rows: WordPhraseRoleInputRow[]
+): Map<string, WordPhraseRoleLookupRow> {
+  const lookup = new Map<string, WordPhraseRoleLookupRow>();
+  for (const row of rows) {
+    const verseRefKey = typeof row.ref_key === "string" ? row.ref_key : "";
+    const wordIndex = Number(row.word_index);
+    if (!verseRefKey || !Number.isInteger(wordIndex) || wordIndex <= 0) {
+      continue;
+    }
+    const key = phraseRoleLookupKey(verseRefKey, wordIndex);
+    if (lookup.has(key)) {
+      throw new Error(`Duplicate phrase role row for ${key}`);
+    }
+    lookup.set(key, {
+      ref_key: verseRefKey,
+      word_index: wordIndex,
+      phrase_role: typeof row.phrase_role === "string" ? row.phrase_role : "",
+      phrase_path: Array.isArray(row.phrase_path)
+        ? row.phrase_path.map((entry) => String(entry))
+        : [],
+      clause_id: typeof row.clause_id === "string" ? row.clause_id : "",
+      subclause_id: typeof row.subclause_id === "string" ? row.subclause_id : "",
+      phrase_version: typeof row.phrase_version === "string" ? row.phrase_version : ""
+    });
+  }
+  return lookup;
+}
+
+export function buildWordPhaseRows(args: BuildWordPhaseRowsInput): Record<string, unknown>[] {
+  return args.rows.map((row) => {
+    const refKey = typeof row.ref_key === "string" ? row.ref_key : "";
+    const lookupKey = phraseLookupKeyFromWordRefKey(refKey);
+    const phrase = lookupKey ? args.phraseRoleLookup.get(lookupKey) : undefined;
+    const skeleton = normalizeWordPhaseSkeleton(row);
+    const oneLiner =
+      typeof row.one_liner === "string" && row.one_liner.length > 0
+        ? row.one_liner
+        : args.compileFlowString(skeleton, " -> ");
+    const phraseRole = phrase?.phrase_role ?? "";
+    const clauseId = phrase?.clause_id ?? "";
+    const subclauseId = phrase?.subclause_id ?? "";
+    const phraseGroup = phraseGroupForRole(phraseRole);
+
+    return {
+      ref: row.ref,
+      ref_key: refKey,
+      surface: typeof row.surface === "string" ? row.surface : "",
+      token_ids: normalizeWordPhaseTokenIds(row),
+      skeleton,
+      one_liner: oneLiner,
+      phrase_role: phraseRole || null,
+      phrase_path: phrase?.phrase_path ?? [],
+      clause_id: clauseId || null,
+      subclause_id: subclauseId || null,
+      phrase_version: phrase?.phrase_version || null,
+      phrase_group: phraseGroup,
+      phase_render: [
+        `Flow: ${oneLiner}`,
+        `Phrase role: ${phraseRole || "UNASSIGNED"}`,
+        `Clause: ${clauseLabel(clauseId, subclauseId)}`
+      ].join("\n")
+    };
+  });
 }
 
 export function buildVerseTraceRecord(args: BuildVerseTraceRecordInput): Record<string, unknown> {

@@ -37,6 +37,11 @@ const RULES = [
     triggerLabel: "render/"
   },
   {
+    key: "render_version",
+    triggerPattern: /^impl\/reference\/src\/scripts\/phraseTree\//u,
+    triggerLabel: "impl/reference/src/scripts/phraseTree/"
+  },
+  {
     key: "trace_version",
     triggerPattern: /^spec\/70-TRACE-FORMAT\.schema\.json$/u,
     triggerLabel: "spec/70-TRACE-FORMAT.schema.json"
@@ -165,8 +170,21 @@ async function collectTouchedFiles(opts) {
 
   if (baseSha) {
     const rangePaths =
-      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", `${baseSha}...${headSha}`])) ??
-      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", baseSha, headSha]));
+      (await tryTouchedFromDiff([
+        "diff",
+        "--name-only",
+        "--diff-filter=ACMR",
+        "-z",
+        `${baseSha}...${headSha}`
+      ])) ??
+      (await tryTouchedFromDiff([
+        "diff",
+        "--name-only",
+        "--diff-filter=ACMR",
+        "-z",
+        baseSha,
+        headSha
+      ]));
     if (rangePaths) {
       for (const filePath of rangePaths) {
         touched.add(filePath);
@@ -183,8 +201,14 @@ async function collectTouchedFiles(opts) {
     }
 
     const stagedPaths =
-      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "--cached", "-z", "HEAD"])) ??
-      [];
+      (await tryTouchedFromDiff([
+        "diff",
+        "--name-only",
+        "--diff-filter=ACMR",
+        "--cached",
+        "-z",
+        "HEAD"
+      ])) ?? [];
     for (const filePath of stagedPaths) {
       touched.add(filePath);
     }

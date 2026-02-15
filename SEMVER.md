@@ -40,6 +40,7 @@ Every artifact family must carry version metadata:
 - If `registry/token-semantics.json` changes, `semantics_version` must increase.
 - If `registry/teamim.classification.json` changes, `semantics_version` must increase.
 - If any `render/` file changes, `render_version` must increase.
+- If `impl/reference/src/scripts/phraseTree/` changes, `render_version` must increase.
 - If `spec/70-TRACE-FORMAT.schema.json` changes, `trace_version` must increase.
 
 Script path: `/Users/adambraun/projects/letters/scripts/check-version-contract.cjs`.

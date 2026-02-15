@@ -212,6 +212,7 @@ Artifacts:
 - `word_flows.skeleton.jsonl`: machine layer (`ref`, `surface`, `tokens`, `events`, `flow_skeleton`).
 - `word_flows.one_liner.jsonl`: compiled human layer.
 - `word_flows.full.jsonl`: merged row format for tooling.
+- `word_phases.jsonl`: phrase-aware word-phase render rows (`Phrase role`, `Clause`, phrase path/IDs).
 - `pattern_index.json`: explicit semantic patterns + frequent n-grams.
 - `exemplar_library.json`: high-frequency skeleton exemplars.
 - `summary.json`: deterministic stats + semantic fingerprints.

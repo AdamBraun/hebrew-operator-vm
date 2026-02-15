@@ -39,6 +39,9 @@ function writeVersionFile(cwd: string, values: VersionValues): void {
 function initRepo(): { repoDir: string; baseSha: string } {
   const repoDir = fs.mkdtempSync(path.join(os.tmpdir(), "version-contract-ci-test-"));
   fs.mkdirSync(path.join(repoDir, "impl", "reference", "src"), { recursive: true });
+  fs.mkdirSync(path.join(repoDir, "impl", "reference", "src", "scripts", "phraseTree"), {
+    recursive: true
+  });
   fs.mkdirSync(path.join(repoDir, "registry"), { recursive: true });
   fs.mkdirSync(path.join(repoDir, "spec"), { recursive: true });
   fs.mkdirSync(path.join(repoDir, "render"), { recursive: true });
@@ -77,6 +80,11 @@ function initRepo(): { repoDir: string; baseSha: string } {
     "utf8"
   );
   fs.writeFileSync(path.join(repoDir, "render", "rules.md"), "render rules v1\n", "utf8");
+  fs.writeFileSync(
+    path.join(repoDir, "impl", "reference", "src", "scripts", "phraseTree", "runtime.ts"),
+    "export const PHRASE_VERSION = 'phrase_tree.v1';\n",
+    "utf8"
+  );
 
   runGit(repoDir, ["init"]);
   runGit(repoDir, ["config", "user.email", "ci@example.com"]);
@@ -191,6 +199,22 @@ describe("version contract CI checks", () => {
     fs.writeFileSync(path.join(repoDir, "render", "rules.md"), "render rules v2\n", "utf8");
     runGit(repoDir, ["add", "render/rules.md"]);
     runGit(repoDir, ["commit", "-m", "render change"]);
+    const headSha = runGit(repoDir, ["rev-parse", "HEAD"]);
+
+    const result = runCheck(repoDir, baseSha, headSha);
+    expect(result.ok).toBe(false);
+    expect(result.output).toContain("render_version must bump");
+  });
+
+  it("fails when phrase tree rules change without render version bump", () => {
+    const { repoDir, baseSha } = initRepo();
+    fs.writeFileSync(
+      path.join(repoDir, "impl", "reference", "src", "scripts", "phraseTree", "runtime.ts"),
+      "export const PHRASE_VERSION = 'phrase_tree.v2';\n",
+      "utf8"
+    );
+    runGit(repoDir, ["add", "impl/reference/src/scripts/phraseTree/runtime.ts"]);
+    runGit(repoDir, ["commit", "-m", "phrase tree rule change"]);
     const headSha = runGit(repoDir, ["rev-parse", "HEAD"]);
 
     const result = runCheck(repoDir, baseSha, headSha);
