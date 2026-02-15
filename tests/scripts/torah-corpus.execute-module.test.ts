@@ -7,6 +7,7 @@ import {
   buildBaselineExecutions,
   buildExecuteCompletion,
   buildExecuteWritePlan,
+  buildVerseLedgerRows,
   buildVersePhraseBoundaryLookup,
   buildWordPhaseRows,
   buildWordPhraseRoleLookup,
@@ -368,6 +369,153 @@ describe("torah corpus execute module helpers", () => {
     });
     expect(String(rows[1]?.phase_render)).toContain("Phrase role: UNASSIGNED");
     expect(String(rows[1]?.phase_render)).toContain("Clause: UNASSIGNED");
+  });
+
+  it("renders verse ledgers with clause-scoped subtree blocks and anchors", () => {
+    const rows = buildVerseLedgerRows({
+      wordPhaseRows: [
+        {
+          ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 1 },
+          ref_key: "Genesis/1/1/1",
+          surface: "א",
+          one_liner: "declare",
+          skeleton: ["HE.DECLARE", "MEM.OPEN"],
+          phrase_role: "SPLIT",
+          phrase_path: ["w_1", "n_1_2_split", "n_1_4_split"],
+          clause_id: "C1",
+          subclause_id: "C1.1",
+          phrase_version: "phrase_tree.v1"
+        },
+        {
+          ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 2 },
+          ref_key: "Genesis/1/1/2",
+          surface: "ב",
+          one_liner: "seal",
+          skeleton: ["TAV.FINALIZE"],
+          phrase_role: "JOIN",
+          phrase_path: ["w_2", "n_1_2_split", "n_1_4_split"],
+          clause_id: "C1",
+          subclause_id: "C1.2",
+          phrase_version: "phrase_tree.v1"
+        },
+        {
+          ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 3 },
+          ref_key: "Genesis/1/1/3",
+          surface: "ג",
+          one_liner: "utter",
+          skeleton: ["PE.UTTER"],
+          phrase_role: "SPLIT",
+          phrase_path: ["w_3", "n_3_4_split", "n_1_4_split"],
+          clause_id: "C2",
+          subclause_id: "C2.1",
+          phrase_version: "phrase_tree.v1"
+        },
+        {
+          ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 4 },
+          ref_key: "Genesis/1/1/4",
+          surface: "ד",
+          one_liner: "close",
+          skeleton: ["FINAL_KAF.FINALIZE", "SAMEKH.SUPPORT_DISCHARGE"],
+          phrase_role: "TAIL",
+          phrase_path: ["w_4", "n_3_4_split", "n_1_4_split"],
+          clause_id: "C2",
+          subclause_id: "C2.1",
+          phrase_version: "phrase_tree.v1"
+        }
+      ],
+      phraseTreeRows: [
+        {
+          ref_key: "Genesis/1/1",
+          ref: { book: "Genesis", chapter: 1, verse: 1 },
+          phrase_version: "phrase_tree.v1",
+          tree: {
+            id: "n_1_4_split",
+            node_type: "SPLIT",
+            split_word_index: 2,
+            span: { start: 1, end: 4 },
+            left: {
+              id: "n_1_2_split",
+              node_type: "SPLIT",
+              split_word_index: 1,
+              span: { start: 1, end: 2 },
+              left: { id: "w_1", node_type: "LEAF", span: { start: 1, end: 1 } },
+              right: { id: "w_2", node_type: "LEAF", span: { start: 2, end: 2 } }
+            },
+            right: {
+              id: "n_3_4_split",
+              node_type: "SPLIT",
+              split_word_index: 3,
+              span: { start: 3, end: 4 },
+              left: { id: "w_3", node_type: "LEAF", span: { start: 3, end: 3 } },
+              right: { id: "w_4", node_type: "LEAF", span: { start: 4, end: 4 } }
+            }
+          }
+        }
+      ],
+      verseTraceRows: [
+        {
+          ref_key: "Genesis/1/1",
+          trace_version: "1.1.0",
+          semantics_version: "1.1.0",
+          render_version: "1.1.0",
+          canonical_hash: "abc123",
+          boundary_events: {
+            phrase_breaks: [
+              {
+                phrase_node_id: "n_1_2_split",
+                split_word_index: 1,
+                word_span: { start: 1, end: 2 },
+                evidence: {
+                  verse_ref_key: "Genesis/1/1",
+                  phrase_version: "phrase_tree.v1"
+                }
+              },
+              {
+                phrase_node_id: "n_3_4_split",
+                split_word_index: 3,
+                word_span: { start: 3, end: 4 },
+                evidence: {
+                  verse_ref_key: "Genesis/1/1",
+                  phrase_version: "phrase_tree.v1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.record_kind).toBe("VERSE_LEDGER");
+    expect(rows[0]?.ref_key).toBe("Genesis/1/1");
+    expect(rows[0]?.phrase_version).toBe("phrase_tree.v1");
+    expect(Array.isArray(rows[0]?.clauses)).toBe(true);
+
+    const clauses = rows[0]?.clauses as Array<Record<string, unknown>>;
+    expect(clauses.map((clause) => String(clause.clause_id))).toEqual(["C1", "C2"]);
+
+    const clauseC1 = clauses.find((clause) => clause.clause_id === "C1") as Record<string, unknown>;
+    const clauseC1Subtrees = clauseC1.subtrees as Array<Record<string, unknown>>;
+    expect(clauseC1Subtrees.map((subtree) => subtree.phrase_node_id)).toEqual(["n_1_2_split"]);
+    expect(
+      (
+        clauseC1Subtrees[0]?.anchors as {
+          trace_phrase_break?: {
+            phrase_node_id?: string;
+          };
+        }
+      ).trace_phrase_break?.phrase_node_id
+    ).toBe("n_1_2_split");
+    expect((clauseC1.rollup as { exports?: { count?: number } }).exports?.count).toBe(1);
+    expect((clauseC1.rollup as { seals?: { count?: number } }).seals?.count).toBe(1);
+    expect((clauseC1.rollup as { persistence?: { count?: number } }).persistence?.count).toBe(1);
+
+    const clauseC2 = clauses.find((clause) => clause.clause_id === "C2") as Record<string, unknown>;
+    const clauseC2Subtrees = clauseC2.subtrees as Array<Record<string, unknown>>;
+    expect(clauseC2Subtrees.map((subtree) => subtree.phrase_node_id)).toEqual(["n_3_4_split"]);
+    expect((clauseC2.rollup as { exports?: { count?: number } }).exports?.count).toBe(1);
+    expect((clauseC2.rollup as { seals?: { count?: number } }).seals?.count).toBe(1);
+    expect((clauseC2.rollup as { persistence?: { count?: number } }).persistence?.count).toBe(1);
   });
 
   it("maps split phrase-tree nodes to deterministic PHRASE_BREAK events", () => {

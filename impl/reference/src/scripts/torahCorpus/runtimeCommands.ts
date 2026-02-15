@@ -35,6 +35,7 @@ import {
   buildExecuteCompletion,
   buildExecuteReports,
   buildExecuteWritePlan,
+  buildVerseLedgerRows,
   buildVersePhraseBoundaryLookup,
   buildWordPhaseRows,
   buildWordPhraseRoleLookup,
@@ -133,11 +134,15 @@ async function runAll(argv) {
   };
 
   const phraseRolesPath = path.resolve(process.cwd(), "corpus", "word_phrase_roles.jsonl");
+  const phraseTreePath = path.resolve(process.cwd(), "corpus", "verse_phrase_trees.jsonl");
+  const verseTracePath = path.resolve(process.cwd(), "corpus", "verse_traces.jsonl");
   let phraseRoleLookup = new Map();
   if (await pathExists(phraseRolesPath)) {
     const phraseRoleRows = await readJsonl(phraseRolesPath);
     phraseRoleLookup = buildWordPhraseRoleLookup(phraseRoleRows);
   }
+  const phraseTreeRows = (await pathExists(phraseTreePath)) ? await readJsonl(phraseTreePath) : [];
+  const verseTraceRows = (await pathExists(verseTracePath)) ? await readJsonl(verseTracePath) : [];
 
   const signatureByKey = new Map();
   const analysisCache = new Map();
@@ -289,6 +294,11 @@ async function runAll(argv) {
     phraseRoleLookup,
     compileFlowString
   });
+  const verseLedgerRows = buildVerseLedgerRows({
+    wordPhaseRows,
+    phraseTreeRows,
+    verseTraceRows
+  });
   const phraseAnnotatedWords = wordPhaseRows.filter(
     (row) => typeof row.phrase_role === "string" && row.phrase_role.length > 0
   ).length;
@@ -308,6 +318,7 @@ async function runAll(argv) {
     "word_flows.one_liner.jsonl": path.join(outDir, "word_flows.one_liner.jsonl"),
     "word_flows.full.jsonl": path.join(outDir, "word_flows.full.jsonl"),
     "word_phases.jsonl": path.join(outDir, "word_phases.jsonl"),
+    "verse_ledger.jsonl": path.join(outDir, "verse_ledger.jsonl"),
     "pattern_index.json": path.join(outDir, "pattern_index.json"),
     "exemplar_library.json": path.join(outDir, "exemplar_library.json"),
     "review_snapshot.json": path.join(outDir, "review_snapshot.json"),
@@ -325,6 +336,7 @@ async function runAll(argv) {
   await writeJsonl(artifactPaths["word_flows.one_liner.jsonl"], oneLinerRows);
   await writeJsonl(artifactPaths["word_flows.full.jsonl"], fullRows);
   await writeJsonl(artifactPaths["word_phases.jsonl"], wordPhaseRows);
+  await writeJsonl(artifactPaths["verse_ledger.jsonl"], verseLedgerRows);
   await writeJson(artifactPaths["pattern_index.json"], patternIndex);
   await writeJson(artifactPaths["exemplar_library.json"], exemplars);
 
@@ -332,7 +344,8 @@ async function runAll(argv) {
     "word_flows.skeleton.jsonl": countLines(skeletonRows),
     "word_flows.one_liner.jsonl": countLines(oneLinerRows),
     "word_flows.full.jsonl": countLines(fullRows),
-    "word_phases.jsonl": countLines(wordPhaseRows)
+    "word_phases.jsonl": countLines(wordPhaseRows),
+    "verse_ledger.jsonl": countLines(verseLedgerRows)
   };
 
   const artifactChecksums = {};
@@ -395,6 +408,7 @@ async function runAll(argv) {
       words_total: wordsTotal,
       words_with_phrase_role: phraseAnnotatedWords,
       words_without_phrase_role: Math.max(0, wordsTotal - phraseAnnotatedWords),
+      verses_with_ledger: verseLedgerRows.length,
       words_with_runtime_error: wordsErrored,
       unique_word_surfaces: analysisCache.size,
       distinct_grapheme_signatures: sortedSignatureKeys.length,

@@ -172,6 +172,11 @@ type WordPhraseRoleLookupRow = {
 
 type VersePhraseTreeInputRow = {
   ref_key?: string;
+  ref?: {
+    book?: string;
+    chapter?: number;
+    verse?: number;
+  };
   words?: unknown[];
   phrase_version?: string;
   tree?: unknown;
@@ -223,6 +228,41 @@ type BuildWordPhaseRowsInput = {
   rows: WordPhaseSourceRow[];
   phraseRoleLookup: Map<string, WordPhraseRoleLookupRow>;
   compileFlowString: (skeleton: string[], separator: string) => string;
+};
+
+type VerseLedgerWordPhaseRow = {
+  ref?: {
+    book?: string;
+    chapter?: number;
+    verse?: number;
+    token_index?: number;
+  };
+  ref_key?: string;
+  surface?: unknown;
+  one_liner?: unknown;
+  skeleton?: unknown;
+  phrase_role?: unknown;
+  phrase_path?: unknown;
+  clause_id?: unknown;
+  subclause_id?: unknown;
+  phrase_version?: unknown;
+};
+
+type VerseLedgerTraceRow = {
+  ref_key?: unknown;
+  trace_version?: unknown;
+  semantics_version?: unknown;
+  render_version?: unknown;
+  canonical_hash?: unknown;
+  boundary_events?: {
+    phrase_breaks?: unknown;
+  };
+};
+
+type BuildVerseLedgerRowsInput = {
+  wordPhaseRows: VerseLedgerWordPhaseRow[];
+  phraseTreeRows: VersePhraseTreeInputRow[];
+  verseTraceRows: VerseLedgerTraceRow[];
 };
 
 type AccumulateWordExecutionArtifactsInput = {
@@ -904,6 +944,687 @@ function phraseGroupForRole(role: string): string | null {
     return "ATTACHMENT";
   }
   return null;
+}
+
+const VERSE_LEDGER_EXPORT_OPS = new Set([
+  "GIMEL.BESTOW",
+  "HE.DECLARE",
+  "HE.DECLARE_BREATH",
+  "HE.DECLARE_PIN",
+  "HE.DECLARE_ALIAS",
+  "PE.UTTER",
+  "VAV.TRANSPORT"
+]);
+
+const VERSE_LEDGER_SEAL_OPS = new Set([
+  "DALET.BOUNDARY_CLOSE",
+  "FINAL_KAF.FINALIZE",
+  "FINAL_PE.UTTER_CLOSE",
+  "RESH.BOUNDARY_CLOSE",
+  "SPACE.BOUNDARY_AUTO_CLOSE",
+  "TAV.FINALIZE"
+]);
+
+const VERSE_LEDGER_PERSISTENCE_OPS = new Set([
+  "FINAL_MEM.CLOSE",
+  "FINAL_NUN.SUPPORT_DEBT",
+  "FINAL_NUN.SUPPORT_DISCHARGE",
+  "MEM.OPEN",
+  "NUN.SUPPORT_DEBT",
+  "SAMEKH.SUPPORT_DISCHARGE",
+  "SPACE.MEM_AUTO_CLOSE",
+  "SPACE.SUPPORT_DISCHARGE"
+]);
+
+type VerseLedgerNormalizedWordRow = {
+  verse_ref_key: string;
+  ref_key: string;
+  token_index: number;
+  surface: string;
+  one_liner: string;
+  skeleton: string[];
+  phrase_role: string;
+  phrase_path: string[];
+  clause_id: string;
+  subclause_id: string;
+  phrase_version: string;
+  ref: {
+    book?: string;
+    chapter?: number;
+    verse?: number;
+  } | null;
+};
+
+type VerseLedgerPhraseNode = {
+  phrase_node_id: string;
+  node_type: string;
+  word_span: {
+    start: number;
+    end: number;
+  };
+  split_word_index: number | null;
+};
+
+type VerseLedgerTracePhraseBreak = {
+  phrase_node_id: string;
+  split_word_index: number | null;
+  word_span: {
+    start: number;
+    end: number;
+  };
+  evidence: {
+    verse_ref_key: string;
+    phrase_version: string;
+  };
+};
+
+function verseRefKeyFromWordRefKey(refKey: string): string {
+  const pieces = String(refKey).split("/");
+  if (pieces.length < 4) {
+    return "";
+  }
+  return pieces.slice(0, -1).join("/");
+}
+
+function tokenIndexFromWordRefKey(refKey: string): number {
+  const pieces = String(refKey).split("/");
+  if (pieces.length < 4) {
+    return NaN;
+  }
+  const tokenIndex = Number(pieces[pieces.length - 1]);
+  return Number.isInteger(tokenIndex) && tokenIndex > 0 ? tokenIndex : NaN;
+}
+
+function tokenIndexFromWordPhaseRow(row: VerseLedgerWordPhaseRow): number {
+  const fromRef = Number(row.ref?.token_index);
+  if (Number.isInteger(fromRef) && fromRef > 0) {
+    return fromRef;
+  }
+  const fromRefKey = tokenIndexFromWordRefKey(typeof row.ref_key === "string" ? row.ref_key : "");
+  return Number.isInteger(fromRefKey) && fromRefKey > 0 ? fromRefKey : NaN;
+}
+
+function normalizeLedgerSkeleton(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.map((entry) => String(entry)).filter((entry) => entry.length > 0);
+}
+
+function normalizePhrasePath(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.map((entry) => String(entry)).filter((entry) => entry.length > 0);
+}
+
+function normalizeVerseLedgerWordRow(
+  row: VerseLedgerWordPhaseRow
+): VerseLedgerNormalizedWordRow | null {
+  const refKey = typeof row.ref_key === "string" ? row.ref_key : "";
+  if (refKey.length === 0) {
+    return null;
+  }
+  const verseRefKey = verseRefKeyFromWordRefKey(refKey);
+  if (verseRefKey.length === 0) {
+    return null;
+  }
+  const tokenIndex = tokenIndexFromWordPhaseRow(row);
+  if (!Number.isInteger(tokenIndex) || tokenIndex <= 0) {
+    return null;
+  }
+  const skeleton = normalizeLedgerSkeleton(row.skeleton);
+  const oneLiner =
+    typeof row.one_liner === "string" && row.one_liner.length > 0
+      ? row.one_liner
+      : skeleton.join(" -> ");
+
+  return {
+    verse_ref_key: verseRefKey,
+    ref_key: refKey,
+    token_index: tokenIndex,
+    surface: typeof row.surface === "string" ? row.surface : "",
+    one_liner: oneLiner,
+    skeleton,
+    phrase_role: typeof row.phrase_role === "string" ? row.phrase_role : "",
+    phrase_path: normalizePhrasePath(row.phrase_path),
+    clause_id: typeof row.clause_id === "string" ? row.clause_id : "",
+    subclause_id: typeof row.subclause_id === "string" ? row.subclause_id : "",
+    phrase_version: typeof row.phrase_version === "string" ? row.phrase_version : "",
+    ref:
+      row.ref && typeof row.ref === "object"
+        ? {
+            book: typeof row.ref.book === "string" ? row.ref.book : undefined,
+            chapter:
+              Number.isInteger(Number(row.ref.chapter)) && Number(row.ref.chapter) > 0
+                ? Number(row.ref.chapter)
+                : undefined,
+            verse:
+              Number.isInteger(Number(row.ref.verse)) && Number(row.ref.verse) > 0
+                ? Number(row.ref.verse)
+                : undefined
+          }
+        : null
+  };
+}
+
+function collectLedgerPhraseNodes(node: unknown, out: VerseLedgerPhraseNode[]): void {
+  if (!node || typeof node !== "object") {
+    return;
+  }
+
+  const row = node as PhraseTreeNodeInput;
+  const nodeType = typeof row.node_type === "string" ? row.node_type : "";
+  const phraseNodeId = typeof row.id === "string" ? row.id : "";
+  const spanStart = Number(row.span?.start);
+  const spanEnd = Number(row.span?.end);
+  const splitWordIndex = Number(row.split_word_index);
+
+  if (
+    nodeType !== "LEAF" &&
+    phraseNodeId.length > 0 &&
+    Number.isInteger(spanStart) &&
+    spanStart > 0 &&
+    Number.isInteger(spanEnd) &&
+    spanEnd >= spanStart
+  ) {
+    out.push({
+      phrase_node_id: phraseNodeId,
+      node_type: nodeType || "UNKNOWN",
+      word_span: {
+        start: spanStart,
+        end: spanEnd
+      },
+      split_word_index:
+        Number.isInteger(splitWordIndex) && splitWordIndex > 0 ? splitWordIndex : null
+    });
+  }
+
+  collectLedgerPhraseNodes(row.left, out);
+  collectLedgerPhraseNodes(row.right, out);
+}
+
+function compareLedgerPhraseNodes(
+  left: VerseLedgerPhraseNode,
+  right: VerseLedgerPhraseNode
+): number {
+  if (left.word_span.start !== right.word_span.start) {
+    return left.word_span.start - right.word_span.start;
+  }
+  if (left.word_span.end !== right.word_span.end) {
+    return left.word_span.end - right.word_span.end;
+  }
+  if (left.node_type !== right.node_type) {
+    return sortRefLike(left.node_type, right.node_type);
+  }
+  return sortRefLike(left.phrase_node_id, right.phrase_node_id);
+}
+
+function sortLedgerCounts(counts: Record<string, number>): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const key of Object.keys(counts).sort(sortRefLike)) {
+    out[key] = counts[key];
+  }
+  return out;
+}
+
+function sumLedgerCounts(counts: Record<string, number>): number {
+  return Object.values(counts).reduce((sum, count) => sum + Number(count), 0);
+}
+
+function buildLedgerOpSummary(
+  words: VerseLedgerNormalizedWordRow[],
+  ops: Set<string>
+): Record<string, unknown> {
+  const byOp: Record<string, number> = {};
+  const anchors: Array<{ ref_key: string; token_index: number; matched_ops: string[] }> = [];
+
+  for (const word of words) {
+    const matchedOps = word.skeleton.filter((op) => ops.has(op));
+    if (matchedOps.length === 0) {
+      continue;
+    }
+    for (const op of matchedOps) {
+      byOp[op] = (byOp[op] ?? 0) + 1;
+    }
+    anchors.push({
+      ref_key: word.ref_key,
+      token_index: word.token_index,
+      matched_ops: matchedOps
+    });
+  }
+
+  anchors.sort(
+    (left, right) =>
+      left.token_index - right.token_index || sortRefLike(left.ref_key, right.ref_key)
+  );
+
+  const sortedByOp = sortLedgerCounts(byOp);
+  return {
+    count: sumLedgerCounts(sortedByOp),
+    by_op: sortedByOp,
+    anchors
+  };
+}
+
+function buildLedgerSummary(words: VerseLedgerNormalizedWordRow[]): Record<string, unknown> {
+  return {
+    words_total: words.length,
+    exports: buildLedgerOpSummary(words, VERSE_LEDGER_EXPORT_OPS),
+    seals: buildLedgerOpSummary(words, VERSE_LEDGER_SEAL_OPS),
+    persistence: buildLedgerOpSummary(words, VERSE_LEDGER_PERSISTENCE_OPS)
+  };
+}
+
+function resolveVerseRefFromLedgerRow(args: {
+  verseRefKey: string;
+  wordRow: VerseLedgerNormalizedWordRow | null;
+  phraseTreeRow: VersePhraseTreeInputRow | null;
+}): { book: string; chapter: number; verse: number } | null {
+  const wordRef = args.wordRow?.ref ?? null;
+  if (
+    wordRef &&
+    typeof wordRef.book === "string" &&
+    Number.isInteger(wordRef.chapter) &&
+    Number.isInteger(wordRef.verse)
+  ) {
+    return {
+      book: wordRef.book,
+      chapter: Number(wordRef.chapter),
+      verse: Number(wordRef.verse)
+    };
+  }
+
+  const phraseRef = args.phraseTreeRow?.ref;
+  if (
+    phraseRef &&
+    typeof phraseRef.book === "string" &&
+    Number.isInteger(Number(phraseRef.chapter)) &&
+    Number.isInteger(Number(phraseRef.verse))
+  ) {
+    return {
+      book: phraseRef.book,
+      chapter: Number(phraseRef.chapter),
+      verse: Number(phraseRef.verse)
+    };
+  }
+
+  const pieces = args.verseRefKey.split("/");
+  if (pieces.length < 3) {
+    return null;
+  }
+  const chapter = Number(pieces[pieces.length - 2]);
+  const verse = Number(pieces[pieces.length - 1]);
+  if (!Number.isInteger(chapter) || !Number.isInteger(verse)) {
+    return null;
+  }
+  return {
+    book: pieces.slice(0, -2).join("/"),
+    chapter,
+    verse
+  };
+}
+
+function normalizeTracePhraseBreaks(
+  row: VerseLedgerTraceRow | undefined
+): Map<string, VerseLedgerTracePhraseBreak> {
+  const lookup = new Map<string, VerseLedgerTracePhraseBreak>();
+  const source = Array.isArray(row?.boundary_events?.phrase_breaks)
+    ? row?.boundary_events?.phrase_breaks
+    : [];
+
+  for (const entry of source) {
+    if (!entry || typeof entry !== "object") {
+      continue;
+    }
+    const event = entry as {
+      phrase_node_id?: unknown;
+      split_word_index?: unknown;
+      word_span?: { start?: unknown; end?: unknown };
+      evidence?: {
+        verse_ref_key?: unknown;
+        phrase_version?: unknown;
+      };
+    };
+    const phraseNodeId =
+      typeof event.phrase_node_id === "string" && event.phrase_node_id.length > 0
+        ? event.phrase_node_id
+        : "";
+    const spanStart = Number(event.word_span?.start);
+    const spanEnd = Number(event.word_span?.end);
+    if (
+      phraseNodeId.length === 0 ||
+      !Number.isInteger(spanStart) ||
+      spanStart <= 0 ||
+      !Number.isInteger(spanEnd) ||
+      spanEnd < spanStart
+    ) {
+      continue;
+    }
+
+    const splitWordIndex = Number(event.split_word_index);
+    lookup.set(phraseNodeId, {
+      phrase_node_id: phraseNodeId,
+      split_word_index:
+        Number.isInteger(splitWordIndex) && splitWordIndex > 0 ? splitWordIndex : null,
+      word_span: {
+        start: spanStart,
+        end: spanEnd
+      },
+      evidence: {
+        verse_ref_key:
+          typeof event.evidence?.verse_ref_key === "string" ? event.evidence.verse_ref_key : "",
+        phrase_version:
+          typeof event.evidence?.phrase_version === "string" ? event.evidence.phrase_version : ""
+      }
+    });
+  }
+
+  return lookup;
+}
+
+function wordsInLedgerSpan(
+  words: VerseLedgerNormalizedWordRow[],
+  start: number,
+  end: number
+): VerseLedgerNormalizedWordRow[] {
+  return words.filter((word) => word.token_index >= start && word.token_index <= end);
+}
+
+function compareLedgerWords(
+  left: VerseLedgerNormalizedWordRow,
+  right: VerseLedgerNormalizedWordRow
+): number {
+  if (left.token_index !== right.token_index) {
+    return left.token_index - right.token_index;
+  }
+  return sortRefLike(left.ref_key, right.ref_key);
+}
+
+function uniqueSortedStrings(values: string[]): string[] {
+  return Array.from(new Set(values.filter((value) => value.length > 0))).sort(sortRefLike);
+}
+
+function summarizeLedgerWords(
+  words: VerseLedgerNormalizedWordRow[]
+): Array<Record<string, unknown>> {
+  return words.map((word) => ({
+    ref_key: word.ref_key,
+    token_index: word.token_index,
+    surface: word.surface,
+    one_liner: word.one_liner,
+    phrase_role: word.phrase_role || null,
+    subclause_id: word.subclause_id || null
+  }));
+}
+
+function clauseWordSpan(
+  words: VerseLedgerNormalizedWordRow[]
+): { start: number; end: number } | null {
+  if (words.length === 0) {
+    return null;
+  }
+  return {
+    start: words[0].token_index,
+    end: words[words.length - 1].token_index
+  };
+}
+
+export function buildVerseLedgerRows(args: BuildVerseLedgerRowsInput): Record<string, unknown>[] {
+  const wordRowsByVerse = new Map<string, VerseLedgerNormalizedWordRow[]>();
+  const seenWordKeys = new Set<string>();
+
+  for (const row of args.wordPhaseRows) {
+    const normalized = normalizeVerseLedgerWordRow(row);
+    if (!normalized) {
+      continue;
+    }
+    const wordKey = `${normalized.verse_ref_key}/${normalized.token_index}`;
+    if (seenWordKeys.has(wordKey)) {
+      throw new Error(`Duplicate verse ledger word row for ${wordKey}`);
+    }
+    seenWordKeys.add(wordKey);
+    const bucket = wordRowsByVerse.get(normalized.verse_ref_key) ?? [];
+    bucket.push(normalized);
+    wordRowsByVerse.set(normalized.verse_ref_key, bucket);
+  }
+
+  const phraseTreeByVerse = new Map<string, VersePhraseTreeInputRow>();
+  for (const row of args.phraseTreeRows) {
+    const verseRefKey = typeof row.ref_key === "string" ? row.ref_key : "";
+    if (verseRefKey.length === 0) {
+      continue;
+    }
+    if (phraseTreeByVerse.has(verseRefKey)) {
+      throw new Error(`Duplicate verse phrase tree row for ${verseRefKey}`);
+    }
+    phraseTreeByVerse.set(verseRefKey, row);
+  }
+
+  const verseTraceByVerse = new Map<string, VerseLedgerTraceRow>();
+  for (const row of args.verseTraceRows) {
+    const verseRefKey = typeof row.ref_key === "string" ? row.ref_key : "";
+    if (verseRefKey.length === 0) {
+      continue;
+    }
+    if (verseTraceByVerse.has(verseRefKey)) {
+      throw new Error(`Duplicate verse trace row for ${verseRefKey}`);
+    }
+    verseTraceByVerse.set(verseRefKey, row);
+  }
+
+  const verseRefKeys = Array.from(wordRowsByVerse.keys()).sort(sortRefLike);
+  const out: Record<string, unknown>[] = [];
+
+  for (const verseRefKey of verseRefKeys) {
+    const words = [...(wordRowsByVerse.get(verseRefKey) ?? [])].sort(compareLedgerWords);
+    if (words.length === 0) {
+      continue;
+    }
+    const phraseTreeRow = phraseTreeByVerse.get(verseRefKey) ?? null;
+    const verseTraceRow = verseTraceByVerse.get(verseRefKey);
+
+    const rawPhraseNodes: VerseLedgerPhraseNode[] = [];
+    if (phraseTreeRow) {
+      collectLedgerPhraseNodes(phraseTreeRow.tree, rawPhraseNodes);
+    }
+    const phraseNodeById = new Map<string, VerseLedgerPhraseNode>();
+    for (const node of rawPhraseNodes) {
+      if (!phraseNodeById.has(node.phrase_node_id)) {
+        phraseNodeById.set(node.phrase_node_id, node);
+      }
+    }
+    const phraseNodes = Array.from(phraseNodeById.values()).sort(compareLedgerPhraseNodes);
+
+    const tracePhraseBreaks = normalizeTracePhraseBreaks(verseTraceRow);
+
+    const clauseIds = uniqueSortedStrings(words.map((word) => word.clause_id));
+    const clauses: Record<string, unknown>[] = [];
+    for (const clauseId of clauseIds) {
+      const clauseWords = words.filter((word) => word.clause_id === clauseId);
+      if (clauseWords.length === 0) {
+        continue;
+      }
+      const span = clauseWordSpan(clauseWords);
+      if (!span) {
+        continue;
+      }
+      const subclauseIds = uniqueSortedStrings(
+        clauseWords
+          .map((word) => word.subclause_id)
+          .filter((subclauseId) => subclauseId !== clauseId)
+      );
+      const subclauses = subclauseIds.map((subclauseId) => {
+        const subclauseWords = clauseWords.filter((word) => word.subclause_id === subclauseId);
+        const subclauseSpan = clauseWordSpan(subclauseWords);
+        return {
+          subclause_id: subclauseId,
+          word_span: subclauseSpan,
+          anchors: {
+            verse_ref_key: verseRefKey,
+            word_refs: subclauseWords.map((word) => ({
+              ref_key: word.ref_key,
+              token_index: word.token_index
+            }))
+          },
+          words: summarizeLedgerWords(subclauseWords),
+          rollup: buildLedgerSummary(subclauseWords)
+        };
+      });
+
+      const subtrees = phraseNodes
+        .map((node) => {
+          const spanWords = wordsInLedgerSpan(words, node.word_span.start, node.word_span.end);
+          if (spanWords.length === 0) {
+            return null;
+          }
+          const spanClauseIds = uniqueSortedStrings(spanWords.map((word) => word.clause_id));
+          if (spanClauseIds.length !== 1 || spanClauseIds[0] !== clauseId) {
+            return null;
+          }
+          const spanSubclauseIds = uniqueSortedStrings(spanWords.map((word) => word.subclause_id));
+          const phrasePathNodeIds = uniqueSortedStrings(
+            spanWords.flatMap((word) =>
+              word.phrase_path.filter((nodeId) => nodeId.startsWith("n_"))
+            )
+          );
+          const traceAnchor = tracePhraseBreaks.get(node.phrase_node_id) ?? null;
+          return {
+            clause_id: clauseId,
+            phrase_node_id: node.phrase_node_id,
+            node_type: node.node_type,
+            word_span: {
+              start: node.word_span.start,
+              end: node.word_span.end
+            },
+            split_word_index: node.split_word_index,
+            subclause_ids: spanSubclauseIds,
+            anchors: {
+              verse_ref_key: verseRefKey,
+              phrase_node_id: node.phrase_node_id,
+              phrase_path_node_ids: phrasePathNodeIds,
+              trace_phrase_break: traceAnchor,
+              word_refs: spanWords.map((word) => ({
+                ref_key: word.ref_key,
+                token_index: word.token_index
+              }))
+            },
+            words: summarizeLedgerWords(spanWords),
+            exports: buildLedgerOpSummary(spanWords, VERSE_LEDGER_EXPORT_OPS),
+            seals: buildLedgerOpSummary(spanWords, VERSE_LEDGER_SEAL_OPS),
+            persistence: buildLedgerOpSummary(spanWords, VERSE_LEDGER_PERSISTENCE_OPS)
+          };
+        })
+        .filter((row): row is NonNullable<typeof row> => row !== null);
+
+      clauses.push({
+        clause_id: clauseId,
+        word_span: span,
+        anchors: {
+          verse_ref_key: verseRefKey,
+          word_refs: clauseWords.map((word) => ({
+            ref_key: word.ref_key,
+            token_index: word.token_index
+          }))
+        },
+        words: summarizeLedgerWords(clauseWords),
+        subclauses,
+        subtrees,
+        rollup: buildLedgerSummary(clauseWords)
+      });
+    }
+
+    const unassignedWords = words.filter((word) => word.clause_id.length === 0);
+    if (unassignedWords.length > 0) {
+      const unassignedSpan = clauseWordSpan(unassignedWords);
+      clauses.push({
+        clause_id: "UNASSIGNED",
+        word_span: unassignedSpan,
+        anchors: {
+          verse_ref_key: verseRefKey,
+          word_refs: unassignedWords.map((word) => ({
+            ref_key: word.ref_key,
+            token_index: word.token_index
+          }))
+        },
+        words: summarizeLedgerWords(unassignedWords),
+        subclauses: [],
+        subtrees: [],
+        rollup: buildLedgerSummary(unassignedWords)
+      });
+    }
+
+    clauses.sort((left, right) =>
+      sortRefLike(String(left.clause_id ?? ""), String(right.clause_id ?? ""))
+    );
+
+    const phraseVersion =
+      words.find((word) => word.phrase_version.length > 0)?.phrase_version ??
+      (typeof phraseTreeRow?.phrase_version === "string" ? phraseTreeRow.phrase_version : "");
+
+    const rootPhraseNodeId =
+      phraseTreeRow &&
+      phraseTreeRow.tree &&
+      typeof phraseTreeRow.tree === "object" &&
+      "id" in phraseTreeRow.tree &&
+      typeof (phraseTreeRow.tree as { id?: unknown }).id === "string"
+        ? ((phraseTreeRow.tree as { id: string }).id ?? "")
+        : "";
+
+    const traceAnchorPhraseBreaks = Array.from(tracePhraseBreaks.values()).sort((left, right) =>
+      sortRefLike(left.phrase_node_id, right.phrase_node_id)
+    );
+
+    out.push({
+      record_kind: "VERSE_LEDGER",
+      ref: resolveVerseRefFromLedgerRow({
+        verseRefKey,
+        wordRow: words[0] ?? null,
+        phraseTreeRow
+      }),
+      ref_key: verseRefKey,
+      phrase_version: phraseVersion || null,
+      anchors: {
+        verse_trace: verseTraceRow
+          ? {
+              ref_key: verseRefKey,
+              trace_version:
+                typeof verseTraceRow.trace_version === "string"
+                  ? verseTraceRow.trace_version
+                  : null,
+              semantics_version:
+                typeof verseTraceRow.semantics_version === "string"
+                  ? verseTraceRow.semantics_version
+                  : null,
+              render_version:
+                typeof verseTraceRow.render_version === "string"
+                  ? verseTraceRow.render_version
+                  : null,
+              canonical_hash:
+                typeof verseTraceRow.canonical_hash === "string"
+                  ? verseTraceRow.canonical_hash
+                  : null,
+              phrase_breaks: traceAnchorPhraseBreaks
+            }
+          : null,
+        phrase_tree: phraseTreeRow
+          ? {
+              ref_key: verseRefKey,
+              phrase_version:
+                typeof phraseTreeRow.phrase_version === "string"
+                  ? phraseTreeRow.phrase_version
+                  : null,
+              root_phrase_node_id: rootPhraseNodeId || null,
+              phrase_node_count: phraseNodes.length
+            }
+          : null
+      },
+      clauses,
+      verse_rollup: buildLedgerSummary(words)
+    });
+  }
+
+  return out;
 }
 
 export function buildWordPhraseRoleLookup(
