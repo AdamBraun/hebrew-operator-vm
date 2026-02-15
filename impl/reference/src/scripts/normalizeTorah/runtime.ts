@@ -580,7 +580,7 @@ export function normalizeVerse(
   let maqafObserved = 0;
   let sofPasuqObserved = 0;
   let qamatsQatanObserved = 0;
-  let qamatsQatanNormalized = 0;
+  const qamatsQatanNormalized = 0;
 
   if (lineStable.replacements > 0) {
     policyTransformations.set("line_breaks_to_lf", lineStable.replacements);
