@@ -7,7 +7,7 @@
 - observed teamim codepoints: 25
 - classification entries: 25
 - unobserved classification entries: 0
-- registry checksum (sha256): ee94c621e4b64164fa4126a6469731e7b9816b9017fc64a0f4eba155d599fcda
+- registry checksum (sha256): 7369050e321e9f578a52a90dd08059eeafa33700f32207f9e25a14c303f25bc4
 
 ## Validation
 

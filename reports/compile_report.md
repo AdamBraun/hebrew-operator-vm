@@ -3,11 +3,11 @@
 - registry: /Users/adambraun/projects/letters/data/tokens.registry.json
 - definitions: /Users/adambraun/projects/letters/registry/token-semantics.json
 - output: /Users/adambraun/projects/letters/data/tokens.compiled.json
-- semver: 1.0.0
+- semver: 1.1.0
 - trace_version: 1.0.0
 - render_version: 1.1.0
-- definitions sha256: 107ad13730c2f8f0412250cd34d82d66eb8ee054bd2f762baac1414012439c39
-- compiled sha256: 47253cd84eeb3d88d2279825659897f552cf20d27c96f1dee9450c776fadbd77
+- definitions sha256: f955b0834bc7201c6e10c6de128252c7e59438ae55b2cb1a9afe0ee718824da0
+- compiled sha256: 9a24ff436b35d42dfcab9ce90e2efe7027d327165816c174f613501c6a427705
 - tokens compiled: 763
 - warnings: 336
 

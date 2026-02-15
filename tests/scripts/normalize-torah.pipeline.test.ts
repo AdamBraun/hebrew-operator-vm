@@ -9,7 +9,7 @@ const SCRIPT = path.resolve(process.cwd(), "scripts", "normalize-torah.mjs");
 function writeFixtureJson(
   outPath: string,
   verses: Array<{ n: number; he: string }> = [
-    { n: 1, he: "<big>בְּ</big>רֵאשִׁ֖ית" },
+    { n: 1, he: '<big>בְּ</big>רֵאשִׁ֖ית&nbsp;<span class="mam-spi-pe">{פ}</span><br>' },
     { n: 2, he: "וְהָאָֽרֶץ" }
   ]
 ): void {
@@ -53,6 +53,7 @@ describe("normalize-torah pipeline", () => {
     ]);
     expect(runOut).toContain("sourceIdempotenceFailures=0");
     expect(runOut).toContain("outputIdempotenceFailures=0");
+    expect(fs.readFileSync(out, "utf8")).not.toContain("{פ}");
 
     const verifyOut = runNode([
       SCRIPT,

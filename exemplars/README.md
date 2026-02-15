@@ -4,8 +4,8 @@ Canonical, deterministic exemplars for publication and regression validation.
 
 ## Summary
 - source_trace: `corpus/word_traces.jsonl`
-- trace_sha256: `02ad0d7f0938ba151e9101cea4178b0503fc19ee2828aedacef31a8035046776`
-- semantic_versions: 1.0.0
+- trace_sha256: `2b00b9882588950a7a71107620b531f903e7632d707dd8d0f16fdb03b1b44df0`
+- semantic_versions: 1.1.0
 - exemplars: 30
 - regression_cases: 18
 - observed_operator_events: 26
@@ -293,3 +293,4 @@ Representative examples selected from the motif index.
 ## Version Notes
 
 - 1.0.0: Auto-generated exemplar set for this semantic version. Update this note when semantics change materially.
+- 1.1.0: Auto-generated exemplar set for this semantic version. Update this note when semantics change materially.

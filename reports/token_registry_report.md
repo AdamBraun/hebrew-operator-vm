@@ -2,10 +2,10 @@
 
 - input: /Users/adambraun/projects/letters/data/torah.normalized.txt
 - records scanned: 5846
-- grapheme clusters scanned: 306269
-- grapheme clusters mapped: 306269
+- grapheme clusters scanned: 305599
+- grapheme clusters mapped: 305599
 - distinct signatures: 763
-- token registry checksum (sha256): 5ef22af9595dd64d36853b31b6fefc808092309b2943c0da895ac208e96c3b99
+- token registry checksum (sha256): d28f5ee904b02cbbd5ec460295258924b1e4aa8e02deee4490c97a598c407e8e
 - signatures list checksum (sha256): 89fadf043f7d506b273151f2d2e4255de30dc7b7258ace33892b8f8e9693aca7
 
 ## Validation
@@ -33,10 +33,10 @@
 - מ: 14488
 - ן: 4276
 - נ: 9891
-- ס: 2257
+- ס: 1878
 - ע: 11261
 - ף: 832
-- פ: 4318
+- פ: 4027
 - ץ: 1036
 - צ: 2942
 - ק: 4706

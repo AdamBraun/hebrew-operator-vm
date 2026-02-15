@@ -32,6 +32,9 @@ const SOF_PASUQ = "\u05C3";
 const CONTEXT_SPAN = 12;
 const ORDER_SAMPLE_LIMIT = 10;
 const IDEMPOTENCE_SAMPLE_LIMIT = 10;
+const PARASHA_MARKER = /\{\s*[פס]\s*\}/gu;
+const SPACE_ENTITIES = new Set(["&nbsp;", "&thinsp;"]);
+const STRUCTURAL_TAGS = new Set(["br", "p", "div", "li", "tr", "td", "th", "hr"]);
 
 const SUPPORTED_COMBINING_MARKS = buildSupportedCombiningMarks();
 const MARK_NAME_BY_CODEPOINT = new Map<number, string>([
@@ -63,6 +66,7 @@ const POLICY_TRANSFORMATION_KEYS = [
   "markup_tags_removed",
   "html_entities_removed",
   "nbsp_to_space",
+  "parasha_markers_removed",
   "collapsed_horizontal_whitespace",
   "trimmed_line_edges",
   "qamats_qatan_to_qamats"
@@ -376,21 +380,48 @@ function normalizeLineBreaks(text: string): {
   };
 }
 
+function extractTagName(markupTag: string): string | null {
+  const match = String(markupTag ?? "").match(/^<\s*\/?\s*([A-Za-z0-9:-]+)/u);
+  return match?.[1]?.toLowerCase() ?? null;
+}
+
 function stripMarkupAndEntities(text: string): {
   normalized: string;
   transformations: Map<PolicyTransformationKey, number>;
 } {
   const transformations = new Map<PolicyTransformationKey, number>();
 
-  const markupTagsRemoved = countMatches(text, /<[^>]*>/g);
-  const htmlEntitiesRemoved = countMatches(text, /&[^;]+;/g);
-  const nbspToSpace = countMatches(text, /\u00A0/g);
-  const collapsedHorizontalWhitespace = countMatches(text, /[ \t\f\v]{2,}/g);
-  const trimmedLineEdges = countMatches(text, / *\n */g);
+  let markupTagsRemoved = 0;
+  let htmlEntitiesRemoved = 0;
+  let nbspToSpace = 0;
 
-  let out = text.replace(/<[^>]*>/g, " ");
-  out = out.replace(/&[^;]+;/g, " ");
-  out = out.replace(/\u00A0/g, " ");
+  let out = text.replace(/<[^>]*>/g, (match) => {
+    markupTagsRemoved += 1;
+    const tagName = extractTagName(match);
+    if (tagName && STRUCTURAL_TAGS.has(tagName)) {
+      return "\n";
+    }
+    return "";
+  });
+  out = out.replace(/&[^;\s]+;/g, (match) => {
+    htmlEntitiesRemoved += 1;
+    if (SPACE_ENTITIES.has(match.toLowerCase())) {
+      nbspToSpace += 1;
+      return " ";
+    }
+    return "";
+  });
+  const literalSpaceEntities = countMatches(out, /[\u00A0\u2009]/g);
+  if (literalSpaceEntities > 0) {
+    nbspToSpace += literalSpaceEntities;
+    out = out.replace(/[\u00A0\u2009]/g, " ");
+  }
+  const parashaMarkersRemoved = countMatches(out, PARASHA_MARKER);
+  out = out.replace(PARASHA_MARKER, " ");
+
+  const collapsedHorizontalWhitespace = countMatches(out, /[ \t\f\v]{2,}/g);
+  const trimmedLineEdges = countMatches(out, / *\n */g);
+
   out = out.replace(/[ \t\f\v]+/g, " ");
   out = out.replace(/ *\n */g, "\n");
   const trimmed = out.trim();
@@ -403,6 +434,9 @@ function stripMarkupAndEntities(text: string): {
   }
   if (nbspToSpace > 0) {
     transformations.set("nbsp_to_space", nbspToSpace);
+  }
+  if (parashaMarkersRemoved > 0) {
+    transformations.set("parasha_markers_removed", parashaMarkersRemoved);
   }
   if (collapsedHorizontalWhitespace > 0) {
     transformations.set("collapsed_horizontal_whitespace", collapsedHorizontalWhitespace);

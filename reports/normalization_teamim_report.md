@@ -15,8 +15,8 @@
 
 ## Codepoint Counts
 
-- total codepoints before: 724216
-- total codepoints after: 724216
+- total codepoints before: 721428
+- total codepoints after: 721428
 - total combining marks before: 334675
 - total combining marks after: 334675
 - total te'amim removed: 0
@@ -84,14 +84,15 @@
 - line_breaks_to_lf: 0
 - markup_tags_removed: 2845
 - html_entities_removed: 5065
-- nbsp_to_space: 0
-- collapsed_horizontal_whitespace: 0
-- trimmed_line_edges: 710
+- nbsp_to_space: 5065
+- parasha_markers_removed: 670
+- collapsed_horizontal_whitespace: 780
+- trimmed_line_edges: 990
 - qamats_qatan_to_qamats: 0
 
 ## Combining Mark Order Verification
 
-- hebrew base letters checked: 306269
+- hebrew base letters checked: 305599
 - base letters with combining marks checked: 225665
 - out-of-order sequences detected: 0
 - out-of-order samples: (none)
@@ -102,4 +103,4 @@
 
 ## Output SHA-256
 
-- 01d642a52a769f8287d0c31dffdf88da44212d1f057abff23d96b99bfaaf8a77
+- 9e422280f2e06c0e655ba39b4457a917f09c4b372fdc5b8a50260c747c1ec11d

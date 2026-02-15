@@ -5,7 +5,7 @@
 - token_registry: data/tokens.registry.json
 - compiled_bundles: data/tokens.compiled.json
 - trace_version: 1.0.0
-- semantics_version: 1.0.0
+- semantics_version: 1.1.0
 - render_version: 1.1.0
 - execution_mode: WORD
 - safety_rail_enabled: true
@@ -17,14 +17,14 @@
 - verses_skipped: 0
 - verses_emitted: 5846
 - unique_skeletons: 4295
-- trace_sha256: 02ad0d7f0938ba151e9101cea4178b0503fc19ee2828aedacef31a8035046776
-- verse_trace_sha256: d2c555c6bf57dd1fca5e75bf949c7908ae35619a89bece9f6bc80b47b33b33db
-- elapsed_ms: 1906.78
-- words_per_second: 42404.52
+- trace_sha256: 2b00b9882588950a7a71107620b531f903e7632d707dd8d0f16fdb03b1b44df0
+- verse_trace_sha256: 3a6af8f620b3f09f613f4d484f53355768d34d76698a1455cd1a980360f024e3
+- elapsed_ms: 1958.19
+- words_per_second: 41291.14
 
 ## Quality Gates
 - coverage: PASS (80856/80856)
-- determinism_basis: trace checksum captured (02ad0d7f0938ba151e9101cea4178b0503fc19ee2828aedacef31a8035046776)
+- determinism_basis: trace checksum captured (2b00b9882588950a7a71107620b531f903e7632d707dd8d0f16fdb03b1b44df0)
 - flow_derivation: PASS (0 mismatches)
 - word_mode_equivalence: FAIL (823/80856)
 - explainability: PASS (WORD baseline mode)

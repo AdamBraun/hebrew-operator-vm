@@ -3,7 +3,7 @@
 ## Summary
 - input: data/torah.json
 - trace_version: 1.0.0
-- semantics_version: 1.0.0
+- semantics_version: 1.1.0
 - render_version: 1.1.0
 - execution_mode: WORD
 - safety_rail_enabled: true
@@ -12,8 +12,8 @@
 - verses_total: 5846
 - changed_words_vs_word_mode: 0
 - verses_with_cross_word_events: 0
-- trace_sha256: 02ad0d7f0938ba151e9101cea4178b0503fc19ee2828aedacef31a8035046776
-- verse_trace_sha256: d2c555c6bf57dd1fca5e75bf949c7908ae35619a89bece9f6bc80b47b33b33db
+- trace_sha256: 2b00b9882588950a7a71107620b531f903e7632d707dd8d0f16fdb03b1b44df0
+- verse_trace_sha256: 3a6af8f620b3f09f613f4d484f53355768d34d76698a1455cd1a980360f024e3
 
 ## Quality Gates
 - word_mode_equivalence: FAIL (823/80856)

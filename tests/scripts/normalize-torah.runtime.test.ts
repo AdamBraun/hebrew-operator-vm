@@ -58,6 +58,15 @@ describe("normalize torah runtime", () => {
     expect(kept.stats.teamimObservedByCodepoint.get("֖".codePointAt(0) ?? 0)).toBe(1);
   });
 
+  it("removes inline markup without splitting words and strips parasha markers", () => {
+    const verse = '<big>בְּ</big>רֵאשִׁ֖ית&nbsp;<span class="mam-spi-pe">{פ}</span><br>';
+    const kept = normalizeVerse(verse, true);
+
+    expect(kept.normalized).toBe("בְּרֵאשִׁ֖ית");
+    expect(kept.normalized).not.toContain("{פ}");
+    expect(kept.stats.policyTransformations.get("parasha_markers_removed")).toBe(1);
+  });
+
   it("fails loudly on unsupported combining marks", () => {
     expect(() => normalizeVerse("א\u0301", true, "Genesis 1:1")).toThrow(
       /Unsupported combining mark U\+0301/
