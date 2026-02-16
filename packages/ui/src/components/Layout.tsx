@@ -1,19 +1,25 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { GenesisRephrase } from '../pages/GenesisRephrase';
 import { PatternSearch } from '../pages/PatternSearch';
 import { TracePage } from '../pages/TracePage';
 import { VerseExplorer } from '../pages/VerseExplorer';
 import { WordPage } from '../pages/WordPage';
 
-type PaneKey = 'verse' | 'word' | 'trace' | 'pattern';
+type PaneKey = 'verse' | 'word' | 'trace' | 'pattern' | 'rephrase';
 
 const panes: Array<{ key: PaneKey; label: string }> = [
   { key: 'verse', label: 'Verse' },
   { key: 'word', label: 'Word' },
   { key: 'trace', label: 'Trace' },
-  { key: 'pattern', label: 'Pattern' }
+  { key: 'pattern', label: 'Pattern' },
+  { key: 'rephrase', label: 'Rephrase' }
 ];
 
 const paneForPath = (pathname: string): PaneKey => {
+  if (pathname.startsWith('/rephrase')) {
+    return 'rephrase';
+  }
+
   if (pathname.startsWith('/pattern')) {
     return 'pattern';
   }
@@ -32,6 +38,7 @@ const paneForPath = (pathname: string): PaneKey => {
 export function Layout(): JSX.Element {
   const { pathname, search } = useLocation();
   const activePane = paneForPath(pathname);
+  const activePaneLabel = panes.find((pane) => pane.key === activePane)?.label ?? 'Pane';
 
   return (
     <div className="app-shell">
@@ -54,23 +61,21 @@ export function Layout(): JSX.Element {
       </header>
 
       <main className="pane-grid">
-        {panes.map((pane) => (
-          <section
-            key={pane.key}
-            aria-label={`${pane.label} pane`}
-            className={pane.key === activePane ? 'pane is-active' : 'pane'}
-          >
-            <header className="pane-header">
-              <h2>{pane.label}</h2>
-            </header>
-            <div className="pane-body">
-              {pane.key === 'verse' ? <VerseExplorer /> : null}
-              {pane.key === 'word' ? <WordPage /> : null}
-              {pane.key === 'trace' ? <TracePage /> : null}
-              {pane.key === 'pattern' ? <PatternSearch /> : null}
-            </div>
-          </section>
-        ))}
+        <section
+          aria-label={`${activePaneLabel} pane`}
+          className="pane is-active"
+        >
+          <header className="pane-header">
+            <h2>{activePaneLabel}</h2>
+          </header>
+          <div className="pane-body">
+            {activePane === 'verse' ? <VerseExplorer /> : null}
+            {activePane === 'word' ? <WordPage /> : null}
+            {activePane === 'trace' ? <TracePage /> : null}
+            {activePane === 'pattern' ? <PatternSearch /> : null}
+            {activePane === 'rephrase' ? <GenesisRephrase /> : null}
+          </div>
+        </section>
       </main>
     </div>
   );

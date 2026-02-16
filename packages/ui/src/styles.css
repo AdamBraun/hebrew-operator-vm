@@ -86,9 +86,11 @@ body {
   min-height: 18rem;
   overflow: hidden;
   animation: paneIn 260ms ease;
+  display: none;
 }
 
 .pane.is-active {
+  display: block;
   border-color: rgba(181, 81, 41, 0.45);
   background: var(--surface-strong);
 }
@@ -588,6 +590,189 @@ body {
   margin: 0;
 }
 
+.genesis-rephrase-page {
+  display: grid;
+  gap: 0.75rem;
+  container-type: inline-size;
+}
+
+.genesis-rephrase-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.7rem;
+  align-items: end;
+}
+
+.genesis-rephrase-header h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
+}
+
+.genesis-rephrase-chapter-picker {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 11rem;
+}
+
+.genesis-rephrase-chapter-picker span {
+  font-size: 0.76rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.genesis-rephrase-chapter-picker select {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  padding: 0.35rem 0.45rem;
+  font-size: 0.82rem;
+}
+
+.genesis-rephrase-layout {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.genesis-rephrase-column {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.74);
+  padding: 0.6rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.genesis-rephrase-column h4 {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.genesis-rephrase-line {
+  margin: 0;
+  border-top: 1px solid var(--line);
+  padding-top: 0.45rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.genesis-rephrase-line:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.genesis-rephrase-line-ref {
+  margin: 0;
+}
+
+.genesis-rephrase-line-text {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.genesis-anchor {
+  margin-left: 0.28rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 0.17rem 0.5rem;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+.genesis-anchor.is-active {
+  box-shadow: 0 0 0 2px rgba(181, 81, 41, 0.25);
+}
+
+.anchor-evidence-panel {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0.6rem;
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+}
+
+.anchor-evidence-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.anchor-evidence-panel-header h3 {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.anchor-evidence-panel-body {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.anchor-evidence-block {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+  padding: 0.5rem;
+  display: grid;
+  gap: 0.32rem;
+}
+
+.anchor-evidence-block h4 {
+  margin: 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.anchor-evidence-verse-text,
+.anchor-evidence-word-surface {
+  margin: 0;
+}
+
+.anchor-evidence-word-surface {
+  font-size: 1rem;
+}
+
+.anchor-evidence-pointer-list {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.anchor-evidence-pointer {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(248, 241, 230, 0.55);
+  padding: 0.45rem;
+  display: grid;
+  gap: 0.22rem;
+}
+
+.anchor-evidence-trace-events {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.1rem;
+}
+
 @container (min-width: 1200px) {
   .verse-content-grid {
     grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
@@ -606,6 +791,28 @@ code {
   .ref-picker-direct {
     grid-template-columns: 1fr;
     align-items: stretch;
+  }
+}
+
+@container (min-width: 960px) {
+  .genesis-rephrase-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .anchor-evidence-panel {
+    grid-column: 1 / -1;
+  }
+}
+
+@container (min-width: 1360px) {
+  .genesis-rephrase-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(280px, 360px);
+    align-items: start;
+  }
+
+  .anchor-evidence-panel {
+    grid-column: auto;
   }
 }
 

@@ -5,7 +5,11 @@ import {
   type ReferenceCatalog,
   type VerseBundle
 } from './loader';
-import type { VersePhraseTreeRecord, WordTraceRecord } from '../contracts';
+import type {
+  RenderOutputRecord,
+  VersePhraseTreeRecord,
+  WordTraceRecord
+} from '../contracts';
 
 const loader = new BundleLoader({
   cache: createLayeredTextCache({
@@ -44,4 +48,9 @@ export async function getPhraseTree(
   ref_key: string
 ): Promise<VersePhraseTreeRecord | null> {
   return loader.getPhraseTree(ref_key);
+}
+
+export async function getParaphrase(ref_key: string): Promise<RenderOutputRecord[]> {
+  const chunk = await loader.getParaphraseChunk(ref_key);
+  return chunk?.records ?? [];
 }
