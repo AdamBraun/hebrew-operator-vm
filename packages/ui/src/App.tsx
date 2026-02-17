@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { DiffViewer } from './pages/DiffViewer';
 import { GenesisRephrase } from './pages/GenesisRephrase';
 import { PatternSearch } from './pages/PatternSearch';
 import { TracePage } from './pages/TracePage';
@@ -17,6 +18,7 @@ function App(): JSX.Element {
         <Route path="trace" element={<TracePage />} />
         <Route path="pattern" element={<PatternSearch />} />
         <Route path="rephrase" element={<GenesisRephrase />} />
+        <Route path="diff" element={<DiffViewer />} />
       </Route>
       <Route path="*" element={<Navigate to="/verse/Gen-1-1" replace />} />
     </Routes>

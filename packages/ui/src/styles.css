@@ -773,6 +773,222 @@ body {
   gap: 0.1rem;
 }
 
+.diff-viewer-page {
+  display: grid;
+  gap: 0.75rem;
+  container-type: inline-size;
+}
+
+.diff-viewer-toolbar {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.7rem;
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  align-items: end;
+}
+
+.diff-viewer-picker {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.diff-viewer-picker span {
+  font-size: 0.78rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.diff-viewer-picker select {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  padding: 0.35rem 0.45rem;
+  font-size: 0.82rem;
+}
+
+.diff-viewer-summary {
+  margin: 0;
+}
+
+.diff-viewer-layout {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.diff-changed-verses,
+.diff-verse-detail {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.74);
+  padding: 0.6rem;
+}
+
+.diff-changed-verses h3,
+.diff-verse-detail h3 {
+  margin: 0;
+  font-size: 0.82rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.diff-changed-list {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+  max-height: 32rem;
+  overflow-y: auto;
+}
+
+.diff-changed-button {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  padding: 0.45rem;
+  text-align: left;
+  display: grid;
+  gap: 0.16rem;
+  cursor: pointer;
+}
+
+.diff-changed-button.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.diff-changed-ref {
+  font-weight: 700;
+}
+
+.diff-changed-meta {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.diff-selected-ref {
+  margin: 0.45rem 0 0;
+  font-weight: 700;
+}
+
+.diff-verse-sections {
+  margin-top: 0.55rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.diff-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.84);
+  padding: 0.55rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.diff-panel h3 {
+  margin: 0;
+}
+
+.diff-paraphrase-cards {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.diff-paraphrase-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 0.5rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.diff-paraphrase-card h4 {
+  margin: 0;
+  font-size: 0.76rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.diff-paraphrase-columns {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.diff-side-label {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.diff-side-text {
+  margin: 0.2rem 0 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.42rem;
+  background: rgba(255, 255, 255, 0.68);
+  white-space: pre-wrap;
+}
+
+.diff-token {
+  white-space: pre-wrap;
+}
+
+.diff-token-added {
+  background: rgba(64, 132, 72, 0.2);
+}
+
+.diff-token-removed {
+  background: rgba(150, 59, 46, 0.2);
+}
+
+.diff-token-empty {
+  color: var(--muted);
+}
+
+.diff-ledger-list,
+.diff-skeleton-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.diff-ledger-item,
+.diff-skeleton-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 0.45rem;
+  display: grid;
+  gap: 0.18rem;
+}
+
+.diff-ledger-title,
+.diff-skeleton-title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.diff-ledger-detail,
+.diff-skeleton-detail {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
 @container (min-width: 1200px) {
   .verse-content-grid {
     grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
@@ -802,6 +1018,15 @@ code {
 
   .anchor-evidence-panel {
     grid-column: 1 / -1;
+  }
+
+  .diff-viewer-layout {
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .diff-paraphrase-columns {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 

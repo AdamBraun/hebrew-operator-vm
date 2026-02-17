@@ -253,6 +253,12 @@ export interface BundleInfo {
   counts: BundleManifest['counts'];
 }
 
+export interface BundleSnapshot {
+  info: BundleInfo;
+  manifest: BundleManifest;
+  refsIndex: RefsIndex;
+}
+
 export interface VerseBundle {
   ref_key: string;
   ref: VerseRef;
@@ -311,6 +317,15 @@ export class BundleLoader {
 
   getBundleInfo(): BundleInfo | null {
     return this.state?.info ?? null;
+  }
+
+  getBundleSnapshot(): BundleSnapshot {
+    const state = this.ensureLoaded();
+    return {
+      info: state.info,
+      manifest: state.manifest,
+      refsIndex: state.refsIndex
+    };
   }
 
   getReferenceCatalog(): ReferenceCatalog {

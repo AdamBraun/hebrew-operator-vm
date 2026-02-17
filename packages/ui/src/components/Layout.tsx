@@ -1,18 +1,20 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { DiffViewer } from '../pages/DiffViewer';
 import { GenesisRephrase } from '../pages/GenesisRephrase';
 import { PatternSearch } from '../pages/PatternSearch';
 import { TracePage } from '../pages/TracePage';
 import { VerseExplorer } from '../pages/VerseExplorer';
 import { WordPage } from '../pages/WordPage';
 
-type PaneKey = 'verse' | 'word' | 'trace' | 'pattern' | 'rephrase';
+type PaneKey = 'verse' | 'word' | 'trace' | 'pattern' | 'rephrase' | 'diff';
 
 const panes: Array<{ key: PaneKey; label: string }> = [
   { key: 'verse', label: 'Verse' },
   { key: 'word', label: 'Word' },
   { key: 'trace', label: 'Trace' },
   { key: 'pattern', label: 'Pattern' },
-  { key: 'rephrase', label: 'Rephrase' }
+  { key: 'rephrase', label: 'Rephrase' },
+  { key: 'diff', label: 'Diff' }
 ];
 
 const paneForPath = (pathname: string): PaneKey => {
@@ -32,6 +34,10 @@ const paneForPath = (pathname: string): PaneKey => {
     return 'trace';
   }
 
+  if (pathname.startsWith('/diff')) {
+    return 'diff';
+  }
+
   return 'verse';
 };
 
@@ -45,7 +51,7 @@ export function Layout(): JSX.Element {
       <header className="header">
         <div className="header-copy">
           <h1>Corpus UI Skeleton</h1>
-          <p>Static-ready React shell for Verse, Word, Trace, and Pattern views.</p>
+          <p>Static-ready React shell for verse, trace, paraphrase, and semantic diff review.</p>
         </div>
         <nav aria-label="Primary" className="nav-tabs">
           {panes.map((pane) => (
@@ -74,6 +80,7 @@ export function Layout(): JSX.Element {
             {activePane === 'trace' ? <TracePage /> : null}
             {activePane === 'pattern' ? <PatternSearch /> : null}
             {activePane === 'rephrase' ? <GenesisRephrase /> : null}
+            {activePane === 'diff' ? <DiffViewer /> : null}
           </div>
         </section>
       </main>
