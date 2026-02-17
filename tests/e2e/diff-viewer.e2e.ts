@@ -21,7 +21,9 @@ test("selects two bundles and renders verse-level semantic diff evidence", async
   await expect(page.getByTestId("diff-paraphrase-strict")).toContainText(
     "At first light, form emerged"
   );
-  await expect(page.getByTestId("diff-ledger-impact")).toContainText("Added: trace:Genesis/1/1/1#e0-1");
+  await expect(page.getByTestId("diff-ledger-impact")).toContainText(
+    "Added: trace:Genesis/1/1/1#e0-1"
+  );
   await expect(page.getByTestId("diff-skeleton-word-1")).toContainText("HE.DECLARE");
   await expect(page.getByTestId("diff-skeleton-word-1")).toContainText("MEM.OPEN");
 });

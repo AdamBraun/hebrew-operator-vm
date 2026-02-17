@@ -1,7 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { computeBundleDiffIndex, computeVerseDiff, type DiffBundleSnapshot } from "../../packages/ui/src/lib/diff";
+import {
+  computeBundleDiffIndex,
+  computeVerseDiff,
+  type DiffBundleSnapshot
+} from "../../packages/ui/src/lib/diff";
 import type { RenderOutputRecord } from "../../packages/ui/src/lib/contracts";
 import type { VerseBundle } from "../../packages/ui/src/lib/data/loader";
 
@@ -42,10 +46,7 @@ describe("diff logic fixtures", () => {
     expect(result.wordSkeletonDiffs).toHaveLength(1);
     expect(result.wordSkeletonDiffs[0]?.wordIndex).toBe(1);
     expect(result.wordSkeletonDiffs[0]?.leftSkeleton).toEqual(["HE.DECLARE"]);
-    expect(result.wordSkeletonDiffs[0]?.rightSkeleton).toEqual([
-      "MEM.OPEN",
-      "HE.DECLARE_BREATH"
-    ]);
+    expect(result.wordSkeletonDiffs[0]?.rightSkeleton).toEqual(["MEM.OPEN", "HE.DECLARE_BREATH"]);
 
     expect(
       result.ledgerAnchorDiffs.some(
