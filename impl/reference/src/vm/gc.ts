@@ -202,9 +202,7 @@ export function collectGarbage(state: State): void {
       !removed.has(boundary.id) && !removed.has(boundary.inside) && !removed.has(boundary.outside)
   );
 
-  state.rules = state.rules.filter(
-    (rule) => !removed.has(rule.target) && !removed.has(rule.id)
-  );
+  state.rules = state.rules.filter((rule) => !removed.has(rule.target) && !removed.has(rule.id));
 
   if (removed.has(state.vm.F)) {
     state.vm.F = state.vm.Omega;

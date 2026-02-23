@@ -412,12 +412,213 @@ function formatJoinInStatus(wordEntry: Record<string, any> | null): string {
   return `${id} (carried)`;
 }
 
+type ScopeEdge = {
+  id: string;
+  outside: string | null;
+};
+
+function asNonEmptyString(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .map((item) => asNonEmptyString(item))
+    .filter((item): item is string => item !== null);
+}
+
+function buildInsideBoundaryIndex(
+  boundaries: Array<Record<string, any>>
+): Map<string, ScopeEdge[]> {
+  const byInside = new Map<string, ScopeEdge[]>();
+  for (const boundary of boundaries) {
+    const id = asNonEmptyString(boundary?.id) ?? asNonEmptyString(boundary?.boundaryId);
+    const inside = asNonEmptyString(boundary?.inside);
+    if (!id || !inside) {
+      continue;
+    }
+    const outside = asNonEmptyString(boundary?.outside);
+    const bucket = byInside.get(inside);
+    const edge: ScopeEdge = { id, outside };
+    if (bucket) {
+      bucket.push(edge);
+    } else {
+      byInside.set(inside, [edge]);
+    }
+  }
+  for (const edges of byInside.values()) {
+    edges.sort((a, b) => a.id.localeCompare(b.id));
+  }
+  return byInside;
+}
+
+function compareScopePaths(a: string[], b: string[]): number {
+  if (a.length !== b.length) {
+    return a.length - b.length;
+  }
+  const aKey = a.join("\u0000");
+  const bKey = b.join("\u0000");
+  return bKey.localeCompare(aKey);
+}
+
+function inferScopePath(handleId: string, byInside: Map<string, ScopeEdge[]>): string[] {
+  type Frame = {
+    current: string;
+    path: string[];
+    seenHandles: Set<string>;
+    seenBoundaries: Set<string>;
+  };
+
+  const stack: Frame[] = [
+    {
+      current: handleId,
+      path: [],
+      seenHandles: new Set([handleId]),
+      seenBoundaries: new Set()
+    }
+  ];
+  let bestPath: string[] = [];
+
+  while (stack.length > 0) {
+    const frame = stack.pop();
+    if (!frame) {
+      continue;
+    }
+
+    const edges = byInside.get(frame.current) ?? [];
+    if (edges.length === 0) {
+      if (compareScopePaths(frame.path, bestPath) > 0) {
+        bestPath = frame.path;
+      }
+      continue;
+    }
+
+    let advanced = false;
+    for (const edge of edges) {
+      if (frame.seenBoundaries.has(edge.id)) {
+        continue;
+      }
+
+      const nextPath = [...frame.path, edge.id];
+      if (compareScopePaths(nextPath, bestPath) > 0) {
+        bestPath = nextPath;
+      }
+
+      if (!edge.outside || frame.seenHandles.has(edge.outside)) {
+        continue;
+      }
+
+      advanced = true;
+      const seenHandles = new Set(frame.seenHandles);
+      seenHandles.add(edge.outside);
+      const seenBoundaries = new Set(frame.seenBoundaries);
+      seenBoundaries.add(edge.id);
+      stack.push({
+        current: edge.outside,
+        path: nextPath,
+        seenHandles,
+        seenBoundaries
+      });
+    }
+
+    if (!advanced && compareScopePaths(frame.path, bestPath) > 0) {
+      bestPath = frame.path;
+    }
+  }
+
+  return bestPath;
+}
+
+function enrichScopeMembership(finalState: Record<string, any>): void {
+  const handles = Array.isArray(finalState?.handles)
+    ? (finalState.handles as Array<Record<string, any>>)
+    : [];
+  const boundaries = Array.isArray(finalState?.boundaries)
+    ? (finalState.boundaries as Array<Record<string, any>>)
+    : [];
+  if (handles.length === 0 || boundaries.length === 0) {
+    return;
+  }
+
+  const byInside = buildInsideBoundaryIndex(boundaries);
+  if (byInside.size === 0) {
+    return;
+  }
+
+  const membersByBoundary = new Map<string, Set<string>>();
+  for (const boundary of boundaries) {
+    const boundaryId = asNonEmptyString(boundary?.id) ?? asNonEmptyString(boundary?.boundaryId);
+    if (!boundaryId) {
+      continue;
+    }
+    const memberSet = membersByBoundary.get(boundaryId) ?? new Set<string>();
+    for (const memberId of asStringArray(boundary?.members)) {
+      memberSet.add(memberId);
+    }
+    for (const memberId of asStringArray(boundary?.memberIds)) {
+      memberSet.add(memberId);
+    }
+    for (const memberId of asStringArray(boundary?.contains)) {
+      memberSet.add(memberId);
+    }
+    const inside = asNonEmptyString(boundary?.inside);
+    if (inside) {
+      memberSet.add(inside);
+    }
+    membersByBoundary.set(boundaryId, memberSet);
+  }
+
+  for (const handle of handles) {
+    const handleId = asNonEmptyString(handle?.id);
+    if (!handleId) {
+      continue;
+    }
+
+    const scopePath = inferScopePath(handleId, byInside);
+    if (scopePath.length === 0) {
+      continue;
+    }
+
+    const meta =
+      handle?.meta && typeof handle.meta === "object" && !Array.isArray(handle.meta)
+        ? handle.meta
+        : {};
+    handle.meta = { ...meta, scope_path: scopePath };
+
+    for (const boundaryId of scopePath) {
+      const memberSet = membersByBoundary.get(boundaryId) ?? new Set<string>();
+      memberSet.add(handleId);
+      membersByBoundary.set(boundaryId, memberSet);
+    }
+  }
+
+  for (const boundary of boundaries) {
+    const boundaryId = asNonEmptyString(boundary?.id) ?? asNonEmptyString(boundary?.boundaryId);
+    if (!boundaryId) {
+      continue;
+    }
+    const memberSet = membersByBoundary.get(boundaryId);
+    if (!memberSet || memberSet.size === 0) {
+      continue;
+    }
+    boundary.members = Array.from(memberSet).sort((a, b) => a.localeCompare(b));
+  }
+}
+
 function withTraceFriendlyVmFlags(finalState: Record<string, any>): Record<string, any> {
   const vm = finalState?.vm;
   if (vm && typeof vm.wordHasContent === "boolean") {
     vm.has_data_payload = vm.wordHasContent;
     delete vm.wordHasContent;
   }
+  enrichScopeMembership(finalState);
   return finalState;
 }
 
