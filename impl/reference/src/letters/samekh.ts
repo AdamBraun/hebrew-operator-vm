@@ -21,7 +21,7 @@ export const samekhOp: LetterOp = {
     setPolicy(S, focus, "framed_lock");
     const handle = S.handles.get(focus);
     if (handle) {
-      handle.meta = { ...handle.meta, stable: 1 };
+      handle.meta = { ...handle.meta, stable: 1, samekh_lock: 1, last_operator: "ס" };
     }
     const cons: Construction = {
       base: focus,
@@ -36,10 +36,11 @@ export const samekhOp: LetterOp = {
     if (top && top.kind === "SUPPORT" && contReachable(S, top.child, focus)) {
       const popped = S.vm.OStack_word.pop();
       if (popped) {
+        const parent = focus === popped.child ? popped.parent : focus;
         S.vm.H.push({
           type: "support",
           tau: S.vm.tau,
-          data: { child: popped.child, parent: focus }
+          data: { child: popped.child, parent }
         });
       }
     }

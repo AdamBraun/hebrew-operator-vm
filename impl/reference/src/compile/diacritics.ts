@@ -17,6 +17,12 @@ const HATAF_MARKS: Record<string, DiacriticKind> = {
   "\u05B3": "kamatz"
 };
 
+const HATAF_COMPOSITE_KIND: Record<string, "hataf_segol" | "hataf_patach" | "hataf_kamatz"> = {
+  "\u05B1": "hataf_segol",
+  "\u05B2": "hataf_patach",
+  "\u05B3": "hataf_kamatz"
+};
+
 const INSIDE_DOT_MARKS: Record<string, DiacriticKind> = {
   "\u05BC": "dagesh",
   "\u05C1": "shin_dot_right",
@@ -40,9 +46,26 @@ export function isHebrewCombiningMark(ch: string): boolean {
 export function classifyDiacritic(mark: string): Diacritic[] | null {
   const hataf = HATAF_MARKS[mark];
   if (hataf) {
+    const compositeKind = HATAF_COMPOSITE_KIND[mark];
     return [
-      { mark, kind: "shva", tier: "sof" },
-      { mark, kind: hataf, tier: "sof" }
+      {
+        mark,
+        kind: "shva",
+        tier: "sof",
+        composite: {
+          kind: compositeKind,
+          role: "carrier_shva"
+        }
+      },
+      {
+        mark,
+        kind: hataf,
+        tier: "sof",
+        composite: {
+          kind: compositeKind,
+          role: "reduced_vowel"
+        }
+      }
     ];
   }
   const vowel = VOWEL_MARKS[mark];

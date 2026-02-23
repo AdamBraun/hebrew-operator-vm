@@ -11,6 +11,8 @@ describe("samekh behavior", () => {
     const wordOut = state.vm.A[state.vm.A.length - 1];
     const focus = state.handles.get(wordOut);
     expect(focus?.policy).toBe("framed_lock");
+    expect(focus?.meta?.samekh_lock).toBe(1);
+    expect(focus?.meta?.last_operator).toBe("ס");
   });
 
   it("discharges SUPPORT only when child <=cont* F", () => {
@@ -49,7 +51,12 @@ describe("samekh behavior", () => {
     const select2 = samekhOp.select(state);
     const bound2 = samekhOp.bound(select2.S, select2.ops);
     samekhOp.seal(bound2.S, bound2.cons);
-    expect(state.vm.H.find((event) => event.type === "support")).toBeDefined();
+    const supportEvent = state.vm.H.find((event) => event.type === "support");
+    expect(supportEvent).toBeDefined();
+    expect(supportEvent?.data).toEqual({
+      child,
+      parent
+    });
     expect(state.vm.R).toBe(BOT_ID);
   });
 });

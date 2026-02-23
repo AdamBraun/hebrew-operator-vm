@@ -22,6 +22,14 @@ describe("trope-driven space modes", () => {
     expect(state.vm.H_committed.some((chunk) => chunk.boundary_mode === "glue")).toBe(true);
   });
 
+  it("emits join_blocked when pending join meets a left-context barrier", () => {
+    const { trace } = runProgramWithTrace("א֑ ב֣ ג", createInitialState());
+    const blockedWord = trace.find((entry) => entry.token === "ג");
+    expect(blockedWord).toBeDefined();
+    expect(blockedWord?.events.some((event) => event.type === "join_blocked")).toBe(true);
+    expect(blockedWord?.events.some((event) => event.type === "join_consume")).toBe(false);
+  });
+
   it("cut(rank=1) resolves obligations strictly (no silent fall/close)", () => {
     const { state, trace } = runProgramWithTrace("מנ֖ ס", createInitialState());
     const cutBoundary = trace.find(

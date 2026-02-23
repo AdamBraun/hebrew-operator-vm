@@ -17,6 +17,10 @@ export type Diacritic = {
   mark: string;
   kind: DiacriticKind;
   tier: DiacriticTier;
+  composite?: {
+    kind: "hataf_segol" | "hataf_patach" | "hataf_kamatz";
+    role: "carrier_shva" | "reduced_vowel";
+  };
 };
 
 export type DotKind = "dagesh" | "mappiq" | "shuruk" | "none";

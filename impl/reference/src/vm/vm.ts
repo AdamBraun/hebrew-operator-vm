@@ -5,7 +5,7 @@ import { compositeRegistry, letterRegistry } from "../letters/registry";
 import { Construction, LetterOp, SelectOperands } from "../letters/types";
 import { BOT_ID } from "../state/handles";
 import { hardenHandle } from "../state/policies";
-import { State, createInitialState } from "../state/state";
+import { State, createInitialState, serializeState } from "../state/state";
 import { applySpace } from "./space";
 
 export type TraceEntry = {
@@ -29,6 +29,123 @@ export type TraceEntry = {
   barrier?: number | null;
   events: Array<{ type: string; tau: number; data: any }>;
 };
+
+export type TracePhaseName =
+  | "token_enter"
+  | "word_entry_context"
+  | "select"
+  | "rosh"
+  | "bound"
+  | "toch"
+  | "seal"
+  | "sof"
+  | "dot_harden"
+  | "shuruk_seed"
+  | "register_commit"
+  | "shape_effect"
+  | "space_apply"
+  | "token_exit";
+
+export type DeepTracePhase = {
+  phase: TracePhaseName;
+  tau: number;
+  detail?: Record<string, any>;
+  snapshot?: Record<string, any>;
+};
+
+export type DeepTraceEntry = TraceEntry & {
+  token_raw: string;
+  dot_kind: Token["dot_kind"];
+  inside_dot_kind: Token["inside_dot_kind"];
+  is_final: boolean;
+  word_index?: number;
+  diacritics: Array<{
+    mark: string;
+    kind: string;
+    tier: string;
+    composite?: {
+      kind: "hataf_segol" | "hataf_patach" | "hataf_kamatz";
+      role: "carrier_shva" | "reduced_vowel";
+    };
+  }>;
+  boundary: Record<string, any> | null;
+  trope: Record<string, any> | null;
+  phases: DeepTracePhase[];
+};
+
+export type PreparedTraceToken = {
+  index: number;
+  token: string;
+  raw: string;
+  dot_kind: Token["dot_kind"];
+  inside_dot_kind: Token["inside_dot_kind"];
+  is_final: boolean;
+  word_index?: number;
+  diacritics: Array<{
+    mark: string;
+    kind: string;
+    tier: string;
+    composite?: {
+      kind: "hataf_segol" | "hataf_patach" | "hataf_kamatz";
+      role: "carrier_shva" | "reduced_vowel";
+    };
+  }>;
+  boundary: Record<string, any> | null;
+  trope: Record<string, any> | null;
+};
+
+export type DeepTraceOptions = {
+  includeStateSnapshots?: boolean;
+};
+
+type PhaseRecorder = {
+  record: (phase: TracePhaseName, detail?: Record<string, any>) => void;
+};
+
+type TraceRunOptions = {
+  collectDeep: boolean;
+  includeSnapshots: boolean;
+};
+
+type TraceRunResult = {
+  state: State;
+  trace: TraceEntry[];
+  deepTrace: DeepTraceEntry[];
+  preparedTokens: PreparedTraceToken[];
+};
+
+function normalizeForJson(value: unknown): any {
+  if (value === null || value === undefined) {
+    return value;
+  }
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => normalizeForJson(entry));
+  }
+  if (value instanceof Set) {
+    return Array.from(value).map((entry) => normalizeForJson(entry));
+  }
+  if (value instanceof Map) {
+    const out: Record<string, any> = {};
+    for (const [key, entry] of value.entries()) {
+      out[String(key)] = normalizeForJson(entry);
+    }
+    return out;
+  }
+  if (typeof value === "object") {
+    const out: Record<string, any> = {};
+    for (const [key, entry] of Object.entries(value)) {
+      if (typeof entry === "function" || entry === undefined) {
+        continue;
+      }
+      out[key] = normalizeForJson(entry);
+    }
+    return out;
+  }
+  return String(value);
+}
 
 function isHehMode(mode: LetterMode | undefined): mode is HehMode {
   return mode === "public" || mode === "breath" || mode === "pinned" || mode === "alias";
@@ -115,7 +232,11 @@ function applySofWrappers(state: State, token: Token, handleId: string): string 
   const hatafMarks = new Set(["\u05B1", "\u05B2", "\u05B3"]);
 
   for (const diacritic of sofDiacritics) {
-    sofModifiers.push({ kind: diacritic.kind, mark: diacritic.mark });
+    sofModifiers.push({
+      kind: diacritic.kind,
+      mark: diacritic.mark,
+      composite: diacritic.composite
+    });
     switch (diacritic.kind) {
       case "patach":
         handle.edge_mode = "gated";
@@ -166,28 +287,68 @@ function executeReadRail(
   state: State,
   token: Token,
   op: LetterOp,
-  context: { isWordFinal: boolean }
+  context: { isWordFinal: boolean },
+  recorder?: PhaseRecorder
 ): void {
   const selectResult = op.select(state);
+  recorder?.record("select", {
+    read_op: op.meta.letter,
+    select_operands: normalizeForJson(selectResult.ops)
+  });
   const ops = applyRoshWrappers(token, selectResult.ops);
+  const roshDiacritics = token.diacritics.filter((diacritic) => diacritic.tier === "rosh");
+  recorder?.record("rosh", {
+    wrapped_operands: normalizeForJson(ops),
+    inside_dot_kind: token.inside_dot_kind,
+    shin_branch: ops.prefs?.shin_branch ?? null,
+    rosh_diacritics: normalizeForJson(roshDiacritics)
+  });
   const letterMode = resolveLetterMode(token, context.isWordFinal);
 
   const boundResult = op.bound(selectResult.S, ops);
+  recorder?.record("bound", {
+    construction: normalizeForJson(boundResult.cons)
+  });
   const hasShuruk = token.dot_kind === "shuruk";
   const shouldHarden = token.dot_kind === "dagesh";
   const cons = applyTochWrappers(token, boundResult.cons, letterMode);
+  const tochDiacritics = token.diacritics.filter((diacritic) => diacritic.tier === "toch");
+  recorder?.record("toch", {
+    wrapped_construction: normalizeForJson(cons),
+    letter_mode: letterMode ?? null,
+    dot_kind: token.dot_kind,
+    inside_dot_kind: token.inside_dot_kind,
+    toch_diacritics: normalizeForJson(tochDiacritics)
+  });
 
   const sealResult = op.seal(boundResult.S, cons);
+  recorder?.record("seal", {
+    sealed_handle: sealResult.h,
+    residue: sealResult.r
+  });
+  const sofDiacritics = token.diacritics.filter((diacritic) => diacritic.tier === "sof");
   const sealed = applySofWrappers(sealResult.S, token, sealResult.h);
+  recorder?.record("sof", {
+    sealed_handle: sealed,
+    sof_diacritics: normalizeForJson(sofDiacritics)
+  });
 
   if (shouldHarden) {
     hardenHandle(sealResult.S, sealed);
+    recorder?.record("dot_harden", {
+      sealed_handle: sealed,
+      reason: "dagesh"
+    });
   }
   if (hasShuruk && cons.meta?.carrier_mode === "seeded") {
     const handle = sealResult.S.handles.get(sealed);
     if (handle) {
       handle.meta = { ...handle.meta, carrier_mode: "seeded", rep_flag: 1 };
     }
+    recorder?.record("shuruk_seed", {
+      sealed_handle: sealed,
+      carrier_mode: "seeded"
+    });
   }
   if (token.dot_kind === "dagesh") {
     const handle = sealResult.S.handles.get(sealed);
@@ -204,6 +365,12 @@ function executeReadRail(
   sealResult.S.vm.K.push(sealed);
   sealResult.S.vm.F = sealed;
   sealResult.S.vm.R = sealResult.r;
+  recorder?.record("register_commit", {
+    F: sealResult.S.vm.F,
+    R: sealResult.S.vm.R,
+    KLength: sealResult.S.vm.K.length,
+    OStackLength: sealResult.S.vm.OStack_word.length
+  });
 }
 
 function applyShapeModifier(state: State, shapeOp: string): void {
@@ -216,10 +383,33 @@ function applyShapeModifier(state: State, shapeOp: string): void {
 function executeLetter(
   state: State,
   token: Token,
-  context: { isWordFinal: boolean }
+  context: { isWordFinal: boolean },
+  recorder?: PhaseRecorder
 ): { read_op: string; shape_op: string | null } {
+  const pendingJoinAtEntry = state.vm.PendingJoin
+    ? {
+        id: state.vm.PendingJoin.id,
+        left: state.vm.PendingJoin.left_span_handle,
+        strength: state.vm.PendingJoin.join_strength
+      }
+    : null;
+  let pendingJoinAction: "none" | "consumed" | "blocked_by_barrier" = "none";
+
   if (!state.vm.wordHasContent) {
     if (state.vm.LeftContextBarrier !== null) {
+      if (pendingJoinAtEntry) {
+        pendingJoinAction = "blocked_by_barrier";
+        state.vm.H.push({
+          type: "join_blocked",
+          tau: state.vm.tau,
+          data: {
+            id: pendingJoinAtEntry.id,
+            left: pendingJoinAtEntry.left,
+            strength: pendingJoinAtEntry.strength,
+            barrier: state.vm.LeftContextBarrier
+          }
+        });
+      }
       state.vm.F = state.vm.Omega;
       state.vm.R = BOT_ID;
       state.vm.K = [state.vm.F, state.vm.R];
@@ -238,6 +428,7 @@ function executeLetter(
         }
       });
       state.vm.PendingJoin = undefined;
+      pendingJoinAction = "consumed";
     }
   }
 
@@ -245,6 +436,14 @@ function executeLetter(
     state.vm.wordEntryFocus = state.vm.F;
   }
   state.vm.wordHasContent = true;
+  recorder?.record("word_entry_context", {
+    is_word_final: context.isWordFinal,
+    left_context_barrier: state.vm.LeftContextBarrier,
+    pending_join_at_entry: pendingJoinAtEntry,
+    pending_join_action: pendingJoinAction,
+    pending_join_consumed: state.vm.lastPendingJoinConsumedId ?? null,
+    entry_focus: state.vm.wordEntryFocus ?? null
+  });
 
   const composite = compositeRegistry[token.letter];
   if (composite) {
@@ -257,10 +456,16 @@ function executeLetter(
     if (!readOp) {
       throw new Error(`Missing read op '${composite.read}' for composite '${token.letter}'`);
     }
-    executeReadRail(state, token, readOp, context);
+    executeReadRail(state, token, readOp, context, recorder);
 
     if (composite.composite_policy.shape_effect_scope === "routing") {
       applyShapeModifier(state, composite.shape);
+      recorder?.record("shape_effect", {
+        shape_op: composite.shape,
+        scope: composite.composite_policy.shape_effect_scope,
+        route_mode: state.vm.route_mode ?? null,
+        route_arity: state.vm.route_arity ?? null
+      });
     }
     return { read_op: readOp.meta.letter, shape_op: composite.shape };
   }
@@ -269,7 +474,7 @@ function executeLetter(
   if (!op) {
     throw new Error(`Missing letter op for ${token.letter}`);
   }
-  executeReadRail(state, token, op, context);
+  executeReadRail(state, token, op, context, recorder);
   return { read_op: op.meta.letter, shape_op: null };
 }
 
@@ -299,38 +504,96 @@ export function runProgram(input: string, state: State = createInitialState()): 
   return state;
 }
 
-export function runProgramWithTrace(
+function runProgramWithTraceInternal(
   input: string,
-  state: State = createInitialState()
-): { state: State; trace: TraceEntry[] } {
+  state: State,
+  options: TraceRunOptions
+): TraceRunResult {
   const tokens = prepareTokens(input);
   const trace: TraceEntry[] = [];
+  const deepTrace: DeepTraceEntry[] = [];
+  const preparedTokens: PreparedTraceToken[] = tokens.map((token, index) => ({
+    index,
+    token: token.letter,
+    raw: token.raw,
+    dot_kind: token.dot_kind,
+    inside_dot_kind: token.inside_dot_kind,
+    is_final: token.is_final,
+    word_index: token.word_index,
+    diacritics: token.diacritics.map((diacritic) => ({
+      mark: diacritic.mark,
+      kind: diacritic.kind,
+      tier: diacritic.tier,
+      composite: diacritic.composite
+    })),
+    boundary: token.boundary ? normalizeForJson(token.boundary) : null,
+    trope: token.trope ? normalizeForJson(token.trope) : null
+  }));
 
   tokens.forEach((token, index) => {
     const tauBefore = state.vm.tau;
     const eventStart = state.vm.H.length;
+    const phases: DeepTracePhase[] = [];
+    const recorder: PhaseRecorder | undefined = options.collectDeep
+      ? {
+          record: (phase, detail) => {
+            const row: DeepTracePhase = {
+              phase,
+              tau: state.vm.tau
+            };
+            if (detail) {
+              row.detail = normalizeForJson(detail);
+            }
+            if (options.includeSnapshots) {
+              row.snapshot = normalizeForJson(serializeState(state));
+            }
+            phases.push(row);
+          }
+        }
+      : undefined;
     let readOp: string | null = null;
     let shapeOp: string | null = null;
     let boundaryMode: SpaceBoundaryMode | undefined;
     let boundaryRank: number | null | undefined;
     let continuation: boolean | undefined;
     let pendingJoinCreated: string | undefined;
+    const isWordFinal = token.letter !== "□" && (index === tokens.length - 1 || tokens[index + 1].letter === "□");
+    recorder?.record("token_enter", {
+      index,
+      token: token.letter,
+      token_raw: token.raw,
+      is_word_final: token.letter === "□" ? null : isWordFinal,
+      word_index: token.word_index ?? null
+    });
     if (token.letter === "□") {
       boundaryMode = token.boundary?.mode ?? "hard";
       boundaryRank = token.boundary?.rank ?? null;
       continuation = boundaryMode === "glue" || boundaryMode === "glue_maqqef";
+      recorder?.record("space_apply", {
+        boundary_mode: boundaryMode,
+        rank: boundaryRank,
+        continuation
+      });
       applySpace(state, { mode: boundaryMode, rank: boundaryRank });
       if (continuation) {
         pendingJoinCreated = state.vm.PendingJoin?.id;
       }
     } else {
-      const isWordFinal = index === tokens.length - 1 || tokens[index + 1].letter === "□";
-      const execution = executeLetter(state, token, { isWordFinal });
+      const execution = executeLetter(state, token, { isWordFinal }, recorder);
       readOp = execution.read_op;
       shapeOp = execution.shape_op;
     }
     const eventEnd = state.vm.H.length;
-    trace.push({
+    recorder?.record("token_exit", {
+      F: state.vm.F,
+      R: state.vm.R,
+      KLength: state.vm.K.length,
+      OStackLength: state.vm.OStack_word.length,
+      barrier: state.vm.LeftContextBarrier,
+      pending_join_created: pendingJoinCreated ?? null,
+      pending_join_consumed: state.vm.lastPendingJoinConsumedId ?? null
+    });
+    const entry: TraceEntry = {
       index,
       token: token.letter,
       read_op: readOp,
@@ -350,8 +613,70 @@ export function runProgramWithTrace(
       pending_join_consumed: state.vm.lastPendingJoinConsumedId,
       barrier: state.vm.LeftContextBarrier,
       events: state.vm.H.slice(eventStart, eventEnd)
-    });
+    };
+    trace.push(entry);
+
+    if (options.collectDeep) {
+      deepTrace.push({
+        ...entry,
+        token_raw: token.raw,
+        dot_kind: token.dot_kind,
+        inside_dot_kind: token.inside_dot_kind,
+        is_final: token.is_final,
+        word_index: token.word_index,
+        diacritics: token.diacritics.map((diacritic) => ({
+          mark: diacritic.mark,
+          kind: diacritic.kind,
+          tier: diacritic.tier,
+          composite: diacritic.composite
+        })),
+        boundary: token.boundary ? normalizeForJson(token.boundary) : null,
+        trope: token.trope ? normalizeForJson(token.trope) : null,
+        phases
+      });
+    }
   });
 
-  return { state, trace };
+  return {
+    state,
+    trace,
+    deepTrace,
+    preparedTokens
+  };
+}
+
+export function runProgramWithTrace(
+  input: string,
+  state: State = createInitialState()
+): { state: State; trace: TraceEntry[] } {
+  const result = runProgramWithTraceInternal(input, state, {
+    collectDeep: false,
+    includeSnapshots: false
+  });
+  return {
+    state: result.state,
+    trace: result.trace
+  };
+}
+
+export function runProgramWithDeepTrace(
+  input: string,
+  state: State = createInitialState(),
+  options: DeepTraceOptions = {}
+): {
+  state: State;
+  trace: TraceEntry[];
+  deepTrace: DeepTraceEntry[];
+  preparedTokens: PreparedTraceToken[];
+} {
+  const result = runProgramWithTraceInternal(input, state, {
+    collectDeep: true,
+    includeSnapshots: options.includeStateSnapshots !== false
+  });
+  return {
+    state: result.state,
+    trace: result.trace,
+    deepTrace: result.deepTrace,
+    preparedTokens: result.preparedTokens
+  };
 }
