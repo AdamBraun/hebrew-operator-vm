@@ -638,12 +638,40 @@ export function renderVmDot(vm, opts = {}) {
     return null;
   }
 
+  function buildVmIndexToWordTextMap(handlesForMap) {
+    const words = Array.isArray(meta.words) ? meta.words : [];
+    if (!words.length) return new Map();
+
+    const idxSet = new Set();
+    for (const handle of handlesForMap) {
+      const wi = inferWordIndexFromHandle(handle);
+      if (wi != null && Number.isFinite(wi)) idxSet.add(Number(wi));
+    }
+
+    const vmIdx = Array.from(idxSet).sort((a, b) => a - b);
+    const map = new Map(); // vmIndex -> cleaned word
+
+    // compress gaps: vmIdx[k] maps to words[k] (0-based)
+    for (let k = 0; k < vmIdx.length && k < words.length; k++) {
+      map.set(vmIdx[k], words[k]);
+    }
+
+    return map;
+  }
+
+  const vmIndexToWordText = buildVmIndexToWordTextMap(keptHandles);
+
   function inferWordText(wordIndex) {
-    const list = Array.isArray(meta.words) ? meta.words : [];
-    // Prefer 1-based index if it matches; else try 0-based.
     if (wordIndex == null) return null;
-    if (list[wordIndex - 1]) return list[wordIndex - 1];
-    if (list[wordIndex]) return list[wordIndex];
+    const wi = Number(wordIndex);
+
+    // gap-aware mapping (preferred)
+    const mapped = vmIndexToWordText.get(wi);
+    if (mapped) return mapped;
+
+    // fallback (old behavior)
+    const list = Array.isArray(meta.words) ? meta.words : [];
+    if (list[wi - 1]) return list[wi - 1];
     return null;
   }
 
@@ -738,7 +766,7 @@ export function renderVmDot(vm, opts = {}) {
       if (!nodes || nodes.length === 0) continue;
 
       const wordText = inferWordText(wi);
-      const clusterLabel = wordText ? wordText : `Word ${wi}`;
+      const clusterLabel = wordText ? `${wordText}` : `VM idx ${wi}`;
 
       dot += `  subgraph cluster_word_${clusterN++} {\n`;
       dot += `    label=${dotLabel(clusterLabel)};\n`;
