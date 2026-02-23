@@ -129,8 +129,9 @@ describe("trope-driven space modes", () => {
     );
     expect(sofPasuqBoundary).toBeDefined();
 
-    const exitSnapshot = sofPasuqBoundary?.phases.find((phase) => phase.phase === "token_exit")
-      ?.snapshot;
+    const exitSnapshot = sofPasuqBoundary?.phases.find(
+      (phase) => phase.phase === "token_exit"
+    )?.snapshot;
     expect(exitSnapshot).toBeDefined();
 
     const stack = exitSnapshot?.vm?.OStack_word as Array<{ kind?: string }>;

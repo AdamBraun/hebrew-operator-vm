@@ -182,7 +182,9 @@ function flushMemZonesAtSofPasuq(state: State): void {
     return;
   }
 
-  state.vm.OStack_word = state.vm.OStack_word.filter((obligation) => obligation.kind !== "MEM_ZONE");
+  state.vm.OStack_word = state.vm.OStack_word.filter(
+    (obligation) => obligation.kind !== "MEM_ZONE"
+  );
 
   const removedHandles = new Set<string>();
   const zoneIds = Array.from(records.keys()).sort(sortIdsStable);
