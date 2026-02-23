@@ -89,35 +89,35 @@ No other handle, edge, frame, or accumulator may persist across verse boundaries
 
 Minimum required post-reset baseline:
 
-| Field | Required value |
-| --- | --- |
-| `vm.tau` | `0` |
-| `vm.Omega` | `Ω` |
-| `vm.F` | `Ω` |
-| `vm.R` | `⊥` |
-| `vm.K` | `[Ω, ⊥]` |
-| `vm.W` | `[]` |
-| `vm.E` | `[]` |
-| `vm.OStack_word` | `[]` |
-| `vm.A` | `[]` |
-| `vm.H` | `[]` |
-| `vm.phraseWordValues` | `[]` |
-| `vm.H_phrase` | `[]` |
-| `vm.H_committed` | `[]` |
-| `vm.PendingJoin` | unset (`undefined`/`null`) |
-| `vm.CNodes` | root-only baseline (or equivalent empty baseline defined by implementation) |
-| `vm.CStack` | root-only baseline stack |
-| `vm.LeftContextBarrier` | `null` |
-| `vm.wordHasContent` | `false` |
-| `vm.wordLastSealedArtifact` | unset |
-| `vm.wordEntryFocus` | `Ω` |
-| `vm.route_mode`, `vm.route_arity` | unset |
-| `vm.metaCounter` (or equivalent allocator counters) | empty/unset |
-| `state.handles` | exactly `{Ω, ⊥}` |
-| `state.links` | `[]` |
-| `state.boundaries` | `[]` |
-| `state.rules` | `[]` |
-| `state.cont` | empty set |
+| Field                                               | Required value                                                              |
+| --------------------------------------------------- | --------------------------------------------------------------------------- |
+| `vm.tau`                                            | `0`                                                                         |
+| `vm.Omega`                                          | `Ω`                                                                         |
+| `vm.F`                                              | `Ω`                                                                         |
+| `vm.R`                                              | `⊥`                                                                         |
+| `vm.K`                                              | `[Ω, ⊥]`                                                                    |
+| `vm.W`                                              | `[]`                                                                        |
+| `vm.E`                                              | `[]`                                                                        |
+| `vm.OStack_word`                                    | `[]`                                                                        |
+| `vm.A`                                              | `[]`                                                                        |
+| `vm.H`                                              | `[]`                                                                        |
+| `vm.phraseWordValues`                               | `[]`                                                                        |
+| `vm.H_phrase`                                       | `[]`                                                                        |
+| `vm.H_committed`                                    | `[]`                                                                        |
+| `vm.PendingJoin`                                    | unset (`undefined`/`null`)                                                  |
+| `vm.CNodes`                                         | root-only baseline (or equivalent empty baseline defined by implementation) |
+| `vm.CStack`                                         | root-only baseline stack                                                    |
+| `vm.LeftContextBarrier`                             | `null`                                                                      |
+| `vm.wordHasContent`                                 | `false`                                                                     |
+| `vm.wordLastSealedArtifact`                         | unset                                                                       |
+| `vm.wordEntryFocus`                                 | `Ω`                                                                         |
+| `vm.route_mode`, `vm.route_arity`                   | unset                                                                       |
+| `vm.metaCounter` (or equivalent allocator counters) | empty/unset                                                                 |
+| `state.handles`                                     | exactly `{Ω, ⊥}`                                                            |
+| `state.links`                                       | `[]`                                                                        |
+| `state.boundaries`                                  | `[]`                                                                        |
+| `state.rules`                                       | `[]`                                                                        |
+| `state.cont`                                        | empty set                                                                   |
 
 ## Stable Verse Graphs: Determinism Guarantees
 
