@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createInitialState } from "@ref/state/state";
+import { applySpace } from "@ref/vm/space";
 import { runProgram, runProgramWithDeepTrace, runProgramWithTrace } from "@ref/vm/vm";
 
 describe("trope-driven space modes", () => {
@@ -142,6 +143,52 @@ describe("trope-driven space modes", () => {
     expect(
       handles.some((handle) => handle.kind === "memZone" || handle.meta?.obligation === "MEM_ZONE")
     ).toBe(false);
+  });
+
+  it("sof pasuq drops pending joins so next verse starts with join_in '-'", () => {
+    const state = createInitialState();
+    runProgramWithTrace("א֣ ", state);
+
+    const droppedJoinId = state.vm.PendingJoin?.id;
+    expect(typeof droppedJoinId).toBe("string");
+
+    applySpace(state, { mode: "cut", rank: 3 });
+
+    expect(state.vm.PendingJoin).toBeUndefined();
+    const joinDropEvents = state.vm.H.filter((event) => event.type === "join_drop");
+    expect(joinDropEvents.length).toBe(1);
+    expect(joinDropEvents[0].data.reason).toBe("sof_pasuk");
+    expect(joinDropEvents[0].data.joinId).toBe(droppedJoinId);
+    expect(joinDropEvents[0].data.joinIds).toEqual([droppedJoinId]);
+
+    const priorEventCount = state.vm.H.length;
+    const { trace, deepTrace } = runProgramWithDeepTrace("ב", state, {
+      includeStateSnapshots: false
+    });
+
+    const nextVerseWord = trace.find((entry) => entry.token === "ב");
+    expect(nextVerseWord).toBeDefined();
+    expect(nextVerseWord?.events.some((event) => event.type === "join_blocked")).toBe(false);
+    expect(nextVerseWord?.events.some((event) => event.type === "join_consume")).toBe(false);
+
+    const wordEntry = deepTrace
+      .find((entry) => entry.token === "ב")
+      ?.phases.find((phase) => phase.phase === "word_entry_context")?.detail as
+      | { pending_join_at_entry?: unknown }
+      | undefined;
+    expect(wordEntry?.pending_join_at_entry ?? null).toBeNull();
+
+    expect(
+      trace.some(
+        (entry) =>
+          entry.pending_join_created === droppedJoinId ||
+          entry.pending_join_consumed === droppedJoinId
+      )
+    ).toBe(false);
+
+    const nextVerseEvents = state.vm.H.slice(priorEventCount);
+    expect(nextVerseEvents.some((event) => event.data?.id === droppedJoinId)).toBe(false);
+    expect(state.handles.has(droppedJoinId as string)).toBe(false);
   });
 
   it("maqqef boundary forces glue semantics even without left trope", () => {

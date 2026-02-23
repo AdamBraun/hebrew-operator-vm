@@ -230,6 +230,24 @@ function flushMemZonesAtSofPasuq(state: State): void {
   }
 }
 
+function dropPendingJoinsAtSofPasuq(state: State): void {
+  const pendingJoin = state.vm.PendingJoin;
+  if (!pendingJoin) {
+    return;
+  }
+
+  state.vm.PendingJoin = undefined;
+  state.vm.H.push({
+    type: "join_drop",
+    tau: state.vm.tau,
+    data: {
+      joinId: pendingJoin.id,
+      joinIds: [pendingJoin.id],
+      reason: "sof_pasuk"
+    }
+  });
+}
+
 function nextChunkId(state: State): string {
   const seq = state.vm.H_phrase.length + state.vm.H_committed.length + 1;
   return `chunk:${state.vm.tau}:${seq}`;
@@ -518,6 +536,7 @@ function applyCut(state: State, rankRaw: number | null | undefined): void {
   state.vm.tau += rank;
 
   if (rank >= 3) {
+    dropPendingJoinsAtSofPasuq(state);
     flushMemZonesAtSofPasuq(state);
   }
 
