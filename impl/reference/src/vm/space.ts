@@ -11,6 +11,223 @@ type ApplySpaceOptions = {
   rank?: number | null;
 };
 
+type MemZoneFlushRecord = {
+  zoneId: string;
+  anchor: string | null;
+  handleIds: Set<string>;
+};
+
+function sortIdsStable(a: string, b: string): number {
+  if (a === b) {
+    return 0;
+  }
+  return a < b ? -1 : 1;
+}
+
+function asHandleId(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function clearMemSpillFlags(meta: Record<string, any>): Record<string, any> {
+  const next = { ...meta };
+  delete next.unresolved;
+  delete next.spilled;
+  delete next.cut_rank;
+  return next;
+}
+
+function collectMemZonesForSofPasuq(state: State): Map<string, MemZoneFlushRecord> {
+  const records = new Map<string, MemZoneFlushRecord>();
+
+  const note = (zoneIdRaw: unknown, anchorRaw: unknown, handleIdRaw?: unknown): void => {
+    const zoneId = asHandleId(zoneIdRaw);
+    if (!zoneId) {
+      return;
+    }
+    const anchor = asHandleId(anchorRaw);
+    const handleId = asHandleId(handleIdRaw);
+    const existing = records.get(zoneId);
+    if (existing) {
+      if (!existing.anchor && anchor) {
+        existing.anchor = anchor;
+      }
+      if (handleId) {
+        existing.handleIds.add(handleId);
+      }
+      return;
+    }
+    const record: MemZoneFlushRecord = {
+      zoneId,
+      anchor: anchor ?? null,
+      handleIds: new Set<string>()
+    };
+    if (handleId) {
+      record.handleIds.add(handleId);
+    }
+    records.set(zoneId, record);
+  };
+
+  for (const obligation of state.vm.OStack_word) {
+    if (obligation.kind !== "MEM_ZONE") {
+      continue;
+    }
+    note(obligation.child, obligation.payload?.anchor ?? obligation.parent, obligation.child);
+  }
+
+  for (const handle of state.handles.values()) {
+    const meta = handle.meta ?? {};
+    const obligationKind = meta.obligation;
+    if (obligationKind === "MEM_ZONE") {
+      note(meta.zone ?? handle.id, meta.anchor ?? meta.parent, handle.id);
+    }
+
+    if (handle.kind !== "memZone") {
+      continue;
+    }
+    const isOpen = meta.closed !== 1 || meta.unresolved === 1 || meta.spilled === 1;
+    if (!isOpen && obligationKind !== "MEM_ZONE") {
+      continue;
+    }
+    note(handle.id, meta.anchor, handle.id);
+  }
+
+  return records;
+}
+
+function scrubFlushedMemZoneRefs(state: State, removedHandles: Set<string>): void {
+  if (removedHandles.size === 0) {
+    return;
+  }
+  const isRemoved = (id: string | undefined): boolean =>
+    typeof id === "string" && removedHandles.has(id);
+  const remapToBot = (id: string): string => (removedHandles.has(id) ? BOT_ID : id);
+
+  state.vm.OStack_word = state.vm.OStack_word.filter(
+    (obligation) => !isRemoved(obligation.parent) && !isRemoved(obligation.child)
+  );
+
+  if (isRemoved(state.vm.F)) {
+    state.vm.F = state.vm.Omega;
+  }
+  if (isRemoved(state.vm.R)) {
+    state.vm.R = BOT_ID;
+  }
+
+  state.vm.K = state.vm.K.map(remapToBot);
+  if (!state.vm.K.includes(state.vm.F)) {
+    state.vm.K.unshift(state.vm.F);
+  }
+  if (!state.vm.K.includes(state.vm.R)) {
+    state.vm.K.push(state.vm.R);
+  }
+
+  state.vm.W = state.vm.W.map(remapToBot);
+  state.vm.A = state.vm.A.map(remapToBot);
+  state.vm.phraseWordValues = state.vm.phraseWordValues.map(remapToBot);
+
+  state.vm.E = state.vm.E.map((frame) => ({
+    ...frame,
+    F: isRemoved(frame.F) ? state.vm.Omega : frame.F,
+    Omega_frame: isRemoved(frame.Omega_frame) ? state.vm.Omega : frame.Omega_frame
+  }));
+
+  if (state.vm.wordLastSealedArtifact && isRemoved(state.vm.wordLastSealedArtifact)) {
+    state.vm.wordLastSealedArtifact = undefined;
+  }
+  if (state.vm.wordEntryFocus && isRemoved(state.vm.wordEntryFocus)) {
+    state.vm.wordEntryFocus = state.vm.F;
+  }
+
+  if (state.vm.PendingJoin) {
+    if (isRemoved(state.vm.PendingJoin.left_span_handle)) {
+      state.vm.PendingJoin = undefined;
+    } else {
+      state.vm.PendingJoin.exported_pins = state.vm.PendingJoin.exported_pins.filter(
+        (pin) => !isRemoved(pin)
+      );
+    }
+  }
+
+  for (const chunk of state.vm.H_phrase) {
+    chunk.word_value = remapToBot(chunk.word_value);
+  }
+  for (const chunk of state.vm.H_committed) {
+    chunk.word_value = remapToBot(chunk.word_value);
+  }
+  for (const node of Object.values(state.vm.CNodes)) {
+    node.word_values = node.word_values.map(remapToBot);
+  }
+
+  state.cont = new Set(
+    Array.from(state.cont).filter((edge) => {
+      const [from, to] = edge.split("->");
+      return !isRemoved(from) && !isRemoved(to);
+    })
+  );
+  state.links = state.links.filter((link) => !isRemoved(link.from) && !isRemoved(link.to));
+  state.boundaries = state.boundaries.filter(
+    (boundary) =>
+      !isRemoved(boundary.id) && !isRemoved(boundary.inside) && !isRemoved(boundary.outside)
+  );
+  state.rules = state.rules.filter((rule) => !isRemoved(rule.target));
+}
+
+function flushMemZonesAtSofPasuq(state: State): void {
+  const records = collectMemZonesForSofPasuq(state);
+  if (records.size === 0) {
+    return;
+  }
+
+  state.vm.OStack_word = state.vm.OStack_word.filter((obligation) => obligation.kind !== "MEM_ZONE");
+
+  const removedHandles = new Set<string>();
+  const zoneIds = Array.from(records.keys()).sort(sortIdsStable);
+
+  for (const zoneId of zoneIds) {
+    const record = records.get(zoneId);
+    if (!record) {
+      continue;
+    }
+
+    const zoneHandle = state.handles.get(zoneId);
+    if (zoneHandle) {
+      const zoneMeta = clearMemSpillFlags(zoneHandle.meta ?? {});
+      zoneHandle.meta = { ...zoneMeta, closed: 1, flushed_by: "sof_pasuk" };
+      record.handleIds.add(zoneId);
+      if (!record.anchor) {
+        record.anchor = asHandleId(zoneMeta.anchor);
+      }
+    }
+
+    for (const handleId of record.handleIds) {
+      const handle = state.handles.get(handleId);
+      if (!handle) {
+        continue;
+      }
+      const metaBefore = handle.meta ?? {};
+      handle.meta = clearMemSpillFlags(metaBefore);
+      if (handle.kind === "memZone" || metaBefore.obligation === "MEM_ZONE") {
+        removedHandles.add(handleId);
+      }
+    }
+
+    state.vm.H.push({
+      type: "mem_zone_flush",
+      tau: state.vm.tau,
+      data: { zoneId, anchor: record.anchor ?? null, reason: "sof_pasuk" }
+    });
+  }
+
+  scrubFlushedMemZoneRefs(state, removedHandles);
+  for (const handleId of Array.from(removedHandles).sort(sortIdsStable)) {
+    state.handles.delete(handleId);
+  }
+}
+
 function nextChunkId(state: State): string {
   const seq = state.vm.H_phrase.length + state.vm.H_committed.length + 1;
   return `chunk:${state.vm.tau}:${seq}`;
@@ -297,6 +514,10 @@ function applyGlue(state: State, mode: "glue" | "glue_maqqef"): void {
 function applyCut(state: State, rankRaw: number | null | undefined): void {
   const rank = Math.max(1, Math.trunc(Number(rankRaw ?? 1)));
   state.vm.tau += rank;
+
+  if (rank >= 3) {
+    flushMemZonesAtSofPasuq(state);
+  }
 
   resolveObligationsStrict(state, rank);
   const wordValue = sealWord(state);

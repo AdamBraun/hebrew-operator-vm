@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createInitialState } from "@ref/state/state";
-import { runProgram, runProgramWithTrace } from "@ref/vm/vm";
+import { runProgram, runProgramWithDeepTrace, runProgramWithTrace } from "@ref/vm/vm";
 
 describe("trope-driven space modes", () => {
   it("glue creates/consumes pending join without hard-default resolution", () => {
@@ -81,6 +81,66 @@ describe("trope-driven space modes", () => {
     expect(
       state.vm.H_committed.some((chunk) => chunk.boundary_mode === "cut" && chunk.rank === 3)
     ).toBe(true);
+  });
+
+  it("sof pasuq flushes mem-zone spill state from earlier cuts", () => {
+    const { state, trace } = runProgramWithTrace("מ֖ א׃", createInitialState());
+    const rankOneCut = trace.find(
+      (entry) => entry.token === "□" && entry.boundary_mode === "cut" && entry.rank === 1
+    );
+    const sofPasuqCut = trace.find(
+      (entry) => entry.token === "□" && entry.boundary_mode === "cut" && entry.rank === 3
+    );
+
+    expect(rankOneCut).toBeDefined();
+    expect(sofPasuqCut).toBeDefined();
+
+    const rankOneTau = rankOneCut?.tauAfter ?? -1;
+    const sofTau = sofPasuqCut?.tauAfter ?? -1;
+
+    expect(state.vm.H.some((event) => event.type === "mem_spill" && event.tau === rankOneTau)).toBe(
+      true
+    );
+    expect(state.vm.H.some((event) => event.type === "mem_spill" && event.tau === sofTau)).toBe(
+      false
+    );
+
+    const flushEvents = state.vm.H.filter(
+      (event) => event.type === "mem_zone_flush" && event.tau === sofTau
+    );
+    expect(flushEvents.length).toBeGreaterThan(0);
+    expect(flushEvents[0].data.reason).toBe("sof_pasuk");
+    expect(typeof flushEvents[0].data.zoneId).toBe("string");
+
+    expect(state.vm.OStack_word.some((obligation) => obligation.kind === "MEM_ZONE")).toBe(false);
+
+    const liveMemZoneHandles = Array.from(state.handles.values()).filter(
+      (handle) => handle.kind === "memZone" || handle.meta?.obligation === "MEM_ZONE"
+    );
+    expect(liveMemZoneHandles.length).toBe(0);
+  });
+
+  it("state snapshots after sof pasuq do not keep mem-zone handles active", () => {
+    const { deepTrace } = runProgramWithDeepTrace("מ֖ א׃", createInitialState(), {
+      includeStateSnapshots: true
+    });
+    const sofPasuqBoundary = deepTrace.find(
+      (entry) => entry.token === "□" && entry.boundary_mode === "cut" && entry.rank === 3
+    );
+    expect(sofPasuqBoundary).toBeDefined();
+
+    const exitSnapshot = sofPasuqBoundary?.phases.find((phase) => phase.phase === "token_exit")
+      ?.snapshot;
+    expect(exitSnapshot).toBeDefined();
+
+    const stack = exitSnapshot?.vm?.OStack_word as Array<{ kind?: string }>;
+    expect(Array.isArray(stack)).toBe(true);
+    expect(stack.some((obligation) => obligation.kind === "MEM_ZONE")).toBe(false);
+
+    const handles = exitSnapshot?.handles as Array<{ kind?: string; meta?: Record<string, any> }>;
+    expect(
+      handles.some((handle) => handle.kind === "memZone" || handle.meta?.obligation === "MEM_ZONE")
+    ).toBe(false);
   });
 
   it("maqqef boundary forces glue semantics even without left trope", () => {
