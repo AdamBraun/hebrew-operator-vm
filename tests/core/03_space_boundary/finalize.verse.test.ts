@@ -143,8 +143,14 @@ describe("finalizeVerse", () => {
     expect(verseSnapshots.length).toBe(2);
     expect(callbackSnapshots).toEqual(verseSnapshots.map((snapshot) => snapshot.tau_end));
 
-    expect(verseSnapshots[0].state_dump.vm.H.some((event: { type?: string }) => event.type === "mem_zone_flush")).toBe(true);
-    expect((verseSnapshots[0].state_dump.handles as Array<{ id: string }>).length).toBeGreaterThan(2);
+    expect(
+      verseSnapshots[0].state_dump.vm.H.some(
+        (event: { type?: string }) => event.type === "mem_zone_flush"
+      )
+    ).toBe(true);
+    expect((verseSnapshots[0].state_dump.handles as Array<{ id: string }>).length).toBeGreaterThan(
+      2
+    );
     expect(verseSnapshots[1].tau_end).toBeLessThanOrEqual(4);
 
     expect(state.vm.tau).toBe(0);
