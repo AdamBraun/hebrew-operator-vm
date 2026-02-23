@@ -67,7 +67,9 @@ function sortBoundaries(
   });
 }
 
-function sortRules(rules: Array<{ id: string; target: string; patch: any; priority: number }>): void {
+function sortRules(
+  rules: Array<{ id: string; target: string; patch: any; priority: number }>
+): void {
   rules.sort((left, right) => {
     const priorityOrder = Number(left.priority) - Number(right.priority);
     if (priorityOrder !== 0) {
@@ -215,10 +217,7 @@ function resetRuntimeState(state: State, opts: FinalizeVerseOptions): void {
   resetHandles(state, keepSystemHandles);
 }
 
-export function finalizeVerse(
-  state: State,
-  opts: FinalizeVerseOptions = {}
-): VerseSnapshot {
+export function finalizeVerse(state: State, opts: FinalizeVerseOptions = {}): VerseSnapshot {
   const snapshot: VerseSnapshot = {
     ref: opts.ref ?? "",
     cleaned: opts.cleaned ?? "",

@@ -24,9 +24,9 @@ describe("finalizeVerse", () => {
     expect(snapshot.state_dump.vm.tau).toBe(tauBefore);
     expect(Array.isArray(snapshot.state_dump.vm.H)).toBe(true);
     expect(snapshot.state_dump.vm.H.length).toBe(eventsBefore);
-    expect(snapshot.state_dump.vm.H.some((event: { type?: string }) => event.type === "mem_zone_flush")).toBe(
-      true
-    );
+    expect(
+      snapshot.state_dump.vm.H.some((event: { type?: string }) => event.type === "mem_zone_flush")
+    ).toBe(true);
     expect(Array.isArray(snapshot.state_dump.handles)).toBe(true);
     expect(snapshot.state_dump.handles.length).toBe(handlesBefore);
 
@@ -70,7 +70,9 @@ describe("finalizeVerse", () => {
       preserveCounters: true
     });
 
-    expect(snapshot.state_dump.handles.some((handle: { id?: string }) => handle.id === "TMP")).toBe(true);
+    expect(snapshot.state_dump.handles.some((handle: { id?: string }) => handle.id === "TMP")).toBe(
+      true
+    );
     expect(Array.from(state.handles.keys())).toEqual([OMEGA_ID, BOT_ID, "SYS"]);
     expect(state.handles.has("TMP")).toBe(false);
     expect(state.vm.metaCounter).toEqual({ omega: 3, tau: 9 });
@@ -101,7 +103,11 @@ describe("finalizeVerse", () => {
       outside: string;
       anchor: number;
     }>;
-    const rules = snapshot.state_dump.rules as Array<{ priority: number; id: string; target: string }>;
+    const rules = snapshot.state_dump.rules as Array<{
+      priority: number;
+      id: string;
+      target: string;
+    }>;
     const cont = snapshot.state_dump.cont as string[];
 
     expect(links).toEqual([
