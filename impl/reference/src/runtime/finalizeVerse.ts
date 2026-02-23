@@ -1,17 +1,28 @@
 import { BOT_ID, OMEGA_ID, Handle, createHandle } from "../state/handles";
 import { State, serializeState } from "../state/state";
+import { validateBaseline } from "./validateBaseline";
 
 export type FinalizeVerseOptions = {
   ref?: string;
   cleaned?: string;
   keepSystemHandles?: Set<string>;
   preserveCounters?: boolean;
+  validateBaseline?: boolean;
+};
+
+export type VerseSnapshotMetrics = {
+  handles: number;
+  links: number;
+  boundaries: number;
+  rules: number;
+  events: number;
 };
 
 export type VerseSnapshot = {
   ref: string;
   cleaned: string;
   tau_end: number;
+  metrics: VerseSnapshotMetrics;
   state_dump: Record<string, any>;
 };
 
@@ -217,14 +228,39 @@ function resetRuntimeState(state: State, opts: FinalizeVerseOptions): void {
   resetHandles(state, keepSystemHandles);
 }
 
+function collectSnapshotMetrics(state: State): VerseSnapshotMetrics {
+  return {
+    handles: state.handles.size,
+    links: state.links.length,
+    boundaries: state.boundaries.length,
+    rules: state.rules.length,
+    events: state.vm.H.length
+  };
+}
+
+function shouldValidateBaseline(opts: FinalizeVerseOptions): boolean {
+  if (typeof opts.validateBaseline === "boolean") {
+    return opts.validateBaseline;
+  }
+  return process.env.NODE_ENV !== "production";
+}
+
 export function finalizeVerse(state: State, opts: FinalizeVerseOptions = {}): VerseSnapshot {
   const snapshot: VerseSnapshot = {
     ref: opts.ref ?? "",
     cleaned: opts.cleaned ?? "",
     tau_end: state.vm.tau,
+    metrics: collectSnapshotMetrics(state),
     state_dump: buildStateDump(state)
   };
   deepFreeze(snapshot);
   resetRuntimeState(state, opts);
+  if (shouldValidateBaseline(opts)) {
+    validateBaseline(state, {
+      keepSystemHandles: opts.keepSystemHandles,
+      preserveCounters: opts.preserveCounters,
+      context: snapshot.ref ? `finalizeVerse(${snapshot.ref})` : "finalizeVerse"
+    });
+  }
   return snapshot;
 }

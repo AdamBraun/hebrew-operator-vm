@@ -11,6 +11,7 @@ This directory defines the normative, domain-agnostic specification of the Hebre
 - `40-PRIMITIVES.md`: the only primitive subroutines (`Y`, `V`) and factorization rules.
 - `50-MODIFIER-SYSTEM.md`: modifier typing, attachment tiers, and guarantees.
 - `60-VM.md`: execution model, registers, stacks, space semantics, obligations.
+- `phase-a-verse-cleanup.md`: verse-end (sof-pasuk) snapshot/reset contract and no-leakage baseline requirements.
 - `70-DETERMINISM.md`: canonical ordering and replay guarantees.
 - `80-CONFORMANCE.md`: compliance levels and required tests.
 

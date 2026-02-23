@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createHandle, BOT_ID, OMEGA_ID } from "@ref/state/handles";
 import { createInitialState } from "@ref/state/state";
 import { finalizeVerse } from "@ref/runtime/finalizeVerse";
+import { validateBaseline } from "@ref/runtime/validateBaseline";
 import { runProgramWithTrace } from "@ref/vm/vm";
 
 describe("finalizeVerse", () => {
@@ -12,6 +13,9 @@ describe("finalizeVerse", () => {
     const tauBefore = state.vm.tau;
     const eventsBefore = state.vm.H.length;
     const handlesBefore = state.handles.size;
+    const linksBefore = state.links.length;
+    const boundariesBefore = state.boundaries.length;
+    const rulesBefore = state.rules.length;
 
     const snapshot = finalizeVerse(state, {
       ref: "Genesis/1/1",
@@ -21,6 +25,13 @@ describe("finalizeVerse", () => {
     expect(snapshot.ref).toBe("Genesis/1/1");
     expect(snapshot.cleaned).toBe("מ֖ א׃");
     expect(snapshot.tau_end).toBe(tauBefore);
+    expect(snapshot.metrics).toEqual({
+      handles: handlesBefore,
+      links: linksBefore,
+      boundaries: boundariesBefore,
+      rules: rulesBefore,
+      events: eventsBefore
+    });
     expect(snapshot.state_dump.vm.tau).toBe(tauBefore);
     expect(Array.isArray(snapshot.state_dump.vm.H)).toBe(true);
     expect(snapshot.state_dump.vm.H.length).toBe(eventsBefore);
@@ -57,6 +68,40 @@ describe("finalizeVerse", () => {
 
     state.vm.F = BOT_ID;
     expect(snapshot.state_dump.vm.F).not.toBe(BOT_ID);
+  });
+
+  it("throws a clear invariant report for invalid baseline state", () => {
+    const state = createInitialState();
+    (state.vm as any).leaky = ["leftover"];
+    state.vm.F = BOT_ID;
+
+    expect(() => validateBaseline(state, { context: "unit-test" })).toThrow(
+      /Post-reset baseline invariant failed \(unit-test\)/u
+    );
+    expect(() => validateBaseline(state, { context: "unit-test" })).toThrow(
+      /vm\.F expected Ω but got ⊥/u
+    );
+    expect(() => validateBaseline(state, { context: "unit-test" })).toThrow(
+      /Unexpected vm baseline fields detected: leaky/u
+    );
+  });
+
+  it("validates post-reset baseline and fails on leaked VM fields", () => {
+    const state = createInitialState();
+    runProgramWithTrace("א׃", state);
+    (state.vm as any).leaky = ["leftover"];
+
+    expect(() => finalizeVerse(state, { ref: "Genesis/1/1" })).toThrow(
+      /Unexpected vm baseline fields detected: leaky/u
+    );
+  });
+
+  it("allows skipping baseline validation when explicitly disabled", () => {
+    const state = createInitialState();
+    runProgramWithTrace("א׃", state);
+    (state.vm as any).leaky = ["leftover"];
+
+    expect(() => finalizeVerse(state, { validateBaseline: false })).not.toThrow();
   });
 
   it("preserves explicit system handles and meta counters when requested", () => {

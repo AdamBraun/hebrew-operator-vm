@@ -13,6 +13,14 @@ A verse cleanup cycle MUST run when the interpreter reaches verse end:
 - explicit sof-pasuk boundary (currently equivalent to boundary `mode=cut` with `rank>=3`), or
 - implicit verse end supplied by the caller (for input that omits explicit punctuation).
 
+## Sof-Pasuk Boundary-Local Cleanup (Before Snapshot)
+
+For explicit sof-pasuk boundaries (`mode=cut`, `rank>=3`), boundary-local hygiene MUST run before snapshot export:
+
+- Pending joins MUST be dropped (`PendingJoin := undefined`) so cross-verse join carryover is impossible.
+- Unresolved mem-zone spill state MUST be flushed/closed and scrubbed from active graph references.
+- If raw VM event streams are exported, these actions SHOULD be visible as deterministic boundary events (for example `join_drop`, `mem_zone_flush` in the reference runtime).
+
 ## Two-Phase End-of-Verse Semantics
 
 Cleanup is a strict two-phase sequence:
@@ -31,6 +39,16 @@ At sof-pasuk, the runtime MUST serialize a **verse artifact** that includes:
 - per-verse trace/events for that verse,
 - per-verse VM graph snapshot: `handles`, `links`, `boundaries`, `rules`, `cont`,
 - required metadata/version envelope used by existing trace contracts.
+
+Optional (recommended) snapshot metrics:
+
+- `handles`
+- `links`
+- `boundaries`
+- `rules`
+- `events`
+
+If included, metric values MUST be deterministic for identical input + semantics.
 
 Notes:
 
@@ -118,6 +136,18 @@ Minimum required post-reset baseline:
 | `state.boundaries`                                  | `[]`                                                                        |
 | `state.rules`                                       | `[]`                                                                        |
 | `state.cont`                                        | empty set                                                                   |
+
+## Post-Reset Baseline Validation
+
+Implementations claiming Phase A conformance MUST provide a post-reset baseline validator in conformance/test mode (it MAY be disabled in production hot paths).
+
+The validator MUST fail with a clear message when baseline is violated, including at least:
+
+1. VM pointer invariants (`Omega=Ω`, `F=Ω`, `R=⊥`).
+2. Empty accumulator/obligation state (`A`, `W`, `E`, `OStack_word`, `phraseWordValues`, `H_phrase`, `H_committed`, `PendingJoin`).
+3. Cleared graph state (`links`, `boundaries`, `rules`, `cont`).
+4. Handle allowlist check (only bootstrap handles plus explicitly allowed system handles).
+5. Unexpected VM-field detection for newly added runtime fields not covered by reset policy.
 
 ## Stable Verse Graphs: Determinism Guarantees
 
