@@ -5,9 +5,7 @@
 function looksLikeVm(value) {
   if (!value || typeof value !== "object") return false;
   return (
-    Array.isArray(value.handles) ||
-    Array.isArray(value.links) ||
-    Array.isArray(value.boundaries)
+    Array.isArray(value.handles) || Array.isArray(value.links) || Array.isArray(value.boundaries)
   );
 }
 
@@ -23,7 +21,11 @@ function pickVm(root) {
 
   // if a nested VM object exists but arrays are elsewhere
   if (root.vm && typeof root.vm === "object" && looksLikeVm(root)) return root;
-  if (root.final_state?.vm && typeof root.final_state.vm === "object" && looksLikeVm(root.final_state)) {
+  if (
+    root.final_state?.vm &&
+    typeof root.final_state.vm === "object" &&
+    looksLikeVm(root.final_state)
+  ) {
     return root.final_state;
   }
 
@@ -247,7 +249,12 @@ function nodeShapeFor(handle) {
   if (handle.kind === "artifact" || handle.kind === "finalize") return "octagon";
 
   // Parent shin-like node: render as record with true ports.
-  if (handle.kind === "structured" && handle.meta?.spine && handle.meta?.left && handle.meta?.right) {
+  if (
+    handle.kind === "structured" &&
+    handle.meta?.spine &&
+    handle.meta?.left &&
+    handle.meta?.right
+  ) {
     return "record";
   }
   // Leaf shin parts remain simple nodes.
@@ -476,12 +483,7 @@ function boundaryClusterName(boundaryId, index) {
 }
 
 function computeDegrees(args) {
-  const {
-    handles,
-    links,
-    boundaries,
-    countBoundaryEdges = true
-  } = args;
+  const { handles, links, boundaries, countBoundaryEdges = true } = args;
   const degree = new Map(handles.map((handle) => [handle.id, 0]));
   const bump = (id) => {
     if (!degree.has(id)) return;
@@ -505,14 +507,7 @@ function computeDegrees(args) {
 }
 
 function pruneOrphanHandles(args) {
-  const {
-    handles,
-    links,
-    boundaries,
-    keepIds,
-    keepKinds,
-    countBoundaryEdges = true
-  } = args;
+  const { handles, links, boundaries, keepIds, keepKinds, countBoundaryEdges = true } = args;
 
   const keepIdSet = new Set((keepIds ?? []).map((id) => String(id)));
   const keepKindSet = new Set((keepKinds ?? []).map((kind) => String(kind)));
@@ -550,6 +545,8 @@ export function renderVmDot(vm, opts = {}) {
     label = "",
     meta = {}, // {ref, cleaned, tau, omega, words}
     wordsMode = layout === "boot" ? "cluster" : "off", // off | cluster | label
+    shinMode = layout === "boot" ? "collapse" : "expand", // expand | collapse
+    shinPortEdges = false,
     wordFill = "#f3e5f5",
     wordBorder = "#6a1b9a",
     prune = "orphans", // orphans | none
@@ -563,6 +560,15 @@ export function renderVmDot(vm, opts = {}) {
   const handles = normalizeHandles(vm);
   const links = normalizeLinks(vm);
   const boundaries = normalizeBoundaries(vm);
+  const shinLeafToParent = new Map(); // leafId -> { parentId, port }
+  for (const handle of handles) {
+    if (handle.kind !== "structured") continue;
+    const parent = handle.meta?.parent;
+    const role = String(handle.meta?.role ?? "");
+    if (!parent || !role) continue;
+    const port = branchPortFor(handle); // role -> sp/l/r
+    shinLeafToParent.set(handle.id, { parentId: String(parent), port });
+  }
 
   // Filter nodes in "summary" mode first.
   const handleKeepByMode = (handle) => {
@@ -584,13 +590,15 @@ export function renderVmDot(vm, opts = {}) {
     });
   }
 
+  if (shinMode === "collapse") {
+    keptHandles = keptHandles.filter((handle) => !shinLeafToParent.has(handle.id));
+  }
+
   const idSet = new Set(handles.map((handle) => handle.id));
   const keptIdSet = new Set(keptHandles.map((handle) => handle.id));
-  const handleById = new Map(handles.map((handle) => [handle.id, handle]));
-  const idMap = buildIdMap(
-    Array.from(new Set(keptHandles.map((handle) => handle.id))),
-    { prettyIds }
-  );
+  const idMap = buildIdMap(Array.from(new Set(keptHandles.map((handle) => handle.id))), {
+    prettyIds
+  });
 
   function nodeIdFor(handleId) {
     const hid = String(handleId ?? "");
@@ -604,6 +612,14 @@ export function renderVmDot(vm, opts = {}) {
   function edgeRef(handleId, port) {
     const base = nodeRef(handleId);
     return port ? `${base}:${port}` : base;
+  }
+
+  function resolveEndpoint(handleId) {
+    const id = String(handleId ?? "");
+    if (shinMode !== "collapse") return { id, port: null };
+    const hit = shinLeafToParent.get(id);
+    if (!hit) return { id, port: null };
+    return { id: hit.parentId, port: hit.port };
   }
 
   function inferWordIndexFromHandle(handle) {
@@ -734,7 +750,12 @@ export function renderVmDot(vm, opts = {}) {
     }
   }
 
-  if (layout === "boot" && meta.omega && keptIdSet.has(String(meta.omega)) && String(meta.omega) !== "Ω") {
+  if (
+    layout === "boot" &&
+    meta.omega &&
+    keptIdSet.has(String(meta.omega)) &&
+    String(meta.omega) !== "Ω"
+  ) {
     dot += `  ${nodeRef("Ω")} -> ${nodeRef(meta.omega)} [${attrs({
       ...edgeLabelAttrs("current root"),
       color: dotId(t.omegaBorder),
@@ -743,20 +764,29 @@ export function renderVmDot(vm, opts = {}) {
     })}];\n\n`;
   }
 
-  if (layout === "boot") {
+  if (layout === "boot" && shinPortEdges) {
     for (const handle of keptHandles) {
       const isRecord =
         nodeShapeFor(handle) === "record" ||
-        (handle.kind === "structured" && handle.meta?.spine && handle.meta?.left && handle.meta?.right);
+        (handle.kind === "structured" &&
+          handle.meta?.spine &&
+          handle.meta?.left &&
+          handle.meta?.right);
       if (!isRecord) continue;
       const me = nodeRef(handle.id);
       dot += `  ${me}:sp -> ${me}:l [${attrs({
         ...edgeLabelAttrs("branch"),
-        color: dotId(t.structuredBorder)
+        color: dotId(t.structuredBorder),
+        constraint: "false",
+        weight: 0,
+        minlen: 0
       })}];\n`;
       dot += `  ${me}:sp -> ${me}:r [${attrs({
         ...edgeLabelAttrs("branch"),
-        color: dotId(t.structuredBorder)
+        color: dotId(t.structuredBorder),
+        constraint: "false",
+        weight: 0,
+        minlen: 0
       })}];\n`;
     }
     dot += "\n";
@@ -804,13 +834,21 @@ export function renderVmDot(vm, opts = {}) {
       })}];\n`;
 
       // Connect if inside/outside are present and exist
-      if (boundaryEntry.inside && idSet.has(boundaryEntry.inside) && keptIdSet.has(boundaryEntry.inside)) {
+      if (
+        boundaryEntry.inside &&
+        idSet.has(boundaryEntry.inside) &&
+        keptIdSet.has(boundaryEntry.inside)
+      ) {
         dot += `  ${nodeRef(boundaryEntry.inside)} -> ${boundaryId} [${attrs({
           ...edgeLabelAttrs("inside"),
           style: dotId("dashed")
         })}];\n`;
       }
-      if (boundaryEntry.outside && idSet.has(boundaryEntry.outside) && keptIdSet.has(boundaryEntry.outside)) {
+      if (
+        boundaryEntry.outside &&
+        idSet.has(boundaryEntry.outside) &&
+        keptIdSet.has(boundaryEntry.outside)
+      ) {
         dot += `  ${boundaryId} -> ${nodeRef(boundaryEntry.outside)} [${attrs({
           ...edgeLabelAttrs("outside"),
           style: dotId("dashed")
@@ -822,27 +860,17 @@ export function renderVmDot(vm, opts = {}) {
 
   // Edges (links)
   for (const link of links) {
-    // Only draw edges between kept nodes
-    if (!keptIdSet.has(link.from) || !keptIdSet.has(link.to)) continue;
+    if (shinMode === "collapse" && String(link.label) === "branch") continue;
 
-    let edgeFrom = edgeRef(link.from);
-    let edgeTo = edgeRef(link.to);
+    const src = resolveEndpoint(link.from);
+    const dst = resolveEndpoint(link.to);
 
-    if (String(link.label) === "branch") {
-      const source = handleById.get(link.from);
-      const target = handleById.get(link.to);
-      const sourceIsParentShin =
-        source &&
-        source.kind === "structured" &&
-        source.meta?.spine &&
-        source.meta?.left &&
-        source.meta?.right;
-      const targetIsChildOfSource =
-        target && target.kind === "structured" && String(target.meta?.parent ?? "") === link.from;
-      if (sourceIsParentShin && targetIsChildOfSource) {
-        edgeFrom = edgeRef(link.from, branchPortFor(target));
-      }
-    }
+    if (!keptIdSet.has(src.id) || !keptIdSet.has(dst.id)) continue;
+
+    const edgeFrom = edgeRef(src.id, src.port);
+    const edgeTo = edgeRef(dst.id, dst.port);
+
+    if (src.id === dst.id && (src.port ?? "") === (dst.port ?? "")) continue;
 
     dot += `  ${edgeFrom} -> ${edgeTo} [${attrs({
       ...edgeLabelAttrs(link.label ? String(link.label) : "")
