@@ -3,6 +3,7 @@ import { validateTokens } from "../compile/validate";
 import { HehMode, LetterMode, SpaceBoundaryMode, Token } from "../compile/types";
 import { compositeRegistry, letterRegistry } from "../letters/registry";
 import { Construction, LetterOp, SelectOperands } from "../letters/types";
+import { FinalizeVerseOptions, VerseSnapshot, finalizeVerse } from "../runtime/finalizeVerse";
 import { BOT_ID } from "../state/handles";
 import { hardenHandle } from "../state/policies";
 import { State, createInitialState, serializeState } from "../state/state";
@@ -96,6 +97,21 @@ export type PreparedTraceToken = {
 
 export type DeepTraceOptions = {
   includeStateSnapshots?: boolean;
+  finalizeAtVerseEnd?: boolean;
+  finalizeVerseOptions?: FinalizeVerseOptions;
+  onVerseSnapshot?: (snapshot: VerseSnapshot, context: VerseSnapshotContext) => void;
+};
+
+export type ProgramRunOptions = {
+  finalizeAtVerseEnd?: boolean;
+  finalizeVerseOptions?: FinalizeVerseOptions;
+  onVerseSnapshot?: (snapshot: VerseSnapshot, context: VerseSnapshotContext) => void;
+};
+
+export type VerseSnapshotContext = {
+  token_index: number;
+  boundary_mode: SpaceBoundaryMode;
+  rank: number;
 };
 
 type PhaseRecorder = {
@@ -105,6 +121,9 @@ type PhaseRecorder = {
 type TraceRunOptions = {
   collectDeep: boolean;
   includeSnapshots: boolean;
+  finalizeAtVerseEnd: boolean;
+  finalizeVerseOptions?: FinalizeVerseOptions;
+  onVerseSnapshot?: (snapshot: VerseSnapshot, context: VerseSnapshotContext) => void;
 };
 
 type TraceRunResult = {
@@ -112,7 +131,36 @@ type TraceRunResult = {
   trace: TraceEntry[];
   deepTrace: DeepTraceEntry[];
   preparedTokens: PreparedTraceToken[];
+  verseSnapshots: VerseSnapshot[];
 };
+
+function shouldFinalizeAtBoundary(
+  boundaryMode: SpaceBoundaryMode | undefined,
+  boundaryRank: number | null | undefined
+): boolean {
+  return boundaryMode === "cut" && Number(boundaryRank ?? 1) >= 3;
+}
+
+function finalizeAtSofPasuqBoundary(
+  state: State,
+  options: {
+    tokenIndex: number;
+    boundaryMode: SpaceBoundaryMode;
+    boundaryRank: number | null | undefined;
+    finalizeVerseOptions?: FinalizeVerseOptions;
+    onVerseSnapshot?: (snapshot: VerseSnapshot, context: VerseSnapshotContext) => void;
+  }
+): VerseSnapshot {
+  const rank = Math.max(1, Math.trunc(Number(options.boundaryRank ?? 1)));
+  const context: VerseSnapshotContext = {
+    token_index: options.tokenIndex,
+    boundary_mode: options.boundaryMode,
+    rank
+  };
+  const snapshot = finalizeVerse(state, options.finalizeVerseOptions ?? {});
+  options.onVerseSnapshot?.(snapshot, context);
+  return snapshot;
+}
 
 function normalizeForJson(value: unknown): any {
   if (value === null || value === undefined) {
@@ -490,12 +538,27 @@ function prepareTokens(input: string): Token[] {
   return withLeading;
 }
 
-export function runProgram(input: string, state: State = createInitialState()): State {
+export function runProgram(
+  input: string,
+  state: State = createInitialState(),
+  options: ProgramRunOptions = {}
+): State {
   const tokens = prepareTokens(input);
   for (let index = 0; index < tokens.length; index += 1) {
     const token = tokens[index];
     if (token.letter === "□") {
-      applySpace(state, { mode: token.boundary?.mode, rank: token.boundary?.rank });
+      const boundaryMode = token.boundary?.mode;
+      const boundaryRank = token.boundary?.rank;
+      applySpace(state, { mode: boundaryMode, rank: boundaryRank });
+      if (options.finalizeAtVerseEnd && shouldFinalizeAtBoundary(boundaryMode, boundaryRank)) {
+        finalizeAtSofPasuqBoundary(state, {
+          tokenIndex: index,
+          boundaryMode: boundaryMode ?? "hard",
+          boundaryRank,
+          finalizeVerseOptions: options.finalizeVerseOptions,
+          onVerseSnapshot: options.onVerseSnapshot
+        });
+      }
     } else {
       const isWordFinal = index === tokens.length - 1 || tokens[index + 1].letter === "□";
       executeLetter(state, token, { isWordFinal });
@@ -512,6 +575,7 @@ function runProgramWithTraceInternal(
   const tokens = prepareTokens(input);
   const trace: TraceEntry[] = [];
   const deepTrace: DeepTraceEntry[] = [];
+  const verseSnapshots: VerseSnapshot[] = [];
   const preparedTokens: PreparedTraceToken[] = tokens.map((token, index) => ({
     index,
     token: token.letter,
@@ -636,27 +700,45 @@ function runProgramWithTraceInternal(
         phases
       });
     }
+
+    if (options.finalizeAtVerseEnd && shouldFinalizeAtBoundary(boundaryMode, boundaryRank)) {
+      verseSnapshots.push(
+        finalizeAtSofPasuqBoundary(state, {
+          tokenIndex: index,
+          boundaryMode: boundaryMode ?? "hard",
+          boundaryRank,
+          finalizeVerseOptions: options.finalizeVerseOptions,
+          onVerseSnapshot: options.onVerseSnapshot
+        })
+      );
+    }
   });
 
   return {
     state,
     trace,
     deepTrace,
-    preparedTokens
+    preparedTokens,
+    verseSnapshots
   };
 }
 
 export function runProgramWithTrace(
   input: string,
-  state: State = createInitialState()
-): { state: State; trace: TraceEntry[] } {
+  state: State = createInitialState(),
+  options: ProgramRunOptions = {}
+): { state: State; trace: TraceEntry[]; verseSnapshots: VerseSnapshot[] } {
   const result = runProgramWithTraceInternal(input, state, {
     collectDeep: false,
-    includeSnapshots: false
+    includeSnapshots: false,
+    finalizeAtVerseEnd: options.finalizeAtVerseEnd === true,
+    finalizeVerseOptions: options.finalizeVerseOptions,
+    onVerseSnapshot: options.onVerseSnapshot
   });
   return {
     state: result.state,
-    trace: result.trace
+    trace: result.trace,
+    verseSnapshots: result.verseSnapshots
   };
 }
 
@@ -669,15 +751,20 @@ export function runProgramWithDeepTrace(
   trace: TraceEntry[];
   deepTrace: DeepTraceEntry[];
   preparedTokens: PreparedTraceToken[];
+  verseSnapshots: VerseSnapshot[];
 } {
   const result = runProgramWithTraceInternal(input, state, {
     collectDeep: true,
-    includeSnapshots: options.includeStateSnapshots !== false
+    includeSnapshots: options.includeStateSnapshots !== false,
+    finalizeAtVerseEnd: options.finalizeAtVerseEnd === true,
+    finalizeVerseOptions: options.finalizeVerseOptions,
+    onVerseSnapshot: options.onVerseSnapshot
   });
   return {
     state: result.state,
     trace: result.trace,
     deepTrace: result.deepTrace,
-    preparedTokens: result.preparedTokens
+    preparedTokens: result.preparedTokens,
+    verseSnapshots: result.verseSnapshots
   };
 }

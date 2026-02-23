@@ -125,4 +125,38 @@ describe("finalizeVerse", () => {
     ]);
     expect(cont).toEqual(["a->b", "z->a"]);
   });
+
+  it("wires sof pasuq boundaries to finalizeVerse for multi-verse runs", () => {
+    const state = createInitialState();
+    const callbackSnapshots: number[] = [];
+    const { trace, verseSnapshots } = runProgramWithTrace("מ֖ א׃ ב׃", state, {
+      finalizeAtVerseEnd: true,
+      onVerseSnapshot: (snapshot) => {
+        callbackSnapshots.push(snapshot.tau_end);
+      }
+    });
+
+    const sofPasuqBoundaries = trace.filter(
+      (entry) => entry.token === "□" && entry.boundary_mode === "cut" && entry.rank === 3
+    );
+    expect(sofPasuqBoundaries.length).toBe(2);
+    expect(verseSnapshots.length).toBe(2);
+    expect(callbackSnapshots).toEqual(verseSnapshots.map((snapshot) => snapshot.tau_end));
+
+    expect(verseSnapshots[0].state_dump.vm.H.some((event: { type?: string }) => event.type === "mem_zone_flush")).toBe(true);
+    expect((verseSnapshots[0].state_dump.handles as Array<{ id: string }>).length).toBeGreaterThan(2);
+    expect(verseSnapshots[1].tau_end).toBeLessThanOrEqual(4);
+
+    expect(state.vm.tau).toBe(0);
+    expect(state.vm.Omega).toBe(OMEGA_ID);
+    expect(state.vm.F).toBe(OMEGA_ID);
+    expect(state.vm.R).toBe(BOT_ID);
+    expect(state.vm.K).toEqual([OMEGA_ID, BOT_ID]);
+    expect(state.vm.H).toEqual([]);
+    expect(state.links).toEqual([]);
+    expect(state.boundaries).toEqual([]);
+    expect(state.rules).toEqual([]);
+    expect(Array.from(state.cont)).toEqual([]);
+    expect(Array.from(state.handles.keys())).toEqual([OMEGA_ID, BOT_ID]);
+  });
 });

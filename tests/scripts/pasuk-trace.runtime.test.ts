@@ -60,6 +60,8 @@ describe("pasuk trace runtime", () => {
     expect(
       result.trace.some((entry) => entry.phases.some((phase) => phase.phase === "select"))
     ).toBe(true);
+    expect(Array.isArray(result.verse_snapshots)).toBe(true);
+    expect(result.verse_snapshots.length).toBe(1);
     expect(typeof result.final_state.vm?.has_data_payload).toBe("boolean");
     expect(result.final_state.vm?.wordHasContent).toBeUndefined();
   });
@@ -145,6 +147,33 @@ describe("pasuk trace runtime", () => {
     expect(typeof wordContext?.pending_join_at_entry?.id).toBe("string");
   });
 
+  it("collects sequential verse snapshots when multiple sof pasuq markers are present", async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-multi-verse-"));
+    const outJsonPath = path.join(tmpDir, "trace.json");
+    const outReportPath = path.join(tmpDir, "trace.txt");
+
+    const opts: PasukTraceOptions = {
+      input: path.join(tmpDir, "unused.json"),
+      ref: "Genesis/1/1",
+      text: "א׃ ב׃",
+      lang: "he",
+      normalizeFinals: false,
+      keepTeamim: true,
+      allowRuntimeErrors: false,
+      includeSnapshots: false,
+      outJson: outJsonPath,
+      outReport: outReportPath,
+      printReport: false
+    };
+
+    const result = await runPasukTrace(opts);
+    expect(result.cleaned_text).toBe("א׃ ב׃");
+    expect(result.verse_snapshots.length).toBe(2);
+    expect(result.verse_snapshots[0].tau_end).toBe(4);
+    expect(result.verse_snapshots[1].tau_end).toBe(3);
+    expect(result.final_state.vm.tau).toBe(result.verse_snapshots[1].tau_end);
+  });
+
   it("writes json and report outputs from main", async () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-main-"));
     const inputPath = path.join(tmpDir, "torah.json");
@@ -183,6 +212,7 @@ describe("pasuk trace runtime", () => {
 
     expect(parsed.ref_key).toBe("Genesis/1/1");
     expect(Array.isArray(parsed.deep_trace)).toBe(true);
+    expect(Array.isArray(parsed.verse_snapshots)).toBe(true);
     expect(reportText).toContain("PASUK TRACE REPORT");
   });
 });

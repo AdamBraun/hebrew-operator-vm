@@ -3,7 +3,7 @@ import path from "node:path";
 import { IterateTorahOptions, sanitizeText } from "../iterateTorah/runtime";
 import { DeepTraceEntry, PreparedTraceToken, runProgramWithDeepTrace } from "../../vm/vm";
 import { createInitialState } from "../../state/state";
-import { finalizeVerse } from "../../runtime/finalizeVerse";
+import { VerseSnapshot, finalizeVerse } from "../../runtime/finalizeVerse";
 
 type RunLanguage = "he" | "en" | "both";
 
@@ -60,6 +60,7 @@ export type PasukTraceRunResult = {
   cleaned_text: string;
   prepared_tokens: PreparedTraceToken[];
   trace: DeepTraceEntry[];
+  verse_snapshots: VerseSnapshot[];
   final_state: Record<string, any>;
   word_sections: WordSection[];
   report_text: string;
@@ -784,10 +785,16 @@ export async function runPasukTrace(opts: PasukTraceOptions): Promise<PasukTrace
   }
 
   const execution = runProgramWithDeepTrace(cleaned, createInitialState(), {
-    includeStateSnapshots: opts.includeSnapshots
+    includeStateSnapshots: opts.includeSnapshots,
+    finalizeAtVerseEnd: true,
+    finalizeVerseOptions: { ref: resolved.refKey, cleaned }
   });
   const sections = buildWordSections(execution.deepTrace);
-  const verseSnapshot = finalizeVerse(execution.state, { ref: resolved.refKey, cleaned });
+  const verseSnapshots =
+    execution.verseSnapshots.length > 0
+      ? execution.verseSnapshots
+      : [finalizeVerse(execution.state, { ref: resolved.refKey, cleaned })];
+  const verseSnapshot = verseSnapshots[verseSnapshots.length - 1];
   const finalState = withTraceFriendlyVmFlags(
     JSON.parse(JSON.stringify(verseSnapshot.state_dump)) as Record<string, any>
   );
@@ -805,6 +812,7 @@ export async function runPasukTrace(opts: PasukTraceOptions): Promise<PasukTrace
     cleaned_text: cleaned,
     prepared_tokens: execution.preparedTokens,
     trace: execution.deepTrace,
+    verse_snapshots: verseSnapshots,
     final_state: finalState,
     word_sections: sections,
     report_text: reportText
@@ -832,6 +840,7 @@ export async function main(rawArgv: string[] = process.argv.slice(2)): Promise<v
     cleaned_text: result.cleaned_text,
     prepared_tokens: result.prepared_tokens,
     deep_trace: result.trace,
+    verse_snapshots: result.verse_snapshots,
     word_sections: result.word_sections,
     final_state: result.final_state
   };
