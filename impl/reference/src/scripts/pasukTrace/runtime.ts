@@ -1,14 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import {
-  IterateTorahOptions,
-  sanitizeText
-} from "../iterateTorah/runtime";
-import {
-  DeepTraceEntry,
-  PreparedTraceToken,
-  runProgramWithDeepTrace
-} from "../../vm/vm";
+import { IterateTorahOptions, sanitizeText } from "../iterateTorah/runtime";
+import { DeepTraceEntry, PreparedTraceToken, runProgramWithDeepTrace } from "../../vm/vm";
 import { createInitialState, serializeState } from "../../state/state";
 
 type RunLanguage = "he" | "en" | "both";
@@ -82,7 +75,9 @@ function printHelp(): void {
   console.log(
     "  node scripts/pasuk-trace.mjs [--text='...'] [--keep-teamim] [--normalize-finals] [--include-snapshots]"
   );
-  console.log("  node scripts/pasuk-trace.mjs [--out-json=path] [--out-report=path] [--print-report]");
+  console.log(
+    "  node scripts/pasuk-trace.mjs [--out-json=path] [--out-report=path] [--print-report]"
+  );
   console.log("");
   console.log("Defaults:");
   console.log(`  --input=${DEFAULT_INPUT}`);
@@ -93,7 +88,11 @@ function printHelp(): void {
   console.log("  include-snapshots=true");
 }
 
-function readOptionValue(argv: string[], index: number, optionName: string): {
+function readOptionValue(
+  argv: string[],
+  index: number,
+  optionName: string
+): {
   value: string;
   nextIndex: number;
 } | null {
@@ -144,13 +143,7 @@ export function parseRefKey(ref: string): RefKey {
   const chapter = Number(chapterRaw);
   const verse = Number(verseRaw);
 
-  if (
-    !book ||
-    !Number.isInteger(chapter) ||
-    chapter < 1 ||
-    !Number.isInteger(verse) ||
-    verse < 1
-  ) {
+  if (!book || !Number.isInteger(chapter) || chapter < 1 || !Number.isInteger(verse) || verse < 1) {
     throw new Error(`Invalid ref '${ref}'. Expected Book/Chapter/Verse with positive integers.`);
   }
 
@@ -299,9 +292,7 @@ function findBook(payload: TorahPayload, name: string): Book | null {
     return exact;
   }
   const normalized = name.toLowerCase();
-  return (
-    books.find((book) => String(book.name ?? "").toLowerCase() === normalized) ?? null
-  );
+  return books.find((book) => String(book.name ?? "").toLowerCase() === normalized) ?? null;
 }
 
 function formatBoundaryLabel(entry: DeepTraceEntry | null): string {
@@ -450,7 +441,10 @@ export function formatDeepTraceReport(args: {
     lines.push("══════════════════════════════════════════════════════════════");
     lines.push("");
 
-    const wordEntry = phaseDetail(section.op_entries[0] ?? ({} as DeepTraceEntry), "word_entry_context");
+    const wordEntry = phaseDetail(
+      section.op_entries[0] ?? ({} as DeepTraceEntry),
+      "word_entry_context"
+    );
     lines.push(`  [join_in: ${formatJoinInStatus(wordEntry)}]`);
     lines.push("");
 
@@ -503,7 +497,9 @@ export function formatDeepTraceReport(args: {
 
     if (section.exit_boundary) {
       const boundary = section.exit_boundary;
-      lines.push(`  ─── ${formatBoundaryLabel(boundary)} ───────────────────────────────────────────────────`);
+      lines.push(
+        `  ─── ${formatBoundaryLabel(boundary)} ───────────────────────────────────────────────────`
+      );
       lines.push(
         `    │ τ ${boundary.tauBefore} -> ${boundary.tauAfter}; continuation=${Boolean(
           boundary.continuation
@@ -514,7 +510,9 @@ export function formatDeepTraceReport(args: {
           boundary.pending_join_consumed ?? "-"
         }`
       );
-      lines.push(`    │ barrier=${boundary.barrier ?? "-"}; events=${formatFullJson(boundary.events)}`);
+      lines.push(
+        `    │ barrier=${boundary.barrier ?? "-"}; events=${formatFullJson(boundary.events)}`
+      );
       lines.push("");
     }
   }
@@ -528,7 +526,9 @@ export function formatDeepTraceReport(args: {
   return lines.join("\n");
 }
 
-async function resolveVerseText(opts: PasukTraceOptions): Promise<{ refKey: string; text: string }> {
+async function resolveVerseText(
+  opts: PasukTraceOptions
+): Promise<{ refKey: string; text: string }> {
   if (opts.text.trim().length > 0) {
     return {
       refKey: "manual",

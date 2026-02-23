@@ -57,9 +57,9 @@ describe("pasuk trace runtime", () => {
     expect(result.report_text).toContain("Select");
     expect(result.report_text).toContain("Rosh");
     expect(result.report_text).toContain("Toch");
-    expect(result.trace.some((entry) => entry.phases.some((phase) => phase.phase === "select"))).toBe(
-      true
-    );
+    expect(
+      result.trace.some((entry) => entry.phases.some((phase) => phase.phase === "select"))
+    ).toBe(true);
     expect(typeof result.final_state.vm?.has_data_payload).toBe("boolean");
     expect(result.final_state.vm?.wordHasContent).toBeUndefined();
   });
@@ -91,9 +91,9 @@ describe("pasuk trace runtime", () => {
       | Record<string, any>
       | undefined;
     expect(Array.isArray(holamRosh?.rosh_diacritics)).toBe(true);
-    expect(holamRosh?.rosh_diacritics?.some((item: { kind?: string }) => item.kind === "holam")).toBe(
-      true
-    );
+    expect(
+      holamRosh?.rosh_diacritics?.some((item: { kind?: string }) => item.kind === "holam")
+    ).toBe(true);
 
     const hatafEntry = result.trace.find((entry) => entry.token_raw === "אֱ");
     const hatafSof = hatafEntry?.phases.find((phase) => phase.phase === "sof")?.detail as
@@ -138,8 +138,9 @@ describe("pasuk trace runtime", () => {
     expect(result.report_text).toContain("(consumed)");
 
     const secondWordEntry = result.word_sections[1]?.op_entries[0];
-    const wordContext = secondWordEntry?.phases.find((phase) => phase.phase === "word_entry_context")
-      ?.detail as Record<string, any> | undefined;
+    const wordContext = secondWordEntry?.phases.find(
+      (phase) => phase.phase === "word_entry_context"
+    )?.detail as Record<string, any> | undefined;
     expect(wordContext?.pending_join_action).toBe("consumed");
     expect(typeof wordContext?.pending_join_at_entry?.id).toBe("string");
   });

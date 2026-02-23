@@ -557,7 +557,8 @@ function runProgramWithTraceInternal(
     let boundaryRank: number | null | undefined;
     let continuation: boolean | undefined;
     let pendingJoinCreated: string | undefined;
-    const isWordFinal = token.letter !== "□" && (index === tokens.length - 1 || tokens[index + 1].letter === "□");
+    const isWordFinal =
+      token.letter !== "□" && (index === tokens.length - 1 || tokens[index + 1].letter === "□");
     recorder?.record("token_enter", {
       index,
       token: token.letter,
