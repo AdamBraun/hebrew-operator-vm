@@ -46,3 +46,12 @@ export function addBoundary(
 ): void {
   state.boundaries.push({ inside, outside, anchor, id });
 }
+
+export function addLink(state: State, from: string, to: string, label: string): void {
+  for (const edge of state.links) {
+    if (edge.from === from && edge.to === to && edge.label === label) {
+      return;
+    }
+  }
+  state.links.push({ from, to, label });
+}

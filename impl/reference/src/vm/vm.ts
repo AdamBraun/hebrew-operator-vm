@@ -6,6 +6,7 @@ import { Construction, LetterOp, SelectOperands } from "../letters/types";
 import { FinalizeVerseOptions, VerseSnapshot, finalizeVerse } from "../runtime/finalizeVerse";
 import { BOT_ID } from "../state/handles";
 import { hardenHandle } from "../state/policies";
+import { applyEventLinks } from "../state/eventLinks";
 import { State, createInitialState, serializeState } from "../state/state";
 import { applySpace } from "./space";
 
@@ -545,6 +546,7 @@ export function runProgram(
 ): State {
   const tokens = prepareTokens(input);
   for (let index = 0; index < tokens.length; index += 1) {
+    const eventStart = state.vm.H.length;
     const token = tokens[index];
     if (token.letter === "□") {
       const boundaryMode = token.boundary?.mode;
@@ -563,6 +565,8 @@ export function runProgram(
       const isWordFinal = index === tokens.length - 1 || tokens[index + 1].letter === "□";
       executeLetter(state, token, { isWordFinal });
     }
+    const eventEnd = state.vm.H.length;
+    applyEventLinks(state, state.vm.H.slice(eventStart, eventEnd));
   }
   return state;
 }
@@ -649,6 +653,7 @@ function runProgramWithTraceInternal(
       shapeOp = execution.shape_op;
     }
     const eventEnd = state.vm.H.length;
+    applyEventLinks(state, state.vm.H.slice(eventStart, eventEnd));
     recorder?.record("token_exit", {
       F: state.vm.F,
       R: state.vm.R,
