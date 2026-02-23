@@ -2,7 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { IterateTorahOptions, sanitizeText } from "../iterateTorah/runtime";
 import { DeepTraceEntry, PreparedTraceToken, runProgramWithDeepTrace } from "../../vm/vm";
-import { createInitialState, serializeState } from "../../state/state";
+import { createInitialState } from "../../state/state";
+import { finalizeVerse } from "../../runtime/finalizeVerse";
 
 type RunLanguage = "he" | "en" | "both";
 
@@ -786,7 +787,10 @@ export async function runPasukTrace(opts: PasukTraceOptions): Promise<PasukTrace
     includeStateSnapshots: opts.includeSnapshots
   });
   const sections = buildWordSections(execution.deepTrace);
-  const finalState = withTraceFriendlyVmFlags(serializeState(execution.state));
+  const verseSnapshot = finalizeVerse(execution.state, { ref: resolved.refKey, cleaned });
+  const finalState = withTraceFriendlyVmFlags(
+    JSON.parse(JSON.stringify(verseSnapshot.state_dump)) as Record<string, any>
+  );
 
   const reportText = formatDeepTraceReport({
     refKey: resolved.refKey,
