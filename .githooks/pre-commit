@@ -1,4 +1,19 @@
 #!/bin/sh
 set -e
 
-npm run format:write
+staged_files="$(git diff --cached --name-only --diff-filter=ACMR)"
+
+if [ -z "$staged_files" ]; then
+  exit 0
+fi
+
+IFS='
+'
+set -f
+# Split only on newlines so paths with spaces are preserved.
+set -- $staged_files
+set +f
+unset IFS
+
+npm exec -- prettier --ignore-unknown --write -- "$@"
+git add -- "$@"

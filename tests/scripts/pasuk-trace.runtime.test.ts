@@ -62,6 +62,12 @@ describe("pasuk trace runtime", () => {
     ).toBe(true);
     expect(Array.isArray(result.verse_snapshots)).toBe(true);
     expect(result.verse_snapshots.length).toBe(1);
+    expect(result.report_text).toContain("FINAL DUMP STATE");
+    expect(result.report_text).toContain("POST-RESET RUNTIME STATE");
+    expect(result.final_state).toEqual(result.final_dump_state);
+    expect(
+      (result.post_reset_state.handles as Array<{ id?: string }>).map((handle) => handle.id).sort()
+    ).toEqual(["Ω", "⊥"].sort());
     expect(typeof result.final_state.vm?.has_data_payload).toBe("boolean");
     expect(result.final_state.vm?.wordHasContent).toBeUndefined();
   });
@@ -172,6 +178,35 @@ describe("pasuk trace runtime", () => {
     expect(result.verse_snapshots[0].tau_end).toBe(4);
     expect(result.verse_snapshots[1].tau_end).toBe(3);
     expect(result.final_state.vm.tau).toBe(result.verse_snapshots[1].tau_end);
+    expect(result.post_reset_state.vm.tau).toBe(0);
+    expect(
+      (result.post_reset_state.handles as Array<{ id?: string }>).map((handle) => handle.id).sort()
+    ).toEqual(["Ω", "⊥"].sort());
+  });
+
+  it("supports hiding post-reset section in the report", async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-hide-post-reset-"));
+    const outJsonPath = path.join(tmpDir, "trace.json");
+    const outReportPath = path.join(tmpDir, "trace.txt");
+
+    const opts: PasukTraceOptions = {
+      input: path.join(tmpDir, "unused.json"),
+      ref: "Genesis/1/1",
+      text: "א׃",
+      lang: "he",
+      normalizeFinals: false,
+      keepTeamim: true,
+      allowRuntimeErrors: false,
+      includeSnapshots: false,
+      showPostReset: false,
+      outJson: outJsonPath,
+      outReport: outReportPath,
+      printReport: false
+    };
+
+    const result = await runPasukTrace(opts);
+    expect(result.report_text).toContain("FINAL DUMP STATE");
+    expect(result.report_text.includes("POST-RESET RUNTIME STATE")).toBe(false);
   });
 
   it("writes json and report outputs from main", async () => {
@@ -213,6 +248,14 @@ describe("pasuk trace runtime", () => {
     expect(parsed.ref_key).toBe("Genesis/1/1");
     expect(Array.isArray(parsed.deep_trace)).toBe(true);
     expect(Array.isArray(parsed.verse_snapshots)).toBe(true);
+    expect(parsed.options.show_post_reset).toBe(true);
+    expect(parsed.final_dump_state).toEqual(parsed.final_state);
+    expect(Array.isArray(parsed.post_reset_state.handles)).toBe(true);
+    expect(
+      parsed.post_reset_state.handles.map((handle: { id?: string }) => handle.id).sort()
+    ).toEqual(["Ω", "⊥"].sort());
     expect(reportText).toContain("PASUK TRACE REPORT");
+    expect(reportText).toContain("FINAL DUMP STATE");
+    expect(reportText).toContain("POST-RESET RUNTIME STATE");
   });
 });

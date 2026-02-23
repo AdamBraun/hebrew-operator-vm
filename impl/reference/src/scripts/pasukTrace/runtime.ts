@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { IterateTorahOptions, sanitizeText } from "../iterateTorah/runtime";
 import { DeepTraceEntry, PreparedTraceToken, runProgramWithDeepTrace } from "../../vm/vm";
-import { createInitialState } from "../../state/state";
+import { createInitialState, serializeState } from "../../state/state";
 import { VerseSnapshot, finalizeVerse } from "../../runtime/finalizeVerse";
 
 type RunLanguage = "he" | "en" | "both";
@@ -42,6 +42,7 @@ export type PasukTraceOptions = {
   keepTeamim: boolean;
   allowRuntimeErrors: boolean;
   includeSnapshots: boolean;
+  showPostReset?: boolean;
   outJson: string;
   outReport: string;
   printReport: boolean;
@@ -61,6 +62,8 @@ export type PasukTraceRunResult = {
   prepared_tokens: PreparedTraceToken[];
   trace: DeepTraceEntry[];
   verse_snapshots: VerseSnapshot[];
+  final_dump_state: Record<string, any>;
+  post_reset_state: Record<string, any>;
   final_state: Record<string, any>;
   word_sections: WordSection[];
   report_text: string;
@@ -78,7 +81,7 @@ function printHelp(): void {
     "  node scripts/pasuk-trace.mjs [--text='...'] [--keep-teamim] [--normalize-finals] [--include-snapshots]"
   );
   console.log(
-    "  node scripts/pasuk-trace.mjs [--out-json=path] [--out-report=path] [--print-report]"
+    "  node scripts/pasuk-trace.mjs [--out-json=path] [--out-report=path] [--print-report] [--show-post-reset]"
   );
   console.log("");
   console.log("Defaults:");
@@ -88,6 +91,7 @@ function printHelp(): void {
   console.log("  keep-teamim=false");
   console.log("  normalize-finals=false");
   console.log("  include-snapshots=true");
+  console.log("  show-post-reset=true");
 }
 
 function readOptionValue(
@@ -166,6 +170,7 @@ export function parseArgs(argv: string[]): PasukTraceOptions {
     keepTeamim: false,
     allowRuntimeErrors: false,
     includeSnapshots: true,
+    showPostReset: true,
     outJson: "",
     outReport: "",
     printReport: true
@@ -250,6 +255,14 @@ export function parseArgs(argv: string[]): PasukTraceOptions {
     }
     if (arg === "--no-snapshots") {
       opts.includeSnapshots = false;
+      continue;
+    }
+    if (arg === "--show-post-reset") {
+      opts.showPostReset = true;
+      continue;
+    }
+    if (arg === "--no-show-post-reset" || arg === "--hide-post-reset") {
+      opts.showPostReset = false;
       continue;
     }
     if (arg === "--print-report") {
@@ -614,21 +627,23 @@ function enrichScopeMembership(finalState: Record<string, any>): void {
   }
 }
 
-function withTraceFriendlyVmFlags(finalState: Record<string, any>): Record<string, any> {
-  const vm = finalState?.vm;
+function withTraceFriendlyVmFlags(stateDump: Record<string, any>): Record<string, any> {
+  const vm = stateDump?.vm;
   if (vm && typeof vm.wordHasContent === "boolean") {
     vm.has_data_payload = vm.wordHasContent;
     delete vm.wordHasContent;
   }
-  enrichScopeMembership(finalState);
-  return finalState;
+  enrichScopeMembership(stateDump);
+  return stateDump;
 }
 
 export function formatDeepTraceReport(args: {
   refKey: string;
   cleanedText: string;
   sections: WordSection[];
-  finalState: Record<string, any>;
+  finalDumpState: Record<string, any>;
+  postResetState: Record<string, any>;
+  showPostReset: boolean;
 }): string {
   const lines: string[] = [];
   lines.push("PASUK TRACE REPORT");
@@ -721,10 +736,18 @@ export function formatDeepTraceReport(args: {
   }
 
   lines.push("══════════════════════════════════════════════════════════════");
-  lines.push(" FINAL STATE");
+  lines.push(" FINAL DUMP STATE");
   lines.push("══════════════════════════════════════════════════════════════");
-  lines.push(formatFullJson(args.finalState));
+  lines.push(formatFullJson(args.finalDumpState));
   lines.push("");
+
+  if (args.showPostReset) {
+    lines.push("══════════════════════════════════════════════════════════════");
+    lines.push(" POST-RESET RUNTIME STATE");
+    lines.push("══════════════════════════════════════════════════════════════");
+    lines.push(formatFullJson(args.postResetState));
+    lines.push("");
+  }
 
   return lines.join("\n");
 }
@@ -795,15 +818,20 @@ export async function runPasukTrace(opts: PasukTraceOptions): Promise<PasukTrace
       ? execution.verseSnapshots
       : [finalizeVerse(execution.state, { ref: resolved.refKey, cleaned })];
   const verseSnapshot = verseSnapshots[verseSnapshots.length - 1];
-  const finalState = withTraceFriendlyVmFlags(
+  const finalDumpState = withTraceFriendlyVmFlags(
     JSON.parse(JSON.stringify(verseSnapshot.state_dump)) as Record<string, any>
+  );
+  const postResetState = withTraceFriendlyVmFlags(
+    JSON.parse(JSON.stringify(serializeState(execution.state))) as Record<string, any>
   );
 
   const reportText = formatDeepTraceReport({
     refKey: resolved.refKey,
     cleanedText: cleaned,
     sections,
-    finalState
+    finalDumpState,
+    postResetState,
+    showPostReset: opts.showPostReset !== false
   });
 
   return {
@@ -813,7 +841,9 @@ export async function runPasukTrace(opts: PasukTraceOptions): Promise<PasukTrace
     prepared_tokens: execution.preparedTokens,
     trace: execution.deepTrace,
     verse_snapshots: verseSnapshots,
-    final_state: finalState,
+    final_dump_state: finalDumpState,
+    post_reset_state: postResetState,
+    final_state: finalDumpState,
     word_sections: sections,
     report_text: reportText
   };
@@ -834,13 +864,16 @@ export async function main(rawArgv: string[] = process.argv.slice(2)): Promise<v
       lang: opts.lang,
       normalize_finals: opts.normalizeFinals,
       keep_teamim: opts.keepTeamim,
-      include_snapshots: opts.includeSnapshots
+      include_snapshots: opts.includeSnapshots,
+      show_post_reset: opts.showPostReset !== false
     },
     source_text: result.source_text,
     cleaned_text: result.cleaned_text,
     prepared_tokens: result.prepared_tokens,
     deep_trace: result.trace,
     verse_snapshots: result.verse_snapshots,
+    final_dump_state: result.final_dump_state,
+    post_reset_state: result.post_reset_state,
     word_sections: result.word_sections,
     final_state: result.final_state
   };
