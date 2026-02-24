@@ -9,6 +9,76 @@ function findWordCluster(dot: string, label: string): string | null {
 }
 
 describe("pasuk graph renderer", () => {
+  it("always renders thick domain and focus edges and reports D/F in legend", async () => {
+    const { renderDotFromTraceJson } = await import("../../scripts/render/pasukGraph.mjs");
+
+    const tracePayload = {
+      ref_key: "Genesis/1/1",
+      cleaned_text: "א",
+      vm: {
+        tau: 1,
+        D: "Ω",
+        F: "Ω",
+        handles: [
+          { id: "Ω", kind: "scope", meta: {} },
+          { id: "⊥", kind: "empty", meta: {} },
+          { id: "א:1:1", kind: "scope", meta: {} }
+        ],
+        links: [],
+        boundaries: []
+      }
+    };
+
+    const dot = renderDotFromTraceJson(tracePayload, {
+      layout: "plain",
+      prune: "orphans",
+      legend: true,
+      prettyIds: false
+    });
+
+    expect(dot).toContain('"Ω" -> "Ω"');
+    expect(dot).toContain("domain");
+    expect(dot).toContain("F_marker [");
+    expect(dot).toContain('label="F"');
+    expect(dot).toContain('F_marker -> "Ω"');
+    expect(dot).toContain("focus");
+    expect(dot).toContain("D=Ω | F=Ω");
+  });
+
+  it("force-keeps domain/focus target nodes under orphan pruning", async () => {
+    const { renderDotFromTraceJson } = await import("../../scripts/render/pasukGraph.mjs");
+
+    const tracePayload = {
+      ref_key: "Genesis/1/2",
+      cleaned_text: "א",
+      vm: {
+        tau: 2,
+        D: "hD",
+        F: "hF",
+        handles: [
+          { id: "Ω", kind: "scope", meta: {} },
+          { id: "⊥", kind: "empty", meta: {} },
+          { id: "hD", kind: "scope", meta: {} },
+          { id: "hF", kind: "scope", meta: {} }
+        ],
+        links: [],
+        boundaries: []
+      }
+    };
+
+    const dot = renderDotFromTraceJson(tracePayload, {
+      layout: "plain",
+      prune: "orphans",
+      legend: false,
+      prettyIds: false
+    });
+
+    expect(dot).toContain("hD [");
+    expect(dot).toContain("hF [");
+    expect(dot).toContain('"Ω" -> hD');
+    expect(dot).toContain("F_marker -> hF");
+  });
+
   it("clusters nodes by word-section ownership (tau) and keeps maqqef sections split", async () => {
     const { renderDotFromTraceJson } = await import("../../scripts/render/pasukGraph.mjs");
 

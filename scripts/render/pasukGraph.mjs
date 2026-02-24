@@ -572,6 +572,7 @@ export function renderDotFromTraceJson(rootJson, opts = {}) {
     rootJson.trace?.wordSections ??
     [];
   const domain = vmMeta(vm, "D", "domain", "Omega", "omega");
+  const focus = vmMeta(vm, "F", "focus");
   const tau = vmMeta(vm, "tau", "τ");
   const graphSafeRef = String(ref || "Pasuk")
     .replace(/\//g, "_")
@@ -582,13 +583,13 @@ export function renderDotFromTraceJson(rootJson, opts = {}) {
   return renderVmDot(vm, {
     ...opts,
     graphName,
-    meta: { ref, cleaned, tau, domain, words, wordSections },
+    meta: { ref, cleaned, tau, domain, focus, words, wordSections },
     // In boot mode, we prefer legend node over global graph label.
     label:
       opts.label ??
       (layout === "boot"
         ? ""
-        : `Hebrew Operator VM - ${ref || "Pasuk"}${cleaned ? ` | ${cleaned}` : ""}${tau !== "" ? ` | tau=${tau}` : ""}${domain !== "" ? ` | D=${domain}` : ""}`)
+        : `Hebrew Operator VM - ${ref || "Pasuk"}${cleaned ? ` | ${cleaned}` : ""}${tau !== "" ? ` | tau=${tau}` : ""}${domain !== "" ? ` | D=${domain}` : ""}${focus !== "" ? ` | F=${focus}` : ""}`)
   });
 }
 
@@ -660,7 +661,7 @@ export function renderVmDot(vm, opts = {}) {
     nodesep = layout === "boot" ? 0.5 : 0.6,
     ranksep = layout === "boot" ? 0.9 : 1.0,
     label = "",
-    meta = {}, // {ref, cleaned, tau, domain, words, wordSections}
+    meta = {}, // {ref, cleaned, tau, domain, focus, words, wordSections}
     wordsMode = layout === "boot" ? "cluster" : "off", // off | cluster | label
     shinMode = layout === "boot" ? "collapse" : "expand", // expand | collapse
     shinPortEdges = false,
@@ -679,6 +680,9 @@ export function renderVmDot(vm, opts = {}) {
   const handles = normalizeHandles(vm);
   const links = normalizeLinks(vm);
   const boundaries = normalizeBoundaries(vm);
+  const domainTargetId = asStringOrNull(meta.domain) ?? "Ω";
+  const focusTargetId = asStringOrNull(meta.focus) ?? "Ω";
+  const forcedPointerIds = new Set(["Ω", domainTargetId, focusTargetId]);
   const shinLeafToParent = new Map(); // leafId -> { parentId, port }
   for (const handle of handles) {
     if (handle.kind !== "structured") continue;
@@ -691,6 +695,7 @@ export function renderVmDot(vm, opts = {}) {
 
   // Filter nodes in "summary" mode first.
   const handleKeepByMode = (handle) => {
+    if (forcedPointerIds.has(handle.id)) return true;
     if (mode !== "summary") return true;
     if (handle.id === "Ω" || handle.id === "⊥") return true;
     return ["boundary", "rule", "artifact", "finalize", "scope"].includes(handle.kind);
@@ -699,18 +704,21 @@ export function renderVmDot(vm, opts = {}) {
   let keptHandles = handles.filter(handleKeepByMode);
 
   if (prune === "orphans") {
+    const requestedKeepIds = parseCsvList(pruneKeepIds);
     keptHandles = pruneOrphanHandles({
       handles: keptHandles,
       links,
       boundaries,
-      keepIds: ["Ω", "⊥", ...parseCsvList(pruneKeepIds)],
+      keepIds: ["Ω", "⊥", ...Array.from(forcedPointerIds), ...requestedKeepIds],
       keepKinds: parseCsvList(pruneKeepKinds),
       countBoundaryEdges: Boolean(pruneCountBoundaryEdges)
     });
   }
 
   if (shinMode === "collapse") {
-    keptHandles = keptHandles.filter((handle) => !shinLeafToParent.has(handle.id));
+    keptHandles = keptHandles.filter(
+      (handle) => !shinLeafToParent.has(handle.id) || forcedPointerIds.has(handle.id)
+    );
   }
 
   const idSet = new Set(handles.map((handle) => handle.id));
@@ -871,8 +879,9 @@ export function renderVmDot(vm, opts = {}) {
   if (legend) {
     const refLine = meta.ref ? String(meta.ref) : String(graphName);
     const tauLine = meta.tau !== "" ? `τ=${meta.tau}` : "";
-    const domainLine = meta.domain !== "" ? `D=${meta.domain}` : "";
-    const tail = [tauLine, domainLine].filter(Boolean).join(" | ");
+    const domainLine = `D=${domainTargetId}`;
+    const focusLine = `F=${focusTargetId}`;
+    const tail = [tauLine, domainLine, focusLine].filter(Boolean).join(" | ");
     dot += `  legend [${attrs({
       label: dotLabel(`${refLine}\nHebrew Calculus VM - Final State\n${tail}`),
       shape: "plaintext",
@@ -940,19 +949,31 @@ export function renderVmDot(vm, opts = {}) {
     }
   }
 
-  if (
-    layout === "boot" &&
-    meta.domain &&
-    keptIdSet.has(String(meta.domain)) &&
-    String(meta.domain) !== "Ω"
-  ) {
-    dot += `  ${nodeRef("Ω")} -> ${nodeRef(meta.domain)} [${attrs({
-      ...edgeLabelAttrs("domain"),
-      color: dotId(t.omegaBorder),
-      penwidth: 4,
-      fontsize: 10
-    })}];\n\n`;
-  }
+  const focusMarkerId = "F_marker";
+  dot += `  ${dotBareId(focusMarkerId)} [${attrs({
+    label: dotLabel("F"),
+    shape: "circle",
+    style: dotId("filled,bold"),
+    fillcolor: dotId(t.structuredFill),
+    fontcolor: dotId(t.text),
+    color: dotId(t.structuredBorder),
+    width: 0.24,
+    height: 0.24,
+    fixedsize: "true",
+    fontsize: 10
+  })}];\n`;
+  dot += `  ${nodeRef("Ω")} -> ${nodeRef(domainTargetId)} [${attrs({
+    ...edgeLabelAttrs("domain"),
+    color: dotId(t.omegaBorder),
+    penwidth: 4,
+    fontsize: 10
+  })}];\n`;
+  dot += `  ${dotBareId(focusMarkerId)} -> ${nodeRef(focusTargetId)} [${attrs({
+    ...edgeLabelAttrs("focus"),
+    color: dotId(t.structuredBorder),
+    penwidth: 4,
+    fontsize: 10
+  })}];\n\n`;
 
   if (layout === "boot" && shinPortEdges) {
     for (const handle of keptHandles) {
