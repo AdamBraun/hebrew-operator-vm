@@ -28,10 +28,11 @@ export const betOp: LetterOp = {
   meta,
   select: (S: State) => ({ S, ops: { args: [S.vm.F], prefs: {} } }),
   bound: (S: State, ops: SelectOperands) => {
+    const shouldReframeDomain = isWordEntryBaseline(S);
     const outside = S.vm.F;
     let anchor = ops.args[0];
 
-    if (isWordEntryBaseline(S)) {
+    if (shouldReframeDomain) {
       const seedId = nextId(S, "ב");
       S.handles.set(seedId, createHandle(seedId, "entity"));
       anchor = seedId;
@@ -45,7 +46,8 @@ export const betOp: LetterOp = {
         meta: {
           inside: anchor,
           outside,
-          openedBy: "ב"
+          openedBy: "ב",
+          domainCarrier: shouldReframeDomain ? 1 : 0
         }
       })
     );
@@ -53,14 +55,19 @@ export const betOp: LetterOp = {
     const cons: Construction = {
       base: anchor,
       envelope: defaultEnvelope(),
-      meta: { boundaryId, anchor, outside }
+      meta: { boundaryId, anchor, outside, reframeDomain: shouldReframeDomain }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { boundaryId } = cons.meta as { boundaryId: string };
+    const { boundaryId, reframeDomain } = cons.meta as {
+      boundaryId: string;
+      reframeDomain: boolean;
+    };
     S.vm.E.push({ F: S.vm.F, lambda: "class", D_frame: S.vm.D });
-    S.vm.D = boundaryId;
+    if (reframeDomain) {
+      S.vm.D = boundaryId;
+    }
     return { S, h: boundaryId, r: BOT_ID };
   }
 };
