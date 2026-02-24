@@ -54,6 +54,11 @@ describe("pasuk trace runtime", () => {
     expect(result.cleaned_text).toBe("וְהָאָרֶץ הָיְתָה");
     expect(result.word_sections.length).toBe(2);
     expect(result.report_text).toContain("WORD 1");
+    expect(result.report_text).toContain("incoming_D=");
+    expect(result.report_text).toContain("incoming_F=");
+    expect(result.report_text).toContain("outgoing_D=");
+    expect(result.report_text).toContain("outgoing_F=");
+    expect(result.report_text).toContain("exit_kind=");
     expect(result.report_text).toContain("Select");
     expect(result.report_text).toContain("Rosh");
     expect(result.report_text).toContain("Toch");
@@ -64,6 +69,9 @@ describe("pasuk trace runtime", () => {
     expect(result.verse_snapshots.length).toBe(1);
     expect(result.report_text).toContain("FINAL DUMP STATE");
     expect(result.report_text).toContain("POST-RESET RUNTIME STATE");
+    expect(result.report_text).toContain("vm.D=");
+    expect(result.report_text).toContain("vm.F=");
+    expect(result.report_text).toContain("vm.OmegaId=");
     expect(result.final_state).toEqual(result.final_dump_state);
     expect(
       (result.post_reset_state.handles as Array<{ id?: string }>).map((handle) => handle.id).sort()
@@ -71,9 +79,16 @@ describe("pasuk trace runtime", () => {
     expect(typeof result.final_state.vm?.has_data_payload).toBe("boolean");
     expect(result.final_state.vm?.D).toBeDefined();
     expect(result.final_state.vm?.Omega).toBeUndefined();
+    expect(result.final_state.vm?.OmegaId).toBe("Ω");
     expect(result.post_reset_state.vm?.D).toBe("Ω");
     expect(result.post_reset_state.vm?.Omega).toBeUndefined();
+    expect(result.post_reset_state.vm?.OmegaId).toBe("Ω");
     expect(result.final_state.vm?.wordHasContent).toBeUndefined();
+    expect(result.word_sections[0]?.incoming_D).toBe("Ω");
+    expect(typeof result.word_sections[0]?.incoming_F).toBe("string");
+    expect(typeof result.word_sections[0]?.outgoing_D).toBe("string");
+    expect(typeof result.word_sections[0]?.outgoing_F).toBe("string");
+    expect(["cut", "glue", "glue_maqqef"]).toContain(result.word_sections[0]?.exit_kind);
   });
 
   it("surfaces holam on rosh tier and marks hataf composites", async () => {
@@ -148,6 +163,8 @@ describe("pasuk trace runtime", () => {
     expect(result.word_sections.length).toBe(2);
     expect(result.report_text).toContain("join_in: join:");
     expect(result.report_text).toContain("(consumed)");
+    expect(result.word_sections[0]?.exit_kind).toBe("glue_maqqef");
+    expect(result.word_sections[1]?.incoming_F).toBe(result.word_sections[0]?.outgoing_F);
 
     const secondWordEntry = result.word_sections[1]?.op_entries[0];
     const wordContext = secondWordEntry?.phases.find(

@@ -17,6 +17,7 @@ export type TraceEntry = {
   shape_op: string | null;
   tauBefore: number;
   tauAfter: number;
+  D: string;
   F: string;
   R: string;
   route_mode?: "fork";
@@ -658,6 +659,7 @@ function runProgramWithTraceInternal(
     const eventEnd = state.vm.H.length;
     applyEventLinks(state, state.vm.H.slice(eventStart, eventEnd));
     recorder?.record("token_exit", {
+      D: state.vm.D,
       F: state.vm.F,
       R: state.vm.R,
       KLength: state.vm.K.length,
@@ -673,6 +675,7 @@ function runProgramWithTraceInternal(
       shape_op: shapeOp,
       tauBefore,
       tauAfter: state.vm.tau,
+      D: state.vm.D,
       F: state.vm.F,
       R: state.vm.R,
       route_mode: state.vm.route_mode,

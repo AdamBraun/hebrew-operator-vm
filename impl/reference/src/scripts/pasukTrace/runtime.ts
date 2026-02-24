@@ -3,6 +3,7 @@ import path from "node:path";
 import { IterateTorahOptions, sanitizeText } from "../iterateTorah/runtime";
 import { DeepTraceEntry, PreparedTraceToken, runProgramWithDeepTrace } from "../../vm/vm";
 import { createInitialState, serializeState } from "../../state/state";
+import { OMEGA_ID } from "../../state/handles";
 import { VerseSnapshot, finalizeVerse } from "../../runtime/finalizeVerse";
 
 type RunLanguage = "he" | "en" | "both";
@@ -51,6 +52,11 @@ export type PasukTraceOptions = {
 export type WordSection = {
   word_index: number;
   surface: string;
+  incoming_D: string | null;
+  incoming_F: string | null;
+  outgoing_D: string | null;
+  outgoing_F: string | null;
+  exit_kind: "cut" | "glue" | "glue_maqqef";
   op_entries: DeepTraceEntry[];
   exit_boundary: DeepTraceEntry | null;
 };
@@ -321,38 +327,68 @@ function formatBoundaryLabel(entry: DeepTraceEntry | null): string {
   return `□${mode}`;
 }
 
+function toWordExitKind(entry: DeepTraceEntry | null): "cut" | "glue" | "glue_maqqef" {
+  const mode = entry?.boundary_mode ?? "hard";
+  if (mode === "glue") {
+    return "glue";
+  }
+  if (mode === "glue_maqqef") {
+    return "glue_maqqef";
+  }
+  return "cut";
+}
+
 export function buildWordSections(trace: DeepTraceEntry[]): WordSection[] {
   const sections: WordSection[] = [];
   let opEntries: DeepTraceEntry[] = [];
   let surface = "";
+  let incomingD: string | null = null;
+  let incomingF: string | null = null;
+  let lastBoundary: DeepTraceEntry | null = null;
+
+  const flushSection = (exitBoundary: DeepTraceEntry | null): void => {
+    if (opEntries.length === 0) {
+      return;
+    }
+    const firstOp = opEntries[0];
+    const lastOp = opEntries[opEntries.length - 1];
+    sections.push({
+      word_index: sections.length + 1,
+      surface,
+      incoming_D: incomingD ?? firstOp?.D ?? null,
+      incoming_F: incomingF ?? firstOp?.F ?? null,
+      outgoing_D: exitBoundary?.D ?? lastOp?.D ?? null,
+      outgoing_F: exitBoundary?.F ?? lastOp?.F ?? null,
+      exit_kind: toWordExitKind(exitBoundary),
+      op_entries: opEntries,
+      exit_boundary: exitBoundary
+    });
+    opEntries = [];
+    surface = "";
+    incomingD = null;
+    incomingF = null;
+  };
 
   for (const entry of trace) {
     if (entry.token === "□") {
-      if (opEntries.length > 0) {
-        sections.push({
-          word_index: sections.length + 1,
-          surface,
-          op_entries: opEntries,
-          exit_boundary: entry
-        });
-        opEntries = [];
-        surface = "";
+      if (opEntries.length === 0) {
+        lastBoundary = entry;
+      } else {
+        flushSection(entry);
+        lastBoundary = entry;
       }
       continue;
     }
 
+    if (opEntries.length === 0) {
+      incomingD = lastBoundary?.D ?? null;
+      incomingF = lastBoundary?.F ?? null;
+    }
     opEntries.push(entry);
     surface += entry.token_raw;
   }
 
-  if (opEntries.length > 0) {
-    sections.push({
-      word_index: sections.length + 1,
-      surface,
-      op_entries: opEntries,
-      exit_boundary: null
-    });
-  }
+  flushSection(null);
 
   return sections;
 }
@@ -407,6 +443,21 @@ function phaseSummaryLabel(entry: DeepTraceEntry): string {
     return "";
   }
   return `  [${labels.join("; ")}]`;
+}
+
+function formatHandleId(value: unknown): string {
+  const asText = typeof value === "string" ? value : "";
+  return asText.length > 0 ? asText : "-";
+}
+
+function formatVmDomainFocusLine(stateDump: Record<string, any>): string {
+  const vm = stateDump?.vm;
+  const omegaId =
+    vm && typeof vm === "object" ? formatHandleId((vm as Record<string, any>).OmegaId) : "-";
+  const fallbackOmega = omegaId === "-" ? OMEGA_ID : omegaId;
+  const domain = vm && typeof vm === "object" ? formatHandleId((vm as Record<string, any>).D) : "-";
+  const focus = vm && typeof vm === "object" ? formatHandleId((vm as Record<string, any>).F) : "-";
+  return `vm.D=${domain}; vm.F=${focus}; vm.OmegaId=${fallbackOmega}`;
 }
 
 function formatJoinInStatus(wordEntry: Record<string, any> | null): string {
@@ -629,9 +680,14 @@ function enrichScopeMembership(finalState: Record<string, any>): void {
 
 function withTraceFriendlyVmFlags(stateDump: Record<string, any>): Record<string, any> {
   const vm = stateDump?.vm;
-  if (vm && typeof vm.wordHasContent === "boolean") {
-    vm.has_data_payload = vm.wordHasContent;
-    delete vm.wordHasContent;
+  if (vm && typeof vm === "object") {
+    if (typeof vm.wordHasContent === "boolean") {
+      vm.has_data_payload = vm.wordHasContent;
+      delete vm.wordHasContent;
+    }
+    if (typeof vm.OmegaId !== "string" || vm.OmegaId.length === 0) {
+      vm.OmegaId = OMEGA_ID;
+    }
   }
   enrichScopeMembership(stateDump);
   return stateDump;
@@ -654,7 +710,13 @@ export function formatDeepTraceReport(args: {
   for (const section of args.sections) {
     lines.push("══════════════════════════════════════════════════════════════");
     lines.push(
-      ` WORD ${section.word_index} │ ${section.surface} │ exit=${formatBoundaryLabel(section.exit_boundary)}`
+      ` WORD ${section.word_index} │ ${section.surface} │ incoming_D=${formatHandleId(
+        section.incoming_D
+      )} incoming_F=${formatHandleId(section.incoming_F)} │ outgoing_D=${formatHandleId(
+        section.outgoing_D
+      )} outgoing_F=${formatHandleId(section.outgoing_F)} │ exit_kind=${section.exit_kind} │ exit=${formatBoundaryLabel(
+        section.exit_boundary
+      )}`
     );
     lines.push("══════════════════════════════════════════════════════════════");
     lines.push("");
@@ -738,6 +800,7 @@ export function formatDeepTraceReport(args: {
   lines.push("══════════════════════════════════════════════════════════════");
   lines.push(" FINAL DUMP STATE");
   lines.push("══════════════════════════════════════════════════════════════");
+  lines.push(` ${formatVmDomainFocusLine(args.finalDumpState)}`);
   lines.push(formatFullJson(args.finalDumpState));
   lines.push("");
 
@@ -745,6 +808,7 @@ export function formatDeepTraceReport(args: {
     lines.push("══════════════════════════════════════════════════════════════");
     lines.push(" POST-RESET RUNTIME STATE");
     lines.push("══════════════════════════════════════════════════════════════");
+    lines.push(` ${formatVmDomainFocusLine(args.postResetState)}`);
     lines.push(formatFullJson(args.postResetState));
     lines.push("");
   }

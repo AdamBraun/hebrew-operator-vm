@@ -213,6 +213,12 @@ function asFiniteNumber(value) {
   return null;
 }
 
+function asStringOrNull(value) {
+  if (value == null) return null;
+  const text = String(value).trim();
+  return text.length > 0 ? text : null;
+}
+
 function parseHandleTau(handleId) {
   const id = String(handleId ?? "");
   // Handle ids follow "<glyph>:<tau>:<ordinal>" (e.g. ב:15:1).
@@ -268,11 +274,21 @@ function normalizeWordSections(rawSections) {
       const surfaceRaw =
         rawSection?.surface ?? rawSection?.word ?? rawSection?.word_text ?? rawSection?.label;
       const surface = String(surfaceRaw ?? "").trim();
+      const incomingD = asStringOrNull(rawSection?.incoming_D ?? rawSection?.incomingD);
+      const incomingF = asStringOrNull(rawSection?.incoming_F ?? rawSection?.incomingF);
+      const outgoingD = asStringOrNull(rawSection?.outgoing_D ?? rawSection?.outgoingD);
+      const outgoingF = asStringOrNull(rawSection?.outgoing_F ?? rawSection?.outgoingF);
+      const exitKind = asStringOrNull(rawSection?.exit_kind ?? rawSection?.exitKind);
 
       return {
         sectionIndex,
         wordIndex,
         surface,
+        incomingD,
+        incomingF,
+        outgoingD,
+        outgoingF,
+        exitKind,
         taus: Array.from(tauSet.values()).sort((a, b) => a - b)
       };
     })
