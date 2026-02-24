@@ -137,6 +137,11 @@ type TraceRunResult = {
   verseSnapshots: VerseSnapshot[];
 };
 
+type LetterExecutionContext = {
+  isWordFinal: boolean;
+  wordText: string;
+};
+
 function shouldFinalizeAtBoundary(
   boundaryMode: SpaceBoundaryMode | undefined,
   boundaryRank: number | null | undefined
@@ -436,10 +441,21 @@ function applyShapeModifier(state: State, shapeOp: string): void {
   }
 }
 
+function wordStart(vm: State["vm"], inboundFocus: string, wordText: string): void {
+  vm.H.push({
+    type: "WORD_START",
+    tau: vm.tau,
+    data: {
+      inboundFocus,
+      wordText
+    }
+  });
+}
+
 function executeLetter(
   state: State,
   token: Token,
-  context: { isWordFinal: boolean },
+  context: LetterExecutionContext,
   recorder?: PhaseRecorder
 ): { read_op: string; shape_op: string | null } {
   const barrierAtEntry = !state.vm.wordHasContent ? state.vm.LeftContextBarrier : null;
@@ -493,6 +509,8 @@ function executeLetter(
 
   if (!state.vm.wordHasContent) {
     state.vm.wordEntryFocus = state.vm.F;
+    const inboundFocus = state.vm.wordEntryFocus ?? state.vm.F;
+    wordStart(state.vm, inboundFocus, context.wordText);
   }
   state.vm.wordHasContent = true;
   recorder?.record("word_entry_context", {
@@ -549,12 +567,32 @@ function prepareTokens(input: string): Token[] {
   return withLeading;
 }
 
+function buildWordTextByIndex(tokens: Token[]): Map<number, string> {
+  const wordTextByIndex = new Map<number, string>();
+  for (const token of tokens) {
+    if (token.letter === "□" || token.word_index === undefined) {
+      continue;
+    }
+    const current = wordTextByIndex.get(token.word_index) ?? "";
+    wordTextByIndex.set(token.word_index, `${current}${token.raw}`);
+  }
+  return wordTextByIndex;
+}
+
+function resolveWordText(token: Token, wordTextByIndex: Map<number, string>): string {
+  if (token.word_index === undefined) {
+    return token.raw;
+  }
+  return wordTextByIndex.get(token.word_index) ?? token.raw;
+}
+
 export function runProgram(
   input: string,
   state: State = createInitialState(),
   options: ProgramRunOptions = {}
 ): State {
   const tokens = prepareTokens(input);
+  const wordTextByIndex = buildWordTextByIndex(tokens);
   for (let index = 0; index < tokens.length; index += 1) {
     const eventStart = state.vm.H.length;
     const token = tokens[index];
@@ -577,7 +615,8 @@ export function runProgram(
       }
     } else {
       const isWordFinal = index === tokens.length - 1 || tokens[index + 1].letter === "□";
-      executeLetter(state, token, { isWordFinal });
+      const wordText = resolveWordText(token, wordTextByIndex);
+      executeLetter(state, token, { isWordFinal, wordText });
     }
     const eventEnd = state.vm.H.length;
     applyEventLinks(state, state.vm.H.slice(eventStart, eventEnd));
@@ -591,6 +630,7 @@ function runProgramWithTraceInternal(
   options: TraceRunOptions
 ): TraceRunResult {
   const tokens = prepareTokens(input);
+  const wordTextByIndex = buildWordTextByIndex(tokens);
   const trace: TraceEntry[] = [];
   const deepTrace: DeepTraceEntry[] = [];
   const verseSnapshots: VerseSnapshot[] = [];
@@ -666,7 +706,8 @@ function runProgramWithTraceInternal(
         pendingJoinCreated = state.vm.PendingJoin?.id;
       }
     } else {
-      const execution = executeLetter(state, token, { isWordFinal }, recorder);
+      const wordText = resolveWordText(token, wordTextByIndex);
+      const execution = executeLetter(state, token, { isWordFinal, wordText }, recorder);
       readOp = execution.read_op;
       shapeOp = execution.shape_op;
     }
