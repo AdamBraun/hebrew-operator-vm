@@ -197,9 +197,15 @@ function resetRuntimeState(state: State, opts: FinalizeVerseOptions): void {
   state.vm.K = [OMEGA_ID, BOT_ID];
   state.vm.E = [];
   state.vm.W = [];
-  state.vm.OStack_word = [];
+  const segmentOStack: State["vm"]["OStack_word"] = [];
+  state.vm.segment = {
+    segmentId: 0,
+    OStack: segmentOStack
+  };
+  state.vm.OStack_word = segmentOStack;
   state.vm.H = [];
   state.vm.A = [];
+  state.vm.aliasEdges = [];
   state.vm.activeConstruct = undefined;
   state.vm.wordHasContent = false;
   state.vm.wordLastSealedArtifact = undefined;

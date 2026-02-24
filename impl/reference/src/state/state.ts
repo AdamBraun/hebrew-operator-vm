@@ -11,6 +11,11 @@ export type Obligation = {
   tau_created: number;
 };
 
+export type SegmentContext = {
+  segmentId: number;
+  OStack: Obligation[];
+};
+
 export type VMEvent = { type: string; tau: number; data: any };
 
 export type PhraseChunk = {
@@ -52,9 +57,11 @@ export type VM = {
   K: string[];
   E: Array<{ F: string; lambda: "student" | "group" | "class"; D_frame: string }>;
   W: string[];
+  segment: SegmentContext;
   OStack_word: Obligation[];
   H: VMEvent[];
   A: string[];
+  aliasEdges: Array<{ from: string; to: string; type: "ALIAS" }>;
   activeConstruct?: string;
   wordHasContent: boolean;
   wordLastSealedArtifact?: string;
@@ -87,6 +94,7 @@ export function createInitialState(): State {
   const handles = new Map<string, Handle>();
   handles.set(OMEGA_ID, createHandle(OMEGA_ID, "scope"));
   handles.set(BOT_ID, createHandle(BOT_ID, "empty"));
+  const segmentOStack: Obligation[] = [];
 
   const vm: VM = {
     tau: 0,
@@ -96,9 +104,14 @@ export function createInitialState(): State {
     K: [OMEGA_ID, BOT_ID],
     E: [],
     W: [],
-    OStack_word: [],
+    segment: {
+      segmentId: 0,
+      OStack: segmentOStack
+    },
+    OStack_word: segmentOStack,
     H: [],
     A: [],
+    aliasEdges: [],
     activeConstruct: undefined,
     wordHasContent: false,
     wordLastSealedArtifact: undefined,
@@ -141,7 +154,9 @@ export function serializeState(state: State): Record<string, any> {
     ports: Array.from(envelope.ports).sort()
   });
   const {
+    aliasEdges: _aliasEdges,
     activeConstruct: _activeConstruct,
+    segment: _segment,
     wordLastSealedArtifact,
     wordEntryFocus: _wordEntryFocus,
     metaCounter,

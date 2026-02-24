@@ -23,6 +23,15 @@ export function assertStateInvariants(state: State): void {
   ensure(state.vm.D);
   ensure(state.vm.F);
   ensure(state.vm.R);
+  if (!Number.isInteger(state.vm.segment.segmentId) || state.vm.segment.segmentId < 0) {
+    throw new Error(`vm.segment.segmentId must be a non-negative integer`);
+  }
+  if (!Array.isArray(state.vm.segment.OStack)) {
+    throw new Error(`vm.segment.OStack must be an array`);
+  }
+  if (state.vm.segment.OStack !== state.vm.OStack_word) {
+    throw new Error(`vm.segment.OStack must alias vm.OStack_word`);
+  }
   state.vm.K.forEach(ensure);
   state.vm.W.forEach(ensure);
   state.vm.A.forEach(ensure);
@@ -113,5 +122,13 @@ export function assertStateInvariants(state: State): void {
   for (const link of state.links) {
     ensure(link.from);
     ensure(link.to);
+  }
+
+  for (const edge of state.vm.aliasEdges) {
+    ensure(edge.from);
+    ensure(edge.to);
+    if (edge.type !== "ALIAS") {
+      throw new Error(`Alias edge type must be ALIAS (got ${String(edge.type)})`);
+    }
   }
 }

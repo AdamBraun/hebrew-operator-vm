@@ -188,6 +188,9 @@ export function collectGarbage(state: State): void {
   }
 
   state.links = state.links.filter((link) => !removed.has(link.from) && !removed.has(link.to));
+  state.vm.aliasEdges = state.vm.aliasEdges.filter(
+    (edge) => !removed.has(edge.from) && !removed.has(edge.to)
+  );
 
   state.cont = new Set(
     Array.from(state.cont).filter((edge) => {
@@ -249,6 +252,7 @@ export function collectGarbage(state: State): void {
   state.vm.OStack_word = state.vm.OStack_word.filter(
     (obligation) => !removed.has(obligation.parent) && !removed.has(obligation.child)
   );
+  state.vm.segment.OStack = state.vm.OStack_word;
 
   for (const chunk of state.vm.H_phrase) {
     chunk.word_value = remapOrBot(chunk.word_value, removed);

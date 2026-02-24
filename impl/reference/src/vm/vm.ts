@@ -7,6 +7,7 @@ import { FinalizeVerseOptions, VerseSnapshot, finalizeVerse } from "../runtime/f
 import { BOT_ID, createHandle } from "../state/handles";
 import { hardenHandle } from "../state/policies";
 import { applyEventLinks } from "../state/eventLinks";
+import { addAliasEdge, aliasReachable, hasAliasEdge } from "../state/relations";
 import { State, createInitialState, serializeState } from "../state/state";
 import { assertOperatorDomainStable } from "./domainTransition";
 import { nextId } from "./ids";
@@ -141,6 +142,7 @@ type TraceRunResult = {
 type LetterExecutionContext = {
   isWordFinal: boolean;
   wordText: string;
+  prevBoundaryMode: SpaceBoundaryMode;
 };
 
 function shouldFinalizeAtBoundary(
@@ -148,6 +150,10 @@ function shouldFinalizeAtBoundary(
   boundaryRank: number | null | undefined
 ): boolean {
   return boundaryMode === "cut" && Number(boundaryRank ?? 1) >= 3;
+}
+
+function boundaryKeepsSegmentOpen(boundaryMode: SpaceBoundaryMode): boolean {
+  return boundaryMode === "glue" || boundaryMode === "glue_maqqef";
 }
 
 function finalizeAtSofPasuqBoundary(
@@ -460,18 +466,52 @@ function allocWordBaselineConstruct(state: State, wordText: string): string {
   return constructId;
 }
 
-function wordStart(state: State, inboundFocus: string, wordText: string): void {
+function resetWordLocalStateAtWordStart(state: State): void {
+  state.vm.wordHasContent = false;
+  state.vm.wordLastSealedArtifact = undefined;
+  state.vm.activeConstruct = undefined;
+  delete state.vm.route_mode;
+  delete state.vm.route_arity;
+}
+
+function beginWord(
+  state: State,
+  wordText: string,
+  prevBoundaryMode: SpaceBoundaryMode,
+  inboundFocusF0: string
+): void {
+  resetWordLocalStateAtWordStart(state);
+  if (!boundaryKeepsSegmentOpen(prevBoundaryMode)) {
+    state.vm.segment.segmentId += 1;
+    state.vm.segment.OStack = [];
+    state.vm.OStack_word = state.vm.segment.OStack;
+  } else if (state.vm.segment.OStack !== state.vm.OStack_word) {
+    state.vm.segment.OStack = state.vm.OStack_word;
+  }
+
   const C0 = allocWordBaselineConstruct(state, wordText);
   state.vm.activeConstruct = C0;
+  addAliasEdge(state, inboundFocusF0, C0);
   state.vm.F = C0;
+  const hasAliasForward = hasAliasEdge(state, inboundFocusF0, C0);
+  const hasAliasReverse = hasAliasEdge(state, C0, inboundFocusF0);
+  const aliasReachableForward = aliasReachable(state, inboundFocusF0, C0);
+  const aliasReachableReverse = aliasReachable(state, C0, inboundFocusF0);
   state.vm.H.push({
     type: "WORD_START",
     tau: state.vm.tau,
     data: {
-      inboundFocus,
+      inboundFocus: inboundFocusF0,
       wordText,
+      prevBoundaryMode,
+      segmentId: state.vm.segment.segmentId,
+      segmentOStackLength: state.vm.segment.OStack.length,
       activeConstruct: C0,
-      focus: state.vm.F
+      focus: state.vm.F,
+      hasAliasForward,
+      hasAliasReverse,
+      aliasReachableForward,
+      aliasReachableReverse
     }
   });
 }
@@ -534,16 +574,19 @@ function executeLetter(
   if (!state.vm.wordHasContent) {
     state.vm.wordEntryFocus = state.vm.F;
     const inboundFocus = state.vm.wordEntryFocus ?? state.vm.F;
-    wordStart(state, inboundFocus, context.wordText);
+    beginWord(state, context.wordText, context.prevBoundaryMode, inboundFocus);
   }
   state.vm.wordHasContent = true;
   recorder?.record("word_entry_context", {
     is_word_final: context.isWordFinal,
+    prev_boundary_mode: context.prevBoundaryMode,
     left_context_barrier: barrierAtEntry,
     pending_join_at_entry: pendingJoinAtEntry,
     pending_join_action: pendingJoinAction,
     pending_join_consumed: state.vm.lastPendingJoinConsumedId ?? null,
     entry_focus: state.vm.wordEntryFocus ?? null,
+    segment_id: state.vm.segment.segmentId,
+    segment_ostack_length: state.vm.segment.OStack.length,
     active_construct: state.vm.activeConstruct ?? null,
     focus: state.vm.F
   });
@@ -619,17 +662,19 @@ export function runProgram(
 ): State {
   const tokens = prepareTokens(input);
   const wordTextByIndex = buildWordTextByIndex(tokens);
+  let prevBoundaryMode: SpaceBoundaryMode = "hard";
   for (let index = 0; index < tokens.length; index += 1) {
     const eventStart = state.vm.H.length;
     const token = tokens[index];
     if (token.letter === "□") {
-      const boundaryMode = token.boundary?.mode;
+      const boundaryMode = token.boundary?.mode ?? "hard";
       const boundaryRank = token.boundary?.rank;
       applySpace(state, {
         mode: boundaryMode,
         rank: boundaryRank,
         leftTrope: token.boundary?.left_trope ?? null
       });
+      prevBoundaryMode = boundaryMode;
       if (options.finalizeAtVerseEnd && shouldFinalizeAtBoundary(boundaryMode, boundaryRank)) {
         finalizeAtSofPasuqBoundary(state, {
           tokenIndex: index,
@@ -642,7 +687,7 @@ export function runProgram(
     } else {
       const isWordFinal = index === tokens.length - 1 || tokens[index + 1].letter === "□";
       const wordText = resolveWordText(token, wordTextByIndex);
-      executeLetter(state, token, { isWordFinal, wordText });
+      executeLetter(state, token, { isWordFinal, wordText, prevBoundaryMode });
     }
     const eventEnd = state.vm.H.length;
     applyEventLinks(state, state.vm.H.slice(eventStart, eventEnd));
@@ -660,6 +705,7 @@ function runProgramWithTraceInternal(
   const trace: TraceEntry[] = [];
   const deepTrace: DeepTraceEntry[] = [];
   const verseSnapshots: VerseSnapshot[] = [];
+  let prevBoundaryMode: SpaceBoundaryMode = "hard";
   const preparedTokens: PreparedTraceToken[] = tokens.map((token, index) => ({
     index,
     token: token.letter,
@@ -731,9 +777,15 @@ function runProgramWithTraceInternal(
       if (continuation) {
         pendingJoinCreated = state.vm.PendingJoin?.id;
       }
+      prevBoundaryMode = boundaryMode;
     } else {
       const wordText = resolveWordText(token, wordTextByIndex);
-      const execution = executeLetter(state, token, { isWordFinal, wordText }, recorder);
+      const execution = executeLetter(
+        state,
+        token,
+        { isWordFinal, wordText, prevBoundaryMode },
+        recorder
+      );
       readOp = execution.read_op;
       shapeOp = execution.shape_op;
     }

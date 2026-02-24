@@ -49,9 +49,11 @@ const KNOWN_VM_KEYS = new Set([
   "K",
   "E",
   "W",
+  "segment",
   "OStack_word",
   "H",
   "A",
+  "aliasEdges",
   "activeConstruct",
   "wordHasContent",
   "wordLastSealedArtifact",
@@ -93,10 +95,20 @@ export function validateBaseline(state: State, opts: ValidateBaselineOptions = {
   assertArrayEmpty(errors, state.vm.E, "E", "vm");
   assertArrayEmpty(errors, state.vm.OStack_word, "OStack_word", "vm");
   assertArrayEmpty(errors, state.vm.H, "H", "vm");
+  assertArrayEmpty(errors, state.vm.aliasEdges, "aliasEdges", "vm");
   assertArrayEmpty(errors, state.vm.H_phrase, "H_phrase", "vm");
   assertArrayEmpty(errors, state.vm.H_committed, "H_committed", "vm");
   assertArrayEmpty(errors, state.vm.phraseWordValues, "phraseWordValues", "vm");
   assertArrayEmpty(errors, state.vm.phraseChunkIds, "phraseChunkIds", "vm");
+  if (!state.vm.segment || typeof state.vm.segment !== "object") {
+    errors.push("vm.segment expected object");
+  } else {
+    assertEquals(errors, state.vm.segment.segmentId, 0, "vm.segment.segmentId");
+    assertArrayEmpty(errors, state.vm.segment.OStack, "OStack", "vm.segment");
+    if (state.vm.segment.OStack !== state.vm.OStack_word) {
+      errors.push("vm.segment.OStack expected to alias vm.OStack_word");
+    }
+  }
 
   if (state.vm.PendingJoin !== undefined) {
     errors.push("vm.PendingJoin expected undefined");

@@ -111,6 +111,7 @@ function scrubFlushedMemZoneRefs(state: State, removedHandles: Set<string>): voi
   state.vm.OStack_word = state.vm.OStack_word.filter(
     (obligation) => !isRemoved(obligation.parent) && !isRemoved(obligation.child)
   );
+  state.vm.segment.OStack = state.vm.OStack_word;
 
   if (isRemoved(state.vm.F)) {
     state.vm.F = state.vm.D;
@@ -174,6 +175,9 @@ function scrubFlushedMemZoneRefs(state: State, removedHandles: Set<string>): voi
     })
   );
   state.links = state.links.filter((link) => !isRemoved(link.from) && !isRemoved(link.to));
+  state.vm.aliasEdges = state.vm.aliasEdges.filter(
+    (edge) => !isRemoved(edge.from) && !isRemoved(edge.to)
+  );
   state.boundaries = state.boundaries.filter(
     (boundary) =>
       !isRemoved(boundary.id) && !isRemoved(boundary.inside) && !isRemoved(boundary.outside)
@@ -190,6 +194,7 @@ function flushMemZonesAtSofPasuq(state: State): void {
   state.vm.OStack_word = state.vm.OStack_word.filter(
     (obligation) => obligation.kind !== "MEM_ZONE"
   );
+  state.vm.segment.OStack = state.vm.OStack_word;
 
   const removedHandles = new Set<string>();
   const zoneIds = Array.from(records.keys()).sort(sortIdsStable);
@@ -507,6 +512,7 @@ function applyHard(state: State, transition: BoundaryTransitionArgs): void {
   settleWordBoundaryState(state);
   baselineReset(state);
   state.vm.OStack_word = [];
+  state.vm.segment.OStack = state.vm.OStack_word;
   collectGarbage(state);
 }
 
@@ -577,6 +583,7 @@ function applyCut(
   settleWordBoundaryState(state);
   baselineReset(state);
   state.vm.OStack_word = [];
+  state.vm.segment.OStack = state.vm.OStack_word;
 
   if (rank >= 2) {
     if (state.vm.E.length > 0) {
