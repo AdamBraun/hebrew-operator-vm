@@ -8,6 +8,14 @@ function findWordCluster(dot: string, label: string): string | null {
   return clusters.find((cluster) => cluster.includes(`label="${label}";`)) ?? null;
 }
 
+function expectDomainAndFocusEdges(dot: string): void {
+  const lines = dot.split(/\r?\n/u);
+  const domainEdge = lines.find((line) => line.includes("domain") && line.includes("penwidth=4"));
+  const focusEdge = lines.find((line) => line.includes("focus") && line.includes("penwidth=4"));
+  expect(domainEdge).toBeTruthy();
+  expect(focusEdge).toBeTruthy();
+}
+
 describe("pasuk graph renderer", () => {
   it("always renders thick domain and focus edges and reports D/F in legend", async () => {
     const { renderDotFromTraceJson } = await import("../../scripts/render/pasukGraph.mjs");
@@ -43,6 +51,7 @@ describe("pasuk graph renderer", () => {
     expect(dot).toContain('F_marker -> "Ω"');
     expect(dot).toContain("focus");
     expect(dot).toContain("D=Ω | F=Ω");
+    expectDomainAndFocusEdges(dot);
   });
 
   it("force-keeps domain/focus target nodes under orphan pruning", async () => {
@@ -77,6 +86,90 @@ describe("pasuk graph renderer", () => {
     expect(dot).toContain("hF [");
     expect(dot).toContain('"Ω" -> hD');
     expect(dot).toContain("F_marker -> hF");
+    expectDomainAndFocusEdges(dot);
+  });
+
+  it("renders thick domain/focus edges across payload shapes and defaults", async () => {
+    const { renderDotFromTraceJson } = await import("../../scripts/render/pasukGraph.mjs");
+
+    const cases: Array<{
+      payload: Record<string, unknown>;
+      opts: Record<string, unknown>;
+    }> = [
+      {
+        payload: {
+          ref_key: "Genesis/1/3",
+          cleaned_text: "א",
+          vm: {
+            tau: 3,
+            D: "Ω",
+            F: "Ω",
+            handles: [
+              { id: "Ω", kind: "scope", meta: {} },
+              { id: "⊥", kind: "empty", meta: {} },
+              { id: "א:3:1", kind: "scope", meta: {} }
+            ],
+            links: [],
+            boundaries: []
+          }
+        },
+        opts: {
+          layout: "plain",
+          prune: "orphans",
+          legend: false,
+          prettyIds: false
+        }
+      },
+      {
+        payload: {
+          ref_key: "Genesis/1/4",
+          cleaned_text: "א",
+          vm: {
+            tau: 4,
+            handles: [
+              { id: "Ω", kind: "scope", meta: {} },
+              { id: "⊥", kind: "empty", meta: {} },
+              { id: "א:4:1", kind: "scope", meta: {} }
+            ],
+            links: [],
+            boundaries: []
+          }
+        },
+        opts: {
+          layout: "plain",
+          prune: "none",
+          legend: false,
+          prettyIds: false,
+          mode: "summary"
+        }
+      },
+      {
+        payload: {
+          ref_key: "Genesis/1/5",
+          final_state: {
+            vm: { tau: 5, D: "Ω", F: "Ω" },
+            handles: [
+              { id: "Ω", kind: "scope", meta: {} },
+              { id: "⊥", kind: "empty", meta: {} },
+              { id: "א:5:1", kind: "scope", meta: {} }
+            ],
+            links: [],
+            boundaries: []
+          }
+        },
+        opts: {
+          layout: "boot",
+          prune: "orphans",
+          legend: true,
+          prettyIds: true
+        }
+      }
+    ];
+
+    for (const testCase of cases) {
+      const dot = renderDotFromTraceJson(testCase.payload, testCase.opts);
+      expectDomainAndFocusEdges(dot);
+    }
   });
 
   it("clusters by origin tau from id, not mutable word metadata", async () => {

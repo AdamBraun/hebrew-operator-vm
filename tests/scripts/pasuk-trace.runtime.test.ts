@@ -175,6 +175,63 @@ describe("pasuk trace runtime", () => {
     expect(typeof wordContext?.pending_join_at_entry?.id).toBe("string");
   });
 
+  it("cut boundaries reset next-word focus to the next-word domain", async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-cut-focus-reset-"));
+    const outJsonPath = path.join(tmpDir, "trace.json");
+    const outReportPath = path.join(tmpDir, "trace.txt");
+
+    const opts: PasukTraceOptions = {
+      input: path.join(tmpDir, "unused.json"),
+      ref: "Genesis/1/1",
+      text: "א֑ ב",
+      lang: "he",
+      normalizeFinals: false,
+      keepTeamim: true,
+      allowRuntimeErrors: false,
+      includeSnapshots: false,
+      outJson: outJsonPath,
+      outReport: outReportPath,
+      printReport: false
+    };
+
+    const result = await runPasukTrace(opts);
+    expect(result.word_sections.length).toBe(2);
+    expect(result.word_sections[0]?.exit_kind).toBe("cut");
+    expect(result.word_sections[1]?.incoming_F).toBe(result.word_sections[1]?.incoming_D);
+  });
+
+  it("keeps D immutable across operator steps within each word", async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-domain-stability-"));
+    const outJsonPath = path.join(tmpDir, "trace.json");
+    const outReportPath = path.join(tmpDir, "trace.txt");
+
+    const opts: PasukTraceOptions = {
+      input: path.join(tmpDir, "unused.json"),
+      ref: "Genesis/1/1",
+      text: "אב גדה",
+      lang: "he",
+      normalizeFinals: false,
+      keepTeamim: false,
+      allowRuntimeErrors: false,
+      includeSnapshots: false,
+      outJson: outJsonPath,
+      outReport: outReportPath,
+      printReport: false
+    };
+
+    const result = await runPasukTrace(opts);
+    expect(result.word_sections.length).toBe(2);
+
+    for (const section of result.word_sections) {
+      const [firstEntry] = section.op_entries;
+      expect(firstEntry).toBeDefined();
+      expect(section.incoming_D).toBe(firstEntry?.D);
+      for (const entry of section.op_entries) {
+        expect(entry.D).toBe(firstEntry?.D);
+      }
+    }
+  });
+
   it("collects sequential verse snapshots when multiple sof pasuq markers are present", async () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-multi-verse-"));
     const outJsonPath = path.join(tmpDir, "trace.json");
