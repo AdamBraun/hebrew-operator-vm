@@ -1,8 +1,9 @@
 import { SpaceBoundaryMode, Trope } from "../compile/types";
+import { OMEGA_ID } from "../state/handles";
 import { State } from "../state/state";
 import { RuntimeError } from "./errors";
 
-export type BoundaryExitKind = SpaceBoundaryMode;
+export type BoundaryExitKind = SpaceBoundaryMode | "gc_repair" | "runtime_reset";
 
 export type BoundaryTransitionArgs = {
   exitKind: BoundaryExitKind;
@@ -31,6 +32,9 @@ function resolveTropeDrivenDomain(
 }
 
 function computeNextDomain(state: State, args: BoundaryTransitionArgs): string {
+  if (args.exitKind === "gc_repair" || args.exitKind === "runtime_reset") {
+    return OMEGA_ID;
+  }
   const tropeDomain = resolveTropeDrivenDomain(state.vm.D, args);
   if (tropeDomain) {
     return tropeDomain;
@@ -52,7 +56,7 @@ export function assertOperatorDomainStable(
   if (!SHOULD_ENFORCE_OPERATOR_DOMAIN_INVARIANT) {
     return;
   }
-  if (state.vm.D === args.before) {
+  if (Object.is(state.vm.D, args.before)) {
     return;
   }
   throw new RuntimeError(

@@ -7,11 +7,14 @@ import { LetterMeta } from "@ref/letters/types";
 describe("select underflow", () => {
   it("reflexive_ok duplicates last operand when required missing", () => {
     const state = createInitialState();
-    state.vm.K = [];
-    state.vm.W = [];
-    state.vm.F = "f1";
-    state.vm.R = "r1";
-    state.vm.D = "omega";
+    state.vm = {
+      ...state.vm,
+      K: [],
+      W: [],
+      F: "f1",
+      R: "r1",
+      D: "omega"
+    };
 
     const meta: LetterMeta = {
       letter: "X",
@@ -28,11 +31,14 @@ describe("select underflow", () => {
 
   it("fills ⊥ when missing and reflexive is false", () => {
     const state = createInitialState();
-    state.vm.K = [];
-    state.vm.W = [];
-    state.vm.F = "f1";
-    state.vm.R = "r1";
-    state.vm.D = "omega";
+    state.vm = {
+      ...state.vm,
+      K: [],
+      W: [],
+      F: "f1",
+      R: "r1",
+      D: "omega"
+    };
 
     const meta: LetterMeta = {
       letter: "X",

@@ -341,7 +341,7 @@ function executeReadRail(
   context: { isWordFinal: boolean },
   recorder?: PhaseRecorder
 ): void {
-  const domainBefore = state.vm.D;
+  const D_before = state.vm.D;
   const selectResult = op.select(state);
   recorder?.record("select", {
     read_op: op.meta.letter,
@@ -409,11 +409,6 @@ function executeReadRail(
     }
   }
 
-  assertOperatorDomainStable(sealResult.S, {
-    before: domainBefore,
-    operator: op.meta.letter
-  });
-
   const sealedHandle = sealResult.S.handles.get(sealed);
   if (sealedHandle?.kind === "artifact") {
     sealResult.S.vm.wordLastSealedArtifact = sealed;
@@ -427,6 +422,10 @@ function executeReadRail(
     R: sealResult.S.vm.R,
     KLength: sealResult.S.vm.K.length,
     OStackLength: sealResult.S.vm.OStack_word.length
+  });
+  assertOperatorDomainStable(sealResult.S, {
+    before: D_before,
+    operator: op.meta.letter
   });
 }
 

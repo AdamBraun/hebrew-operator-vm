@@ -1,5 +1,6 @@
 import { BOT_ID, OMEGA_ID, Handle, createHandle } from "../state/handles";
 import { State, serializeState } from "../state/state";
+import { applyBoundaryTransition } from "../vm/domainTransition";
 import { validateBaseline } from "./validateBaseline";
 
 export type FinalizeVerseOptions = {
@@ -190,7 +191,7 @@ function resetRuntimeState(state: State, opts: FinalizeVerseOptions): void {
     opts.preserveCounters && state.vm.metaCounter ? { ...state.vm.metaCounter } : undefined;
 
   state.vm.tau = 0;
-  state.vm.D = OMEGA_ID;
+  applyBoundaryTransition(state, { exitKind: "runtime_reset" });
   state.vm.F = OMEGA_ID;
   state.vm.R = BOT_ID;
   state.vm.K = [OMEGA_ID, BOT_ID];

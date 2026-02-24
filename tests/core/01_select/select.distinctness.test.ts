@@ -7,11 +7,14 @@ import { RuntimeError } from "@ref/vm/errors";
 describe("select distinctness", () => {
   it("distinct_required enforces unique ids when possible", () => {
     const state = createInitialState();
-    state.vm.K = ["k1", "k2"];
-    state.vm.W = ["k2"];
-    state.vm.F = "f1";
-    state.vm.R = "r1";
-    state.vm.D = "omega";
+    state.vm = {
+      ...state.vm,
+      K: ["k1", "k2"],
+      W: ["k2"],
+      F: "f1",
+      R: "r1",
+      D: "omega"
+    };
 
     const meta: LetterMeta = {
       letter: "X",
@@ -29,11 +32,14 @@ describe("select distinctness", () => {
 
   it("allows duplicates across buckets", () => {
     const state = createInitialState();
-    state.vm.K = ["k1"];
-    state.vm.W = ["k1"];
-    state.vm.F = "f1";
-    state.vm.R = "r1";
-    state.vm.D = "omega";
+    state.vm = {
+      ...state.vm,
+      K: ["k1"],
+      W: ["k1"],
+      F: "f1",
+      R: "r1",
+      D: "omega"
+    };
 
     const meta: LetterMeta = {
       letter: "X",
@@ -50,11 +56,14 @@ describe("select distinctness", () => {
 
   it("throws when distinctness cannot be met within a bucket", () => {
     const state = createInitialState();
-    state.vm.K = ["k1", "k1"];
-    state.vm.W = [];
-    state.vm.F = "k1";
-    state.vm.R = "k1";
-    state.vm.D = "k1";
+    state.vm = {
+      ...state.vm,
+      K: ["k1", "k1"],
+      W: [],
+      F: "k1",
+      R: "k1",
+      D: "k1"
+    };
 
     const meta: LetterMeta = {
       letter: "X",

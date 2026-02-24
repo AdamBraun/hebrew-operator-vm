@@ -1,5 +1,6 @@
 import { BOT_ID, OMEGA_ID } from "../state/handles";
 import { State } from "../state/state";
+import { applyBoundaryTransition } from "./domainTransition";
 
 type HandleAdjacency = Map<string, Set<string>>;
 
@@ -211,7 +212,7 @@ export function collectGarbage(state: State): void {
     state.vm.R = BOT_ID;
   }
   if (removed.has(state.vm.D)) {
-    state.vm.D = OMEGA_ID;
+    applyBoundaryTransition(state, { exitKind: "gc_repair" });
   }
 
   state.vm.K = state.vm.K.map((id) => remapOrBot(id, removed));

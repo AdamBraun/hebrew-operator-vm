@@ -6,11 +6,14 @@ import { LetterMeta } from "@ref/letters/types";
 describe("select order", () => {
   it("consumes required operands in order K, W, F, R, Ω", () => {
     const state = createInitialState();
-    state.vm.K = ["k1", "k2"];
-    state.vm.W = ["w1", "w2"];
-    state.vm.F = "f1";
-    state.vm.R = "r1";
-    state.vm.D = "omega";
+    state.vm = {
+      ...state.vm,
+      K: ["k1", "k2"],
+      W: ["w1", "w2"],
+      F: "f1",
+      R: "r1",
+      D: "omega"
+    };
 
     const meta: LetterMeta = {
       letter: "X",

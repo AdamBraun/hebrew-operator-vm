@@ -149,7 +149,7 @@ function executeReadRail(
   op: LetterOp,
   context: ExecuteContext
 ): void {
-  const domainBefore = state.vm.D;
+  const D_before = state.vm.D;
   const selectResult = op.select(state);
   const ops = applyRosh(bundle.runtime, selectResult.ops);
   const letterMode = resolveLetterMode(bundle.runtime, context.isWordFinal);
@@ -175,11 +175,6 @@ function executeReadRail(
     }
   }
 
-  assertOperatorDomainStable(sealResult.S, {
-    before: domainBefore,
-    operator: op.meta.letter
-  });
-
   const sealedHandle = sealResult.S.handles.get(sealed);
   if (sealedHandle?.kind === "artifact") {
     sealResult.S.vm.wordLastSealedArtifact = sealed;
@@ -188,6 +183,10 @@ function executeReadRail(
   sealResult.S.vm.K.push(sealed);
   sealResult.S.vm.F = sealed;
   sealResult.S.vm.R = sealResult.r;
+  assertOperatorDomainStable(sealResult.S, {
+    before: D_before,
+    operator: op.meta.letter
+  });
 }
 
 function applyShape(runtime: CompiledTokenRuntime, state: State): void {
