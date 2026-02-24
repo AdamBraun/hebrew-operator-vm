@@ -365,29 +365,33 @@ function buildNodeLabel(handle, mode) {
 
 export const THEMES = {
   light: {
-    bg: "#f8f9fa",
-    node: "#ffffff",
-    text: "#111111",
-    border: "#444444",
-    edge: "#555555",
+    // Scroll/parchment palette (blend of Palette A/C + restrained accents).
+    bg: "#F7EED6",
+    node: "#F2E6C8",
+    text: "#1C1B16",
+    border: "#9B7A4F",
+    edge: "#3A352B",
 
-    boundaryFill: "#e3f2fd",
-    boundaryBorder: "#1e88e5",
+    boundaryFill: "#E6D2A9",
+    boundaryBorder: "#9B7A4F",
 
-    structuredFill: "#f3e5f5",
-    structuredBorder: "#6a1b9a",
+    structuredFill: "#FAF2DA",
+    structuredBorder: "#A88455",
 
-    rulePublicFill: "#e8f5e9",
-    rulePublicBorder: "#2e7d32",
+    rulePublicFill: "#E7D3A6",
+    rulePublicBorder: "#B08D57",
 
-    finalizeFill: "#fce4ec",
-    finalizeBorder: "#ad1457",
+    finalizeFill: "#EAD7AF",
+    finalizeBorder: "#7B1E16",
 
-    omegaFill: "#fff9c4",
-    omegaBorder: "#f9a825",
+    omegaFill: "#B08D57",
+    omegaBorder: "#8C6A3D",
 
-    bottomFill: "#ffebee",
-    bottomBorder: "#c62828"
+    bottomFill: "#D7C08F",
+    bottomBorder: "#5A3C22",
+
+    wordFill: "#E6D2A9",
+    wordBorder: "#9B7A4F"
   },
 
   dark: {
@@ -413,7 +417,10 @@ export const THEMES = {
     omegaBorder: "#ffee58",
 
     bottomFill: "#2a0f0f",
-    bottomBorder: "#ef5350"
+    bottomBorder: "#ef5350",
+
+    wordFill: "#2b1432",
+    wordBorder: "#8e44ad"
   },
 
   kabbalah: {
@@ -439,7 +446,10 @@ export const THEMES = {
     omegaBorder: "#ffeb3b",
 
     bottomFill: "#2a0a0a",
-    bottomBorder: "#ef5350"
+    bottomBorder: "#ef5350",
+
+    wordFill: "#2b1432",
+    wordBorder: "#8e44ad"
   }
 };
 
@@ -547,8 +557,8 @@ export function renderVmDot(vm, opts = {}) {
     wordsMode = layout === "boot" ? "cluster" : "off", // off | cluster | label
     shinMode = layout === "boot" ? "collapse" : "expand", // expand | collapse
     shinPortEdges = false,
-    wordFill = "#f3e5f5",
-    wordBorder = "#6a1b9a",
+    wordFill = null,
+    wordBorder = null,
     prune = "orphans", // orphans | none
     pruneKeepKinds = "",
     pruneKeepIds = "",
@@ -556,6 +566,8 @@ export function renderVmDot(vm, opts = {}) {
   } = opts;
 
   const t = THEMES[theme] ?? THEMES.light;
+  const resolvedWordFill = wordFill ?? t.wordFill ?? "#f3e5f5";
+  const resolvedWordBorder = wordBorder ?? t.wordBorder ?? "#6a1b9a";
 
   const handles = normalizeHandles(vm);
   const links = normalizeLinks(vm);
@@ -715,7 +727,8 @@ export function renderVmDot(vm, opts = {}) {
     dot += `  legend [${attrs({
       label: dotLabel(`${refLine}\nHebrew Calculus VM - Final State\n${tail}`),
       shape: "plaintext",
-      fillcolor: dotId("#ffffff"),
+      fillcolor: dotId(t.node),
+      fontcolor: dotId(t.text),
       fontsize: 14
     })}];\n\n`;
   }
@@ -771,8 +784,8 @@ export function renderVmDot(vm, opts = {}) {
       dot += `  subgraph cluster_word_${clusterN++} {\n`;
       dot += `    label=${dotLabel(clusterLabel)};\n`;
       dot += `    style=${dotId("filled")};\n`;
-      dot += `    fillcolor=${dotId(wordFill)};\n`;
-      dot += `    color=${dotId(wordBorder)};\n`;
+      dot += `    fillcolor=${dotId(resolvedWordFill)};\n`;
+      dot += `    color=${dotId(resolvedWordBorder)};\n`;
       for (const nodeRefId of nodes) dot += `    ${nodeRefId};\n`;
       dot += "  }\n\n";
     }
