@@ -1,22 +1,17 @@
 #!/bin/sh
 set -e
 
-staged_files="$(git diff --cached --name-only --diff-filter=ACMR)"
-
-if [ -z "$staged_files" ]; then
+if [ -z "$(git diff --cached --name-only --diff-filter=ACMR)" ]; then
   exit 0
 fi
 
-IFS='
-'
-set -f
-# Split only on newlines so paths with spaces are preserved.
-set -- $staged_files
-set +f
-unset IFS
+# Use a NUL-delimited staged file list and process in chunks to avoid shell arg limits.
+staged_list_file="$(mktemp)"
+trap 'rm -f "$staged_list_file"' EXIT INT TERM
+git diff --cached --name-only --diff-filter=ACMR -z > "$staged_list_file"
 
-npm exec -- prettier --ignore-unknown --write -- "$@"
-git add -- "$@"
+xargs -0 -n 200 npm exec -- prettier --ignore-unknown --write -- < "$staged_list_file"
+xargs -0 -n 200 git add -- < "$staged_list_file"
 
 if npm run artifacts:needs-update; then
   :
