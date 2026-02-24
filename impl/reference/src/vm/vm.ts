@@ -466,12 +466,38 @@ function allocWordBaselineConstruct(state: State, wordText: string): string {
   return constructId;
 }
 
+type WordLocalRuntimeBag = {
+  text?: string;
+  exports?: unknown[];
+  snapshots?: unknown[];
+  localCounters?: Record<string, unknown>;
+};
+
+function wordLocalRuntimeBag(state: State): WordLocalRuntimeBag | null {
+  const candidate = (state.vm as unknown as { word?: unknown }).word;
+  if (!candidate || typeof candidate !== "object") {
+    return null;
+  }
+  return candidate as WordLocalRuntimeBag;
+}
+
 function resetWordLocalStateAtWordStart(state: State): void {
   state.vm.wordHasContent = false;
   state.vm.wordLastSealedArtifact = undefined;
   state.vm.activeConstruct = undefined;
   delete state.vm.route_mode;
   delete state.vm.route_arity;
+  const word = wordLocalRuntimeBag(state);
+  if (!word) {
+    return;
+  }
+  if (Array.isArray(word.exports)) {
+    word.exports = [];
+  }
+  if (Array.isArray(word.snapshots)) {
+    word.snapshots = [];
+  }
+  word.localCounters = {};
 }
 
 function beginWord(
@@ -481,6 +507,10 @@ function beginWord(
   inboundFocusF0: string
 ): void {
   resetWordLocalStateAtWordStart(state);
+  const word = wordLocalRuntimeBag(state);
+  if (word) {
+    word.text = wordText;
+  }
   const segmentReset = !boundaryKeepsSegmentOpen(prevBoundaryMode);
   if (segmentReset) {
     state.vm.segment.segmentId += 1;
@@ -916,4 +946,15 @@ export function runProgramWithDeepTrace(
     preparedTokens: result.preparedTokens,
     verseSnapshots: result.verseSnapshots
   };
+}
+
+export function beginWordForTest(
+  state: State,
+  args: {
+    wordText: string;
+    prevBoundaryMode: SpaceBoundaryMode;
+    inboundFocusF0?: string;
+  }
+): void {
+  beginWord(state, args.wordText, args.prevBoundaryMode, args.inboundFocusF0 ?? state.vm.F);
 }
