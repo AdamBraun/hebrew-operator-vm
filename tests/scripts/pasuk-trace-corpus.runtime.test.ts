@@ -54,6 +54,7 @@ describe("pasuk trace corpus runtime", () => {
       "--theme=light",
       "--mode=full",
       "--words=cluster",
+      "--concurrency=7",
       "--verify-existing",
       "--no-print-progress"
     ]);
@@ -67,8 +68,14 @@ describe("pasuk trace corpus runtime", () => {
     expect(parsed.graphLayout).toBe("boot");
     expect(parsed.graphPrettyIds).toBe(true);
     expect(parsed.emitDot).toBe(true);
+    expect(parsed.concurrency).toBe(7);
     expect(parsed.verifyExisting).toBe(true);
     expect(parsed.printProgress).toBe(false);
+  });
+
+  it("defaults concurrency to 50", () => {
+    const parsed = parseArgs([]);
+    expect(parsed.concurrency).toBe(50);
   });
 
   it("collects refs with book + ref window filters", async () => {

@@ -91,6 +91,7 @@ npm run pasuk-trace-corpus -- \
   --lang=he \
   --keep-teamim \
   --include-snapshots \
+  --concurrency=50 \
   --layout=boot \
   --pretty-ids \
   --boundary=cluster \

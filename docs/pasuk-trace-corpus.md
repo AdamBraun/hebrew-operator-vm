@@ -31,6 +31,7 @@ npm run pasuk-trace-corpus -- \
   --lang=he \
   --keep-teamim \
   --include-snapshots \
+  --concurrency=50 \
   --layout=boot \
   --pretty-ids \
   --boundary=cluster \
@@ -42,6 +43,7 @@ Defaults are already aligned with the command above for:
 - `--lang=he`
 - `--keep-teamim`
 - `--include-snapshots`
+- `--concurrency=50`
 - `--layout=boot`
 - `--pretty-ids`
 - `--boundary=cluster`

@@ -133,6 +133,7 @@ export type PasukTraceCorpusOptions = {
   fromRef: string;
   toRef: string;
   limit: number;
+  concurrency: number;
   progressEvery: number;
   printProgress: boolean;
   emitDot: boolean;
@@ -207,6 +208,7 @@ type CorpusManifest = {
     from_ref: string;
     to_ref: string;
     limit: number;
+    concurrency: number;
     emit_dot: boolean;
     graph: {
       theme: GraphTheme;
@@ -239,6 +241,7 @@ type CorpusManifest = {
 
 const DEFAULT_INPUT = path.resolve(process.cwd(), "data", "torah.json");
 const DEFAULT_OUT_DIR = path.resolve(process.cwd(), "outputs", "pasuk-trace-corpus", "latest");
+const DEFAULT_CONCURRENCY = 50;
 const DEFAULT_PROGRESS_EVERY = 25;
 const DOT_SCHEMA = 1;
 const REPORT_SCHEMA = 1;
@@ -264,7 +267,7 @@ function printHelp(): void {
     "  node scripts/pasuk-trace-corpus.mjs [--show-post-reset|--hide-post-reset] [--skip-existing] [--verify-existing] [--repair-existing]"
   );
   console.log(
-    "  node scripts/pasuk-trace-corpus.mjs [--book=Genesis --book=Exodus] [--from-ref=Book/Chapter/Verse] [--to-ref=Book/Chapter/Verse] [--limit=N]"
+    "  node scripts/pasuk-trace-corpus.mjs [--book=Genesis --book=Exodus] [--from-ref=Book/Chapter/Verse] [--to-ref=Book/Chapter/Verse] [--limit=N] [--concurrency=N]"
   );
   console.log(
     "  node scripts/pasuk-trace-corpus.mjs [--layout=boot|plain] [--boundary=auto|cluster|node|both] [--pretty-ids|--no-pretty-ids]"
@@ -289,6 +292,7 @@ function printHelp(): void {
   console.log("  --layout=boot");
   console.log("  --boundary=cluster");
   console.log("  --pretty-ids=true");
+  console.log(`  --concurrency=${DEFAULT_CONCURRENCY}`);
   console.log(`  --progress-every=${DEFAULT_PROGRESS_EVERY}`);
 }
 
@@ -783,6 +787,7 @@ export function parseArgs(argv: string[]): PasukTraceCorpusOptions {
     fromRef: "",
     toRef: "",
     limit: 0,
+    concurrency: DEFAULT_CONCURRENCY,
     progressEvery: DEFAULT_PROGRESS_EVERY,
     printProgress: true,
     emitDot: true,
@@ -853,6 +858,13 @@ export function parseArgs(argv: string[]): PasukTraceCorpusOptions {
     if (limitOpt) {
       opts.limit = parsePositiveInt(limitOpt.value, "--limit");
       index = limitOpt.nextIndex;
+      continue;
+    }
+
+    const concurrencyOpt = readOptionValue(argv, index, "--concurrency");
+    if (concurrencyOpt) {
+      opts.concurrency = parsePositiveInt(concurrencyOpt.value, "--concurrency");
+      index = concurrencyOpt.nextIndex;
       continue;
     }
 
@@ -1419,7 +1431,11 @@ export async function runPasukTraceCorpus(
 
   await fs.mkdir(outDir, { recursive: true });
 
-  for (const ref of allRefs) {
+  let fatalError: Error | null = null;
+  let nextRefIndex = 0;
+  const workerCount = Math.min(opts.concurrency, allRefs.length);
+
+  const processRef = async (ref: CollectedRef): Promise<void> => {
     const verseDir = path.join(outDir, "refs", ref.bookSlug, pad3(ref.chapter), pad3(ref.verse));
     const traceJsonPath = path.join(verseDir, "trace.json");
     const traceReportPath = path.join(verseDir, "trace.txt");
@@ -1498,7 +1514,7 @@ export async function runPasukTraceCorpus(
             })
           );
           skippedExisting += 1;
-          continue;
+          return;
         }
 
         if (opts.verifyExisting) {
@@ -1550,7 +1566,7 @@ export async function runPasukTraceCorpus(
 
           repairedExisting += 1;
           skippedExisting += 1;
-          continue;
+          return;
         }
       }
 
@@ -1632,7 +1648,7 @@ export async function runPasukTraceCorpus(
         message
       });
       if (!opts.continueOnError) {
-        throw new Error(`pasuk-trace-corpus failed at ${ref.refKey}: ${message}`);
+        fatalError ??= new Error(`pasuk-trace-corpus failed at ${ref.refKey}: ${message}`);
       }
     } finally {
       done += 1;
@@ -1651,6 +1667,26 @@ export async function runPasukTraceCorpus(
         );
       }
     }
+  };
+
+  const runWorker = async (): Promise<void> => {
+    while (!fatalError) {
+      const currentRefIndex = nextRefIndex;
+      if (currentRefIndex >= allRefs.length) {
+        return;
+      }
+      nextRefIndex += 1;
+      const ref = allRefs[currentRefIndex];
+      if (!ref) {
+        return;
+      }
+      await processRef(ref);
+    }
+  };
+
+  await Promise.all(Array.from({ length: workerCount }, () => runWorker()));
+  if (fatalError) {
+    throw fatalError;
   }
 
   indexRows.sort((left, right) => {
@@ -1689,6 +1725,7 @@ export async function runPasukTraceCorpus(
       from_ref: opts.fromRef,
       to_ref: opts.toRef,
       limit: opts.limit,
+      concurrency: opts.concurrency,
       emit_dot: opts.emitDot,
       graph: {
         theme: opts.graphTheme,
