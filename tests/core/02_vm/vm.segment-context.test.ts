@@ -3,9 +3,20 @@ import { createInitialState } from "@ref/state/state";
 import { runProgram, runProgramWithDeepTrace } from "@ref/vm/vm";
 
 type WordStartPayload = {
+  F0?: string;
+  C0?: string;
   prevBoundaryMode?: string;
+  segmentIdAfter?: number;
+  segmentReset?: boolean;
   segmentId?: number;
   segmentOStackLength?: number;
+};
+
+type BoundaryPayload = {
+  mode?: string;
+  beforeFocus?: string;
+  afterFocus?: string;
+  segmentIdBefore?: number;
 };
 
 function collectWordStarts(input: string): WordStartPayload[] {
@@ -15,11 +26,21 @@ function collectWordStarts(input: string): WordStartPayload[] {
   );
 }
 
+function collectBoundaries(input: string): BoundaryPayload[] {
+  const state = runProgram(input, createInitialState());
+  return state.vm.H.filter((event) => event.type === "BOUNDARY").map(
+    (event) => (event.data ?? {}) as BoundaryPayload
+  );
+}
+
 describe("vm segment context", () => {
   it("passes GLUE boundary mode into beginWord for the next word", () => {
     const starts = collectWordStarts("נ֣ ס");
     expect(starts).toHaveLength(2);
     expect(starts[1]?.prevBoundaryMode).toBe("glue");
+    expect(starts[1]?.segmentReset).toBe(false);
+    expect(typeof starts[1]?.F0).toBe("string");
+    expect(typeof starts[1]?.C0).toBe("string");
   });
 
   it("preserves segment obligations across GLUE at the next word start", () => {
@@ -33,16 +54,28 @@ describe("vm segment context", () => {
     const starts = collectWordStarts("נ א");
     expect(starts).toHaveLength(2);
     expect(starts[1]?.prevBoundaryMode).toBe("hard");
+    expect(starts[1]?.segmentReset).toBe(true);
     expect(starts[1]?.segmentOStackLength).toBe(0);
   });
 
   it("keeps segment id across glue and advances across hard boundaries", () => {
     const glueStarts = collectWordStarts("נ֣ ס");
     expect(glueStarts[0]?.segmentId).toBe(glueStarts[1]?.segmentId);
+    expect(glueStarts[0]?.segmentIdAfter).toBe(glueStarts[1]?.segmentIdAfter);
 
     const hardStarts = collectWordStarts("נ ס");
     expect(hardStarts).toHaveLength(2);
     expect(hardStarts[0]?.segmentId).not.toBe(hardStarts[1]?.segmentId);
+    expect((hardStarts[1]?.segmentIdAfter ?? 0) > (hardStarts[0]?.segmentIdAfter ?? 0)).toBe(true);
+  });
+
+  it("emits BOUNDARY telemetry with focus transition and segmentIdBefore", () => {
+    const boundaries = collectBoundaries("נ֣ ס");
+    const glueBoundary = boundaries.find((event) => event.mode === "glue");
+    expect(glueBoundary).toBeDefined();
+    expect(typeof glueBoundary?.beforeFocus).toBe("string");
+    expect(typeof glueBoundary?.afterFocus).toBe("string");
+    expect(typeof glueBoundary?.segmentIdBefore).toBe("number");
   });
 
   it("exposes vm.segment in word execution context", () => {

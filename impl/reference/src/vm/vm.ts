@@ -481,7 +481,8 @@ function beginWord(
   inboundFocusF0: string
 ): void {
   resetWordLocalStateAtWordStart(state);
-  if (!boundaryKeepsSegmentOpen(prevBoundaryMode)) {
+  const segmentReset = !boundaryKeepsSegmentOpen(prevBoundaryMode);
+  if (segmentReset) {
     state.vm.segment.segmentId += 1;
     state.vm.segment.OStack = [];
     state.vm.OStack_word = state.vm.segment.OStack;
@@ -501,9 +502,13 @@ function beginWord(
     type: "WORD_START",
     tau: state.vm.tau,
     data: {
+      F0: inboundFocusF0,
+      C0,
       inboundFocus: inboundFocusF0,
       wordText,
       prevBoundaryMode,
+      segmentIdAfter: state.vm.segment.segmentId,
+      segmentReset,
       segmentId: state.vm.segment.segmentId,
       segmentOStackLength: state.vm.segment.OStack.length,
       activeConstruct: C0,

@@ -602,16 +602,26 @@ function applyCut(
 
 export function applySpace(state: State, options: ApplySpaceOptions = {}): void {
   const mode = options.mode ?? "hard";
+  const beforeFocus = state.vm.F;
+  const segmentIdBefore = state.vm.segment.segmentId;
   const transition = {
     tropeInfo: options.leftTrope ?? null
   };
   if (mode === "glue" || mode === "glue_maqqef") {
     applyGlue(state, mode, { ...transition, exitKind: mode });
-    return;
-  }
-  if (mode === "cut") {
+  } else if (mode === "cut") {
     applyCut(state, options.rank, { ...transition, exitKind: mode });
-    return;
+  } else {
+    applyHard(state, { ...transition, exitKind: mode });
   }
-  applyHard(state, { ...transition, exitKind: mode });
+  state.vm.H.push({
+    type: "BOUNDARY",
+    tau: state.vm.tau,
+    data: {
+      mode,
+      beforeFocus,
+      afterFocus: state.vm.F,
+      segmentIdBefore
+    }
+  });
 }
