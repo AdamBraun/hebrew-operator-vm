@@ -19,6 +19,10 @@ These are non-normative but useful as minimum sanity checks:
 - **T3 — Final nun does not leave pending support**: program `ן □` ⇒ no `fall` event and `policy(F)` is `framed_lock`.
 - **T4 — Mem pending closes silently at boundary (no export)**: program `מ □` ⇒ no exported mem handle pushed to `K` by boundary; the internal mem zone is closed via `CloseMemZoneSilently`.
 - **T5 — Final mem exports handle**: program `מ ם □` ⇒ a stable mem handle is exported and becomes `F` before boundary; no pending `MEM_ZONE` remains at boundary.
+- **T6 — WordStart bootstrap runs once per word**: for a 3-word input, `WORD_START` appears exactly 3 times (never on intra-word marks).
+- **T7 — Glue preserves segment obligations**: with pending obligations before `□glue`, next word starts with `segmentReset=false` and non-empty segment OStack.
+- **T8 — Hard starts a new segment**: after `□hard`, next word starts with `segmentReset=true`, incremented segment id, and empty segment OStack.
+- **T9 — Missing WordStart baseline fails early**: if letter execution occurs without `activeConstruct`, runtime throws a clear bootstrap error.
 
 ## L1 Modifier Engine
 

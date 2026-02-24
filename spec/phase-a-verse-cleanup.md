@@ -79,6 +79,7 @@ The following are verse-local in Phase A and MUST NOT leak across verses:
   - `boundaries`
   - `rules`
   - `cont`
+  - `vm.aliasEdges`
 - Accumulators:
   - `A`
   - `phraseWordValues`
@@ -87,8 +88,10 @@ The following are verse-local in Phase A and MUST NOT leak across verses:
   - `CNodes`
   - `PendingJoin`
 - Obligations/frames:
+  - `segment`
   - `OStack_word`
   - `E`
+  - `activeConstruct`
 
 To preserve per-verse determinism, the allocator epoch MUST also reset (logical time/counters used to build `X:n:m` IDs).
 
@@ -116,7 +119,10 @@ Minimum required post-reset baseline:
 | `vm.K`                                              | `[Ω, ⊥]`                                                                    |
 | `vm.W`                                              | `[]`                                                                        |
 | `vm.E`                                              | `[]`                                                                        |
+| `vm.segment`                                        | `{ segmentId: 0, OStack: [] }`                                              |
 | `vm.OStack_word`                                    | `[]`                                                                        |
+| `vm.aliasEdges`                                     | `[]`                                                                        |
+| `vm.activeConstruct`                                | unset                                                                       |
 | `vm.A`                                              | `[]`                                                                        |
 | `vm.H`                                              | `[]`                                                                        |
 | `vm.phraseWordValues`                               | `[]`                                                                        |
@@ -144,8 +150,8 @@ Implementations claiming Phase A conformance MUST provide a post-reset baseline 
 The validator MUST fail with a clear message when baseline is violated, including at least:
 
 1. VM pointer invariants (`Omega=Ω`, `F=Ω`, `R=⊥`).
-2. Empty accumulator/obligation state (`A`, `W`, `E`, `OStack_word`, `phraseWordValues`, `H_phrase`, `H_committed`, `PendingJoin`).
-3. Cleared graph state (`links`, `boundaries`, `rules`, `cont`).
+2. Empty accumulator/obligation state (`A`, `W`, `E`, `segment.OStack`, `OStack_word`, `phraseWordValues`, `H_phrase`, `H_committed`, `PendingJoin`).
+3. Cleared graph state (`links`, `boundaries`, `rules`, `cont`, `vm.aliasEdges`).
 4. Handle allowlist check (only bootstrap handles plus explicitly allowed system handles).
 5. Unexpected VM-field detection for newly added runtime fields not covered by reset policy.
 
@@ -174,7 +180,8 @@ Immediately after export, reset MUST run so runtime becomes baseline:
 - `state.handles = {Ω, ⊥}`
 - `links = []`, `boundaries = []`, `rules = []`, `cont = ∅`
 - `A = []`, `phraseWordValues = []`, `H_phrase = []`, `H_committed = []`
-- `OStack_word = []`, `E = []`
+- `segment = { segmentId: 0, OStack: [] }`, `OStack_word = []`, `E = []`
+- `vm.aliasEdges = []`, `activeConstruct = unset`
 - `Omega=Ω`, `F=Ω`, `R=⊥`, `K=[Ω,⊥]`, allocator counters reset
 
 Therefore Genesis 1:2 begins from a clean baseline, with no residual `ל/ש/ת` graph state from Genesis 1:1.

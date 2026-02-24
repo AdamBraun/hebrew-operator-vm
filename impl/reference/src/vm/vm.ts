@@ -500,6 +500,12 @@ function resetWordLocalStateAtWordStart(state: State): void {
   word.localCounters = {};
 }
 
+function assertWordStartBaselineConstruct(state: State): void {
+  if (!state.vm.activeConstruct) {
+    throw new Error("WordStart must allocate C0 before letters run");
+  }
+}
+
 function beginWord(
   state: State,
   wordText: string,
@@ -611,6 +617,7 @@ function executeLetter(
     const inboundFocus = state.vm.wordEntryFocus ?? state.vm.F;
     beginWord(state, context.wordText, context.prevBoundaryMode, inboundFocus);
   }
+  assertWordStartBaselineConstruct(state);
   state.vm.wordHasContent = true;
   recorder?.record("word_entry_context", {
     is_word_final: context.isWordFinal,
@@ -957,4 +964,16 @@ export function beginWordForTest(
   }
 ): void {
   beginWord(state, args.wordText, args.prevBoundaryMode, args.inboundFocusF0 ?? state.vm.F);
+}
+
+export function executeLetterForTest(
+  state: State,
+  token: Token,
+  context: Partial<LetterExecutionContext> = {}
+): { read_op: string; shape_op: string | null } {
+  return executeLetter(state, token, {
+    isWordFinal: context.isWordFinal ?? true,
+    wordText: context.wordText ?? token.raw,
+    prevBoundaryMode: context.prevBoundaryMode ?? "hard"
+  });
 }
