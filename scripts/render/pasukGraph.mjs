@@ -204,6 +204,91 @@ function parseCsvList(value) {
     .filter((item) => item.length > 0);
 }
 
+function asFiniteNumber(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && /^-?\d+(\.\d+)?$/.test(value.trim())) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function parseHandleTau(handleId) {
+  const id = String(handleId ?? "");
+  // Handle ids follow "<glyph>:<tau>:<ordinal>" (e.g. ב:15:1).
+  const match = id.match(/^[^:]+:(\d+):\d+$/u);
+  if (!match) return null;
+  const tau = Number(match[1]);
+  return Number.isFinite(tau) ? tau : null;
+}
+
+function collectTausFromWordEntry(entry) {
+  const out = [];
+  const pushTau = (value) => {
+    const tau = asFiniteNumber(value);
+    if (tau == null) return;
+    out.push(Number(tau));
+  };
+
+  pushTau(entry?.tau);
+  pushTau(entry?.tauBefore);
+  pushTau(entry?.tauAfter);
+
+  const phases = Array.isArray(entry?.phases) ? entry.phases : [];
+  for (const phase of phases) {
+    pushTau(phase?.tau);
+    const steps = Array.isArray(phase?.steps) ? phase.steps : [];
+    for (const step of steps) {
+      pushTau(step?.tau);
+      const events = Array.isArray(step?.events) ? step.events : [];
+      for (const event of events) pushTau(event?.tau);
+    }
+  }
+
+  return out;
+}
+
+function normalizeWordSections(rawSections) {
+  if (!Array.isArray(rawSections)) return [];
+
+  return rawSections
+    .map((rawSection, sectionIndex) => {
+      const opEntries = Array.isArray(rawSection?.op_entries) ? rawSection.op_entries : [];
+      const tauSet = new Set();
+      for (const entry of opEntries) {
+        for (const tau of collectTausFromWordEntry(entry)) {
+          tauSet.add(Number(tau));
+        }
+      }
+
+      const wordIndexRaw =
+        rawSection?.word_index ?? rawSection?.wordIndex ?? rawSection?.index ?? sectionIndex + 1;
+      const wordIndexParsed = asFiniteNumber(wordIndexRaw);
+      const wordIndex = wordIndexParsed == null ? sectionIndex + 1 : Number(wordIndexParsed);
+      const surfaceRaw =
+        rawSection?.surface ?? rawSection?.word ?? rawSection?.word_text ?? rawSection?.label;
+      const surface = String(surfaceRaw ?? "").trim();
+
+      return {
+        sectionIndex,
+        wordIndex,
+        surface,
+        taus: Array.from(tauSet.values()).sort((a, b) => a - b)
+      };
+    })
+    .filter((section) => section.surface.length > 0 || section.taus.length > 0);
+}
+
+function buildTauToWordSectionMap(sections) {
+  const map = new Map();
+  for (const section of sections) {
+    for (const tau of section.taus) {
+      if (!map.has(tau)) map.set(tau, section.sectionIndex);
+    }
+  }
+  return map;
+}
+
 function inferBoundaryMembership(boundaries, handles) {
   // returns: Map(boundaryId -> Set(handleId))
   const map = new Map();
@@ -464,6 +549,12 @@ export function renderDotFromTraceJson(rootJson, opts = {}) {
   const ref = rootJson.ref ?? rootJson.reference ?? rootJson.pasukRef ?? rootJson.ref_key ?? "";
   const cleaned = rootJson.cleaned ?? rootJson.cleaned_text ?? "";
   const words = cleaned ? String(cleaned).trim().split(/\s+/).filter(Boolean) : [];
+  const wordSections =
+    rootJson.word_sections ??
+    rootJson.wordSections ??
+    rootJson.trace?.word_sections ??
+    rootJson.trace?.wordSections ??
+    [];
   const omega = vmMeta(vm, "Omega", "omega");
   const tau = vmMeta(vm, "tau", "τ");
   const graphSafeRef = String(ref || "Pasuk")
@@ -475,7 +566,7 @@ export function renderDotFromTraceJson(rootJson, opts = {}) {
   return renderVmDot(vm, {
     ...opts,
     graphName,
-    meta: { ref, cleaned, tau, omega, words },
+    meta: { ref, cleaned, tau, omega, words, wordSections },
     // In boot mode, we prefer legend node over global graph label.
     label:
       opts.label ??
@@ -553,7 +644,7 @@ export function renderVmDot(vm, opts = {}) {
     nodesep = layout === "boot" ? 0.5 : 0.6,
     ranksep = layout === "boot" ? 0.9 : 1.0,
     label = "",
-    meta = {}, // {ref, cleaned, tau, omega, words}
+    meta = {}, // {ref, cleaned, tau, omega, words, wordSections}
     wordsMode = layout === "boot" ? "cluster" : "off", // off | cluster | label
     shinMode = layout === "boot" ? "collapse" : "expand", // expand | collapse
     shinPortEdges = false,
@@ -634,20 +725,30 @@ export function renderVmDot(vm, opts = {}) {
     return { id: hit.parentId, port: hit.port };
   }
 
-  function inferWordIndexFromHandle(handle) {
-    // 1) explicit metadata wins
+  const wordSections = normalizeWordSections(meta.wordSections);
+  const tauToWordSection = buildTauToWordSectionMap(wordSections);
+  const hasWordSectionOwnership = wordSections.length > 0 && tauToWordSection.size > 0;
+  const wordNumberToSectionIndex = new Map();
+  for (const section of wordSections) {
+    if (!wordNumberToSectionIndex.has(section.wordIndex)) {
+      wordNumberToSectionIndex.set(section.wordIndex, section.sectionIndex);
+    }
+  }
+
+  function parseWordIndexFromMeta(handle) {
     const m = handle.meta || {};
     const wi = m.wordIndex ?? m.word_index ?? m.word ?? m.wi ?? null;
+    return asFiniteNumber(wi);
+  }
 
-    if (typeof wi === "number" && Number.isFinite(wi)) return wi;
-    if (typeof wi === "string" && /^\d+$/.test(wi)) return Number(wi);
+  function inferLegacyWordIndexFromHandle(handle) {
+    // 1) explicit metadata wins
+    const wi = parseWordIndexFromMeta(handle);
+    if (wi != null) return Number(wi);
 
     // 2) fallback: parse from handle.id like "ה:8:3"
-    const id = String(handle.id ?? "");
-    const match = id.match(/^(.):(\d+):(\d+)$/u);
-    if (match) return Number(match[2]);
-
-    return null;
+    const tau = parseHandleTau(handle.id);
+    return tau == null ? null : Number(tau);
   }
 
   function buildVmIndexToWordTextMap(handlesForMap) {
@@ -656,7 +757,7 @@ export function renderVmDot(vm, opts = {}) {
 
     const idxSet = new Set();
     for (const handle of handlesForMap) {
-      const wi = inferWordIndexFromHandle(handle);
+      const wi = inferLegacyWordIndexFromHandle(handle);
       if (wi != null && Number.isFinite(wi)) idxSet.add(Number(wi));
     }
 
@@ -673,9 +774,41 @@ export function renderVmDot(vm, opts = {}) {
 
   const vmIndexToWordText = buildVmIndexToWordTextMap(keptHandles);
 
-  function inferWordText(wordIndex) {
-    if (wordIndex == null) return null;
-    const wi = Number(wordIndex);
+  function inferWordClusterIndex(handle) {
+    if (hasWordSectionOwnership) {
+      const tau = parseHandleTau(handle.id);
+      if (tau != null && tauToWordSection.has(tau)) {
+        return tauToWordSection.get(tau);
+      }
+
+      const metaWordIndex = parseWordIndexFromMeta(handle);
+      if (metaWordIndex != null) {
+        // Support either 1-based or 0-based metadata conventions.
+        if (wordNumberToSectionIndex.has(metaWordIndex)) {
+          return wordNumberToSectionIndex.get(metaWordIndex);
+        }
+        const oneBased = Number(metaWordIndex) + 1;
+        if (wordNumberToSectionIndex.has(oneBased)) {
+          return wordNumberToSectionIndex.get(oneBased);
+        }
+      }
+
+      return null;
+    }
+
+    return inferLegacyWordIndexFromHandle(handle);
+  }
+
+  function inferWordText(clusterIndex) {
+    if (clusterIndex == null) return null;
+    if (hasWordSectionOwnership) {
+      const section = wordSections[Number(clusterIndex)];
+      if (!section) return null;
+      if (section.surface) return section.surface;
+      return `WORD ${section.wordIndex}`;
+    }
+
+    const wi = Number(clusterIndex);
 
     // gap-aware mapping (preferred)
     const mapped = vmIndexToWordText.get(wi);
@@ -758,13 +891,13 @@ export function renderVmDot(vm, opts = {}) {
   dot += "\n";
 
   if (wordsMode === "cluster") {
-    // wordIndex -> array of node ids (already mapped through nodeRef)
+    // word cluster index -> array of node ids (already mapped through nodeRef)
     const buckets = new Map();
 
     for (const handle of keptHandles) {
-      const wi = inferWordIndexFromHandle(handle);
-      if (wi == null) continue;
-      const key = String(wi);
+      const clusterIndex = inferWordClusterIndex(handle);
+      if (clusterIndex == null) continue;
+      const key = String(clusterIndex);
       if (!buckets.has(key)) buckets.set(key, []);
       buckets.get(key).push(nodeRef(handle.id));
     }
@@ -774,12 +907,12 @@ export function renderVmDot(vm, opts = {}) {
     let clusterN = 0;
 
     for (const key of keys) {
-      const wi = Number(key);
+      const clusterIndex = Number(key);
       const nodes = buckets.get(key);
       if (!nodes || nodes.length === 0) continue;
 
-      const wordText = inferWordText(wi);
-      const clusterLabel = wordText ? `${wordText}` : `VM idx ${wi}`;
+      const wordText = inferWordText(clusterIndex);
+      const clusterLabel = wordText ? `${wordText}` : `VM idx ${clusterIndex}`;
 
       dot += `  subgraph cluster_word_${clusterN++} {\n`;
       dot += `    label=${dotLabel(clusterLabel)};\n`;
