@@ -46,11 +46,11 @@ export type ConstituentNode = {
 
 export type VM = {
   tau: number;
-  Omega: string;
+  D: string;
   F: string;
   R: string;
   K: string[];
-  E: Array<{ F: string; lambda: "student" | "group" | "class"; Omega_frame: string }>;
+  E: Array<{ F: string; lambda: "student" | "group" | "class"; D_frame: string }>;
   W: string[];
   OStack_word: Obligation[];
   H: VMEvent[];
@@ -89,7 +89,7 @@ export function createInitialState(): State {
 
   const vm: VM = {
     tau: 0,
-    Omega: OMEGA_ID,
+    D: OMEGA_ID,
     F: OMEGA_ID,
     R: BOT_ID,
     K: [OMEGA_ID, BOT_ID],

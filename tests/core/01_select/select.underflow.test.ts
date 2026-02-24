@@ -11,7 +11,7 @@ describe("select underflow", () => {
     state.vm.W = [];
     state.vm.F = "f1";
     state.vm.R = "r1";
-    state.vm.Omega = "omega";
+    state.vm.D = "omega";
 
     const meta: LetterMeta = {
       letter: "X",
@@ -32,7 +32,7 @@ describe("select underflow", () => {
     state.vm.W = [];
     state.vm.F = "f1";
     state.vm.R = "r1";
-    state.vm.Omega = "omega";
+    state.vm.D = "omega";
 
     const meta: LetterMeta = {
       letter: "X",

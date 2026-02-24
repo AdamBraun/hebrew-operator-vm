@@ -49,7 +49,7 @@ describe("pasuk graph renderer", () => {
       ],
       vm: {
         tau: 19,
-        Omega: "ב:15:1",
+        D: "ב:15:1",
         handles: [
           { id: "Ω", kind: "scope", meta: {} },
           { id: "א:7:2", kind: "scope", meta: {} },

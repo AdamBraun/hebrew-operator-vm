@@ -11,7 +11,7 @@ describe("select distinctness", () => {
     state.vm.W = ["k2"];
     state.vm.F = "f1";
     state.vm.R = "r1";
-    state.vm.Omega = "omega";
+    state.vm.D = "omega";
 
     const meta: LetterMeta = {
       letter: "X",
@@ -33,7 +33,7 @@ describe("select distinctness", () => {
     state.vm.W = ["k1"];
     state.vm.F = "f1";
     state.vm.R = "r1";
-    state.vm.Omega = "omega";
+    state.vm.D = "omega";
 
     const meta: LetterMeta = {
       letter: "X",
@@ -54,7 +54,7 @@ describe("select distinctness", () => {
     state.vm.W = [];
     state.vm.F = "k1";
     state.vm.R = "k1";
-    state.vm.Omega = "k1";
+    state.vm.D = "k1";
 
     const meta: LetterMeta = {
       letter: "X",

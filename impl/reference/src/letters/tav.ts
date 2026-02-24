@@ -19,8 +19,7 @@ export const tavOp: LetterOp = {
   bound: (S: State, ops) => {
     const target = ops.args[0];
     const frame = S.vm.E[S.vm.E.length - 1];
-    const outside =
-      S.vm.R !== BOT_ID ? S.vm.R : frame?.Omega_frame ? frame.Omega_frame : S.vm.Omega;
+    const outside = S.vm.R !== BOT_ID ? S.vm.R : frame?.D_frame ? frame.D_frame : S.vm.D;
     const boundaryId = nextId(S, "ת");
     S.handles.set(
       boundaryId,

@@ -14,7 +14,13 @@ export function assertStateInvariants(state: State): void {
 
   ensure(BOT_ID);
   ensure(OMEGA_ID);
-  ensure(state.vm.Omega);
+  if (state.handles.get(BOT_ID)?.kind !== "empty") {
+    throw new Error(`Handle ${BOT_ID} must be kind 'empty'`);
+  }
+  if (state.handles.get(OMEGA_ID)?.kind !== "scope") {
+    throw new Error(`Handle ${OMEGA_ID} must be kind 'scope'`);
+  }
+  ensure(state.vm.D);
   ensure(state.vm.F);
   ensure(state.vm.R);
   state.vm.K.forEach(ensure);

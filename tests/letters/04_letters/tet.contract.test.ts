@@ -13,7 +13,7 @@ describe("tet contract", () => {
 
   it("does not reference invalid handles", () => {
     const state = createInitialState();
-    const { cons } = tetOp.bound(state, { args: [state.vm.F, state.vm.Omega], prefs: {} });
+    const { cons } = tetOp.bound(state, { args: [state.vm.F, state.vm.D], prefs: {} });
     const { h, r } = tetOp.seal(state, cons);
     expect(state.handles.has(h)).toBe(true);
     expect(state.handles.has(r) || r === "⊥").toBe(true);

@@ -59,8 +59,8 @@ export const betOp: LetterOp = {
   },
   seal: (S: State, cons: Construction) => {
     const { boundaryId } = cons.meta as { boundaryId: string };
-    S.vm.E.push({ F: S.vm.F, lambda: "class", Omega_frame: S.vm.Omega });
-    S.vm.Omega = boundaryId;
+    S.vm.E.push({ F: S.vm.F, lambda: "class", D_frame: S.vm.D });
+    S.vm.D = boundaryId;
     return { S, h: boundaryId, r: BOT_ID };
   }
 };

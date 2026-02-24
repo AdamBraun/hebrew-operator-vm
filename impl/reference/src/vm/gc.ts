@@ -32,7 +32,7 @@ function parseContEdge(edge: string): [string, string] | null {
 }
 
 function collectRoots(state: State): Set<string> {
-  const roots = new Set<string>([OMEGA_ID, BOT_ID, state.vm.Omega, state.vm.F, state.vm.R]);
+  const roots = new Set<string>([OMEGA_ID, BOT_ID, state.vm.D, state.vm.F, state.vm.R]);
 
   for (const id of state.vm.K) roots.add(id);
   for (const id of state.vm.W) roots.add(id);
@@ -47,7 +47,7 @@ function collectRoots(state: State): Set<string> {
 
   for (const frame of state.vm.E) {
     roots.add(frame.F);
-    roots.add(frame.Omega_frame);
+    roots.add(frame.D_frame);
   }
 
   for (const obligation of state.vm.OStack_word) {
@@ -106,7 +106,7 @@ function buildAdjacency(state: State): HandleAdjacency {
   }
 
   for (const frame of state.vm.E) {
-    connect(adjacency, frame.F, frame.Omega_frame);
+    connect(adjacency, frame.F, frame.D_frame);
   }
 
   for (const rule of state.rules) {
@@ -205,13 +205,13 @@ export function collectGarbage(state: State): void {
   state.rules = state.rules.filter((rule) => !removed.has(rule.target) && !removed.has(rule.id));
 
   if (removed.has(state.vm.F)) {
-    state.vm.F = state.vm.Omega;
+    state.vm.F = state.vm.D;
   }
   if (removed.has(state.vm.R)) {
     state.vm.R = BOT_ID;
   }
-  if (removed.has(state.vm.Omega)) {
-    state.vm.Omega = OMEGA_ID;
+  if (removed.has(state.vm.D)) {
+    state.vm.D = OMEGA_ID;
   }
 
   state.vm.K = state.vm.K.map((id) => remapOrBot(id, removed));
@@ -237,8 +237,8 @@ export function collectGarbage(state: State): void {
   }
 
   for (const frame of state.vm.E) {
-    frame.F = removed.has(frame.F) ? state.vm.Omega : frame.F;
-    frame.Omega_frame = removed.has(frame.Omega_frame) ? state.vm.Omega : frame.Omega_frame;
+    frame.F = removed.has(frame.F) ? state.vm.D : frame.F;
+    frame.D_frame = removed.has(frame.D_frame) ? state.vm.D : frame.D_frame;
   }
 
   state.vm.OStack_word = state.vm.OStack_word.filter(

@@ -14,7 +14,7 @@ describe("pe contract", () => {
   it("does not reference invalid handles", () => {
     const state = createInitialState();
     const { cons } = peOp.bound(state, {
-      args: [state.vm.F, state.vm.Omega],
+      args: [state.vm.F, state.vm.D],
       prefs: {}
     });
     const { h, r } = peOp.seal(state, cons);

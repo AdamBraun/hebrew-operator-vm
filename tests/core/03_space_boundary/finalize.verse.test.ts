@@ -33,6 +33,8 @@ describe("finalizeVerse", () => {
       events: eventsBefore
     });
     expect(snapshot.state_dump.vm.tau).toBe(tauBefore);
+    expect(snapshot.state_dump.vm.D).toBeDefined();
+    expect(snapshot.state_dump.vm.Omega).toBeUndefined();
     expect(Array.isArray(snapshot.state_dump.vm.H)).toBe(true);
     expect(snapshot.state_dump.vm.H.length).toBe(eventsBefore);
     expect(
@@ -42,7 +44,7 @@ describe("finalizeVerse", () => {
     expect(snapshot.state_dump.handles.length).toBe(handlesBefore);
 
     expect(state.vm.tau).toBe(0);
-    expect(state.vm.Omega).toBe(OMEGA_ID);
+    expect(state.vm.D).toBe(OMEGA_ID);
     expect(state.vm.F).toBe(OMEGA_ID);
     expect(state.vm.R).toBe(BOT_ID);
     expect(state.vm.K).toEqual([OMEGA_ID, BOT_ID]);
@@ -199,7 +201,7 @@ describe("finalizeVerse", () => {
     expect(verseSnapshots[1].tau_end).toBeLessThanOrEqual(4);
 
     expect(state.vm.tau).toBe(0);
-    expect(state.vm.Omega).toBe(OMEGA_ID);
+    expect(state.vm.D).toBe(OMEGA_ID);
     expect(state.vm.F).toBe(OMEGA_ID);
     expect(state.vm.R).toBe(BOT_ID);
     expect(state.vm.K).toEqual([OMEGA_ID, BOT_ID]);

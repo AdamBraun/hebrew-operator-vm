@@ -31,7 +31,7 @@ export const finalPeOp: LetterOp = {
     }
 
     const source = utteranceId;
-    const target = S.vm.R !== BOT_ID ? S.vm.R : S.vm.Omega;
+    const target = S.vm.R !== BOT_ID ? S.vm.R : S.vm.D;
     const ruleId = nextId(S, "ף");
     S.handles.set(
       ruleId,

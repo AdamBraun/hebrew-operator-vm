@@ -111,7 +111,7 @@ function scrubFlushedMemZoneRefs(state: State, removedHandles: Set<string>): voi
   );
 
   if (isRemoved(state.vm.F)) {
-    state.vm.F = state.vm.Omega;
+    state.vm.F = state.vm.D;
   }
   if (isRemoved(state.vm.R)) {
     state.vm.R = BOT_ID;
@@ -131,8 +131,8 @@ function scrubFlushedMemZoneRefs(state: State, removedHandles: Set<string>): voi
 
   state.vm.E = state.vm.E.map((frame) => ({
     ...frame,
-    F: isRemoved(frame.F) ? state.vm.Omega : frame.F,
-    Omega_frame: isRemoved(frame.Omega_frame) ? state.vm.Omega : frame.Omega_frame
+    F: isRemoved(frame.F) ? state.vm.D : frame.F,
+    D_frame: isRemoved(frame.D_frame) ? state.vm.D : frame.D_frame
   }));
 
   if (state.vm.wordLastSealedArtifact && isRemoved(state.vm.wordLastSealedArtifact)) {
@@ -272,7 +272,7 @@ function sealWord(state: State): string {
 }
 
 function baselineReset(state: State): void {
-  state.vm.F = state.vm.Omega;
+  state.vm.F = state.vm.D;
   state.vm.R = BOT_ID;
   state.vm.K = [state.vm.F, state.vm.R];
   state.vm.wordEntryFocus = state.vm.F;

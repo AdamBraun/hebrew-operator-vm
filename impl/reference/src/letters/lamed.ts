@@ -22,8 +22,7 @@ export const lamedOp: LetterOp = {
     const suggestedDomain = ops.args[1];
     const frame = S.vm.E[S.vm.E.length - 1];
     const domain =
-      suggestedDomain ??
-      (S.vm.R !== BOT_ID ? S.vm.R : frame?.Omega_frame ? frame.Omega_frame : S.vm.Omega);
+      suggestedDomain ?? (S.vm.R !== BOT_ID ? S.vm.R : frame?.D_frame ? frame.D_frame : S.vm.D);
     const boundaryId = nextId(S, "ל");
     S.handles.set(
       boundaryId,

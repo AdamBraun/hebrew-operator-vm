@@ -18,7 +18,7 @@ export const peOp: LetterOp = {
   select: (S: State) => selectOperands(S, meta),
   bound: (S: State, ops) => {
     const [source, payload] = ops.args;
-    const target = ops.args[2] ?? (S.vm.R !== BOT_ID ? S.vm.R : S.vm.Omega);
+    const target = ops.args[2] ?? (S.vm.R !== BOT_ID ? S.vm.R : S.vm.D);
     const ruleId = nextId(S, "פ");
     S.handles.set(
       ruleId,

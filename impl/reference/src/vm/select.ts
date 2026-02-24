@@ -60,10 +60,10 @@ export function selectOperands(state: State, meta: LetterMeta): { S: State; ops:
     requiredUsedR = true;
   }
 
-  let requiredUsedOmega = false;
+  let requiredUsedD = false;
   if (args.length < meta.arity_req) {
-    args.push(state.vm.Omega);
-    requiredUsedOmega = true;
+    args.push(state.vm.D);
+    requiredUsedD = true;
   }
 
   while (args.length < meta.arity_req) {
@@ -106,8 +106,8 @@ export function selectOperands(state: State, meta: LetterMeta): { S: State; ops:
       optional.push(state.vm.R);
     }
 
-    if (optional.length < meta.arity_opt && !requiredUsedOmega) {
-      optional.push(state.vm.Omega);
+    if (optional.length < meta.arity_opt && !requiredUsedD) {
+      optional.push(state.vm.D);
     }
 
     // optional operands are only supplied if available; no fallback duplication or BOT fill

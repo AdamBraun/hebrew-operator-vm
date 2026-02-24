@@ -6,7 +6,7 @@ describe("yod behavior", () => {
   it("creates an entity handle seeded from focus", () => {
     const state = runProgram("י", createInitialState());
     const seedHandle = Array.from(state.handles.values()).find(
-      (handle) => handle.kind === "entity" && handle.meta?.seedOf === state.vm.Omega
+      (handle) => handle.kind === "entity" && handle.meta?.seedOf === state.vm.D
     );
     expect(seedHandle).toBeDefined();
     expect(seedHandle?.anchor).toBe(1);

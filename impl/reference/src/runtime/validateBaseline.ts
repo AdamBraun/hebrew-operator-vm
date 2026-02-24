@@ -43,7 +43,7 @@ function assertEquals(errors: string[], actual: unknown, expected: unknown, labe
 
 const KNOWN_VM_KEYS = new Set([
   "tau",
-  "Omega",
+  "D",
   "F",
   "R",
   "K",
@@ -75,7 +75,7 @@ export function validateBaseline(state: State, opts: ValidateBaselineOptions = {
   const errors: string[] = [];
   const allowedHandles = normalizeAllowedHandleIds(opts.keepSystemHandles);
 
-  assertEquals(errors, state.vm.Omega, OMEGA_ID, "vm.Omega");
+  assertEquals(errors, state.vm.D, OMEGA_ID, "vm.D");
   assertEquals(errors, state.vm.F, OMEGA_ID, "vm.F");
   assertEquals(errors, state.vm.R, BOT_ID, "vm.R");
   assertEquals(errors, state.vm.tau, 0, "vm.tau");
@@ -150,6 +150,12 @@ export function validateBaseline(state: State, opts: ValidateBaselineOptions = {
     if (!state.handles.has(required)) {
       errors.push(`handles missing required id '${required}'`);
     }
+  }
+  if (state.handles.get(OMEGA_ID)?.kind !== "scope") {
+    errors.push(`handles['${OMEGA_ID}'] expected kind 'scope'`);
+  }
+  if (state.handles.get(BOT_ID)?.kind !== "empty") {
+    errors.push(`handles['${BOT_ID}'] expected kind 'empty'`);
   }
 
   const unknownVmKeys = Object.keys(state.vm)

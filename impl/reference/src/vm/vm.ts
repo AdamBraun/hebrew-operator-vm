@@ -459,7 +459,7 @@ function executeLetter(
           }
         });
       }
-      state.vm.F = state.vm.Omega;
+      state.vm.F = state.vm.D;
       state.vm.R = BOT_ID;
       state.vm.K = [state.vm.F, state.vm.R];
     } else if (state.vm.PendingJoin) {

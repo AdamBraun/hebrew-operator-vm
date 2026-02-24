@@ -69,6 +69,10 @@ describe("pasuk trace runtime", () => {
       (result.post_reset_state.handles as Array<{ id?: string }>).map((handle) => handle.id).sort()
     ).toEqual(["Ω", "⊥"].sort());
     expect(typeof result.final_state.vm?.has_data_payload).toBe("boolean");
+    expect(result.final_state.vm?.D).toBeDefined();
+    expect(result.final_state.vm?.Omega).toBeUndefined();
+    expect(result.post_reset_state.vm?.D).toBe("Ω");
+    expect(result.post_reset_state.vm?.Omega).toBeUndefined();
     expect(result.final_state.vm?.wordHasContent).toBeUndefined();
   });
 

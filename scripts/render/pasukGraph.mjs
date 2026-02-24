@@ -555,7 +555,7 @@ export function renderDotFromTraceJson(rootJson, opts = {}) {
     rootJson.trace?.word_sections ??
     rootJson.trace?.wordSections ??
     [];
-  const omega = vmMeta(vm, "Omega", "omega");
+  const domain = vmMeta(vm, "D", "domain", "Omega", "omega");
   const tau = vmMeta(vm, "tau", "τ");
   const graphSafeRef = String(ref || "Pasuk")
     .replace(/\//g, "_")
@@ -566,13 +566,13 @@ export function renderDotFromTraceJson(rootJson, opts = {}) {
   return renderVmDot(vm, {
     ...opts,
     graphName,
-    meta: { ref, cleaned, tau, omega, words, wordSections },
+    meta: { ref, cleaned, tau, domain, words, wordSections },
     // In boot mode, we prefer legend node over global graph label.
     label:
       opts.label ??
       (layout === "boot"
         ? ""
-        : `Hebrew Operator VM - ${ref || "Pasuk"}${cleaned ? ` | ${cleaned}` : ""}${tau !== "" ? ` | tau=${tau}` : ""}${omega !== "" ? ` | Omega=${omega}` : ""}`)
+        : `Hebrew Operator VM - ${ref || "Pasuk"}${cleaned ? ` | ${cleaned}` : ""}${tau !== "" ? ` | tau=${tau}` : ""}${domain !== "" ? ` | D=${domain}` : ""}`)
   });
 }
 
@@ -644,7 +644,7 @@ export function renderVmDot(vm, opts = {}) {
     nodesep = layout === "boot" ? 0.5 : 0.6,
     ranksep = layout === "boot" ? 0.9 : 1.0,
     label = "",
-    meta = {}, // {ref, cleaned, tau, omega, words, wordSections}
+    meta = {}, // {ref, cleaned, tau, domain, words, wordSections}
     wordsMode = layout === "boot" ? "cluster" : "off", // off | cluster | label
     shinMode = layout === "boot" ? "collapse" : "expand", // expand | collapse
     shinPortEdges = false,
@@ -855,8 +855,8 @@ export function renderVmDot(vm, opts = {}) {
   if (legend) {
     const refLine = meta.ref ? String(meta.ref) : String(graphName);
     const tauLine = meta.tau !== "" ? `τ=${meta.tau}` : "";
-    const omegaLine = meta.omega !== "" ? `Ω relocated to ${meta.omega}` : "";
-    const tail = [tauLine, omegaLine].filter(Boolean).join(" | ");
+    const domainLine = meta.domain !== "" ? `D=${meta.domain}` : "";
+    const tail = [tauLine, domainLine].filter(Boolean).join(" | ");
     dot += `  legend [${attrs({
       label: dotLabel(`${refLine}\nHebrew Calculus VM - Final State\n${tail}`),
       shape: "plaintext",
@@ -926,12 +926,12 @@ export function renderVmDot(vm, opts = {}) {
 
   if (
     layout === "boot" &&
-    meta.omega &&
-    keptIdSet.has(String(meta.omega)) &&
-    String(meta.omega) !== "Ω"
+    meta.domain &&
+    keptIdSet.has(String(meta.domain)) &&
+    String(meta.domain) !== "Ω"
   ) {
-    dot += `  ${nodeRef("Ω")} -> ${nodeRef(meta.omega)} [${attrs({
-      ...edgeLabelAttrs("current root"),
+    dot += `  ${nodeRef("Ω")} -> ${nodeRef(meta.domain)} [${attrs({
+      ...edgeLabelAttrs("domain"),
       color: dotId(t.omegaBorder),
       penwidth: 4,
       fontsize: 10

@@ -10,7 +10,7 @@ describe("select order", () => {
     state.vm.W = ["w1", "w2"];
     state.vm.F = "f1";
     state.vm.R = "r1";
-    state.vm.Omega = "omega";
+    state.vm.D = "omega";
 
     const meta: LetterMeta = {
       letter: "X",

@@ -15,7 +15,7 @@ describe("bet behavior", () => {
     const seeded = state.handles.get(boundary.inside);
     expect(seeded?.kind).toBe("entity");
 
-    expect(state.vm.Omega).toBe(boundary.id);
+    expect(state.vm.D).toBe(boundary.id);
     const wordOut = state.vm.A[state.vm.A.length - 1];
     expect(wordOut).toBe(boundary.id);
   });

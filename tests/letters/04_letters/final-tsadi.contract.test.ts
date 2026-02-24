@@ -14,7 +14,7 @@ describe("final tsadi contract", () => {
   it("does not reference invalid handles", () => {
     const state = createInitialState();
     const { cons } = finalTsadiOp.bound(state, {
-      args: [state.vm.F, state.vm.Omega],
+      args: [state.vm.F, state.vm.D],
       prefs: {}
     });
     const { h, r } = finalTsadiOp.seal(state, cons);
