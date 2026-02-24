@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 export const REPO_ROOT = process.cwd();
+const GIT_OUTPUT_MAX_BUFFER = 128 * 1024 * 1024;
 
 function errorFromCommandFailure(error, commandLabel) {
   const stderrRaw = error && typeof error === "object" ? error.stderr : "";
@@ -19,7 +20,8 @@ function runGit(args, { allowFailure = false } = {}) {
     return execFileSync("git", args, {
       cwd: REPO_ROOT,
       encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"]
+      stdio: ["ignore", "pipe", "pipe"],
+      maxBuffer: GIT_OUTPUT_MAX_BUFFER
     });
   } catch (error) {
     if (allowFailure) {

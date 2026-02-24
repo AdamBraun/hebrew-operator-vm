@@ -148,7 +148,8 @@ export function verifyArtifacts({ verbose = false } = {}) {
     );
   }
 
-  const changedFiles = listChangedFiles();
+  const changeScope = [...INTERPRETER_INPUT_PATHS, ...DOT_RENDERER_INPUT_PATHS];
+  const changedFiles = listChangedFiles(changeScope);
   const changedInterpreterFiles = filterPathsBySpecs(changedFiles, INTERPRETER_INPUT_PATHS);
   const changedDotFiles = filterPathsBySpecs(changedFiles, DOT_RENDERER_INPUT_PATHS);
 
