@@ -44,6 +44,7 @@ function collectRoots(state: State): Set<string> {
 
   if (state.vm.wordLastSealedArtifact) roots.add(state.vm.wordLastSealedArtifact);
   if (state.vm.wordEntryFocus) roots.add(state.vm.wordEntryFocus);
+  if (state.vm.activeConstruct) roots.add(state.vm.activeConstruct);
   if (state.vm.PendingJoin?.left_span_handle) roots.add(state.vm.PendingJoin.left_span_handle);
 
   for (const frame of state.vm.E) {
@@ -222,6 +223,9 @@ export function collectGarbage(state: State): void {
 
   if (state.vm.wordLastSealedArtifact && removed.has(state.vm.wordLastSealedArtifact)) {
     state.vm.wordLastSealedArtifact = undefined;
+  }
+  if (state.vm.activeConstruct && removed.has(state.vm.activeConstruct)) {
+    state.vm.activeConstruct = undefined;
   }
   if (state.vm.wordEntryFocus && removed.has(state.vm.wordEntryFocus)) {
     state.vm.wordEntryFocus = state.vm.F;

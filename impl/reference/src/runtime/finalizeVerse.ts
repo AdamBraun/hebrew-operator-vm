@@ -200,6 +200,7 @@ function resetRuntimeState(state: State, opts: FinalizeVerseOptions): void {
   state.vm.OStack_word = [];
   state.vm.H = [];
   state.vm.A = [];
+  state.vm.activeConstruct = undefined;
   state.vm.wordHasContent = false;
   state.vm.wordLastSealedArtifact = undefined;
   state.vm.wordEntryFocus = OMEGA_ID;

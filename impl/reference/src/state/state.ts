@@ -55,6 +55,7 @@ export type VM = {
   OStack_word: Obligation[];
   H: VMEvent[];
   A: string[];
+  activeConstruct?: string;
   wordHasContent: boolean;
   wordLastSealedArtifact?: string;
   wordEntryFocus?: string;
@@ -98,6 +99,7 @@ export function createInitialState(): State {
     OStack_word: [],
     H: [],
     A: [],
+    activeConstruct: undefined,
     wordHasContent: false,
     wordLastSealedArtifact: undefined,
     wordEntryFocus: OMEGA_ID,
@@ -139,6 +141,7 @@ export function serializeState(state: State): Record<string, any> {
     ports: Array.from(envelope.ports).sort()
   });
   const {
+    activeConstruct: _activeConstruct,
     wordLastSealedArtifact,
     wordEntryFocus: _wordEntryFocus,
     metaCounter,

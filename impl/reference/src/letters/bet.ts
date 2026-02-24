@@ -15,13 +15,15 @@ const meta: LetterMeta = {
 
 function isWordEntryBaseline(state: State): boolean {
   const entryFocus = state.vm.wordEntryFocus ?? state.vm.F;
-  return (
-    state.vm.F === entryFocus &&
-    state.vm.R === BOT_ID &&
+  const focus = state.vm.F;
+  const baselineFocus =
+    (state.vm.activeConstruct !== undefined && focus === state.vm.activeConstruct) ||
+    focus === entryFocus;
+  const stackMatches =
     state.vm.K.length === 2 &&
-    state.vm.K[0] === state.vm.F &&
-    state.vm.K[1] === BOT_ID
-  );
+    state.vm.K[1] === BOT_ID &&
+    (state.vm.K[0] === focus || state.vm.K[0] === entryFocus);
+  return baselineFocus && state.vm.R === BOT_ID && stackMatches;
 }
 
 export const betOp: LetterOp = {

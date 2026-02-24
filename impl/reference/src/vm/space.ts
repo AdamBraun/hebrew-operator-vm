@@ -140,6 +140,9 @@ function scrubFlushedMemZoneRefs(state: State, removedHandles: Set<string>): voi
   if (state.vm.wordLastSealedArtifact && isRemoved(state.vm.wordLastSealedArtifact)) {
     state.vm.wordLastSealedArtifact = undefined;
   }
+  if (state.vm.activeConstruct && isRemoved(state.vm.activeConstruct)) {
+    state.vm.activeConstruct = undefined;
+  }
   if (state.vm.wordEntryFocus && isRemoved(state.vm.wordEntryFocus)) {
     state.vm.wordEntryFocus = state.vm.F;
   }
@@ -474,6 +477,7 @@ function emitConstituentNode(state: State, rank: number): void {
 function settleWordBoundaryState(state: State): void {
   state.vm.wordHasContent = false;
   state.vm.wordLastSealedArtifact = undefined;
+  state.vm.activeConstruct = undefined;
   delete state.vm.route_mode;
   delete state.vm.route_arity;
 }

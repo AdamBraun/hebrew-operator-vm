@@ -4,11 +4,12 @@ import { HehMode, LetterMode, SpaceBoundaryMode, Token } from "../compile/types"
 import { compositeRegistry, letterRegistry } from "../letters/registry";
 import { Construction, LetterOp, SelectOperands } from "../letters/types";
 import { FinalizeVerseOptions, VerseSnapshot, finalizeVerse } from "../runtime/finalizeVerse";
-import { BOT_ID } from "../state/handles";
+import { BOT_ID, createHandle } from "../state/handles";
 import { hardenHandle } from "../state/policies";
 import { applyEventLinks } from "../state/eventLinks";
 import { State, createInitialState, serializeState } from "../state/state";
 import { assertOperatorDomainStable } from "./domainTransition";
+import { nextId } from "./ids";
 import { applySpace } from "./space";
 
 export type TraceEntry = {
@@ -441,13 +442,36 @@ function applyShapeModifier(state: State, shapeOp: string): void {
   }
 }
 
-function wordStart(vm: State["vm"], inboundFocus: string, wordText: string): void {
-  vm.H.push({
+function allocWordBaselineConstruct(state: State, wordText: string): string {
+  const constructId = nextId(state, "C");
+  state.handles.set(
+    constructId,
+    createHandle(constructId, "scope", {
+      anchor: 1,
+      meta: {
+        owner: "word",
+        construct_role: "baseline",
+        payload: {},
+        word_text: wordText,
+        ephemeral: 1
+      }
+    })
+  );
+  return constructId;
+}
+
+function wordStart(state: State, inboundFocus: string, wordText: string): void {
+  const C0 = allocWordBaselineConstruct(state, wordText);
+  state.vm.activeConstruct = C0;
+  state.vm.F = C0;
+  state.vm.H.push({
     type: "WORD_START",
-    tau: vm.tau,
+    tau: state.vm.tau,
     data: {
       inboundFocus,
-      wordText
+      wordText,
+      activeConstruct: C0,
+      focus: state.vm.F
     }
   });
 }
@@ -510,7 +534,7 @@ function executeLetter(
   if (!state.vm.wordHasContent) {
     state.vm.wordEntryFocus = state.vm.F;
     const inboundFocus = state.vm.wordEntryFocus ?? state.vm.F;
-    wordStart(state.vm, inboundFocus, context.wordText);
+    wordStart(state, inboundFocus, context.wordText);
   }
   state.vm.wordHasContent = true;
   recorder?.record("word_entry_context", {
@@ -519,7 +543,9 @@ function executeLetter(
     pending_join_at_entry: pendingJoinAtEntry,
     pending_join_action: pendingJoinAction,
     pending_join_consumed: state.vm.lastPendingJoinConsumedId ?? null,
-    entry_focus: state.vm.wordEntryFocus ?? null
+    entry_focus: state.vm.wordEntryFocus ?? null,
+    active_construct: state.vm.activeConstruct ?? null,
+    focus: state.vm.F
   });
 
   const composite = compositeRegistry[token.letter];

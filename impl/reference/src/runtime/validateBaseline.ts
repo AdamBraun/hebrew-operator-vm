@@ -52,6 +52,7 @@ const KNOWN_VM_KEYS = new Set([
   "OStack_word",
   "H",
   "A",
+  "activeConstruct",
   "wordHasContent",
   "wordLastSealedArtifact",
   "wordEntryFocus",
@@ -102,6 +103,9 @@ export function validateBaseline(state: State, opts: ValidateBaselineOptions = {
   }
   if (state.vm.wordLastSealedArtifact !== undefined) {
     errors.push("vm.wordLastSealedArtifact expected undefined");
+  }
+  if (state.vm.activeConstruct !== undefined) {
+    errors.push("vm.activeConstruct expected undefined");
   }
   if (state.vm.lastPendingJoinConsumedId !== undefined) {
     errors.push("vm.lastPendingJoinConsumedId expected undefined");

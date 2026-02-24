@@ -29,6 +29,9 @@ export function assertStateInvariants(state: State): void {
   if (state.vm.wordLastSealedArtifact) {
     ensure(state.vm.wordLastSealedArtifact);
   }
+  if (state.vm.activeConstruct) {
+    ensure(state.vm.activeConstruct);
+  }
   if (state.vm.wordEntryFocus) {
     ensure(state.vm.wordEntryFocus);
   }
