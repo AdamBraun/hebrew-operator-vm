@@ -177,6 +177,103 @@ describe("pasuk trace corpus runtime", () => {
     expect(reportProv.report_schema).toBe(2);
   });
 
+  it("auto-skips unchanged existing artifacts without --skip-existing", async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-corpus-autoskip-"));
+    const inputPath = path.join(tmpDir, "torah.json");
+    const outDir = path.join(tmpDir, "out");
+
+    const payload = {
+      books: [
+        {
+          name: "Genesis",
+          chapters: [{ n: 1, verses: [{ n: 1, he: "א ב" }] }]
+        }
+      ]
+    };
+    await fs.writeFile(inputPath, JSON.stringify(payload, null, 2), "utf8");
+
+    const first = await runPasukTraceCorpus(
+      parseArgs([
+        `--input=${inputPath}`,
+        `--out-dir=${outDir}`,
+        "--limit=1",
+        "--no-snapshots",
+        "--no-print-progress"
+      ]),
+      { renderDotFromTraceJson: fakeRenderDot, rendererIds: TEST_RENDERER_IDS }
+    );
+    expect(first.manifest.totals.processed).toBe(1);
+
+    const second = await runPasukTraceCorpus(
+      parseArgs([
+        `--input=${inputPath}`,
+        `--out-dir=${outDir}`,
+        "--limit=1",
+        "--no-snapshots",
+        "--no-print-progress"
+      ]),
+      { renderDotFromTraceJson: fakeRenderDot, rendererIds: TEST_RENDERER_IDS }
+    );
+    expect(second.manifest.totals.processed).toBe(0);
+    expect(second.manifest.totals.skipped_existing).toBe(1);
+  });
+
+  it("auto-skips from provenance when refs/index.json is missing", async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), "pasuk-trace-corpus-autoskip-provenance-")
+    );
+    const inputPath = path.join(tmpDir, "torah.json");
+    const outDir = path.join(tmpDir, "out");
+
+    const payload = {
+      books: [
+        {
+          name: "Genesis",
+          chapters: [{ n: 1, verses: [{ n: 1, he: "א ב" }] }]
+        }
+      ]
+    };
+    await fs.writeFile(inputPath, JSON.stringify(payload, null, 2), "utf8");
+
+    const first = await runPasukTraceCorpus(
+      parseArgs([
+        `--input=${inputPath}`,
+        `--out-dir=${outDir}`,
+        "--limit=1",
+        "--no-snapshots",
+        "--no-print-progress"
+      ]),
+      { renderDotFromTraceJson: fakeRenderDot, rendererIds: TEST_RENDERER_IDS }
+    );
+    expect(first.manifest.totals.processed).toBe(1);
+
+    const indexPath = path.join(outDir, "refs", "index.json");
+    await fs.rm(indexPath);
+
+    const second = await runPasukTraceCorpus(
+      parseArgs([
+        `--input=${inputPath}`,
+        `--out-dir=${outDir}`,
+        "--limit=1",
+        "--no-snapshots",
+        "--no-print-progress"
+      ]),
+      { renderDotFromTraceJson: fakeRenderDot, rendererIds: TEST_RENDERER_IDS }
+    );
+
+    expect(second.manifest.totals.processed).toBe(0);
+    expect(second.manifest.totals.skipped_existing).toBe(1);
+
+    const rebuiltIndex = JSON.parse(await fs.readFile(indexPath, "utf8")) as Array<{
+      sha256?: { trace_json?: string };
+      stats?: { words?: number; trace_entries?: number };
+    }>;
+    expect(Array.isArray(rebuiltIndex)).toBe(true);
+    expect(rebuiltIndex[0]?.sha256?.trace_json).toMatch(/^[0-9a-f]{64}$/u);
+    expect((rebuiltIndex[0]?.stats?.words ?? 0) > 0).toBe(true);
+    expect((rebuiltIndex[0]?.stats?.trace_entries ?? 0) > 0).toBe(true);
+  });
+
   it("fails verify-existing when graph options drift under skip-existing", async () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-corpus-verify-"));
     const inputPath = path.join(tmpDir, "torah.json");

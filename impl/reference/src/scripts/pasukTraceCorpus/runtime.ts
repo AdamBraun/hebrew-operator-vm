@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
+import { spawn } from "node:child_process";
 import { formatDeepTraceReport, parseRefKey, runPasukTrace } from "../pasukTrace/runtime";
 import type { WordSection } from "../pasukTrace/runtime";
 
@@ -47,10 +48,16 @@ type RendererIds = {
   reportRendererId: string;
 };
 
+type TraceExecutionMode = "in-process" | "subprocess";
+
 type TracePayloadLike = {
   schema_version?: unknown;
+  generated_at?: unknown;
   ref_key?: unknown;
+  options?: unknown;
+  source_text?: unknown;
   cleaned_text?: unknown;
+  prepared_tokens?: unknown;
   word_sections?: unknown;
   final_dump_state?: unknown;
   post_reset_state?: unknown;
@@ -96,12 +103,25 @@ type ExistingArtifacts = {
   dotText: string | null;
 };
 
+type ExistingSkipArtifacts = {
+  traceJsonExists: boolean;
+  reportText: string | null;
+  dotText: string | null;
+};
+
 type ExistingCheckResult = {
   skippable: boolean;
   canRepairFromTrace: boolean;
   reasons: string[];
   traceFileSha256: string | null;
   traceSemanticSha256: string | null;
+  parsedDotProvenance: ParsedDotProvenance | null;
+  parsedReportProvenance: ParsedReportProvenance | null;
+};
+
+type ExistingSkipCheckResult = {
+  skippable: boolean;
+  reasons: string[];
   parsedDotProvenance: ParsedDotProvenance | null;
   parsedReportProvenance: ParsedReportProvenance | null;
 };
@@ -117,6 +137,7 @@ type ExpectedProvenance = {
 export type PasukTraceCorpusDeps = {
   renderDotFromTraceJson?: RenderDotFromTraceJson;
   rendererIds?: RendererIds;
+  traceExecutionMode?: TraceExecutionMode;
 };
 
 export type PasukTraceCorpusOptions = {
@@ -933,6 +954,151 @@ export function parseReportProvenance(reportText: string): ParsedReportProvenanc
   };
 }
 
+function verifyDotProvenanceForSkip(args: {
+  parsed: ParsedDotProvenance;
+  expectedGraphOptsSha256: string;
+  graphRendererId: string;
+}): string[] {
+  const reasons: string[] = [];
+  const { parsed } = args;
+
+  if (!parsed.trace_file_sha256) {
+    reasons.push("graph.dot missing trace_file_sha256 provenance");
+  }
+
+  if (!parsed.graph_opts_sha256) {
+    reasons.push("graph.dot missing graph_opts_sha256 provenance");
+  } else if (parsed.graph_opts_sha256 !== args.expectedGraphOptsSha256) {
+    reasons.push(
+      `graph.dot graph_opts_sha256 mismatch (expected ${args.expectedGraphOptsSha256}, got ${parsed.graph_opts_sha256})`
+    );
+  }
+
+  if (!parsed.graph_renderer_id) {
+    reasons.push("graph.dot missing graph_renderer_id provenance");
+  } else if (parsed.graph_renderer_id !== args.graphRendererId) {
+    reasons.push(
+      `graph.dot graph_renderer_id mismatch (expected ${args.graphRendererId}, got ${parsed.graph_renderer_id})`
+    );
+  }
+
+  if (parsed.dot_schema === undefined) {
+    reasons.push("graph.dot missing dot_schema provenance");
+  } else if (!SUPPORTED_DOT_SCHEMAS.has(parsed.dot_schema)) {
+    reasons.push(`graph.dot dot_schema unsupported (${parsed.dot_schema})`);
+  }
+
+  return reasons;
+}
+
+function verifyReportProvenanceForSkip(args: {
+  parsed: ParsedReportProvenance;
+  reportRendererId: string;
+}): string[] {
+  const reasons: string[] = [];
+  const { parsed } = args;
+
+  if (!parsed.trace_file_sha256) {
+    reasons.push("trace.txt missing trace_file_sha256 provenance");
+  }
+
+  if (!parsed.report_renderer_id) {
+    reasons.push("trace.txt missing report_renderer_id provenance");
+  } else if (parsed.report_renderer_id !== args.reportRendererId) {
+    reasons.push(
+      `trace.txt report_renderer_id mismatch (expected ${args.reportRendererId}, got ${parsed.report_renderer_id})`
+    );
+  }
+
+  if (parsed.report_schema === undefined) {
+    reasons.push("trace.txt missing report_schema provenance");
+  } else if (!SUPPORTED_REPORT_SCHEMAS.has(parsed.report_schema)) {
+    reasons.push(`trace.txt report_schema unsupported (${parsed.report_schema})`);
+  }
+
+  return reasons;
+}
+
+function verifyExistingSkipArtifacts(args: {
+  existing: ExistingSkipArtifacts;
+  expectedGraphOptsSha256: string;
+  rendererIds: RendererIds;
+  requireDot: boolean;
+}): ExistingSkipCheckResult {
+  const reasons: string[] = [];
+  const { existing } = args;
+
+  if (!existing.traceJsonExists) {
+    if (existing.reportText || existing.dotText) {
+      reasons.push("trace.json is missing while derived artifacts exist");
+    }
+    return {
+      skippable: false,
+      reasons,
+      parsedDotProvenance: existing.dotText ? parseDotProvenance(existing.dotText) : null,
+      parsedReportProvenance: existing.reportText
+        ? parseReportProvenance(existing.reportText)
+        : null
+    };
+  }
+
+  let parsedReportProvenance: ParsedReportProvenance | null = null;
+  if (!existing.reportText) {
+    reasons.push("trace.txt is missing");
+  } else {
+    parsedReportProvenance = parseReportProvenance(existing.reportText);
+    reasons.push(
+      ...verifyReportProvenanceForSkip({
+        parsed: parsedReportProvenance,
+        reportRendererId: args.rendererIds.reportRendererId
+      })
+    );
+  }
+
+  let parsedDotProvenance: ParsedDotProvenance | null = null;
+  if (args.requireDot) {
+    if (!existing.dotText) {
+      reasons.push("graph.dot is missing");
+    } else {
+      parsedDotProvenance = parseDotProvenance(existing.dotText);
+      reasons.push(
+        ...verifyDotProvenanceForSkip({
+          parsed: parsedDotProvenance,
+          expectedGraphOptsSha256: args.expectedGraphOptsSha256,
+          graphRendererId: args.rendererIds.graphRendererId
+        })
+      );
+    }
+  }
+
+  if (
+    parsedReportProvenance?.trace_file_sha256 &&
+    parsedDotProvenance?.trace_file_sha256 &&
+    parsedReportProvenance.trace_file_sha256 !== parsedDotProvenance.trace_file_sha256
+  ) {
+    reasons.push(
+      `trace_file_sha256 mismatch between trace.txt and graph.dot (${parsedReportProvenance.trace_file_sha256} vs ${parsedDotProvenance.trace_file_sha256})`
+    );
+  }
+
+  if (
+    parsedReportProvenance?.trace_semantic_sha256 &&
+    parsedDotProvenance?.trace_semantic_sha256 &&
+    parsedReportProvenance.trace_semantic_sha256 !== parsedDotProvenance.trace_semantic_sha256
+  ) {
+    reasons.push(
+      `trace_semantic_sha256 mismatch between trace.txt and graph.dot (${parsedReportProvenance.trace_semantic_sha256} vs ${parsedDotProvenance.trace_semantic_sha256})`
+    );
+  }
+
+  return {
+    skippable: reasons.length === 0,
+    reasons,
+    parsedDotProvenance,
+    parsedReportProvenance
+  };
+}
+
 function verifyDotProvenance(args: {
   parsed: ParsedDotProvenance;
   expected: ExpectedProvenance;
@@ -1352,7 +1518,7 @@ function buildTraceDumpPayload(args: {
   result: Awaited<ReturnType<typeof runPasukTrace>>;
   opts: PasukTraceCorpusOptions;
   inputPath: string;
-}): Record<string, unknown> {
+}): TracePayloadLike {
   const { result, opts, inputPath } = args;
   return {
     schema_version: TRACE_DUMP_SCHEMA,
@@ -1378,6 +1544,178 @@ function buildTraceDumpPayload(args: {
     word_sections: result.word_sections,
     final_state: result.final_state
   };
+}
+
+type TraceArtifacts = {
+  tracePayload: TracePayloadLike;
+  traceJsonText: string;
+  reportBody: string;
+};
+
+function appendChunk(buffer: string, chunk: Buffer | string, limit = 8192): string {
+  if (buffer.length >= limit) {
+    return buffer;
+  }
+  const text = typeof chunk === "string" ? chunk : chunk.toString("utf8");
+  const combined = `${buffer}${text}`;
+  return combined.length > limit ? combined.slice(0, limit) : combined;
+}
+
+function formatChildOutput(stderr: string, stdout: string): string {
+  const parts: string[] = [];
+  const stderrTrimmed = stderr.trim();
+  if (stderrTrimmed.length > 0) {
+    parts.push(`stderr=${JSON.stringify(stderrTrimmed)}`);
+  }
+  const stdoutTrimmed = stdout.trim();
+  if (stdoutTrimmed.length > 0) {
+    parts.push(`stdout=${JSON.stringify(stdoutTrimmed)}`);
+  }
+  return parts.length > 0 ? ` ${parts.join(" ")}` : "";
+}
+
+async function runPasukTraceSubprocess(args: {
+  inputPath: string;
+  refKey: string;
+  opts: PasukTraceCorpusOptions;
+  traceJsonPath: string;
+  traceReportPath: string;
+}): Promise<void> {
+  const scriptPath = path.resolve(process.cwd(), "scripts", "pasuk-trace.mjs");
+  const cliArgs = [
+    scriptPath,
+    `--input=${args.inputPath}`,
+    `--ref=${args.refKey}`,
+    `--lang=${args.opts.lang}`,
+    `--out-json=${args.traceJsonPath}`,
+    `--out-report=${args.traceReportPath}`,
+    args.opts.normalizeFinals ? "--normalize-finals" : "--no-normalize-finals",
+    args.opts.keepTeamim ? "--keep-teamim" : "--strip-teamim",
+    args.opts.includeSnapshots ? "--include-snapshots" : "--no-snapshots",
+    args.opts.showPostReset ? "--show-post-reset" : "--hide-post-reset",
+    "--no-print-report"
+  ];
+
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(process.execPath, cliArgs, {
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    let stderr = "";
+    let stdout = "";
+    child.stderr?.on("data", (chunk: Buffer | string) => {
+      stderr = appendChunk(stderr, chunk);
+    });
+    child.stdout?.on("data", (chunk: Buffer | string) => {
+      stdout = appendChunk(stdout, chunk);
+    });
+    child.on("error", (error) => {
+      reject(error);
+    });
+    child.on("close", (code, signal) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+      const status = signal ? `signal=${signal}` : `code=${String(code)}`;
+      reject(
+        new Error(
+          `pasuk-trace subprocess failed for ${args.refKey} (${status}).${formatChildOutput(
+            stderr,
+            stdout
+          )}`
+        )
+      );
+    });
+  });
+}
+
+async function executeTraceInProcess(args: {
+  inputPath: string;
+  refKey: string;
+  opts: PasukTraceCorpusOptions;
+}): Promise<TraceArtifacts> {
+  const result = await runPasukTrace({
+    input: args.inputPath,
+    ref: args.refKey,
+    text: "",
+    lang: args.opts.lang,
+    normalizeFinals: args.opts.normalizeFinals,
+    keepTeamim: args.opts.keepTeamim,
+    allowRuntimeErrors: false,
+    includeSnapshots: args.opts.includeSnapshots,
+    showPostReset: args.opts.showPostReset,
+    outJson: "",
+    outReport: "",
+    printReport: false
+  });
+
+  const tracePayload = buildTraceDumpPayload({
+    result,
+    opts: args.opts,
+    inputPath: args.inputPath
+  });
+
+  return {
+    tracePayload,
+    traceJsonText: withTrailingNewline(JSON.stringify(tracePayload, null, 2)),
+    reportBody: result.report_text
+  };
+}
+
+async function executeTraceInSubprocess(args: {
+  inputPath: string;
+  refKey: string;
+  opts: PasukTraceCorpusOptions;
+  traceJsonPath: string;
+  traceReportPath: string;
+}): Promise<TraceArtifacts> {
+  await runPasukTraceSubprocess({
+    inputPath: args.inputPath,
+    refKey: args.refKey,
+    opts: args.opts,
+    traceJsonPath: args.traceJsonPath,
+    traceReportPath: args.traceReportPath
+  });
+
+  const [traceJsonTextRaw, reportTextRaw] = await Promise.all([
+    fs.readFile(args.traceJsonPath, "utf8"),
+    fs.readFile(args.traceReportPath, "utf8")
+  ]);
+
+  const tracePayload = parseTracePayloadIfPossible(traceJsonTextRaw);
+  if (!tracePayload) {
+    throw new Error(`pasuk-trace subprocess produced invalid trace.json for ${args.refKey}`);
+  }
+
+  return {
+    tracePayload,
+    traceJsonText: withTrailingNewline(traceJsonTextRaw),
+    reportBody: reportTextRaw
+  };
+}
+
+async function executeTrace(args: {
+  mode: TraceExecutionMode;
+  inputPath: string;
+  refKey: string;
+  opts: PasukTraceCorpusOptions;
+  traceJsonPath: string;
+  traceReportPath: string;
+}): Promise<TraceArtifacts> {
+  if (args.mode === "subprocess") {
+    return executeTraceInSubprocess({
+      inputPath: args.inputPath,
+      refKey: args.refKey,
+      opts: args.opts,
+      traceJsonPath: args.traceJsonPath,
+      traceReportPath: args.traceReportPath
+    });
+  }
+  return executeTraceInProcess({
+    inputPath: args.inputPath,
+    refKey: args.refKey,
+    opts: args.opts
+  });
 }
 
 function buildGraphOptions(opts: PasukTraceCorpusOptions): Record<string, unknown> {
@@ -1451,6 +1789,21 @@ async function readTextIfExists(filePath: string | null): Promise<string | null>
   }
 }
 
+async function fileExists(filePath: string | null): Promise<boolean> {
+  if (!filePath) {
+    return false;
+  }
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
+}
+
 function parseTracePayloadIfPossible(traceJsonText: string | null): TracePayloadLike | null {
   if (!traceJsonText) {
     return null;
@@ -1477,6 +1830,23 @@ async function readExistingArtifacts(args: {
   return {
     traceJsonText,
     tracePayload: parseTracePayloadIfPossible(traceJsonText),
+    reportText,
+    dotText
+  };
+}
+
+async function readExistingSkipArtifacts(args: {
+  traceJsonPath: string;
+  traceReportPath: string;
+  dotPath: string | null;
+}): Promise<ExistingSkipArtifacts> {
+  const [traceJsonExists, reportText, dotText] = await Promise.all([
+    fileExists(args.traceJsonPath),
+    readTextIfExists(args.traceReportPath),
+    readTextIfExists(args.dotPath)
+  ]);
+  return {
+    traceJsonExists,
     reportText,
     dotText
   };
@@ -1560,6 +1930,167 @@ function verifyExistingArtifacts(args: {
     parsedDotProvenance,
     parsedReportProvenance
   };
+}
+
+function readReportStats(reportText: string): {
+  words: number;
+  traceEntries: number;
+} {
+  const lines = reportText.split(/\r?\n/u);
+  let words = 0;
+  let traceEntries = 0;
+  for (const line of lines) {
+    if (/^\s*WORD\s+\d+\s+│/u.test(line)) {
+      words += 1;
+    }
+    if (/^\s*τ=\d+\s+│/u.test(line)) {
+      traceEntries += 1;
+    }
+  }
+  return {
+    words,
+    traceEntries
+  };
+}
+
+function buildRefIndexRowFromSkipArtifacts(args: {
+  outDir: string;
+  ref: CollectedRef;
+  traceJsonPath: string;
+  traceReportPath: string;
+  dotPath: string | null;
+  reportText: string;
+  dotText: string | null;
+  reportProvenance: ParsedReportProvenance;
+  dotProvenance: ParsedDotProvenance | null;
+  fallbackSnapshots: number;
+}): RefIndexRow {
+  const stats = readReportStats(args.reportText);
+  const traceFileSha = args.reportProvenance.trace_file_sha256 ?? "";
+  const traceSemanticSha =
+    args.reportProvenance.trace_semantic_sha256 ?? args.dotProvenance?.trace_semantic_sha256;
+  const reportRendererId = args.reportProvenance.report_renderer_id ?? "unknown";
+  const reportSchema = args.reportProvenance.report_schema ?? REPORT_SCHEMA;
+
+  return {
+    ref_key: args.ref.refKey,
+    book: args.ref.book,
+    book_slug: args.ref.bookSlug,
+    chapter: args.ref.chapter,
+    verse: args.ref.verse,
+    output: {
+      trace_json: toPosixRelative(args.outDir, args.traceJsonPath),
+      trace_report: toPosixRelative(args.outDir, args.traceReportPath),
+      graph_dot: args.dotPath ? toPosixRelative(args.outDir, args.dotPath) : null
+    },
+    stats: {
+      words: stats.words,
+      trace_entries: stats.traceEntries,
+      snapshots: args.fallbackSnapshots
+    },
+    sha256: {
+      trace_json: traceFileSha,
+      trace_report: sha256Text(args.reportText),
+      graph_dot: args.dotText === null ? null : sha256Text(args.dotText)
+    },
+    provenance: {
+      trace_file_sha256: traceFileSha,
+      trace_semantic_sha256: traceSemanticSha ?? null,
+      graph_opts_sha256: args.dotProvenance?.graph_opts_sha256 ?? null,
+      graph_renderer_id: args.dotProvenance?.graph_renderer_id ?? null,
+      dot_schema: args.dotProvenance?.dot_schema ?? null,
+      report_renderer_id: reportRendererId,
+      report_schema: reportSchema
+    }
+  };
+}
+
+async function loadExistingIndexRows(outDir: string): Promise<Map<string, RefIndexRow>> {
+  const indexPath = path.join(outDir, "refs", "index.json");
+  const text = await readTextIfExists(indexPath);
+  const rows = new Map<string, RefIndexRow>();
+  if (!text) {
+    return rows;
+  }
+  try {
+    const parsed = JSON.parse(text) as unknown;
+    if (!Array.isArray(parsed)) {
+      return rows;
+    }
+    for (const entry of parsed) {
+      if (!entry || typeof entry !== "object") {
+        continue;
+      }
+      const row = entry as Partial<RefIndexRow>;
+      if (typeof row.ref_key !== "string" || row.ref_key.length === 0) {
+        continue;
+      }
+      rows.set(row.ref_key, row as RefIndexRow);
+    }
+  } catch {
+    return rows;
+  }
+  return rows;
+}
+
+function isCachedRowReusable(args: {
+  row: RefIndexRow;
+  outDir: string;
+  ref: CollectedRef;
+  traceJsonPath: string;
+  traceReportPath: string;
+  dotPath: string | null;
+  graphOptsSha256: string;
+  rendererIds: RendererIds;
+  requireDot: boolean;
+}): boolean {
+  const expectedTraceJson = toPosixRelative(args.outDir, args.traceJsonPath);
+  const expectedTraceReport = toPosixRelative(args.outDir, args.traceReportPath);
+  const expectedDot = args.dotPath ? toPosixRelative(args.outDir, args.dotPath) : null;
+
+  if (args.row.ref_key !== args.ref.refKey) {
+    return false;
+  }
+  if (
+    args.row.book !== args.ref.book ||
+    args.row.chapter !== args.ref.chapter ||
+    args.row.verse !== args.ref.verse
+  ) {
+    return false;
+  }
+  if (args.row.output.trace_json !== expectedTraceJson) {
+    return false;
+  }
+  if (args.row.output.trace_report !== expectedTraceReport) {
+    return false;
+  }
+  if ((args.row.output.graph_dot ?? null) !== expectedDot) {
+    return false;
+  }
+
+  const provenance = args.row.provenance;
+  if (!provenance) {
+    return false;
+  }
+  if (provenance.report_renderer_id !== args.rendererIds.reportRendererId) {
+    return false;
+  }
+  if (!SUPPORTED_REPORT_SCHEMAS.has(provenance.report_schema)) {
+    return false;
+  }
+  if (args.requireDot) {
+    if (provenance.graph_opts_sha256 !== args.graphOptsSha256) {
+      return false;
+    }
+    if (provenance.graph_renderer_id !== args.rendererIds.graphRendererId) {
+      return false;
+    }
+    if (provenance.dot_schema === null || !SUPPORTED_DOT_SCHEMAS.has(provenance.dot_schema)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function formatReasons(reasons: string[]): string {
@@ -1718,10 +2249,12 @@ export async function runPasukTraceCorpus(
   const renderDotFromTraceJson = opts.emitDot
     ? (deps.renderDotFromTraceJson ?? (await loadRenderDotFromTraceJson()))
     : null;
+  const traceExecutionMode = deps.traceExecutionMode ?? "in-process";
   const graphOpts = buildGraphOptions(opts);
   const graphOptsSha256 = sha256Text(stableStringify(graphOpts));
 
   await fs.mkdir(outDir, { recursive: true });
+  const existingIndexRowsByRef = await loadExistingIndexRows(outDir);
 
   let fatalError: Error | null = null;
   let nextRefIndex = 0;
@@ -1734,18 +2267,75 @@ export async function runPasukTraceCorpus(
     const dotPath = opts.emitDot ? path.join(verseDir, "graph.dot") : null;
 
     try {
-      const existing = await readExistingArtifacts({
+      const existingSkip = await readExistingSkipArtifacts({
         traceJsonPath,
         traceReportPath,
         dotPath
       });
 
       const hasAnyExisting =
-        existing.traceJsonText !== null ||
-        existing.reportText !== null ||
-        existing.dotText !== null;
+        existingSkip.traceJsonExists ||
+        existingSkip.reportText !== null ||
+        existingSkip.dotText !== null;
 
-      if (opts.skipExisting && hasAnyExisting) {
+      if (hasAnyExisting && !opts.verifyExisting && !opts.repairExisting) {
+        const check = verifyExistingSkipArtifacts({
+          existing: existingSkip,
+          expectedGraphOptsSha256: graphOptsSha256,
+          rendererIds,
+          requireDot: opts.emitDot
+        });
+
+        if (
+          check.skippable &&
+          existingSkip.reportText &&
+          check.parsedReportProvenance?.trace_file_sha256
+        ) {
+          const cachedRow = existingIndexRowsByRef.get(ref.refKey);
+          if (
+            cachedRow &&
+            isCachedRowReusable({
+              row: cachedRow,
+              outDir,
+              ref,
+              traceJsonPath,
+              traceReportPath,
+              dotPath,
+              graphOptsSha256,
+              rendererIds,
+              requireDot: opts.emitDot
+            })
+          ) {
+            indexRows.push(cachedRow);
+            skippedExisting += 1;
+            return;
+          }
+
+          indexRows.push(
+            buildRefIndexRowFromSkipArtifacts({
+              outDir,
+              ref,
+              traceJsonPath,
+              traceReportPath,
+              dotPath,
+              reportText: existingSkip.reportText,
+              dotText: opts.emitDot ? existingSkip.dotText : null,
+              reportProvenance: check.parsedReportProvenance,
+              dotProvenance: opts.emitDot ? check.parsedDotProvenance : null,
+              fallbackSnapshots: cachedRow?.stats.snapshots ?? 1
+            })
+          );
+          skippedExisting += 1;
+          return;
+        }
+      }
+
+      if (hasAnyExisting && opts.skipExisting && (opts.verifyExisting || opts.repairExisting)) {
+        const existing = await readExistingArtifacts({
+          traceJsonPath,
+          traceReportPath,
+          dotPath
+        });
         const check = verifyExistingArtifacts({
           existing,
           expectedGraphOptsSha256: graphOptsSha256,
@@ -1869,30 +2459,18 @@ export async function runPasukTraceCorpus(
         }
       }
 
-      const result = await runPasukTrace({
-        input: inputPath,
-        ref: ref.refKey,
-        text: "",
-        lang: opts.lang,
-        normalizeFinals: opts.normalizeFinals,
-        keepTeamim: opts.keepTeamim,
-        allowRuntimeErrors: false,
-        includeSnapshots: opts.includeSnapshots,
-        showPostReset: opts.showPostReset,
-        outJson: "",
-        outReport: "",
-        printReport: false
-      });
-
-      const tracePayload = buildTraceDumpPayload({
-        result,
+      const traceArtifacts = await executeTrace({
+        mode: traceExecutionMode,
+        inputPath,
+        refKey: ref.refKey,
         opts,
-        inputPath
+        traceJsonPath,
+        traceReportPath
       });
       const normalizedTracePayload = normalizeTracePayloadForDerivedArtifacts(
-        tracePayload as TracePayloadLike
+        traceArtifacts.tracePayload
       );
-      const traceJsonText = withTrailingNewline(JSON.stringify(tracePayload, null, 2));
+      const traceJsonText = traceArtifacts.traceJsonText;
       const traceFileSha256 = sha256Text(traceJsonText);
       const traceSemanticSha256 = computeTraceSemanticSha256(normalizedTracePayload);
 
@@ -1902,7 +2480,7 @@ export async function runPasukTraceCorpus(
         report_schema: REPORT_SCHEMA,
         trace_semantic_sha256: traceSemanticSha256
       };
-      const traceReportText = wrapReportWithProvenance(result.report_text, reportProvenance);
+      const traceReportText = wrapReportWithProvenance(traceArtifacts.reportBody, reportProvenance);
 
       let dotProvenance: DotProvenance | null = null;
       let graphDotText: string | null = null;
@@ -1933,7 +2511,7 @@ export async function runPasukTraceCorpus(
           traceReportPath,
           dotPath,
           traceJsonText,
-          tracePayload,
+          tracePayload: traceArtifacts.tracePayload,
           traceReportText,
           graphDotText,
           traceFileSha256,
@@ -2070,7 +2648,9 @@ export async function runPasukTraceCorpus(
 
 export async function main(rawArgv: string[] = process.argv.slice(2)): Promise<void> {
   const opts = parseArgs(rawArgv);
-  const result = await runPasukTraceCorpus(opts);
+  const result = await runPasukTraceCorpus(opts, {
+    traceExecutionMode: "subprocess"
+  });
 
   console.log(
     [
