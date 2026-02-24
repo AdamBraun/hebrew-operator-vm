@@ -79,6 +79,61 @@ describe("pasuk graph renderer", () => {
     expect(dot).toContain("F_marker -> hF");
   });
 
+  it("clusters by origin tau from id, not mutable word metadata", async () => {
+    const { renderDotFromTraceJson } = await import("../../scripts/render/pasukGraph.mjs");
+
+    const tracePayload = {
+      ref_key: "Genesis/3/1",
+      cleaned_text: "א ב",
+      word_sections: [
+        {
+          word_index: 1,
+          surface: "א",
+          op_entries: [{ tauBefore: 7, tauAfter: 7 }],
+          exit_boundary: { mode: "cut" }
+        },
+        {
+          word_index: 2,
+          surface: "ב",
+          op_entries: [{ tauBefore: 8, tauAfter: 8 }],
+          exit_boundary: null
+        }
+      ],
+      vm: {
+        tau: 9,
+        D: "Ω",
+        F: "Ω",
+        handles: [
+          { id: "Ω", kind: "scope", meta: {} },
+          { id: "⊥", kind: "empty", meta: {} },
+          // Simulate later-word references mutating metadata.
+          { id: "א:7:1", kind: "scope", meta: { word_index: 2 } },
+          { id: "ב:8:1", kind: "scope", meta: { word_index: 1 } }
+        ],
+        links: [],
+        boundaries: []
+      }
+    };
+
+    const dot = renderDotFromTraceJson(tracePayload, {
+      layout: "plain",
+      wordsMode: "cluster",
+      prune: "none",
+      legend: false,
+      prettyIds: false
+    });
+
+    const firstWordCluster = findWordCluster(dot, "א");
+    expect(firstWordCluster).toBeTruthy();
+    expect(firstWordCluster).toContain('"א:7:1";');
+    expect(firstWordCluster).not.toContain('"ב:8:1";');
+
+    const secondWordCluster = findWordCluster(dot, "ב");
+    expect(secondWordCluster).toBeTruthy();
+    expect(secondWordCluster).toContain('"ב:8:1";');
+    expect(secondWordCluster).not.toContain('"א:7:1";');
+  });
+
   it("clusters nodes by word-section ownership (tau) and keeps maqqef sections split", async () => {
     const { renderDotFromTraceJson } = await import("../../scripts/render/pasukGraph.mjs");
 

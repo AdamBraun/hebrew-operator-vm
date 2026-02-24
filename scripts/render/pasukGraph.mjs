@@ -279,6 +279,7 @@ function normalizeWordSections(rawSections) {
       const outgoingD = asStringOrNull(rawSection?.outgoing_D ?? rawSection?.outgoingD);
       const outgoingF = asStringOrNull(rawSection?.outgoing_F ?? rawSection?.outgoingF);
       const exitKind = asStringOrNull(rawSection?.exit_kind ?? rawSection?.exitKind);
+      const sortedTaus = Array.from(tauSet.values()).sort((a, b) => a - b);
 
       return {
         sectionIndex,
@@ -289,7 +290,9 @@ function normalizeWordSections(rawSections) {
         outgoingD,
         outgoingF,
         exitKind,
-        taus: Array.from(tauSet.values()).sort((a, b) => a - b)
+        taus: sortedTaus,
+        tauMin: sortedTaus.length > 0 ? sortedTaus[0] : null,
+        tauMax: sortedTaus.length > 0 ? sortedTaus[sortedTaus.length - 1] : null
       };
     })
     .filter((section) => section.surface.length > 0 || section.taus.length > 0);
@@ -751,13 +754,7 @@ export function renderVmDot(vm, opts = {}) {
 
   const wordSections = normalizeWordSections(meta.wordSections);
   const tauToWordSection = buildTauToWordSectionMap(wordSections);
-  const hasWordSectionOwnership = wordSections.length > 0 && tauToWordSection.size > 0;
-  const wordNumberToSectionIndex = new Map();
-  for (const section of wordSections) {
-    if (!wordNumberToSectionIndex.has(section.wordIndex)) {
-      wordNumberToSectionIndex.set(section.wordIndex, section.sectionIndex);
-    }
-  }
+  const hasWordSectionOwnership = wordSections.length > 0;
 
   function parseWordIndexFromMeta(handle) {
     const m = handle.meta || {};
@@ -800,20 +797,19 @@ export function renderVmDot(vm, opts = {}) {
 
   function inferWordClusterIndex(handle) {
     if (hasWordSectionOwnership) {
-      const tau = parseHandleTau(handle.id);
-      if (tau != null && tauToWordSection.has(tau)) {
-        return tauToWordSection.get(tau);
+      const originTau = parseHandleTau(handle.id);
+      if (originTau == null) {
+        return null;
+      }
+      if (tauToWordSection.has(originTau)) {
+        return tauToWordSection.get(originTau);
       }
 
-      const metaWordIndex = parseWordIndexFromMeta(handle);
-      if (metaWordIndex != null) {
-        // Support either 1-based or 0-based metadata conventions.
-        if (wordNumberToSectionIndex.has(metaWordIndex)) {
-          return wordNumberToSectionIndex.get(metaWordIndex);
-        }
-        const oneBased = Number(metaWordIndex) + 1;
-        if (wordNumberToSectionIndex.has(oneBased)) {
-          return wordNumberToSectionIndex.get(oneBased);
+      // Fallback for sparse trace snapshots: map by section tau range, still based on origin tau.
+      for (const section of wordSections) {
+        if (section.tauMin == null || section.tauMax == null) continue;
+        if (originTau >= section.tauMin && originTau <= section.tauMax) {
+          return section.sectionIndex;
         }
       }
 
