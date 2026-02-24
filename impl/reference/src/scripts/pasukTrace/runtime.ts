@@ -77,6 +77,7 @@ export type PasukTraceRunResult = {
 
 const DEFAULT_INPUT = path.resolve(process.cwd(), "data", "torah.json");
 const DEFAULT_OUT_DIR = path.resolve(process.cwd(), ".tmp", "pasuk-trace");
+const TRACE_DUMP_SCHEMA = 2;
 
 function printHelp(): void {
   console.log("Usage:");
@@ -933,7 +934,7 @@ export async function main(rawArgv: string[] = process.argv.slice(2)): Promise<v
   const result = await runPasukTrace(opts);
 
   const dumpPayload = {
-    schema_version: 1,
+    schema_version: TRACE_DUMP_SCHEMA,
     generated_at: new Date().toISOString(),
     ref_key: result.ref_key,
     options: {

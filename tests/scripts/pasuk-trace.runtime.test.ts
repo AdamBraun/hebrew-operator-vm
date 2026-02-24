@@ -267,6 +267,7 @@ describe("pasuk trace runtime", () => {
     const reportText = await fs.readFile(outReportPath, "utf8");
     const parsed = JSON.parse(jsonText);
 
+    expect(parsed.schema_version).toBe(2);
     expect(parsed.ref_key).toBe("Genesis/1/1");
     expect(Array.isArray(parsed.deep_trace)).toBe(true);
     expect(Array.isArray(parsed.verse_snapshots)).toBe(true);

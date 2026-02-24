@@ -5,8 +5,8 @@ import { PASUK_CORPUS_CANONICAL_ARGS, REPAIR_COMMAND_HINT } from "./config.mjs";
 import { ensureKnownFlags, resolveRepoPath, sha256Text, stableStringify } from "./lib.mjs";
 
 const PASUK_ROOT = "outputs/pasuk-trace-corpus/latest";
-const DOT_SCHEMA = 1;
-const REPORT_SCHEMA = 1;
+const DOT_SCHEMA = 2;
+const REPORT_SCHEMA = 2;
 
 function parseDotProvenance(dotText) {
   const out = {};

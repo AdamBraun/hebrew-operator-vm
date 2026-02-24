@@ -48,11 +48,13 @@ type RendererIds = {
 };
 
 type TracePayloadLike = {
+  schema_version?: unknown;
   ref_key?: unknown;
   cleaned_text?: unknown;
   word_sections?: unknown;
   final_dump_state?: unknown;
   post_reset_state?: unknown;
+  final_state?: unknown;
   deep_trace?: unknown;
   verse_snapshots?: unknown;
 };
@@ -243,15 +245,16 @@ const DEFAULT_INPUT = path.resolve(process.cwd(), "data", "torah.json");
 const DEFAULT_OUT_DIR = path.resolve(process.cwd(), "outputs", "pasuk-trace-corpus", "latest");
 const DEFAULT_CONCURRENCY = 50;
 const DEFAULT_PROGRESS_EVERY = 25;
-const DOT_SCHEMA = 1;
-const REPORT_SCHEMA = 1;
+const OMEGA_HANDLE_ID = "Ω";
+const LEGACY_TRACE_DUMP_SCHEMA = 1;
+const TRACE_DUMP_SCHEMA = 2;
+const SUPPORTED_TRACE_DUMP_SCHEMAS = new Set<number>([LEGACY_TRACE_DUMP_SCHEMA, TRACE_DUMP_SCHEMA]);
+const DOT_SCHEMA = 2;
+const REPORT_SCHEMA = 2;
 const SUPPORTED_DOT_SCHEMAS = new Set<number>([DOT_SCHEMA]);
 const SUPPORTED_REPORT_SCHEMAS = new Set<number>([REPORT_SCHEMA]);
 
-const dynamicImport = new Function(
-  "specifier",
-  "return import(specifier);"
-) as DynamicImport;
+const dynamicImport = new Function("specifier", "return import(specifier);") as DynamicImport;
 
 let rendererIdsCache: Promise<RendererIds> | null = null;
 
@@ -415,9 +418,7 @@ function equalRef(left: string, right: string): boolean {
   const l = parseRefKey(left);
   const r = parseRefKey(right);
   return (
-    l.chapter === r.chapter &&
-    l.verse === r.verse &&
-    l.book.toLowerCase() === r.book.toLowerCase()
+    l.chapter === r.chapter && l.verse === r.verse && l.book.toLowerCase() === r.book.toLowerCase()
   );
 }
 
@@ -506,7 +507,11 @@ function stripVolatileTraceFields(value: unknown): unknown {
 }
 
 function computeTraceSemanticSha256(tracePayload: unknown): string {
-  return sha256Text(stableStringify(stripVolatileTraceFields(tracePayload)));
+  const normalized =
+    tracePayload && typeof tracePayload === "object"
+      ? normalizeTracePayloadForDerivedArtifacts(tracePayload as TracePayloadLike)
+      : tracePayload;
+  return sha256Text(stableStringify(stripVolatileTraceFields(normalized)));
 }
 
 function withTrailingNewline(text: string): string {
@@ -520,6 +525,281 @@ function asRecord(value: unknown, label: string): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
+function asRecordOrNull(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
+
+function asNonEmptyString(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function normalizePointer(value: unknown, fallback: string = OMEGA_HANDLE_ID): string {
+  return asNonEmptyString(value) ?? fallback;
+}
+
+function resolveLegacyDomainPointer(source: Record<string, unknown> | null): string {
+  if (!source) {
+    return OMEGA_HANDLE_ID;
+  }
+  return (
+    asNonEmptyString(source.D) ??
+    asNonEmptyString(source.domain) ??
+    asNonEmptyString(source.Omega) ??
+    asNonEmptyString(source.omega) ??
+    asNonEmptyString(source.OmegaId) ??
+    OMEGA_HANDLE_ID
+  );
+}
+
+function resolveLegacyFocusPointer(source: Record<string, unknown> | null): string {
+  if (!source) {
+    return OMEGA_HANDLE_ID;
+  }
+  return asNonEmptyString(source.F) ?? asNonEmptyString(source.focus) ?? OMEGA_HANDLE_ID;
+}
+
+function normalizeTraceSchemaVersion(tracePayload: TracePayloadLike): number {
+  const rawVersion = tracePayload.schema_version;
+  if (rawVersion === undefined || rawVersion === null) {
+    return LEGACY_TRACE_DUMP_SCHEMA;
+  }
+  const parsed = Number(rawVersion);
+  if (!Number.isInteger(parsed)) {
+    throw new Error(`trace.json schema_version must be an integer (got ${String(rawVersion)})`);
+  }
+  if (!SUPPORTED_TRACE_DUMP_SCHEMAS.has(parsed)) {
+    const supported = Array.from(SUPPORTED_TRACE_DUMP_SCHEMAS.values()).sort((a, b) => a - b);
+    throw new Error(
+      `trace.json schema_version ${parsed} is unsupported; supported schemas: ${supported.join(", ")}`
+    );
+  }
+  return parsed;
+}
+
+function normalizeTraceEntryPointers(value: unknown): Record<string, unknown> | null {
+  const entry = asRecordOrNull(value);
+  if (!entry) {
+    return null;
+  }
+  return {
+    ...entry,
+    D: resolveLegacyDomainPointer(entry),
+    F: resolveLegacyFocusPointer(entry)
+  };
+}
+
+function readWordEntryFocus(entry: Record<string, unknown> | null): string | null {
+  if (!entry) {
+    return null;
+  }
+  const phases = Array.isArray(entry.phases) ? entry.phases : [];
+  for (const phaseValue of phases) {
+    const phase = asRecordOrNull(phaseValue);
+    if (!phase || phase.phase !== "word_entry_context") {
+      continue;
+    }
+    const detail = asRecordOrNull(phase.detail);
+    const focus = asNonEmptyString(detail?.entry_focus);
+    if (focus) {
+      return focus;
+    }
+  }
+  return null;
+}
+
+function normalizeExitKind(
+  value: unknown,
+  exitBoundary: Record<string, unknown> | null
+): "cut" | "glue" | "glue_maqqef" {
+  const explicit = asNonEmptyString(value);
+  if (explicit === "glue" || explicit === "glue_maqqef" || explicit === "cut") {
+    return explicit;
+  }
+  const mode =
+    asNonEmptyString(exitBoundary?.boundary_mode) ?? asNonEmptyString(exitBoundary?.mode);
+  if (mode === "glue" || mode === "glue_maqqef") {
+    return mode;
+  }
+  return "cut";
+}
+
+function normalizeWordIndex(value: unknown, fallback: number): number {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    return fallback;
+  }
+  return Number(parsed);
+}
+
+function normalizeWordSection(
+  sectionValue: unknown,
+  sectionIndex: number
+): Record<string, unknown> {
+  const section = asRecordOrNull(sectionValue);
+  if (!section) {
+    throw new Error(`word_sections[${sectionIndex}] must be an object`);
+  }
+
+  const rawEntries = Array.isArray(section.op_entries) ? section.op_entries : [];
+  const opEntries = rawEntries.map((entry) => normalizeTraceEntryPointers(entry) ?? entry);
+  const firstOp = asRecordOrNull(opEntries[0]);
+  const lastOp = asRecordOrNull(opEntries[opEntries.length - 1]);
+  const exitBoundary = normalizeTraceEntryPointers(section.exit_boundary);
+
+  const incomingD =
+    asNonEmptyString(section.incoming_D) ??
+    asNonEmptyString(section.incomingD) ??
+    resolveLegacyDomainPointer(firstOp);
+  const incomingF =
+    asNonEmptyString(section.incoming_F) ??
+    asNonEmptyString(section.incomingF) ??
+    readWordEntryFocus(firstOp) ??
+    resolveLegacyFocusPointer(firstOp);
+  const outgoingD =
+    asNonEmptyString(section.outgoing_D) ??
+    asNonEmptyString(section.outgoingD) ??
+    resolveLegacyDomainPointer(exitBoundary ?? lastOp);
+  const outgoingF =
+    asNonEmptyString(section.outgoing_F) ??
+    asNonEmptyString(section.outgoingF) ??
+    resolveLegacyFocusPointer(exitBoundary ?? lastOp);
+
+  return {
+    ...section,
+    word_index: normalizeWordIndex(
+      section.word_index ?? section.wordIndex ?? section.index,
+      sectionIndex + 1
+    ),
+    surface: String(section.surface ?? section.word ?? ""),
+    op_entries: opEntries,
+    exit_boundary: exitBoundary,
+    incoming_D: incomingD,
+    incoming_F: incomingF,
+    outgoing_D: outgoingD,
+    outgoing_F: outgoingF,
+    exit_kind: normalizeExitKind(section.exit_kind ?? section.exitKind, exitBoundary)
+  };
+}
+
+function normalizeVmStateDumpPointers(value: unknown, label: string): Record<string, unknown> {
+  const stateDump = asRecord(value, label);
+  const vm = asRecordOrNull(stateDump.vm) ?? {};
+  return {
+    ...stateDump,
+    vm: {
+      ...vm,
+      D: normalizePointer(resolveLegacyDomainPointer(vm)),
+      F: normalizePointer(resolveLegacyFocusPointer(vm)),
+      OmegaId: normalizePointer(vm.OmegaId, OMEGA_HANDLE_ID)
+    }
+  };
+}
+
+function hasWordSectionPointerFields(section: Record<string, unknown>): boolean {
+  return (
+    ("incoming_D" in section || "incomingD" in section) &&
+    ("incoming_F" in section || "incomingF" in section) &&
+    ("outgoing_D" in section || "outgoingD" in section) &&
+    ("outgoing_F" in section || "outgoingF" in section)
+  );
+}
+
+function assertSchema2Pointers(args: {
+  schemaVersion: number;
+  wordSections: unknown[];
+  finalDumpStateRaw: unknown;
+  postResetStateRaw: unknown;
+}): void {
+  const { schemaVersion, wordSections, finalDumpStateRaw, postResetStateRaw } = args;
+  if (schemaVersion !== TRACE_DUMP_SCHEMA) {
+    return;
+  }
+
+  for (const [index, sectionValue] of wordSections.entries()) {
+    const section = asRecordOrNull(sectionValue);
+    if (!section) {
+      throw new Error(
+        `trace.json schema_version ${TRACE_DUMP_SCHEMA}: word_sections[${index}] must be an object`
+      );
+    }
+    if (!hasWordSectionPointerFields(section)) {
+      throw new Error(
+        `trace.json schema_version ${TRACE_DUMP_SCHEMA}: word_sections[${index}] is missing incoming/outgoing D/F fields`
+      );
+    }
+  }
+
+  const finalDumpState = asRecord(finalDumpStateRaw, "final_dump_state");
+  const finalVm = asRecordOrNull(finalDumpState.vm);
+  if (!asNonEmptyString(finalVm?.D) || !asNonEmptyString(finalVm?.F)) {
+    throw new Error(
+      `trace.json schema_version ${TRACE_DUMP_SCHEMA}: final_dump_state.vm must include non-empty D and F`
+    );
+  }
+
+  const postResetState = asRecord(postResetStateRaw, "post_reset_state");
+  const postVm = asRecordOrNull(postResetState.vm);
+  if (!asNonEmptyString(postVm?.D) || !asNonEmptyString(postVm?.F)) {
+    throw new Error(
+      `trace.json schema_version ${TRACE_DUMP_SCHEMA}: post_reset_state.vm must include non-empty D and F`
+    );
+  }
+}
+
+function normalizeTracePayloadForDerivedArtifacts(
+  tracePayload: TracePayloadLike
+): TracePayloadLike {
+  const schemaVersion = normalizeTraceSchemaVersion(tracePayload);
+  const wordSectionsRaw = tracePayload.word_sections;
+  if (!Array.isArray(wordSectionsRaw)) {
+    throw new Error("word_sections is missing or not an array");
+  }
+
+  const finalDumpState = normalizeVmStateDumpPointers(
+    tracePayload.final_dump_state,
+    "final_dump_state"
+  );
+  const postResetState = normalizeVmStateDumpPointers(
+    tracePayload.post_reset_state,
+    "post_reset_state"
+  );
+
+  assertSchema2Pointers({
+    schemaVersion,
+    wordSections: wordSectionsRaw,
+    finalDumpStateRaw: tracePayload.final_dump_state,
+    postResetStateRaw: tracePayload.post_reset_state
+  });
+
+  const normalizedWordSections = wordSectionsRaw.map((section, index) =>
+    normalizeWordSection(section, index)
+  );
+  const deepTrace = Array.isArray(tracePayload.deep_trace)
+    ? tracePayload.deep_trace.map((entry) => normalizeTraceEntryPointers(entry) ?? entry)
+    : tracePayload.deep_trace;
+  const finalState = normalizeVmStateDumpPointers(
+    tracePayload.final_state ?? tracePayload.final_dump_state,
+    "final_state"
+  );
+
+  return {
+    ...tracePayload,
+    schema_version: TRACE_DUMP_SCHEMA,
+    word_sections: normalizedWordSections,
+    deep_trace: deepTrace,
+    final_dump_state: finalDumpState,
+    post_reset_state: postResetState,
+    final_state: finalState
+  };
+}
+
 function asWordSections(value: unknown): WordSection[] {
   if (!Array.isArray(value)) {
     throw new Error("word_sections is missing or not an array");
@@ -531,11 +811,12 @@ function renderReportFromTracePayload(args: {
   tracePayload: TracePayloadLike;
   showPostReset: boolean;
 }): string {
-  const refKey = String(args.tracePayload.ref_key ?? "unknown");
-  const cleanedText = String(args.tracePayload.cleaned_text ?? "");
-  const sections = asWordSections(args.tracePayload.word_sections);
-  const finalDumpState = asRecord(args.tracePayload.final_dump_state, "final_dump_state");
-  const postResetState = asRecord(args.tracePayload.post_reset_state, "post_reset_state");
+  const normalizedTrace = normalizeTracePayloadForDerivedArtifacts(args.tracePayload);
+  const refKey = String(normalizedTrace.ref_key ?? "unknown");
+  const cleanedText = String(normalizedTrace.cleaned_text ?? "");
+  const sections = asWordSections(normalizedTrace.word_sections);
+  const finalDumpState = asRecord(normalizedTrace.final_dump_state, "final_dump_state");
+  const postResetState = asRecord(normalizedTrace.post_reset_state, "post_reset_state");
 
   return formatDeepTraceReport({
     refKey,
@@ -630,7 +911,9 @@ export function parseDotProvenance(dotText: string): ParsedDotProvenance {
     graph_opts_sha256: map.graph_opts_sha256,
     graph_renderer_id: map.graph_renderer_id,
     dot_schema:
-      parsedSchema !== undefined && Number.isInteger(parsedSchema) ? Number(parsedSchema) : undefined,
+      parsedSchema !== undefined && Number.isInteger(parsedSchema)
+        ? Number(parsedSchema)
+        : undefined,
     trace_semantic_sha256: map.trace_semantic_sha256
   };
 }
@@ -643,7 +926,9 @@ export function parseReportProvenance(reportText: string): ParsedReportProvenanc
     trace_file_sha256: map.trace_file_sha256,
     report_renderer_id: map.report_renderer_id,
     report_schema:
-      parsedSchema !== undefined && Number.isInteger(parsedSchema) ? Number(parsedSchema) : undefined,
+      parsedSchema !== undefined && Number.isInteger(parsedSchema)
+        ? Number(parsedSchema)
+        : undefined,
     trace_semantic_sha256: map.trace_semantic_sha256
   };
 }
@@ -759,7 +1044,8 @@ async function resolveRendererIds(): Promise<RendererIds> {
 
       const gitHint =
         process.env.GIT_COMMIT_SHA ?? process.env.COMMIT_SHA ?? process.env.SOURCE_COMMIT ?? "";
-      const normalizedHint = typeof gitHint === "string" && gitHint.trim() ? `+${gitHint.trim()}` : "";
+      const normalizedHint =
+        typeof gitHint === "string" && gitHint.trim() ? `+${gitHint.trim()}` : "";
       const base = `${packageName}@${packageVersion}${normalizedHint}`;
       return {
         graphRendererId: `${base}/pasuk-graph`,
@@ -1069,7 +1355,7 @@ function buildTraceDumpPayload(args: {
 }): Record<string, unknown> {
   const { result, opts, inputPath } = args;
   return {
-    schema_version: 1,
+    schema_version: TRACE_DUMP_SCHEMA,
     generated_at: new Date().toISOString(),
     ref_key: result.ref_key,
     options: {
@@ -1349,12 +1635,18 @@ async function regenerateDerivedFromTrace(args: {
   renderDotFromTraceJson: RenderDotFromTraceJson | null;
   rendererIds: RendererIds;
   showPostReset: boolean;
-}): Promise<{ traceReportText: string; graphDotText: string | null; rowReportProvenance: ReportProvenance; rowDotProvenance: DotProvenance | null }> {
+}): Promise<{
+  traceReportText: string;
+  graphDotText: string | null;
+  rowReportProvenance: ReportProvenance;
+  rowDotProvenance: DotProvenance | null;
+}> {
+  const normalizedTracePayload = normalizeTracePayloadForDerivedArtifacts(args.tracePayload);
   const traceFileSha256 = sha256Text(args.traceJsonText);
-  const traceSemanticSha256 = computeTraceSemanticSha256(args.tracePayload);
+  const traceSemanticSha256 = computeTraceSemanticSha256(normalizedTracePayload);
 
   const reportBody = renderReportFromTracePayload({
-    tracePayload: args.tracePayload,
+    tracePayload: normalizedTracePayload,
     showPostReset: args.showPostReset
   });
 
@@ -1369,7 +1661,7 @@ async function regenerateDerivedFromTrace(args: {
   let dotProvenance: DotProvenance | null = null;
   let graphDotText: string | null = null;
   if (args.dotPath && args.renderDotFromTraceJson) {
-    const dotRaw = args.renderDotFromTraceJson(args.tracePayload, args.graphOpts);
+    const dotRaw = args.renderDotFromTraceJson(normalizedTracePayload, args.graphOpts);
     dotProvenance = {
       trace_file_sha256: traceFileSha256,
       graph_opts_sha256: args.graphOptsSha256,
@@ -1424,7 +1716,7 @@ export async function runPasukTraceCorpus(
 
   const rendererIds = deps.rendererIds ?? (await resolveRendererIds());
   const renderDotFromTraceJson = opts.emitDot
-    ? deps.renderDotFromTraceJson ?? (await loadRenderDotFromTraceJson())
+    ? (deps.renderDotFromTraceJson ?? (await loadRenderDotFromTraceJson()))
     : null;
   const graphOpts = buildGraphOptions(opts);
   const graphOptsSha256 = sha256Text(stableStringify(graphOpts));
@@ -1449,7 +1741,9 @@ export async function runPasukTraceCorpus(
       });
 
       const hasAnyExisting =
-        existing.traceJsonText !== null || existing.reportText !== null || existing.dotText !== null;
+        existing.traceJsonText !== null ||
+        existing.reportText !== null ||
+        existing.dotText !== null;
 
       if (opts.skipExisting && hasAnyExisting) {
         const check = verifyExistingArtifacts({
@@ -1459,7 +1753,12 @@ export async function runPasukTraceCorpus(
           requireDot: opts.emitDot
         });
 
-        if (check.skippable && existing.traceJsonText && existing.tracePayload && existing.reportText) {
+        if (
+          check.skippable &&
+          existing.traceJsonText &&
+          existing.tracePayload &&
+          existing.reportText
+        ) {
           const reportProvenance =
             check.parsedReportProvenance &&
             check.parsedReportProvenance.trace_file_sha256 &&
@@ -1590,9 +1889,12 @@ export async function runPasukTraceCorpus(
         opts,
         inputPath
       });
+      const normalizedTracePayload = normalizeTracePayloadForDerivedArtifacts(
+        tracePayload as TracePayloadLike
+      );
       const traceJsonText = withTrailingNewline(JSON.stringify(tracePayload, null, 2));
       const traceFileSha256 = sha256Text(traceJsonText);
-      const traceSemanticSha256 = computeTraceSemanticSha256(tracePayload);
+      const traceSemanticSha256 = computeTraceSemanticSha256(normalizedTracePayload);
 
       const reportProvenance: ReportProvenance = {
         trace_file_sha256: traceFileSha256,
@@ -1605,7 +1907,7 @@ export async function runPasukTraceCorpus(
       let dotProvenance: DotProvenance | null = null;
       let graphDotText: string | null = null;
       if (opts.emitDot && renderDotFromTraceJson) {
-        const dotRaw = renderDotFromTraceJson(tracePayload, graphOpts);
+        const dotRaw = renderDotFromTraceJson(normalizedTracePayload, graphOpts);
         dotProvenance = {
           trace_file_sha256: traceFileSha256,
           graph_opts_sha256: graphOptsSha256,
