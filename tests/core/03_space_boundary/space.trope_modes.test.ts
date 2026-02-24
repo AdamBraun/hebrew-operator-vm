@@ -23,12 +23,39 @@ describe("trope-driven space modes", () => {
     expect(state.vm.H_committed.some((chunk) => chunk.boundary_mode === "glue")).toBe(true);
   });
 
-  it("emits join_blocked when pending join meets a left-context barrier", () => {
-    const { trace } = runProgramWithTrace("א֑ ב֣ ג", createInitialState());
-    const blockedWord = trace.find((entry) => entry.token === "ג");
-    expect(blockedWord).toBeDefined();
-    expect(blockedWord?.events.some((event) => event.type === "join_blocked")).toBe(true);
-    expect(blockedWord?.events.some((event) => event.type === "join_consume")).toBe(false);
+  it("applies cut reset at the next word only, then allows downstream glue joins", () => {
+    const { deepTrace, trace } = runProgramWithDeepTrace("א֑ ב֣ ג", createInitialState(), {
+      includeStateSnapshots: false
+    });
+    const cutBoundary = trace.find(
+      (entry) => entry.token === "□" && entry.boundary_mode === "cut" && entry.rank === 2
+    );
+    expect(cutBoundary).toBeDefined();
+    expect(cutBoundary?.F).toBe("Ω");
+    expect(cutBoundary?.R).toBe("⊥");
+
+    const secondWordContext = deepTrace
+      .find((entry) => entry.token === "ב")
+      ?.phases.find((phase) => phase.phase === "word_entry_context")?.detail as
+      | { entry_focus?: string | null }
+      | undefined;
+    expect(secondWordContext?.entry_focus).toBe("Ω");
+
+    const thirdWord = trace.find((entry) => entry.token === "ג");
+    const thirdWordContext = deepTrace
+      .find((entry) => entry.token === "ג")
+      ?.phases.find((phase) => phase.phase === "word_entry_context")?.detail as
+      | {
+          pending_join_action?: string;
+          pending_join_at_entry?: { left?: string | null } | null;
+          entry_focus?: string | null;
+        }
+      | undefined;
+    expect(thirdWord).toBeDefined();
+    expect(thirdWord?.events.some((event) => event.type === "join_blocked")).toBe(false);
+    expect(thirdWord?.events.some((event) => event.type === "join_consume")).toBe(true);
+    expect(thirdWordContext?.pending_join_action).toBe("consumed");
+    expect(thirdWordContext?.entry_focus).toBe(thirdWordContext?.pending_join_at_entry?.left);
   });
 
   it("cut(rank=1) resolves obligations strictly (no silent fall/close)", () => {
@@ -44,6 +71,9 @@ describe("trope-driven space modes", () => {
       true
     );
     expect(state.vm.H.some((event) => event.type === "fall" && event.tau === tau)).toBe(false);
+    expect(cutBoundary?.F).toBe("Ω");
+    expect(cutBoundary?.R).toBe("⊥");
+    expect(cutBoundary?.KLength).toBe(2);
   });
 
   it("same-rank disjunctive cuts emit sibling nodes", () => {
@@ -192,7 +222,9 @@ describe("trope-driven space modes", () => {
   });
 
   it("maqqef boundary forces glue semantics even without left trope", () => {
-    const { state, trace } = runProgramWithTrace("מ־נ֖", createInitialState());
+    const { deepTrace, state, trace } = runProgramWithDeepTrace("מ־נ֖", createInitialState(), {
+      includeStateSnapshots: false
+    });
     const maqqefBoundary = trace.find(
       (entry) => entry.token === "□" && entry.boundary_mode === "glue_maqqef"
     );
@@ -204,5 +236,17 @@ describe("trope-driven space modes", () => {
         (event.type === "fall" || event.type === "mem_spill" || event.type === "support_debt")
     );
     expect(resolvedAtSeam.length).toBe(0);
+
+    const nextWordContext = deepTrace
+      .find((entry) => entry.token === "נ")
+      ?.phases.find((phase) => phase.phase === "word_entry_context")?.detail as
+      | {
+          pending_join_action?: string;
+          pending_join_at_entry?: { left?: string | null } | null;
+          entry_focus?: string | null;
+        }
+      | undefined;
+    expect(nextWordContext?.pending_join_action).toBe("consumed");
+    expect(nextWordContext?.entry_focus).toBe(nextWordContext?.pending_join_at_entry?.left);
   });
 });

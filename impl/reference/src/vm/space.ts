@@ -558,16 +558,16 @@ function applyCut(state: State, rankRaw: number | null | undefined): void {
   state.vm.PendingJoin = undefined;
   state.vm.LeftContextBarrier = rank;
   settleWordBoundaryState(state);
+  baselineReset(state);
+  state.vm.OStack_word = [];
 
   if (rank >= 2) {
-    baselineReset(state);
     if (state.vm.E.length > 0) {
       state.vm.E.pop();
     }
   }
 
   if (rank >= 3) {
-    baselineReset(state);
     state.vm.E = [];
     flushPhraseToCommitted(state);
     state.vm.CStack = [{ rank: Number.MAX_SAFE_INTEGER, node_id: "ROOT" }];

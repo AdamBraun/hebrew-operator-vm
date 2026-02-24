@@ -435,6 +435,7 @@ function executeLetter(
   context: { isWordFinal: boolean },
   recorder?: PhaseRecorder
 ): { read_op: string; shape_op: string | null } {
+  const barrierAtEntry = !state.vm.wordHasContent ? state.vm.LeftContextBarrier : null;
   const pendingJoinAtEntry = state.vm.PendingJoin
     ? {
         id: state.vm.PendingJoin.id,
@@ -445,7 +446,7 @@ function executeLetter(
   let pendingJoinAction: "none" | "consumed" | "blocked_by_barrier" = "none";
 
   if (!state.vm.wordHasContent) {
-    if (state.vm.LeftContextBarrier !== null) {
+    if (barrierAtEntry !== null) {
       if (pendingJoinAtEntry) {
         pendingJoinAction = "blocked_by_barrier";
         state.vm.H.push({
@@ -455,13 +456,15 @@ function executeLetter(
             id: pendingJoinAtEntry.id,
             left: pendingJoinAtEntry.left,
             strength: pendingJoinAtEntry.strength,
-            barrier: state.vm.LeftContextBarrier
+            barrier: barrierAtEntry
           }
         });
+        state.vm.PendingJoin = undefined;
       }
       state.vm.F = state.vm.D;
       state.vm.R = BOT_ID;
       state.vm.K = [state.vm.F, state.vm.R];
+      state.vm.LeftContextBarrier = null;
     } else if (state.vm.PendingJoin) {
       const consumed = state.vm.PendingJoin;
       state.vm.F = consumed.left_span_handle;
@@ -487,7 +490,7 @@ function executeLetter(
   state.vm.wordHasContent = true;
   recorder?.record("word_entry_context", {
     is_word_final: context.isWordFinal,
-    left_context_barrier: state.vm.LeftContextBarrier,
+    left_context_barrier: barrierAtEntry,
     pending_join_at_entry: pendingJoinAtEntry,
     pending_join_action: pendingJoinAction,
     pending_join_consumed: state.vm.lastPendingJoinConsumedId ?? null,
