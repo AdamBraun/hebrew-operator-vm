@@ -8,6 +8,7 @@ import { BOT_ID } from "../state/handles";
 import { hardenHandle } from "../state/policies";
 import { applyEventLinks } from "../state/eventLinks";
 import { State, createInitialState, serializeState } from "../state/state";
+import { assertOperatorDomainStable } from "./domainTransition";
 import { applySpace } from "./space";
 
 export type TraceEntry = {
@@ -340,6 +341,7 @@ function executeReadRail(
   context: { isWordFinal: boolean },
   recorder?: PhaseRecorder
 ): void {
+  const domainBefore = state.vm.D;
   const selectResult = op.select(state);
   recorder?.record("select", {
     read_op: op.meta.letter,
@@ -406,6 +408,11 @@ function executeReadRail(
       handle.meta = { ...handle.meta, hard: 1 };
     }
   }
+
+  assertOperatorDomainStable(sealResult.S, {
+    before: domainBefore,
+    operator: op.meta.letter
+  });
 
   const sealedHandle = sealResult.S.handles.get(sealed);
   if (sealedHandle?.kind === "artifact") {
@@ -555,7 +562,11 @@ export function runProgram(
     if (token.letter === "□") {
       const boundaryMode = token.boundary?.mode;
       const boundaryRank = token.boundary?.rank;
-      applySpace(state, { mode: boundaryMode, rank: boundaryRank });
+      applySpace(state, {
+        mode: boundaryMode,
+        rank: boundaryRank,
+        leftTrope: token.boundary?.left_trope ?? null
+      });
       if (options.finalizeAtVerseEnd && shouldFinalizeAtBoundary(boundaryMode, boundaryRank)) {
         finalizeAtSofPasuqBoundary(state, {
           tokenIndex: index,
@@ -647,7 +658,11 @@ function runProgramWithTraceInternal(
         rank: boundaryRank,
         continuation
       });
-      applySpace(state, { mode: boundaryMode, rank: boundaryRank });
+      applySpace(state, {
+        mode: boundaryMode,
+        rank: boundaryRank,
+        leftTrope: token.boundary?.left_trope ?? null
+      });
       if (continuation) {
         pendingJoinCreated = state.vm.PendingJoin?.id;
       }

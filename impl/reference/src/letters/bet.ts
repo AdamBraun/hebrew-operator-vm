@@ -55,19 +55,13 @@ export const betOp: LetterOp = {
     const cons: Construction = {
       base: anchor,
       envelope: defaultEnvelope(),
-      meta: { boundaryId, anchor, outside, reframeDomain: shouldReframeDomain }
+      meta: { boundaryId, anchor, outside }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { boundaryId, reframeDomain } = cons.meta as {
-      boundaryId: string;
-      reframeDomain: boolean;
-    };
+    const { boundaryId } = cons.meta as { boundaryId: string };
     S.vm.E.push({ F: S.vm.F, lambda: "class", D_frame: S.vm.D });
-    if (reframeDomain) {
-      S.vm.D = boundaryId;
-    }
     return { S, h: boundaryId, r: BOT_ID };
   }
 };

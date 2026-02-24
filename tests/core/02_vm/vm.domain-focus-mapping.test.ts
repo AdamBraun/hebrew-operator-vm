@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { letterRegistry } from "@ref/letters/registry";
 import { BOT_ID, createHandle } from "@ref/state/handles";
 import { createInitialState } from "@ref/state/state";
-import { runProgram } from "@ref/vm/vm";
-
-const NON_REFRAMING_LETTERS = ["ל", "מ", "ם", "י", "כ", "ד", "ר"] as const;
+import { runProgram, runProgramWithTrace } from "@ref/vm/vm";
 
 function createStateWithDomain(domainId: string) {
   const state = createInitialState();
@@ -16,32 +15,57 @@ function createStateWithDomain(domainId: string) {
   return state;
 }
 
+const OPERATOR_INPUTS = Array.from(new Set(Object.keys(letterRegistry))).sort();
+
 describe("vm domain/focus mapping", () => {
-  it.each(NON_REFRAMING_LETTERS)("keeps D stable for non-reframing letter %s", (letter) => {
+  it.each(OPERATOR_INPUTS)("keeps D stable for operator %s", (letter) => {
     const initialDomain = "D:test";
-    const state = runProgram(letter, createStateWithDomain(initialDomain));
-    expect(state.vm.D).toBe(initialDomain);
+    const { trace } = runProgramWithTrace(letter, createStateWithDomain(initialDomain));
+    const letterEntry = trace.find((entry) => entry.token === letter);
+
+    expect(letterEntry).toBeDefined();
+    expect(letterEntry?.D).toBe(initialDomain);
   });
 
-  it("reframes D for bet at word-entry baseline", () => {
+  it("keeps D stable for bet while preserving domain-carrier metadata", () => {
     const initialDomain = "D:test";
     const state = runProgram("ב", createStateWithDomain(initialDomain));
     const boundary = state.boundaries[0];
     const boundaryHandle = state.handles.get(boundary.id);
 
-    expect(state.vm.D).toBe(boundary.id);
-    expect(state.vm.D).not.toBe(initialDomain);
+    expect(state.vm.D).toBe(initialDomain);
     expect(boundaryHandle?.meta.domainCarrier).toBe(1);
   });
 
-  it("does not reframe D on repeated bet deepening within the same word", () => {
-    const state = runProgram("בב", createInitialState());
-    expect(state.boundaries.length).toBe(2);
+  it("letter tokens never change D between adjacent trace entries", () => {
+    const { trace } = runProgramWithTrace("ב֣ ל֑ מ־נ", createStateWithDomain("D:test"));
+    for (let index = 1; index < trace.length; index += 1) {
+      const current = trace[index];
+      if (current.token === "□") {
+        continue;
+      }
+      const previous = trace[index - 1];
+      expect(current.D).toBe(previous.D);
+    }
+  });
 
-    const [first, second] = state.boundaries;
-    const secondHandle = state.handles.get(second.id);
-    expect(state.vm.D).toBe(first.id);
-    expect(state.vm.D).not.toBe(second.id);
-    expect(secondHandle?.meta.domainCarrier).toBe(0);
+  it("throws in test builds if an operator mutates D", () => {
+    const originalAleph = letterRegistry.א;
+    letterRegistry.א = {
+      ...originalAleph,
+      seal: (S, cons) => {
+        const result = originalAleph.seal(S, cons);
+        result.S.vm.D = "D:illegal";
+        return result;
+      }
+    };
+
+    try {
+      expect(() => runProgram("א", createInitialState())).toThrow(
+        /Only boundary\/cantillation transitions may update vm\.D/
+      );
+    } finally {
+      letterRegistry.א = originalAleph;
+    }
   });
 });

@@ -1,8 +1,10 @@
 import { HehMode, LetterMode } from "../compile/types";
 import { letterRegistry } from "../letters/registry";
 import { Construction, LetterOp, SelectOperands } from "../letters/types";
+import { applyEventLinks } from "../state/eventLinks";
 import { hardenHandle } from "../state/policies";
 import { State } from "../state/state";
+import { assertOperatorDomainStable } from "../vm/domainTransition";
 import { applySpace } from "../vm/space";
 import {
   CompiledTokenBundle,
@@ -90,7 +92,8 @@ function applySof(state: State, runtime: CompiledTokenRuntime, handleId: string)
         : modifier.mark;
     sofModifiers.push({
       kind: modifier.kind,
-      mark: markChar
+      mark: markChar,
+      composite: undefined
     });
 
     switch (modifier.kind) {
@@ -146,6 +149,7 @@ function executeReadRail(
   op: LetterOp,
   context: ExecuteContext
 ): void {
+  const domainBefore = state.vm.D;
   const selectResult = op.select(state);
   const ops = applyRosh(bundle.runtime, selectResult.ops);
   const letterMode = resolveLetterMode(bundle.runtime, context.isWordFinal);
@@ -170,6 +174,11 @@ function executeReadRail(
       handle.meta = { ...handle.meta, carrier_mode: "seeded", rep_flag: 1 };
     }
   }
+
+  assertOperatorDomainStable(sealResult.S, {
+    before: domainBefore,
+    operator: op.meta.letter
+  });
 
   const sealedHandle = sealResult.S.handles.get(sealed);
   if (sealedHandle?.kind === "artifact") {
@@ -252,6 +261,7 @@ export function applyTokenId(
   }
 
   const events = state.vm.H.slice(eventStart);
+  applyEventLinks(state, events);
   return [state, events];
 }
 

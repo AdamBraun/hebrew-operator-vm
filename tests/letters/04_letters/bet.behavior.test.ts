@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { OMEGA_ID } from "@ref/state/handles";
 import { createInitialState } from "@ref/state/state";
 import { runProgram } from "@ref/vm/vm";
 
@@ -15,7 +16,7 @@ describe("bet behavior", () => {
     const seeded = state.handles.get(boundary.inside);
     expect(seeded?.kind).toBe("entity");
 
-    expect(state.vm.D).toBe(boundary.id);
+    expect(state.vm.D).toBe(OMEGA_ID);
     const wordOut = state.vm.A[state.vm.A.length - 1];
     expect(wordOut).toBe(boundary.id);
   });

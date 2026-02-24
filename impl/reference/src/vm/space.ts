@@ -1,14 +1,16 @@
-import { SpaceBoundaryMode } from "../compile/types";
+import { SpaceBoundaryMode, Trope } from "../compile/types";
 import { BOT_ID, createHandle } from "../state/handles";
 import { addBoundary, closeMemZoneSilently } from "../state/relations";
 import { PhraseChunk, State } from "../state/state";
 import { collectGarbage } from "./gc";
+import { BoundaryTransitionArgs, applyBoundaryTransition } from "./domainTransition";
 import { RuntimeError } from "./errors";
 import { nextId } from "./ids";
 
 type ApplySpaceOptions = {
   mode?: SpaceBoundaryMode;
   rank?: number | null;
+  leftTrope?: Trope | null;
 };
 
 type MemZoneFlushRecord = {
@@ -476,7 +478,7 @@ function settleWordBoundaryState(state: State): void {
   delete state.vm.route_arity;
 }
 
-function applyHard(state: State): void {
+function applyHard(state: State, transition: BoundaryTransitionArgs): void {
   state.vm.tau += 1;
 
   resolveObligationsByDefault(state);
@@ -497,13 +499,18 @@ function applyHard(state: State): void {
   state.vm.PendingJoin = undefined;
   state.vm.LeftContextBarrier = null;
 
+  applyBoundaryTransition(state, transition);
   settleWordBoundaryState(state);
   baselineReset(state);
   state.vm.OStack_word = [];
   collectGarbage(state);
 }
 
-function applyGlue(state: State, mode: "glue" | "glue_maqqef"): void {
+function applyGlue(
+  state: State,
+  mode: "glue" | "glue_maqqef",
+  transition: BoundaryTransitionArgs
+): void {
   state.vm.tau += 1;
 
   const wordValue = sealWord(state);
@@ -528,10 +535,15 @@ function applyGlue(state: State, mode: "glue" | "glue_maqqef"): void {
   state.vm.H_phrase.push(chunk);
   state.vm.phraseWordValues.push(wordValue);
   state.vm.phraseChunkIds.push(chunk.id);
+  applyBoundaryTransition(state, transition);
   settleWordBoundaryState(state);
 }
 
-function applyCut(state: State, rankRaw: number | null | undefined): void {
+function applyCut(
+  state: State,
+  rankRaw: number | null | undefined,
+  transition: Omit<BoundaryTransitionArgs, "rank">
+): void {
   const rank = Math.max(1, Math.trunc(Number(rankRaw ?? 1)));
   state.vm.tau += rank;
 
@@ -557,6 +569,7 @@ function applyCut(state: State, rankRaw: number | null | undefined): void {
   emitConstituentNode(state, rank);
   state.vm.PendingJoin = undefined;
   state.vm.LeftContextBarrier = rank;
+  applyBoundaryTransition(state, { ...transition, rank });
   settleWordBoundaryState(state);
   baselineReset(state);
   state.vm.OStack_word = [];
@@ -578,13 +591,16 @@ function applyCut(state: State, rankRaw: number | null | undefined): void {
 
 export function applySpace(state: State, options: ApplySpaceOptions = {}): void {
   const mode = options.mode ?? "hard";
+  const transition = {
+    tropeInfo: options.leftTrope ?? null
+  };
   if (mode === "glue" || mode === "glue_maqqef") {
-    applyGlue(state, mode);
+    applyGlue(state, mode, { ...transition, exitKind: mode });
     return;
   }
   if (mode === "cut") {
-    applyCut(state, options.rank);
+    applyCut(state, options.rank, { ...transition, exitKind: mode });
     return;
   }
-  applyHard(state);
+  applyHard(state, { ...transition, exitKind: mode });
 }
