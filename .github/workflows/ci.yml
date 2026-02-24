@@ -25,6 +25,8 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install
         run: npm ci
+      - name: Verify Artifacts
+        run: npm run artifacts:verify:deep
       - name: Lint
         run: npm run lint
       - name: Guardrails (Fail Mode, touched files)

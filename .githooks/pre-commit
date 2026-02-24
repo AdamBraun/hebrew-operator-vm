@@ -17,3 +17,14 @@ unset IFS
 
 npm exec -- prettier --ignore-unknown --write -- "$@"
 git add -- "$@"
+
+if npm run artifacts:needs-update; then
+  :
+else
+  needs_update_status=$?
+  if [ "$needs_update_status" -eq 1 ]; then
+    npm run artifacts:verify
+  else
+    exit "$needs_update_status"
+  fi
+fi

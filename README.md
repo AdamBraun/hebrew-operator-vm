@@ -67,6 +67,78 @@ Notes:
 - By default it does **not** normalize final letterforms and **fails fast** on RuntimeErrors.
   Use `--normalize-finals` or `--allow-runtime-errors` if you want a more permissive pass.
 
+### Pasuk Trace Corpus (Per-Verse JSON + DOT)
+
+Build a verse-by-verse archive with:
+
+- `trace.json` from `pasuk-trace` semantics (deep trace, snapshots, final dump state, post-reset state)
+- `trace.txt` human report
+- `graph.dot` Graphviz DOT generated from each trace payload
+- `refs/index.json` for UI traversal
+- `manifest.json` run-level metadata and counts
+
+Integrity model:
+
+- `trace.json` is canonical.
+- `trace.txt` and `graph.dot` are derived artifacts.
+- Derived artifacts embed provenance headers that bind them to the exact `trace.json` bytes plus renderer/schema metadata.
+- `graph.dot` provenance also binds to the exact graph option set hash.
+
+```bash
+npm run build
+npm run pasuk-trace-corpus -- \
+  --input=data/torah.json \
+  --lang=he \
+  --keep-teamim \
+  --include-snapshots \
+  --layout=boot \
+  --pretty-ids \
+  --boundary=cluster \
+  --out-dir=outputs/pasuk-trace-corpus/latest
+```
+
+Resume a previous run without regenerating existing verse artifacts:
+
+```bash
+npm run pasuk-trace-corpus -- \
+  --input=data/torah.json \
+  --out-dir=outputs/pasuk-trace-corpus/latest \
+  --skip-existing
+```
+
+Validate existing resume artifacts against embedded provenance:
+
+```bash
+npm run pasuk-trace-corpus -- \
+  --input=data/torah.json \
+  --out-dir=outputs/pasuk-trace-corpus/latest \
+  --skip-existing \
+  --verify-existing
+```
+
+Repair stale derived artifacts (`trace.txt` / `graph.dot`) from stored `trace.json`:
+
+```bash
+npm run pasuk-trace-corpus -- \
+  --input=data/torah.json \
+  --out-dir=outputs/pasuk-trace-corpus/latest \
+  --skip-existing \
+  --repair-existing
+```
+
+Resume behavior with `--skip-existing`:
+
+- Skip only when provenance validation passes.
+- `--verify-existing` fails fast on any mismatch.
+- `--repair-existing` rewrites stale `trace.txt`/`graph.dot` from stored `trace.json` without rerunning the interpreter.
+- `--verify-existing` and `--repair-existing` are mutually exclusive.
+
+Detailed output contract and UI integration notes:
+[`docs/pasuk-trace-corpus.md`](docs/pasuk-trace-corpus.md)
+
+Operational note: `--include-snapshots` can make per-verse JSON files very large; see
+`docs/pasuk-trace-corpus.md` for measured sizing guidance and versioning recommendations.
+
 ### Torah Normalization Pipeline
 
 For a deterministic canonical Unicode normalization stage (NFD) with explicit verse refs:
@@ -306,6 +378,40 @@ Integrity check:
 ```bash
 npm run torah-corpus:verify -- --dir outputs/torah-corpus/latest
 ```
+
+Artifact freshness guard (interpreter + DOT renderer contract):
+
+```bash
+npm run artifacts:verify
+npm run artifacts:verify:deep
+npm run artifacts:repair -- --full
+```
+
+`artifacts:verify` compares required manifests against deterministic hashes for the two moving parts:
+
+- `interpreter_inputs_hash`
+- `dot_renderer_inputs_hash`
+
+`artifacts:verify:deep` also runs:
+
+- a read-only per-verse provenance scan of `outputs/pasuk-trace-corpus/latest/refs/**` (`trace.json` -> `trace.txt`/`graph.dot` binding, schema checks, canonical graph options hash check)
+- a committed-state gate: push fails if engine/artifact paths have local uncommitted changes, so verification reflects exactly what will be pushed
+
+`artifacts:repair -- --full` performs full regeneration and stamps each manifest with:
+
+- `artifact_set_id`
+- `interpreter_inputs_hash`
+- `dot_renderer_inputs_hash` (for DOT-bearing corpora)
+- `pasuk_corpus_args_sha256` (canonical pasuk trace corpus command args)
+- `engine_git_sha` (when available)
+- `artifact_generated_at`
+- `artifact_tool_versions`
+
+Hook/CI behavior:
+
+- `.githooks/pre-commit` runs `artifacts:verify` only when staged paths touch configured engine inputs.
+- `.githooks/pre-push` always runs `artifacts:verify:deep` and blocks push on any drift.
+- CI always runs `npm run artifacts:verify:deep` on push/PR.
 
 Run-to-run diff + regression (single command):
 
