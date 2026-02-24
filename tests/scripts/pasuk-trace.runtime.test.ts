@@ -81,11 +81,12 @@ describe("pasuk trace runtime", () => {
     expect(result.final_state.vm?.Omega).toBeUndefined();
     expect(result.final_state.vm?.OmegaId).toBe("Ω");
     expect(result.post_reset_state.vm?.D).toBe("Ω");
+    expect(result.post_reset_state.vm?.F).toBe("Ω");
     expect(result.post_reset_state.vm?.Omega).toBeUndefined();
     expect(result.post_reset_state.vm?.OmegaId).toBe("Ω");
     expect(result.final_state.vm?.wordHasContent).toBeUndefined();
     expect(result.word_sections[0]?.incoming_D).toBe("Ω");
-    expect(typeof result.word_sections[0]?.incoming_F).toBe("string");
+    expect(result.word_sections[0]?.incoming_F).toBe("Ω");
     expect(typeof result.word_sections[0]?.outgoing_D).toBe("string");
     expect(typeof result.word_sections[0]?.outgoing_F).toBe("string");
     expect(["cut", "glue", "glue_maqqef"]).toContain(result.word_sections[0]?.exit_kind);

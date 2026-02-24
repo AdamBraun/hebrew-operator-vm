@@ -346,6 +346,15 @@ export function buildWordSections(trace: DeepTraceEntry[]): WordSection[] {
   let incomingF: string | null = null;
   let lastBoundary: DeepTraceEntry | null = null;
 
+  const readWordEntryFocus = (entry: DeepTraceEntry | undefined): string | null => {
+    if (!entry) {
+      return null;
+    }
+    const wordEntry = phaseDetail(entry, "word_entry_context");
+    const value = wordEntry?.entry_focus;
+    return typeof value === "string" && value.length > 0 ? value : null;
+  };
+
   const flushSection = (exitBoundary: DeepTraceEntry | null): void => {
     if (opEntries.length === 0) {
       return;
@@ -355,10 +364,10 @@ export function buildWordSections(trace: DeepTraceEntry[]): WordSection[] {
     sections.push({
       word_index: sections.length + 1,
       surface,
-      incoming_D: incomingD ?? firstOp?.D ?? null,
-      incoming_F: incomingF ?? firstOp?.F ?? null,
-      outgoing_D: exitBoundary?.D ?? lastOp?.D ?? null,
-      outgoing_F: exitBoundary?.F ?? lastOp?.F ?? null,
+      incoming_D: incomingD ?? firstOp?.D ?? OMEGA_ID,
+      incoming_F: incomingF ?? readWordEntryFocus(firstOp) ?? firstOp?.F ?? OMEGA_ID,
+      outgoing_D: exitBoundary?.D ?? lastOp?.D ?? OMEGA_ID,
+      outgoing_F: exitBoundary?.F ?? lastOp?.F ?? OMEGA_ID,
       exit_kind: toWordExitKind(exitBoundary),
       op_entries: opEntries,
       exit_boundary: exitBoundary
@@ -681,6 +690,12 @@ function enrichScopeMembership(finalState: Record<string, any>): void {
 function withTraceFriendlyVmFlags(stateDump: Record<string, any>): Record<string, any> {
   const vm = stateDump?.vm;
   if (vm && typeof vm === "object") {
+    if (typeof vm.D !== "string" || vm.D.length === 0) {
+      vm.D = OMEGA_ID;
+    }
+    if (typeof vm.F !== "string" || vm.F.length === 0) {
+      vm.F = vm.D;
+    }
     if (typeof vm.wordHasContent === "boolean") {
       vm.has_data_payload = vm.wordHasContent;
       delete vm.wordHasContent;
