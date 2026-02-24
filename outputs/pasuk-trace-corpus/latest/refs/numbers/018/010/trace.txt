@@ -1,0 +1,463 @@
+# trace_file_sha256: ab23804b46b7c9f8889ed7b9efb8ec4b20597c4f46c4dbe3ff969bdfa1dbfa9e
+# report_renderer_id: hebrew-operator-vm@0.1.0/pasuk-report
+# report_schema: 2
+# trace_semantic_sha256: 53c74b9401a0cf21ac019dd647480488b56408e3c0a4d50abe1fb6eb5ac75f1d
+
+PASUK TRACE REPORT
+ref: Numbers/18/10
+cleaned: בְּקֹ֥דֶשׁ הַקֳּדָשִׁ֖ים תֹּאכְלֶ֑נּוּ כָּל־זָכָר֙ יֹאכַ֣ל אֹת֔וֹ קֹ֖דֶשׁ יִהְיֶה־לָּךְ׃
+
+══════════════════════════════════════════════════════════════
+ WORD 1 │ בְּקֹדֶשׁ │ incoming_D=Ω incoming_F=Ω │ outgoing_D=Ω outgoing_F=ש:1:4 │ exit_kind=glue │ exit=□glue
+══════════════════════════════════════════════════════════════
+
+  [join_in: -]
+
+τ=1 │ OP_1  [sof:shva]  (בְּ)
+    │ Select : {"args":["C:1:1"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"dagesh","shin_branch":null}
+    │ Bound  : {"base":"ב:1:1","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"boundaryId":"ב:1:2","anchor":"ב:1:1","outside":"C:1:1"}}
+    │ Toch   : {"diacritics":[{"mark":"ּ","kind":"dagesh","tier":"toch"}],"dot_kind":"dagesh","inside_dot_kind":"dagesh","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ב:1:2","residue":"⊥","F":"ב:1:2","R":"⊥"}
+    │ Sof    : [{"mark":"ְ","kind":"shva","tier":"sof"}]
+    │ State  : {"KLength":3,"OStackLength":0,"barrier":null}
+
+τ=1 │ OP_2  [rosh:holam]  (קֹ)
+    │ Select : {"args":["ב:1:2","⊥"],"prefs":{}}
+    │ Rosh   : {"diacritics":[{"mark":"ֹ","kind":"holam","tier":"rosh"}],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"ב:1:2","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"left":"ב:1:2","right":"⊥"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ק:1:1","residue":"⊥","F":"ק:1:1","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":2,"OStackLength":0,"barrier":null}
+
+τ=1 │ OP_3  [sof:segol]  (דֶ)
+    │ Select : {"args":["ק:1:1"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"ק:1:1","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"boundaryId":"ד:1:1","inside":"ק:1:1","outside":"Ω"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ד:1:1","residue":"⊥","F":"ד:1:1","R":"⊥"}
+    │ Sof    : [{"mark":"ֶ","kind":"segol","tier":"sof"}]
+    │ State  : {"KLength":3,"OStackLength":0,"barrier":null}
+
+τ=1 │ OP_4  (שׁ)
+    │ Select : {"args":["ד:1:1"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"shin_dot_right","shin_branch":"right"}
+    │ Bound  : {"base":"ד:1:1","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"parentId":"ש:1:4","focus":"ד:1:1","spineId":"ש:1:1","leftId":"ש:1:2","rightId":"ש:1:3","active":"right"}}
+    │ Toch   : {"diacritics":[{"mark":"ׁ","kind":"shin_dot_right","tier":"toch"}],"dot_kind":"none","inside_dot_kind":"shin_dot_right","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ש:1:4","residue":"⊥","F":"ש:1:4","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":4,"OStackLength":0,"barrier":null}
+
+  ─── □glue ───────────────────────────────────────────────────
+    │ τ 1 -> 2; continuation=true
+    │ pending_join_created=join:2:3; pending_join_consumed=-
+    │ barrier=-; events=[{"type":"BOUNDARY","tau":2,"data":{"mode":"glue","beforeFocus":"ש:1:4","afterFocus":"ש:1:4","segmentIdBefore":1}}]
+
+══════════════════════════════════════════════════════════════
+ WORD 2 │ הַקֳּדָשִׁים │ incoming_D=Ω incoming_F=ש:1:4 │ outgoing_D=Ω outgoing_F=Ω │ exit_kind=cut │ exit=□cut(1)
+══════════════════════════════════════════════════════════════
+
+  [join_in: join:2:3 (consumed)]
+
+τ=2 │ OP_1  [sof:patach]  (הַ)
+    │ Select : {"args":["C:2:2"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"C:2:2","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"focus":"C:2:2"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":"public"}
+    │ Seal   : {"sealed_handle":"ה:2:1","residue":"⊥","F":"ה:2:1","R":"⊥"}
+    │ Sof    : [{"mark":"ַ","kind":"patach","tier":"sof"}]
+    │ State  : {"KLength":5,"OStackLength":0,"barrier":null}
+
+τ=2 │ OP_2  [sof:shva,kamatz]  (קֳּ)
+    │ Select : {"args":["ה:2:1","ש:1:4"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"dagesh","shin_branch":null}
+    │ Bound  : {"base":"ה:2:1","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"left":"ה:2:1","right":"ש:1:4"}}
+    │ Toch   : {"diacritics":[{"mark":"ּ","kind":"dagesh","tier":"toch"}],"dot_kind":"dagesh","inside_dot_kind":"dagesh","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ק:2:2","residue":"⊥","F":"ק:2:2","R":"⊥"}
+    │ Sof    : [{"mark":"ֳ","kind":"shva","tier":"sof","composite":{"kind":"hataf_kamatz","role":"carrier_shva"}},{"mark":"ֳ","kind":"kamatz","tier":"sof","composite":{"kind":"hataf_kamatz","role":"reduced_vowel"}}]
+    │ State  : {"KLength":4,"OStackLength":0,"barrier":null}
+
+τ=2 │ OP_3  [sof:kamatz]  (דָ)
+    │ Select : {"args":["ק:2:2"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"ק:2:2","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"boundaryId":"ד:2:2","inside":"ק:2:2","outside":"Ω"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ד:2:2","residue":"⊥","F":"ד:2:2","R":"⊥"}
+    │ Sof    : [{"mark":"ָ","kind":"kamatz","tier":"sof"}]
+    │ State  : {"KLength":5,"OStackLength":0,"barrier":null}
+
+τ=2 │ OP_4  [sof:hiriq]  (שִׁ)
+    │ Select : {"args":["ד:2:2"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"shin_dot_right","shin_branch":"right"}
+    │ Bound  : {"base":"ד:2:2","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"parentId":"ש:2:8","focus":"ד:2:2","spineId":"ש:2:5","leftId":"ש:2:6","rightId":"ש:2:7","active":"right"}}
+    │ Toch   : {"diacritics":[{"mark":"ׁ","kind":"shin_dot_right","tier":"toch"}],"dot_kind":"none","inside_dot_kind":"shin_dot_right","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ש:2:8","residue":"⊥","F":"ש:2:8","R":"⊥"}
+    │ Sof    : [{"mark":"ִ","kind":"hiriq","tier":"sof"}]
+    │ State  : {"KLength":6,"OStackLength":0,"barrier":null}
+
+τ=2 │ OP_5  (י)
+    │ Select : {"args":["ש:2:8"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"ש:2:8","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"focus":"ש:2:8"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"י:2:1","residue":"⊥","F":"י:2:1","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":7,"OStackLength":0,"barrier":null}
+
+τ=2 │ OP_6  (ם)
+    │ Select : {"args":["י:2:1"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"י:2:1","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"focus":"י:2:1"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ם:2:1","residue":"⊥","F":"ם:2:1","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":8,"OStackLength":0,"barrier":null}
+
+  ─── □cut(1) ───────────────────────────────────────────────────
+    │ τ 2 -> 3; continuation=false
+    │ pending_join_created=-; pending_join_consumed=-
+    │ barrier=1; events=[{"type":"BOUNDARY","tau":3,"data":{"mode":"cut","beforeFocus":"ם:2:1","afterFocus":"Ω","segmentIdBefore":1}}]
+
+══════════════════════════════════════════════════════════════
+ WORD 3 │ תֹּאכְלֶנּוּ │ incoming_D=Ω incoming_F=Ω │ outgoing_D=Ω outgoing_F=Ω │ exit_kind=cut │ exit=□cut(2)
+══════════════════════════════════════════════════════════════
+
+  [join_in: -]
+
+τ=3 │ OP_1  [rosh:holam]  (תֹּ)
+    │ Select : {"args":["C:3:3"],"prefs":{}}
+    │ Rosh   : {"diacritics":[{"mark":"ֹ","kind":"holam","tier":"rosh"}],"inside_dot_kind":"dagesh","shin_branch":null}
+    │ Bound  : {"base":"C:3:3","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"final"},"meta":{"target":"C:3:3","outside":"Ω","boundaryId":"ת:3:1","artifactId":"ת:3:2","residueId":"ת:3:3"}}
+    │ Toch   : {"diacritics":[{"mark":"ּ","kind":"dagesh","tier":"toch"}],"dot_kind":"dagesh","inside_dot_kind":"dagesh","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ת:3:3","residue":"ת:3:2","F":"ת:3:3","R":"ת:3:2"}
+    │ Sof    : []
+    │ State  : {"KLength":3,"OStackLength":0,"barrier":null}
+
+τ=3 │ OP_2  (א)
+    │ Select : {"args":["Ω"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"ת:3:3","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"focusAtEntry":"Ω","constructId":"ת:3:3","aliasId":"א:3:1"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ת:3:3","residue":"⊥","F":"ת:3:3","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":4,"OStackLength":0,"barrier":null}
+
+τ=3 │ OP_3  [sof:shva]  (כְ)
+    │ Select : {"args":["ת:3:3","ת:3:3"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"ת:3:3","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"portionId":"כ:3:1","residueId":"כ:3:2"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"כ:3:1","residue":"כ:3:2","F":"כ:3:1","R":"כ:3:2"}
+    │ Sof    : [{"mark":"ְ","kind":"shva","tier":"sof"}]
+    │ State  : {"KLength":3,"OStackLength":0,"barrier":null}
+
+τ=3 │ OP_4  [sof:segol]  (לֶ)
+    │ Select : {"args":["כ:3:1","⊥"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"כ:3:1","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"endpointId":"ל:3:2","endpoint":"כ:3:1","domain":"⊥","boundaryId":"ל:3:1"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ל:3:2","residue":"⊥","F":"ל:3:2","R":"⊥"}
+    │ Sof    : [{"mark":"ֶ","kind":"segol","tier":"sof"}]
+    │ State  : {"KLength":2,"OStackLength":0,"barrier":null}
+
+τ=3 │ OP_5  (נּ)
+    │ Select : {"args":["ל:3:2"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"dagesh","shin_branch":null}
+    │ Bound  : {"base":"ל:3:2","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"parent":"ל:3:2","child":"נ:3:1"}}
+    │ Toch   : {"diacritics":[{"mark":"ּ","kind":"dagesh","tier":"toch"}],"dot_kind":"dagesh","inside_dot_kind":"dagesh","letter_mode":null}
+    │ Seal   : {"sealed_handle":"נ:3:1","residue":"⊥","F":"נ:3:1","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":3,"OStackLength":1,"barrier":null}
+
+τ=3 │ OP_6  (וּ)
+    │ Select : {"args":["נ:3:1","ל:3:2"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"shuruk","shin_branch":null}
+    │ Bound  : {"base":"נ:3:1","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"from":"נ:3:1","to":"ל:3:2"}}
+    │ Toch   : {"diacritics":[{"mark":"ּ","kind":"dagesh","tier":"toch"}],"dot_kind":"shuruk","inside_dot_kind":"shuruk","letter_mode":"seeded"}
+    │ Seal   : {"sealed_handle":"ו:3:1","residue":"ו:3:2","F":"ו:3:1","R":"ו:3:2"}
+    │ Sof    : []
+    │ State  : {"KLength":2,"OStackLength":1,"barrier":null}
+
+  ─── □cut(2) ───────────────────────────────────────────────────
+    │ τ 3 -> 5; continuation=false
+    │ pending_join_created=-; pending_join_consumed=-
+    │ barrier=2; events=[{"type":"support_debt","tau":5,"data":{"node":"support_debt:5:1","child":"נ:3:1","parent":"ל:3:2","rank":2}},{"type":"BOUNDARY","tau":5,"data":{"mode":"cut","beforeFocus":"ו:3:1","afterFocus":"Ω","segmentIdBefore":2}}]
+
+══════════════════════════════════════════════════════════════
+ WORD 4 │ כָּל │ incoming_D=Ω incoming_F=Ω │ outgoing_D=Ω outgoing_F=ל:5:4 │ exit_kind=glue_maqqef │ exit=□glue_maqqef
+══════════════════════════════════════════════════════════════
+
+  [join_in: -]
+
+τ=5 │ OP_1  [sof:kamatz]  (כָּ)
+    │ Select : {"args":["⊥","Ω"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"dagesh","shin_branch":null}
+    │ Bound  : {"base":"⊥","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"portionId":"כ:5:3","residueId":"כ:5:4"}}
+    │ Toch   : {"diacritics":[{"mark":"ּ","kind":"dagesh","tier":"toch"}],"dot_kind":"dagesh","inside_dot_kind":"dagesh","letter_mode":null}
+    │ Seal   : {"sealed_handle":"כ:5:3","residue":"כ:5:4","F":"כ:5:3","R":"כ:5:4"}
+    │ Sof    : [{"mark":"ָ","kind":"kamatz","tier":"sof"}]
+    │ State  : {"KLength":1,"OStackLength":0,"barrier":null}
+
+τ=5 │ OP_2  (ל)
+    │ Select : {"args":["כ:5:3","כ:5:3"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"כ:5:3","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"endpointId":"ל:5:4","endpoint":"כ:5:3","domain":"כ:5:3","boundaryId":"ל:5:3"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ל:5:4","residue":"⊥","F":"ל:5:4","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":1,"OStackLength":0,"barrier":null}
+
+  ─── □glue_maqqef ───────────────────────────────────────────────────
+    │ τ 5 -> 6; continuation=true
+    │ pending_join_created=join:6:6; pending_join_consumed=-
+    │ barrier=-; events=[{"type":"BOUNDARY","tau":6,"data":{"mode":"glue_maqqef","beforeFocus":"ל:5:4","afterFocus":"ל:5:4","segmentIdBefore":3}}]
+
+══════════════════════════════════════════════════════════════
+ WORD 5 │ זָכָר │ incoming_D=Ω incoming_F=ל:5:4 │ outgoing_D=Ω outgoing_F=Ω │ exit_kind=cut │ exit=□cut(2)
+══════════════════════════════════════════════════════════════
+
+  [join_in: join:6:6 (consumed)]
+
+τ=6 │ OP_1  [sof:kamatz]  (זָ)
+    │ Select : {"args":["C:6:5"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"C:6:5","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"gateId":"ז:6:1","target":"C:6:5"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ז:6:1","residue":"⊥","F":"ז:6:1","R":"⊥"}
+    │ Sof    : [{"mark":"ָ","kind":"kamatz","tier":"sof"}]
+    │ State  : {"KLength":2,"OStackLength":0,"barrier":null}
+
+τ=6 │ OP_2  [sof:kamatz]  (כָ)
+    │ Select : {"args":["ז:6:1","ל:5:4"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"ז:6:1","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"portionId":"כ:6:5","residueId":"כ:6:6"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"כ:6:5","residue":"כ:6:6","F":"כ:6:5","R":"כ:6:6"}
+    │ Sof    : [{"mark":"ָ","kind":"kamatz","tier":"sof"}]
+    │ State  : {"KLength":1,"OStackLength":0,"barrier":null}
+
+τ=6 │ OP_3  (ר)
+    │ Select : {"args":["כ:6:5"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"כ:6:5","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"boundaryId":"ר:6:1","inside":"כ:6:5","outside":"כ:6:6"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ר:6:1","residue":"⊥","F":"ר:6:1","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":2,"OStackLength":0,"barrier":null}
+
+  ─── □cut(2) ───────────────────────────────────────────────────
+    │ τ 6 -> 8; continuation=false
+    │ pending_join_created=-; pending_join_consumed=-
+    │ barrier=2; events=[{"type":"BOUNDARY","tau":8,"data":{"mode":"cut","beforeFocus":"ר:6:1","afterFocus":"Ω","segmentIdBefore":3}}]
+
+══════════════════════════════════════════════════════════════
+ WORD 6 │ יֹאכַל │ incoming_D=Ω incoming_F=Ω │ outgoing_D=Ω outgoing_F=ל:8:6 │ exit_kind=glue │ exit=□glue
+══════════════════════════════════════════════════════════════
+
+  [join_in: -]
+
+τ=8 │ OP_1  [rosh:holam]  (יֹ)
+    │ Select : {"args":["C:8:6"],"prefs":{}}
+    │ Rosh   : {"diacritics":[{"mark":"ֹ","kind":"holam","tier":"rosh"}],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"C:8:6","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"focus":"C:8:6"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"י:8:2","residue":"⊥","F":"י:8:2","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":3,"OStackLength":0,"barrier":null}
+
+τ=8 │ OP_2  (א)
+    │ Select : {"args":["Ω"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"י:8:2","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"focusAtEntry":"Ω","constructId":"י:8:2","aliasId":"א:8:2"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"י:8:2","residue":"⊥","F":"י:8:2","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":4,"OStackLength":0,"barrier":null}
+
+τ=8 │ OP_3  [sof:patach]  (כַ)
+    │ Select : {"args":["י:8:2","י:8:2"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"י:8:2","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"portionId":"כ:8:7","residueId":"כ:8:8"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"כ:8:7","residue":"כ:8:8","F":"כ:8:7","R":"כ:8:8"}
+    │ Sof    : [{"mark":"ַ","kind":"patach","tier":"sof"}]
+    │ State  : {"KLength":3,"OStackLength":0,"barrier":null}
+
+τ=8 │ OP_4  (ל)
+    │ Select : {"args":["כ:8:7","⊥"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"כ:8:7","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"endpointId":"ל:8:6","endpoint":"כ:8:7","domain":"⊥","boundaryId":"ל:8:5"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ל:8:6","residue":"⊥","F":"ל:8:6","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":2,"OStackLength":0,"barrier":null}
+
+  ─── □glue ───────────────────────────────────────────────────
+    │ τ 8 -> 9; continuation=true
+    │ pending_join_created=join:9:8; pending_join_consumed=-
+    │ barrier=-; events=[{"type":"BOUNDARY","tau":9,"data":{"mode":"glue","beforeFocus":"ל:8:6","afterFocus":"ל:8:6","segmentIdBefore":4}}]
+
+══════════════════════════════════════════════════════════════
+ WORD 7 │ אֹתוֹ │ incoming_D=Ω incoming_F=ל:8:6 │ outgoing_D=Ω outgoing_F=Ω │ exit_kind=cut │ exit=□cut(2)
+══════════════════════════════════════════════════════════════
+
+  [join_in: join:9:8 (consumed)]
+
+τ=9 │ OP_1  [rosh:holam]  (אֹ)
+    │ Select : {"args":["ל:8:6"],"prefs":{}}
+    │ Rosh   : {"diacritics":[{"mark":"ֹ","kind":"holam","tier":"rosh"}],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"C:9:7","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"focusAtEntry":"ל:8:6","constructId":"C:9:7","aliasId":"א:9:3"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"C:9:7","residue":"⊥","F":"C:9:7","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":3,"OStackLength":0,"barrier":null}
+
+τ=9 │ OP_2  (ת)
+    │ Select : {"args":["C:9:7"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"C:9:7","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"final"},"meta":{"target":"C:9:7","outside":"Ω","boundaryId":"ת:9:4","artifactId":"ת:9:5","residueId":"ת:9:6"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ת:9:6","residue":"ת:9:5","F":"ת:9:6","R":"ת:9:5"}
+    │ Sof    : []
+    │ State  : {"KLength":4,"OStackLength":0,"barrier":null}
+
+τ=9 │ OP_3  [rosh:holam]  (וֹ)
+    │ Select : {"args":["ת:9:6","C:9:7"],"prefs":{}}
+    │ Rosh   : {"diacritics":[{"mark":"ֹ","kind":"holam","tier":"rosh"}],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"ת:9:6","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"from":"ת:9:6","to":"C:9:7"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":"plain"}
+    │ Seal   : {"sealed_handle":"ו:9:3","residue":"ו:9:4","F":"ו:9:3","R":"ו:9:4"}
+    │ Sof    : []
+    │ State  : {"KLength":3,"OStackLength":0,"barrier":null}
+
+  ─── □cut(2) ───────────────────────────────────────────────────
+    │ τ 9 -> 11; continuation=false
+    │ pending_join_created=-; pending_join_consumed=-
+    │ barrier=2; events=[{"type":"BOUNDARY","tau":11,"data":{"mode":"cut","beforeFocus":"ו:9:3","afterFocus":"Ω","segmentIdBefore":4}}]
+
+══════════════════════════════════════════════════════════════
+ WORD 8 │ קֹדֶשׁ │ incoming_D=Ω incoming_F=Ω │ outgoing_D=Ω outgoing_F=Ω │ exit_kind=cut │ exit=□cut(1)
+══════════════════════════════════════════════════════════════
+
+  [join_in: -]
+
+τ=11 │ OP_1  [rosh:holam]  (קֹ)
+    │ Select : {"args":["⊥","Ω"],"prefs":{}}
+    │ Rosh   : {"diacritics":[{"mark":"ֹ","kind":"holam","tier":"rosh"}],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"⊥","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"left":"⊥","right":"Ω"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ק:11:3","residue":"⊥","F":"ק:11:3","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":1,"OStackLength":0,"barrier":null}
+
+τ=11 │ OP_2  [sof:segol]  (דֶ)
+    │ Select : {"args":["ק:11:3"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"ק:11:3","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"boundaryId":"ד:11:3","inside":"ק:11:3","outside":"Ω"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ד:11:3","residue":"⊥","F":"ד:11:3","R":"⊥"}
+    │ Sof    : [{"mark":"ֶ","kind":"segol","tier":"sof"}]
+    │ State  : {"KLength":2,"OStackLength":0,"barrier":null}
+
+τ=11 │ OP_3  (שׁ)
+    │ Select : {"args":["ד:11:3"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"shin_dot_right","shin_branch":"right"}
+    │ Bound  : {"base":"ד:11:3","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"parentId":"ש:11:12","focus":"ד:11:3","spineId":"ש:11:9","leftId":"ש:11:10","rightId":"ש:11:11","active":"right"}}
+    │ Toch   : {"diacritics":[{"mark":"ׁ","kind":"shin_dot_right","tier":"toch"}],"dot_kind":"none","inside_dot_kind":"shin_dot_right","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ש:11:12","residue":"⊥","F":"ש:11:12","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":3,"OStackLength":0,"barrier":null}
+
+  ─── □cut(1) ───────────────────────────────────────────────────
+    │ τ 11 -> 12; continuation=false
+    │ pending_join_created=-; pending_join_consumed=-
+    │ barrier=1; events=[{"type":"BOUNDARY","tau":12,"data":{"mode":"cut","beforeFocus":"ש:11:12","afterFocus":"Ω","segmentIdBefore":5}}]
+
+══════════════════════════════════════════════════════════════
+ WORD 9 │ יִהְיֶה │ incoming_D=Ω incoming_F=Ω │ outgoing_D=Ω outgoing_F=י:12:4 │ exit_kind=glue_maqqef │ exit=□glue_maqqef
+══════════════════════════════════════════════════════════════
+
+  [join_in: -]
+
+τ=12 │ OP_1  [sof:hiriq]  (יִ)
+    │ Select : {"args":["C:12:9"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"C:12:9","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"focus":"C:12:9"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"י:12:3","residue":"⊥","F":"י:12:3","R":"⊥"}
+    │ Sof    : [{"mark":"ִ","kind":"hiriq","tier":"sof"}]
+    │ State  : {"KLength":3,"OStackLength":0,"barrier":null}
+
+τ=12 │ OP_2  [sof:shva]  (הְ)
+    │ Select : {"args":["י:12:3"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"י:12:3","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"focus":"י:12:3"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":"public"}
+    │ Seal   : {"sealed_handle":"ה:12:2","residue":"⊥","F":"ה:12:2","R":"⊥"}
+    │ Sof    : [{"mark":"ְ","kind":"shva","tier":"sof"}]
+    │ State  : {"KLength":4,"OStackLength":0,"barrier":null}
+
+τ=12 │ OP_3  [sof:segol]  (יֶ)
+    │ Select : {"args":["ה:12:2"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"ה:12:2","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"focus":"ה:12:2"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"י:12:4","residue":"⊥","F":"י:12:4","R":"⊥"}
+    │ Sof    : [{"mark":"ֶ","kind":"segol","tier":"sof"}]
+    │ State  : {"KLength":5,"OStackLength":0,"barrier":null}
+
+τ=12 │ OP_4  (ה)
+    │ Select : {"args":["י:12:4"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"י:12:4","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"focus":"י:12:4"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":"breath"}
+    │ Seal   : {"sealed_handle":"י:12:4","residue":"⊥","F":"י:12:4","R":"⊥"}
+    │ Sof    : []
+    │ State  : {"KLength":6,"OStackLength":0,"barrier":null}
+
+  ─── □glue_maqqef ───────────────────────────────────────────────────
+    │ τ 12 -> 13; continuation=true
+    │ pending_join_created=join:13:11; pending_join_consumed=-
+    │ barrier=-; events=[{"type":"BOUNDARY","tau":13,"data":{"mode":"glue_maqqef","beforeFocus":"י:12:4","afterFocus":"י:12:4","segmentIdBefore":6}}]
+
+══════════════════════════════════════════════════════════════
+ WORD 10 │ לָּךְ │ incoming_D=Ω incoming_F=י:12:4 │ outgoing_D=Ω outgoing_F=Ω │ exit_kind=cut │ exit=□cut(3)
+══════════════════════════════════════════════════════════════
+
+  [join_in: join:13:11 (consumed)]
+
+τ=13 │ OP_1  [sof:kamatz]  (לָּ)
+    │ Select : {"args":["י:12:4","י:12:4"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"dagesh","shin_branch":null}
+    │ Bound  : {"base":"י:12:4","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{"endpointId":"ל:13:8","endpoint":"י:12:4","domain":"י:12:4","boundaryId":"ל:13:7"}}
+    │ Toch   : {"diacritics":[{"mark":"ּ","kind":"dagesh","tier":"toch"}],"dot_kind":"dagesh","inside_dot_kind":"dagesh","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ל:13:8","residue":"⊥","F":"ל:13:8","R":"⊥"}
+    │ Sof    : [{"mark":"ָ","kind":"kamatz","tier":"sof"}]
+    │ State  : {"KLength":5,"OStackLength":0,"barrier":null}
+
+τ=13 │ OP_2  [sof:shva]  (ךְ)
+    │ Select : {"args":["ל:13:8","ה:12:2"],"prefs":{}}
+    │ Rosh   : {"diacritics":[],"inside_dot_kind":"none","shin_branch":null}
+    │ Bound  : {"base":"ל:13:8","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"framed_lock"},"meta":{"portionId":"ך:13:1","residueId":"ך:13:2"}}
+    │ Toch   : {"diacritics":[],"dot_kind":"none","inside_dot_kind":"none","letter_mode":null}
+    │ Seal   : {"sealed_handle":"ך:13:1","residue":"ך:13:2","F":"ך:13:1","R":"ך:13:2"}
+    │ Sof    : [{"mark":"ְ","kind":"shva","tier":"sof"}]
+    │ State  : {"KLength":4,"OStackLength":0,"barrier":null}
+
+  ─── □cut(3) ───────────────────────────────────────────────────
+    │ τ 13 -> 16; continuation=false
+    │ pending_join_created=-; pending_join_consumed=-
+    │ barrier=3; events=[{"type":"BOUNDARY","tau":16,"data":{"mode":"cut","beforeFocus":"ך:13:1","afterFocus":"Ω","segmentIdBefore":6}}]
+
+══════════════════════════════════════════════════════════════
+ FINAL DUMP STATE
+══════════════════════════════════════════════════════════════
+ vm.D=Ω; vm.F=Ω; vm.OmegaId=Ω
+{"boundaries":[{"anchor":1,"id":"ב:1:2","inside":"ב:1:1","outside":"C:1:1","members":["ב:1:1"]},{"anchor":1,"id":"ד:11:3","inside":"ק:11:3","outside":"Ω","members":["ק:11:3"]},{"anchor":1,"id":"ד:1:1","inside":"ק:1:1","outside":"Ω","members":["ק:1:1"]},{"anchor":1,"id":"ד:2:2","inside":"ק:2:2","outside":"Ω","members":["ק:2:2"]},{"anchor":1,"id":"ל:13:7","inside":"י:12:4","outside":"י:12:4","members":["י:12:4"]},{"anchor":1,"id":"ל:3:1","inside":"כ:3:1","outside":"⊥","members":["כ:3:1"]},{"anchor":1,"id":"ל:5:3","inside":"כ:5:3","outside":"כ:5:3","members":["כ:5:3"]},{"anchor":1,"id":"ל:8:5","inside":"כ:8:7","outside":"⊥","members":["כ:8:7"]},{"anchor":0,"id":"ר:6:1","inside":"כ:6:5","outside":"כ:6:6","members":["כ:6:5"]},{"anchor":1,"id":"ת:3:1","inside":"C:3:3","outside":"Ω","members":["C:3:3"]},{"anchor":1,"id":"ת:9:4","inside":"C:9:7","outside":"Ω","members":["C:9:7"]}],"cont":["ל:3:2->נ:3:1"],"handles":[{"anchor":1,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"C:1:1","kind":"scope","meta":{"construct_role":"baseline","ephemeral":1,"owner":"word","payload":{},"word_text":"בְּקֹדֶשׁ"},"policy":"soft"},{"anchor":1,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"C:2:2","kind":"scope","meta":{"construct_role":"baseline","ephemeral":1,"owner":"word","payload":{},"word_text":"הַקֳּדָשִׁים"},"policy":"soft"},{"anchor":1,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"C:3:3","kind":"scope","meta":{"construct_role":"baseline","ephemeral":1,"owner":"word","payload":{},"word_text":"תֹּאכְלֶנּוּ","scope_path":["ת:3:1"]},"policy":"soft"},{"anchor":1,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"C:9:7","kind":"scope","meta":{"construct_role":"baseline","ephemeral":1,"owner":"word","payload":{},"word_text":"אֹתוֹ","scope_path":["ת:9:4"]},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"support_debt:5:1","kind":"structured","meta":{"child":"נ:3:1","mode":"debt","obligation":"SUPPORT","parent":"ל:3:2","rank":2},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"Ω","kind":"scope","meta":{},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ב:1:1","kind":"entity","meta":{"scope_path":["ב:1:2"]},"policy":"soft"},{"anchor":1,"edge_mode":"collapsed","envelope":{"coupling":"CopyNoBacklink","ctx_flow":"LOW","data_flow":"SNAPSHOT","edit_flow":"TIGHT","policy":"framed_lock","ports":[],"x_flow":"EXPLICIT_ONLY"},"id":"ב:1:2","kind":"boundary","meta":{"collapsed":1,"domainCarrier":1,"hard":1,"inside":"ב:1:1","openedBy":"ב","outside":"C:1:1","sof_modifiers":[{"kind":"shva","mark":"ְ"}]},"policy":"framed_lock"},{"anchor":1,"edge_mode":"convergent","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ד:11:3","kind":"boundary","meta":{"closedBy":"ד","convergent":1,"endpoint_bias":1,"inside":"ק:11:3","outside":"Ω","sof_modifiers":[{"kind":"segol","mark":"ֶ"}]},"policy":"soft"},{"anchor":1,"edge_mode":"convergent","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ד:1:1","kind":"boundary","meta":{"closedBy":"ד","convergent":1,"endpoint_bias":1,"inside":"ק:1:1","outside":"Ω","sof_modifiers":[{"kind":"segol","mark":"ֶ"}]},"policy":"soft"},{"anchor":1,"edge_mode":"committed","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ד:2:2","kind":"boundary","meta":{"atomic":1,"closedBy":"ד","inside":"ק:2:2","outside":"Ω","sof_modifiers":[{"kind":"kamatz","mark":"ָ"}]},"policy":"soft"},{"anchor":0,"edge_mode":"collapsed","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ה:12:2","kind":"rule","meta":{"collapsed":1,"he_mode":"public","public":1,"sof_modifiers":[{"kind":"shva","mark":"ְ"}],"source":"י:12:3","tau":12},"policy":"soft"},{"anchor":0,"edge_mode":"gated","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ה:2:1","kind":"rule","meta":{"gated":1,"he_mode":"public","public":1,"sof_modifiers":[{"kind":"patach","mark":"ַ"}],"source":"C:2:2","tau":2},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ו:3:1","kind":"structured","meta":{"carrier_mode":"seeded","from":"נ:3:1","label":"vav","mode":"seeded","rep_flag":1,"to":"ל:3:2"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ו:3:2","kind":"scope","meta":{"mode":"seeded","residueOf":"ו:3:1"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ו:9:3","kind":"structured","meta":{"from":"ת:9:6","label":"vav","mode":"plain","to":"C:9:7"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ו:9:4","kind":"scope","meta":{"mode":"plain","residueOf":"ו:9:3"},"policy":"soft"},{"anchor":0,"edge_mode":"committed","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ז:6:1","kind":"gate","meta":{"armed":1,"atomic":1,"policy":"guard","sof_modifiers":[{"kind":"kamatz","mark":"ָ"}],"target":"C:6:5"},"policy":"soft"},{"anchor":1,"edge_mode":"committed","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"י:12:3","kind":"entity","meta":{"port":"interface","rep_token":1,"seedOf":"C:12:9","sof_modifiers":[{"kind":"hiriq","mark":"ִ"}]},"policy":"soft"},{"anchor":1,"edge_mode":"convergent","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"י:12:4","kind":"entity","meta":{"convergent":1,"endpoint_bias":1,"final_tail":"breath","he_mode":"breath","port":"interface","seedOf":"ה:12:2","sof_modifiers":[{"kind":"segol","mark":"ֶ"}],"soft_public_shading":1,"scope_path":["ל:13:7"]},"policy":"soft"},{"anchor":1,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"י:2:1","kind":"entity","meta":{"port":"interface","seedOf":"ש:2:8"},"policy":"soft"},{"anchor":1,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"י:8:2","kind":"entity","meta":{"port":"interface","seedOf":"C:8:6"},"policy":"soft"},{"anchor":0,"edge_mode":"collapsed","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"framed_lock","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ך:13:1","kind":"scope","meta":{"collapsed":1,"final":1,"portionOf":"ל:13:8","sof_modifiers":[{"kind":"shva","mark":"ְ"}],"template":"ה:12:2","unitized":1},"policy":"framed_lock"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ך:13:2","kind":"scope","meta":{"residueOf":"ל:13:8","template":"ה:12:2"},"policy":"soft"},{"anchor":0,"edge_mode":"collapsed","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"כ:3:1","kind":"scope","meta":{"collapsed":1,"portionOf":"ת:3:3","sof_modifiers":[{"kind":"shva","mark":"ְ"}],"template":"ת:3:3","unitized":1,"scope_path":["ל:3:1"]},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"כ:3:2","kind":"scope","meta":{"residueOf":"ת:3:3","template":"ת:3:3"},"policy":"soft"},{"anchor":0,"edge_mode":"committed","envelope":{"coupling":"CopyNoBacklink","ctx_flow":"LOW","data_flow":"SNAPSHOT","edit_flow":"TIGHT","policy":"framed_lock","ports":[],"x_flow":"EXPLICIT_ONLY"},"id":"כ:5:3","kind":"scope","meta":{"atomic":1,"hard":1,"portionOf":"⊥","sof_modifiers":[{"kind":"kamatz","mark":"ָ"}],"template":"Ω","unitized":1,"scope_path":["ל:5:3"]},"policy":"framed_lock"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"כ:5:4","kind":"scope","meta":{"residueOf":"⊥","template":"Ω"},"policy":"soft"},{"anchor":0,"edge_mode":"committed","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"כ:6:5","kind":"scope","meta":{"atomic":1,"portionOf":"ז:6:1","sof_modifiers":[{"kind":"kamatz","mark":"ָ"}],"template":"ל:5:4","unitized":1,"scope_path":["ר:6:1"]},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"כ:6:6","kind":"scope","meta":{"residueOf":"ז:6:1","template":"ל:5:4"},"policy":"soft"},{"anchor":0,"edge_mode":"gated","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"כ:8:7","kind":"scope","meta":{"gated":1,"portionOf":"י:8:2","sof_modifiers":[{"kind":"patach","mark":"ַ"}],"template":"י:8:2","unitized":1,"scope_path":["ל:8:5"]},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"כ:8:8","kind":"scope","meta":{"residueOf":"י:8:2","template":"י:8:2"},"policy":"soft"},{"anchor":1,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ל:13:7","kind":"boundary","meta":{"closedBy":"ל","inside":"י:12:4","outside":"י:12:4"},"policy":"soft"},{"anchor":0,"edge_mode":"committed","envelope":{"coupling":"CopyNoBacklink","ctx_flow":"LOW","data_flow":"SNAPSHOT","edit_flow":"TIGHT","policy":"framed_lock","ports":[],"x_flow":"EXPLICIT_ONLY"},"id":"ל:13:8","kind":"endpoint","meta":{"atomic":1,"boundaryId":"ל:13:7","domain":"י:12:4","endpoint":"י:12:4","hard":1,"sof_modifiers":[{"kind":"kamatz","mark":"ָ"}]},"policy":"framed_lock"},{"anchor":1,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ל:3:1","kind":"boundary","meta":{"closedBy":"ל","inside":"כ:3:1","outside":"⊥"},"policy":"soft"},{"anchor":0,"edge_mode":"convergent","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ל:3:2","kind":"endpoint","meta":{"boundaryId":"ל:3:1","convergent":1,"domain":"⊥","endpoint":"כ:3:1","endpoint_bias":1,"sof_modifiers":[{"kind":"segol","mark":"ֶ"}]},"policy":"soft"},{"anchor":1,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ל:5:3","kind":"boundary","meta":{"closedBy":"ל","inside":"כ:5:3","outside":"כ:5:3"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ל:5:4","kind":"endpoint","meta":{"boundaryId":"ל:5:3","domain":"כ:5:3","endpoint":"כ:5:3"},"policy":"soft"},{"anchor":1,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ל:8:5","kind":"boundary","meta":{"closedBy":"ל","inside":"כ:8:7","outside":"⊥"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ל:8:6","kind":"endpoint","meta":{"boundaryId":"ל:8:5","domain":"⊥","endpoint":"כ:8:7"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ם:2:1","kind":"memHandle","meta":{"zone":"מ:2:1"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"מ:2:1","kind":"memZone","meta":{"anchor":"י:2:1","closed":1},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"CopyNoBacklink","ctx_flow":"LOW","data_flow":"SNAPSHOT","edit_flow":"TIGHT","policy":"framed_lock","ports":[],"x_flow":"EXPLICIT_ONLY"},"id":"נ:3:1","kind":"scope","meta":{"hard":1,"succOf":"ל:3:2"},"policy":"framed_lock"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ק:11:3","kind":"alias","meta":{"approx":true,"left":"⊥","right":"Ω","scope_path":["ד:11:3"]},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ק:1:1","kind":"alias","meta":{"approx":true,"left":"ב:1:2","right":"⊥","scope_path":["ד:1:1"]},"policy":"soft"},{"anchor":0,"edge_mode":"committed","envelope":{"coupling":"CopyNoBacklink","ctx_flow":"LOW","data_flow":"SNAPSHOT","edit_flow":"TIGHT","policy":"framed_lock","ports":[],"x_flow":"EXPLICIT_ONLY"},"id":"ק:2:2","kind":"alias","meta":{"approx":true,"atomic":1,"bind_next":1,"collapsed":1,"hard":1,"hataf":1,"left":"ה:2:1","reduced":1,"right":"ש:1:4","sof_modifiers":[{"composite":{"kind":"hataf_kamatz","role":"carrier_shva"},"kind":"shva","mark":"ֳ"},{"composite":{"kind":"hataf_kamatz","role":"reduced_vowel"},"kind":"kamatz","mark":"ֳ"}],"scope_path":["ד:2:2"]},"policy":"framed_lock"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ר:6:1","kind":"boundary","meta":{"closedBy":"ר","inside":"כ:6:5","outside":"כ:6:6"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ש:11:10","kind":"structured","meta":{"parent":"ש:11:12","role":"left"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ש:11:11","kind":"structured","meta":{"parent":"ש:11:12","role":"right"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ש:11:12","kind":"structured","meta":{"active":"right","base":"ד:11:3","left":"ש:11:10","right":"ש:11:11","spine":"ש:11:9"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ש:11:9","kind":"structured","meta":{"parent":"ש:11:12","role":"spine"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ש:1:1","kind":"structured","meta":{"parent":"ש:1:4","role":"spine"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ש:1:2","kind":"structured","meta":{"parent":"ש:1:4","role":"left"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ש:1:3","kind":"structured","meta":{"parent":"ש:1:4","role":"right"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ש:1:4","kind":"structured","meta":{"active":"right","base":"ד:1:1","left":"ש:1:2","right":"ש:1:3","spine":"ש:1:1"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ש:2:5","kind":"structured","meta":{"parent":"ש:2:8","role":"spine"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ש:2:6","kind":"structured","meta":{"parent":"ש:2:8","role":"left"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ש:2:7","kind":"structured","meta":{"parent":"ש:2:8","role":"right"},"policy":"soft"},{"anchor":0,"edge_mode":"committed","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ש:2:8","kind":"structured","meta":{"active":"right","base":"ד:2:2","left":"ש:2:6","rep_token":1,"right":"ש:2:7","sof_modifiers":[{"kind":"hiriq","mark":"ִ"}],"spine":"ש:2:5"},"policy":"soft"},{"anchor":1,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ת:3:1","kind":"boundary","meta":{"closedBy":"ת","inside":"C:3:3","outside":"Ω"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"final","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ת:3:2","kind":"artifact","meta":{"base":"C:3:3","boundaryId":"ת:3:1","mark":1},"policy":"final"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"CopyNoBacklink","ctx_flow":"LOW","data_flow":"SNAPSHOT","edit_flow":"TIGHT","policy":"framed_lock","ports":[],"x_flow":"EXPLICIT_ONLY"},"id":"ת:3:3","kind":"scope","meta":{"artifact":"ת:3:2","hard":1,"mark":1,"outside":"Ω","residueOf":"C:3:3"},"policy":"framed_lock"},{"anchor":1,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ת:9:4","kind":"boundary","meta":{"closedBy":"ת","inside":"C:9:7","outside":"Ω"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"final","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ת:9:5","kind":"artifact","meta":{"base":"C:9:7","boundaryId":"ת:9:4","mark":1},"policy":"final"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"ת:9:6","kind":"scope","meta":{"artifact":"ת:9:5","mark":1,"outside":"Ω","residueOf":"C:9:7"},"policy":"soft"},{"anchor":0,"edge_mode":"free","envelope":{"coupling":"LINK","ctx_flow":"LOW","data_flow":"LIVE","edit_flow":"OPEN","policy":"soft","ports":[],"x_flow":"IMPLICIT_OK"},"id":"⊥","kind":"empty","meta":{},"policy":"soft"}],"links":[{"from":"C:2:2","label":"declare","to":"ה:2:1"},{"from":"C:3:3","label":"finalize","to":"ת:3:2"},{"from":"C:9:7","label":"transport","to":"ל:8:6"},{"from":"C:9:7","label":"finalize","to":"ת:9:5"},{"from":"support_debt:5:1","label":"support_debt","to":"נ:3:1"},{"from":"Ω","label":"transport","to":"י:8:2"},{"from":"Ω","label":"transport","to":"ת:3:3"},{"from":"Ω","label":"approx","to":"⊥"},{"from":"ב:1:2","label":"approx","to":"⊥"},{"from":"ד:11:3","label":"boundary","to":"Ω"},{"from":"ד:11:3","label":"construct","to":"ש:11:12"},{"from":"ד:1:1","label":"boundary","to":"Ω"},{"from":"ד:1:1","label":"construct","to":"ש:1:4"},{"from":"ד:2:2","label":"boundary","to":"Ω"},{"from":"ד:2:2","label":"construct","to":"ש:2:8"},{"from":"ה:2:1","label":"approx","to":"ש:1:4"},{"from":"י:12:3","label":"declare","to":"ה:12:2"},{"from":"י:12:4","label":"endpoint","to":"ל:13:8"},{"from":"י:8:2","label":"transport","to":"Ω"},{"from":"כ:3:1","label":"endpoint","to":"ל:3:2"},{"from":"כ:5:3","label":"endpoint","to":"ל:5:4"},{"from":"כ:6:5","label":"boundary","to":"ר:6:1"},{"from":"כ:8:7","label":"endpoint","to":"ל:8:6"},{"from":"ל:3:2","label":"support_debt","to":"support_debt:5:1"},{"from":"ל:8:6","label":"transport","to":"C:9:7"},{"from":"נ:3:1","label":"vav","to":"ל:3:2"},{"from":"ק:11:3","label":"boundary","to":"ד:11:3"},{"from":"ק:1:1","label":"boundary","to":"ד:1:1"},{"from":"ק:2:2","label":"boundary","to":"ד:2:2"},{"from":"ר:6:1","label":"boundary","to":"כ:6:6"},{"from":"ש:11:12","label":"branch","to":"ש:11:10"},{"from":"ש:11:12","label":"branch","to":"ש:11:11"},{"from":"ש:11:12","label":"branch","to":"ש:11:9"},{"from":"ש:1:4","label":"approx","to":"ה:2:1"},{"from":"ש:1:4","label":"branch","to":"ש:1:1"},{"from":"ש:1:4","label":"branch","to":"ש:1:2"},{"from":"ש:1:4","label":"branch","to":"ש:1:3"},{"from":"ש:2:8","label":"branch","to":"ש:2:5"},{"from":"ש:2:8","label":"branch","to":"ש:2:6"},{"from":"ש:2:8","label":"branch","to":"ש:2:7"},{"from":"ת:3:2","label":"residue","to":"ת:3:3"},{"from":"ת:3:3","label":"transport","to":"Ω"},{"from":"ת:9:5","label":"residue","to":"ת:9:6"},{"from":"ת:9:6","label":"vav","to":"C:9:7"},{"from":"⊥","label":"approx","to":"Ω"},{"from":"⊥","label":"approx","to":"ב:1:2"}],"rules":[{"id":"ה:12:2","patch":{"public":true},"priority":0,"target":"י:12:3"},{"id":"ה:2:1","patch":{"public":true},"priority":0,"target":"C:2:2"}],"vm":{"A":["⊥","ש:1:4","ם:2:1","ת:3:2","ל:5:4","ר:6:1","ל:8:6","ת:9:5","ש:11:12","י:12:4","ך:13:1"],"D":"Ω","E":[],"F":"Ω","H":[{"data":{"afterFocus":"Ω","beforeFocus":"Ω","mode":"hard","segmentIdBefore":0},"tau":1,"type":"BOUNDARY"},{"data":{"C0":"C:1:1","F0":"Ω","activeConstruct":"C:1:1","aliasReachableForward":true,"aliasReachableReverse":true,"focus":"C:1:1","hasAliasForward":true,"hasAliasReverse":true,"inboundFocus":"Ω","prevBoundaryMode":"hard","segmentId":1,"segmentIdAfter":1,"segmentOStackLength":0,"segmentReset":true,"wordText":"בְּקֹדֶשׁ"},"tau":1,"type":"WORD_START"},{"data":{"id":"ק:1:1","left":"ב:1:2","right":"⊥"},"tau":1,"type":"approx"},{"data":{"id":"ד:1:1","inside":"ק:1:1","outside":"Ω"},"tau":1,"type":"boundary_close"},{"data":{"active":"right","focus":"ד:1:1","id":"ש:1:4","left":"ש:1:2","right":"ש:1:3","spine":"ש:1:1"},"tau":1,"type":"shin"},{"data":{"afterFocus":"ש:1:4","beforeFocus":"ש:1:4","mode":"glue","segmentIdBefore":1},"tau":2,"type":"BOUNDARY"},{"data":{"id":"join:2:3","left":"ש:1:4","strength":"conj"},"tau":2,"type":"join_consume"},{"data":{"C0":"C:2:2","F0":"ש:1:4","activeConstruct":"C:2:2","aliasReachableForward":true,"aliasReachableReverse":true,"focus":"C:2:2","hasAliasForward":true,"hasAliasReverse":true,"inboundFocus":"ש:1:4","prevBoundaryMode":"glue","segmentId":1,"segmentIdAfter":1,"segmentOStackLength":0,"segmentReset":false,"wordText":"הַקֳּדָשִׁים"},"tau":2,"type":"WORD_START"},{"data":{"id":"ה:2:1","mode":"public","target":"C:2:2"},"tau":2,"type":"declare"},{"data":{"id":"ק:2:2","left":"ה:2:1","right":"ש:1:4"},"tau":2,"type":"approx"},{"data":{"id":"ד:2:2","inside":"ק:2:2","outside":"Ω"},"tau":2,"type":"boundary_close"},{"data":{"active":"right","focus":"ד:2:2","id":"ש:2:8","left":"ש:2:6","right":"ש:2:7","spine":"ש:2:5"},"tau":2,"type":"shin"},{"data":{"afterFocus":"Ω","beforeFocus":"ם:2:1","mode":"cut","segmentIdBefore":1},"tau":3,"type":"BOUNDARY"},{"data":{"C0":"C:3:3","F0":"Ω","activeConstruct":"C:3:3","aliasReachableForward":true,"aliasReachableReverse":true,"focus":"C:3:3","hasAliasForward":true,"hasAliasReverse":true,"inboundFocus":"Ω","prevBoundaryMode":"cut","segmentId":2,"segmentIdAfter":2,"segmentOStackLength":0,"segmentReset":true,"wordText":"תֹּאכְלֶנּוּ"},"tau":3,"type":"WORD_START"},{"data":{"boundaryId":"ת:3:1","id":"ת:3:2","outside":"Ω","residueId":"ת:3:3","target":"C:3:3"},"tau":3,"type":"finalize"},{"data":{"id":"א:3:1","left":"Ω","right":"ת:3:3"},"tau":3,"type":"alias"},{"data":{"boundaryId":"ל:3:1","domain":"⊥","endpoint":"כ:3:1","id":"ל:3:2"},"tau":3,"type":"endpoint"},{"data":{"child":"נ:3:1","node":"support_debt:5:1","parent":"ל:3:2","rank":2},"tau":5,"type":"support_debt"},{"data":{"afterFocus":"Ω","beforeFocus":"ו:3:1","mode":"cut","segmentIdBefore":2},"tau":5,"type":"BOUNDARY"},{"data":{"C0":"C:5:4","F0":"Ω","activeConstruct":"C:5:4","aliasReachableForward":true,"aliasReachableReverse":true,"focus":"C:5:4","hasAliasForward":true,"hasAliasReverse":true,"inboundFocus":"Ω","prevBoundaryMode":"cut","segmentId":3,"segmentIdAfter":3,"segmentOStackLength":0,"segmentReset":true,"wordText":"כָּל"},"tau":5,"type":"WORD_START"},{"data":{"boundaryId":"ל:5:3","domain":"כ:5:3","endpoint":"כ:5:3","id":"ל:5:4"},"tau":5,"type":"endpoint"},{"data":{"afterFocus":"ל:5:4","beforeFocus":"ל:5:4","mode":"glue_maqqef","segmentIdBefore":3},"tau":6,"type":"BOUNDARY"},{"data":{"id":"join:6:6","left":"ל:5:4","strength":"maqqef"},"tau":6,"type":"join_consume"},{"data":{"C0":"C:6:5","F0":"ל:5:4","activeConstruct":"C:6:5","aliasReachableForward":true,"aliasReachableReverse":true,"focus":"C:6:5","hasAliasForward":true,"hasAliasReverse":true,"inboundFocus":"ל:5:4","prevBoundaryMode":"glue_maqqef","segmentId":3,"segmentIdAfter":3,"segmentOStackLength":0,"segmentReset":false,"wordText":"זָכָר"},"tau":6,"type":"WORD_START"},{"data":{"id":"ז:6:1","target":"C:6:5"},"tau":6,"type":"gate"},{"data":{"anchor":0,"id":"ר:6:1","inside":"כ:6:5","outside":"כ:6:6"},"tau":6,"type":"boundary_close"},{"data":{"afterFocus":"Ω","beforeFocus":"ר:6:1","mode":"cut","segmentIdBefore":3},"tau":8,"type":"BOUNDARY"},{"data":{"C0":"C:8:6","F0":"Ω","activeConstruct":"C:8:6","aliasReachableForward":true,"aliasReachableReverse":true,"focus":"C:8:6","hasAliasForward":true,"hasAliasReverse":true,"inboundFocus":"Ω","prevBoundaryMode":"cut","segmentId":4,"segmentIdAfter":4,"segmentOStackLength":0,"segmentReset":true,"wordText":"יֹאכַל"},"tau":8,"type":"WORD_START"},{"data":{"id":"א:8:2","left":"Ω","right":"י:8:2"},"tau":8,"type":"alias"},{"data":{"boundaryId":"ל:8:5","domain":"⊥","endpoint":"כ:8:7","id":"ל:8:6"},"tau":8,"type":"endpoint"},{"data":{"afterFocus":"ל:8:6","beforeFocus":"ל:8:6","mode":"glue","segmentIdBefore":4},"tau":9,"type":"BOUNDARY"},{"data":{"id":"join:9:8","left":"ל:8:6","strength":"conj"},"tau":9,"type":"join_consume"},{"data":{"C0":"C:9:7","F0":"ל:8:6","activeConstruct":"C:9:7","aliasReachableForward":true,"aliasReachableReverse":true,"focus":"C:9:7","hasAliasForward":true,"hasAliasReverse":true,"inboundFocus":"ל:8:6","prevBoundaryMode":"glue","segmentId":4,"segmentIdAfter":4,"segmentOStackLength":0,"segmentReset":false,"wordText":"אֹתוֹ"},"tau":9,"type":"WORD_START"},{"data":{"id":"א:9:3","left":"ל:8:6","right":"C:9:7"},"tau":9,"type":"alias"},{"data":{"boundaryId":"ת:9:4","id":"ת:9:5","outside":"Ω","residueId":"ת:9:6","target":"C:9:7"},"tau":9,"type":"finalize"},{"data":{"afterFocus":"Ω","beforeFocus":"ו:9:3","mode":"cut","segmentIdBefore":4},"tau":11,"type":"BOUNDARY"},{"data":{"C0":"C:11:8","F0":"Ω","activeConstruct":"C:11:8","aliasReachableForward":true,"aliasReachableReverse":true,"focus":"C:11:8","hasAliasForward":true,"hasAliasReverse":true,"inboundFocus":"Ω","prevBoundaryMode":"cut","segmentId":5,"segmentIdAfter":5,"segmentOStackLength":0,"segmentReset":true,"wordText":"קֹדֶשׁ"},"tau":11,"type":"WORD_START"},{"data":{"id":"ק:11:3","left":"⊥","right":"Ω"},"tau":11,"type":"approx"},{"data":{"id":"ד:11:3","inside":"ק:11:3","outside":"Ω"},"tau":11,"type":"boundary_close"},{"data":{"active":"right","focus":"ד:11:3","id":"ש:11:12","left":"ש:11:10","right":"ש:11:11","spine":"ש:11:9"},"tau":11,"type":"shin"},{"data":{"afterFocus":"Ω","beforeFocus":"ש:11:12","mode":"cut","segmentIdBefore":5},"tau":12,"type":"BOUNDARY"},{"data":{"C0":"C:12:9","F0":"Ω","activeConstruct":"C:12:9","aliasReachableForward":true,"aliasReachableReverse":true,"focus":"C:12:9","hasAliasForward":true,"hasAliasReverse":true,"inboundFocus":"Ω","prevBoundaryMode":"cut","segmentId":6,"segmentIdAfter":6,"segmentOStackLength":0,"segmentReset":true,"wordText":"יִהְיֶה"},"tau":12,"type":"WORD_START"},{"data":{"id":"ה:12:2","mode":"public","target":"י:12:3"},"tau":12,"type":"declare"},{"data":{"target":"י:12:4"},"tau":12,"type":"declare_breath"},{"data":{"afterFocus":"י:12:4","beforeFocus":"י:12:4","mode":"glue_maqqef","segmentIdBefore":6},"tau":13,"type":"BOUNDARY"},{"data":{"id":"join:13:11","left":"י:12:4","strength":"maqqef"},"tau":13,"type":"join_consume"},{"data":{"C0":"C:13:10","F0":"י:12:4","activeConstruct":"C:13:10","aliasReachableForward":true,"aliasReachableReverse":true,"focus":"C:13:10","hasAliasForward":true,"hasAliasReverse":true,"inboundFocus":"י:12:4","prevBoundaryMode":"glue_maqqef","segmentId":6,"segmentIdAfter":6,"segmentOStackLength":0,"segmentReset":false,"wordText":"לָּךְ"},"tau":13,"type":"WORD_START"},{"data":{"boundaryId":"ל:13:7","domain":"י:12:4","endpoint":"י:12:4","id":"ל:13:8"},"tau":13,"type":"endpoint"},{"data":{"afterFocus":"Ω","beforeFocus":"ך:13:1","mode":"cut","segmentIdBefore":6},"tau":16,"type":"BOUNDARY"}],"K":["Ω","⊥"],"OStack_word":[],"R":"⊥","W":[],"metaCounter":{"C":10,"support_debt":1,"א":3,"ב":2,"ד":3,"ה":2,"ו":4,"ז":1,"י":4,"ך":2,"כ":8,"ל":8,"ם":1,"מ":1,"נ":1,"ק":3,"ר":1,"ש":12,"ת":6},"tau":16,"has_data_payload":false,"OmegaId":"Ω"}}
+
+══════════════════════════════════════════════════════════════
+ POST-RESET RUNTIME STATE
+══════════════════════════════════════════════════════════════
+ vm.D=Ω; vm.F=Ω; vm.OmegaId=Ω
+{"vm":{"tau":0,"D":"Ω","F":"Ω","R":"⊥","K":["Ω","⊥"],"E":[],"W":[],"OStack_word":[],"H":[],"A":[],"has_data_payload":false,"OmegaId":"Ω"},"handles":[{"id":"⊥","kind":"empty","policy":"soft","anchor":0,"edge_mode":"free","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{}},{"id":"Ω","kind":"scope","policy":"soft","anchor":0,"edge_mode":"free","envelope":{"ctx_flow":"LOW","x_flow":"IMPLICIT_OK","data_flow":"LIVE","edit_flow":"OPEN","ports":[],"coupling":"LINK","policy":"soft"},"meta":{}}],"cont":[],"links":[],"boundaries":[],"rules":[]}

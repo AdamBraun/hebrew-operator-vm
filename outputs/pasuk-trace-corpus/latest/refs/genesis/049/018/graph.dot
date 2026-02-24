@@ -1,0 +1,112 @@
+// trace_file_sha256: cdec7fd1fb6be7dfd290de723133d0fa75d3a37426b5f4cb9e6b02f9bafd5d85
+// graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
+// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// dot_schema: 2
+// trace_semantic_sha256: 8fb9db3439e2c9139ede96368e3a2b79488dd9e1a145713815e5b453a37410f3
+
+digraph Genesis_49_18_Boot {
+  rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
+  bgcolor="#F7EED6";
+  fontname="Helvetica";
+  node [fontname="Helvetica"];
+  edge [fontname="Helvetica", color="#3A352B"];
+
+  legend [label="Genesis/49/18\nHebrew Calculus VM - Final State\nτ=6 | D=Ω | F=Ω", shape=plaintext, fillcolor="#F2E6C8", fontcolor="#1C1B16", fontsize=14];
+
+  Omega [label="Ω\nscope", shape=doublecircle, style="filled,rounded,bold", fillcolor="#B08D57", fontcolor="#1C1B16", color="#8C6A3D"];
+  H31 [label="ה:3:1\nrule | public", shape=hexagon, style="filled", fillcolor="#E7D3A6", fontcolor="#1C1B16", color="#B08D57"];
+  Y11 [label="י:1:1\nentity", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  Y22 [label="י:2:2\nentity", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  Y34 [label="י:3:4\nentity", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  L11 [label="ל:1:1\nboundary", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
+  L12 [label="ל:1:2\nendpoint", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  E11 [label="ע:1:1\nwatch | atomic", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  Q21 [label="ק:2:1\nalias", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  Sh14 [label="{<sp>spine|<l>left|<r>right}", shape=record, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
+  Th11 [label="ת:1:1\nboundary", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
+  Th12 [label="ת:1:2\nartifact", shape=octagon, style="filled", fillcolor="#EAD7AF", fontcolor="#1C1B16", color="#7B1E16"];
+  Th13 [label="ת:1:3\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  Th24 [label="ת:2:4\nboundary", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
+  Th25 [label="ת:2:5\nartifact", shape=octagon, style="filled", fillcolor="#EAD7AF", fontcolor="#1C1B16", color="#7B1E16"];
+  Th26 [label="ת:2:6\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  Trans [label="⊥\nempty", shape=circle, style="filled", fillcolor="#D7C08F", fontcolor="#1C1B16", color="#5A3C22"];
+
+  subgraph cluster_word_0 {
+    label="לִישׁוּעָתְךָ";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    Y11;
+    L11;
+    L12;
+    E11;
+    Sh14;
+    Th11;
+    Th12;
+    Th13;
+  }
+
+  subgraph cluster_word_1 {
+    label="קִוִּיתִי";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    Y22;
+    Q21;
+    Th24;
+    Th25;
+    Th26;
+  }
+
+  subgraph cluster_word_2 {
+    label="יְהֹוָה";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    H31;
+    Y34;
+  }
+
+  F_marker [label="F", shape=circle, style="filled,bold", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455", width=0.24, height=0.24, fixedsize=true, fontsize=10];
+  Omega -> Omega [xlabel="domain", color="#8C6A3D", penwidth=4, fontsize=10];
+  F_marker -> Omega [xlabel="focus", color="#A88455", penwidth=4, fontsize=10];
+
+  subgraph cluster_1_1_0 {
+    label="Boundary ל:1:1";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    Trans;
+    L12;
+  }
+  subgraph cluster_1_1_1 {
+    label="Boundary ת:1:1";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    E11;
+    Th12;
+  }
+  subgraph cluster_2_4_2 {
+    label="Boundary ת:2:4";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    Y22;
+    Th25;
+  }
+
+  Omega -> Trans [xlabel="approx"];
+  H31 -> Y34 [xlabel="vav"];
+  Y11 -> Sh14 [xlabel="construct"];
+  Y22 -> Th25 [xlabel="finalize"];
+  Y34 -> H31 [xlabel="declare"];
+  E11 -> Th12 [xlabel="finalize"];
+  Q21 -> E11 [xlabel="vav"];
+  Sh14 -> Y11 [xlabel="vav"];
+  Th12 -> Th13 [xlabel="residue"];
+  Th25 -> Th26 [xlabel="residue"];
+  Trans -> Omega [xlabel="approx"];
+  Trans -> L12 [xlabel="endpoint"];
+  legend -> Omega [style=invis];
+}

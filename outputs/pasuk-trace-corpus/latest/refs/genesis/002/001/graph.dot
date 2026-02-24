@@ -1,0 +1,140 @@
+// trace_file_sha256: 6bc828b00bfb36cbace371537ceab1a6ab66746c1eda938cac7629749a57ad54
+// graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
+// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// dot_schema: 2
+// trace_semantic_sha256: ae2087d5ecb22c31096d39051561c9f06c1bd5a04b612870927997067c53d5b6
+
+digraph Genesis_2_1_Boot {
+  rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
+  bgcolor="#F7EED6";
+  fontname="Helvetica";
+  node [fontname="Helvetica"];
+  edge [fontname="Helvetica", color="#3A352B"];
+
+  legend [label="Genesis/2/1\nHebrew Calculus VM - Final State\nτ=8 | D=Ω | F=Ω", shape=plaintext, fillcolor="#F2E6C8", fontcolor="#1C1B16", fontsize=14];
+
+  H22 [label="C:2:2\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  Omega [label="Ω\nscope", shape=doublecircle, style="filled,rounded,bold", fillcolor="#B08D57", fontcolor="#1C1B16", color="#8C6A3D"];
+  B51 [label="ב:5:1\nboundary | atomic", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
+  H21 [label="ה:2:1\nrule | public,gated", shape=hexagon, style="filled", fillcolor="#E7D3A6", fontcolor="#1C1B16", color="#B08D57"];
+  H32 [label="ה:3:2\nrule | public,atomic", shape=hexagon, style="filled", fillcolor="#E7D3A6", fontcolor="#1C1B16", color="#B08D57"];
+  V35 [label="ו:3:5\nstructured", shape=parallelogram, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
+  Y22 [label="י:2:2\nentity", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  K11 [label="כ:1:1\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  K43 [label="כ:4:3\nscope | atomic", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  L11 [label="ל:1:1\nboundary", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
+  L12 [label="ל:1:2\nendpoint | hard", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  L43 [label="ל:4:3\nboundary", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
+  L44 [label="ל:4:4\nendpoint", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  Mf21 [label="ם:2:1\nmemHandle", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  Tsf31 [label="ץ:3:1\nartifact", shape=octagon, style="filled", fillcolor="#EAD7AF", fontcolor="#1C1B16", color="#7B1E16"];
+  Ts51 [label="צ:5:1\nstructured", shape=ellipse, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
+  R31 [label="ר:3:1\nboundary | convergent", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
+  Sh24 [label="{<sp>spine|<l>left|<r>right}", shape=record, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
+  Trans [label="⊥\nempty", shape=circle, style="filled", fillcolor="#D7C08F", fontcolor="#1C1B16", color="#5A3C22"];
+
+  subgraph cluster_word_0 {
+    label="וַיְכֻלּוּ";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    K11;
+    L11;
+    L12;
+  }
+
+  subgraph cluster_word_1 {
+    label="הַשָּׁמַיִם";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    H22;
+    H21;
+    Y22;
+    Mf21;
+    Sh24;
+  }
+
+  subgraph cluster_word_2 {
+    label="וְהָאָרֶץ";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    H32;
+    V35;
+    Tsf31;
+    R31;
+  }
+
+  subgraph cluster_word_3 {
+    label="וְכָל";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    K43;
+    L43;
+    L44;
+  }
+
+  subgraph cluster_word_4 {
+    label="צְבָאָם";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    B51;
+    Ts51;
+  }
+
+  F_marker [label="F", shape=circle, style="filled,bold", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455", width=0.24, height=0.24, fixedsize=true, fontsize=10];
+  Omega -> Omega [xlabel="domain", color="#8C6A3D", penwidth=4, fontsize=10];
+  F_marker -> Omega [xlabel="focus", color="#A88455", penwidth=4, fontsize=10];
+
+  subgraph cluster_5_1_0 {
+    label="Boundary ב:5:1";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    Ts51;
+  }
+  subgraph cluster_1_1_1 {
+    label="Boundary ל:1:1";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    K11;
+    L12;
+  }
+  subgraph cluster_4_3_2 {
+    label="Boundary ל:4:3";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    K43;
+    L44;
+  }
+  subgraph cluster_3_1_3 {
+    label="Boundary ר:3:1";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    H32;
+  }
+
+  H22 -> H21 [xlabel="declare"];
+  B51 -> L44 [xlabel="transport"];
+  H21 -> Sh24 [xlabel="construct"];
+  H32 -> Mf21 [xlabel="transport"];
+  H32 -> R31 [xlabel="boundary"];
+  V35 -> H32 [xlabel="declare"];
+  K11 -> L12 [xlabel="endpoint"];
+  K43 -> L44 [xlabel="endpoint"];
+  L44 -> B51 [xlabel="transport"];
+  L44 -> Ts51 [xlabel="align"];
+  Mf21 -> H32 [xlabel="transport"];
+  Mf21 -> Y22 [xlabel="vav"];
+  R31 -> Omega [xlabel="boundary"];
+  R31 -> Tsf31 [xlabel="align"];
+  Trans -> Omega [xlabel="vav"];
+  Trans -> Omega [xlabel="vav"];
+  legend -> Omega [style=invis];
+}

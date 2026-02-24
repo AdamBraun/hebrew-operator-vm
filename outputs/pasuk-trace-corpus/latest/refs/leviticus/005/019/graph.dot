@@ -1,0 +1,112 @@
+// trace_file_sha256: 2dce2e1b0c2b18b99235ac90cfb59cc0e4bd2805b3090b377935395dbb58c0dc
+// graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
+// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// dot_schema: 2
+// trace_semantic_sha256: 91d42377f281168ff4d033763037618dbf687364a0fdac52b8511d25c3a8fca5
+
+digraph Leviticus_5_19_Boot {
+  rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
+  bgcolor="#F7EED6";
+  fontname="Helvetica";
+  node [fontname="Helvetica"];
+  edge [fontname="Helvetica", color="#3A352B"];
+
+  legend [label="Leviticus/5/19\nHebrew Calculus VM - Final State\nτ=9 | D=Ω | F=Ω", shape=plaintext, fillcolor="#F2E6C8", fontcolor="#1C1B16", fontsize=14];
+
+  H11 [label="C:1:1\nscope | atomic", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  H22 [label="C:2:2\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  H43 [label="C:4:3\nscope | atomic", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  H54 [label="C:5:4\nscope | atomic", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  Omega [label="Ω\nscope", shape=doublecircle, style="filled,rounded,bold", fillcolor="#B08D57", fontcolor="#1C1B16", color="#8C6A3D"];
+  H21 [label="ה:2:1\nrule | public", shape=hexagon, style="filled", fillcolor="#E7D3A6", fontcolor="#1C1B16", color="#B08D57"];
+  H62 [label="ה:6:2\nrule | public", shape=hexagon, style="filled", fillcolor="#E7D3A6", fontcolor="#1C1B16", color="#B08D57"];
+  V21 [label="ו:2:1\nstructured", shape=parallelogram, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
+  Y61 [label="י:6:1\nentity", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  L61 [label="ל:6:1\nboundary", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
+  L62 [label="ל:6:2\nendpoint | gated", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  Mf42 [label="ם:4:2\nmemHandle", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  Sh14 [label="{<sp>spine|<l>left|<r>right}", shape=record, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
+  Sh48 [label="{<sp>spine|<l>left|<r>right}", shape=record, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
+  Sh512 [label="{<sp>spine|<l>left|<r>right}", shape=record, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
+  Trans [label="⊥\nempty", shape=circle, style="filled", fillcolor="#D7C08F", fontcolor="#1C1B16", color="#5A3C22"];
+
+  subgraph cluster_word_0 {
+    label="אָשָׁם";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    H11;
+    Sh14;
+  }
+
+  subgraph cluster_word_1 {
+    label="הוּא";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    H22;
+    H21;
+    V21;
+  }
+
+  subgraph cluster_word_2 {
+    label="אָשֹׁם";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    H43;
+    Mf42;
+    Sh48;
+  }
+
+  subgraph cluster_word_3 {
+    label="אָשַׁם";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    H54;
+    Sh512;
+  }
+
+  subgraph cluster_word_4 {
+    label="לַיהֹוָה";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    H62;
+    Y61;
+    L61;
+    L62;
+  }
+
+  F_marker [label="F", shape=circle, style="filled,bold", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455", width=0.24, height=0.24, fixedsize=true, fontsize=10];
+  Omega -> Omega [xlabel="domain", color="#8C6A3D", penwidth=4, fontsize=10];
+  F_marker -> Omega [xlabel="focus", color="#A88455", penwidth=4, fontsize=10];
+
+  subgraph cluster_6_1_0 {
+    label="Boundary ל:6:1";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    Trans;
+    L62;
+  }
+
+  H11 -> Omega [xlabel="transport"];
+  H11 -> Sh14 [xlabel="construct"];
+  H22 -> H21 [xlabel="declare"];
+  H43 -> Omega [xlabel="transport"];
+  H43 -> Sh48 [xlabel="construct"];
+  H54 -> Mf42 [xlabel="transport"];
+  H54 -> Sh512 [xlabel="construct"];
+  Omega -> H11 [xlabel="transport"];
+  Omega -> H43 [xlabel="transport"];
+  Omega -> V21 [xlabel="transport"];
+  H21 -> Trans [xlabel="vav"];
+  H62 -> Y61 [xlabel="vav"];
+  V21 -> Omega [xlabel="transport"];
+  Y61 -> H62 [xlabel="declare"];
+  Mf42 -> H54 [xlabel="transport"];
+  Trans -> L62 [xlabel="endpoint"];
+  legend -> Omega [style=invis];
+}
