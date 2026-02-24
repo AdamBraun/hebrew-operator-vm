@@ -31,7 +31,7 @@ export const PASUK_CORPUS_CANONICAL_ARGS = Object.freeze([
   "--out-dir=outputs/pasuk-trace-corpus/latest",
   "--lang=he",
   "--keep-teamim",
-  "--include-snapshots",
+  "--no-snapshots",
   "--layout=boot",
   "--pretty-ids",
   "--boundary=cluster"
