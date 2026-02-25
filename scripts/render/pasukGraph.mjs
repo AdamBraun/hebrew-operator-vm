@@ -61,77 +61,15 @@ function dotBareId(s) {
   return /^[A-Za-z_][A-Za-z0-9_]*$/.test(id) ? id : dotId(id);
 }
 
-const HEBREW_TO_LATIN = {
-  א: "A",
-  ב: "B",
-  ג: "G",
-  ד: "D",
-  ה: "H",
-  ו: "V",
-  ז: "Z",
-  ח: "Ch",
-  ט: "T",
-  י: "Y",
-  כ: "K",
-  ך: "Kf",
-  ל: "L",
-  מ: "M",
-  ם: "Mf",
-  נ: "N",
-  ן: "Nf",
-  ס: "S",
-  ע: "E",
-  פ: "P",
-  ף: "Pf",
-  צ: "Ts",
-  ץ: "Tsf",
-  ק: "Q",
-  ר: "R",
-  ש: "Sh",
-  ת: "Th"
-};
-
-function prettyIdFromHandleId(rawId) {
-  const id = String(rawId ?? "");
-  if (id === "Ω") return "Omega";
-  if (id === "⊥") return "Trans";
-
-  // Pattern: <glyph>:<a>:<b> (e.g. ב:1:2)
-  const match = id.match(/^(.):(\d+):(\d+)$/u);
-  if (match) {
-    const [, glyph, a, b] = match;
-    const latin = HEBREW_TO_LATIN[glyph] ?? "H";
-    return `${latin}${a}${b}`; // B12, R83, Th55, etc.
-  }
-
-  // Fallback: make a safe-ish identifier
-  return `H_${id.replace(/[^A-Za-z0-9_]+/g, "_")}`;
-}
-
-function buildIdMap(handleIds, opts) {
+function buildIdMap(handleIds) {
   const map = new Map(); // handleId -> nodeId
 
-  if (!opts?.prettyIds) {
-    for (const handleId of handleIds) {
-      map.set(String(handleId), String(handleId));
-    }
-    return map;
+  for (const handleId of handleIds) {
+    map.set(String(handleId), String(handleId));
   }
 
-  const used = new Map(); // nodeId -> count
-  for (const hid of handleIds) {
-    const base = prettyIdFromHandleId(hid);
-    const safe = base.replace(/[^A-Za-z0-9_]+/g, "_");
-    const key = safe || "N";
-
-    const count = (used.get(key) ?? 0) + 1;
-    used.set(key, count);
-
-    map.set(String(hid), count === 1 ? key : `${key}_${count}`);
-  }
   return map;
 }
-
 function attrs(obj) {
   // obj: {key: value} -> key=value pairs, values already quoted if needed
   return Object.entries(obj)
@@ -732,7 +670,7 @@ export function renderVmDot(vm, opts = {}) {
 
   function nodeIdFor(handleId) {
     const hid = String(handleId ?? "");
-    return idMap.get(hid) ?? (prettyIds ? prettyIdFromHandleId(hid) : hid);
+    return idMap.get(hid) ?? hid;
   }
 
   function nodeRef(handleId) {
