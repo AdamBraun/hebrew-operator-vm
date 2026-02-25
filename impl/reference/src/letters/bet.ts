@@ -33,6 +33,7 @@ export const betOp: LetterOp = {
     const shouldReframeDomain = isWordEntryBaseline(S);
     const outside = S.vm.F;
     let anchor = ops.args[0];
+    const domainCarrier = shouldReframeDomain ? 1 : 0;
 
     if (shouldReframeDomain) {
       const seedId = nextId(S, "ב");
@@ -49,7 +50,7 @@ export const betOp: LetterOp = {
           inside: anchor,
           outside,
           openedBy: "ב",
-          domainCarrier: shouldReframeDomain ? 1 : 0
+          domainCarrier
         }
       })
     );
@@ -57,12 +58,29 @@ export const betOp: LetterOp = {
     const cons: Construction = {
       base: anchor,
       envelope: defaultEnvelope(),
-      meta: { boundaryId, anchor, outside }
+      meta: { boundaryId, anchor, outside, domainCarrier }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { boundaryId } = cons.meta as { boundaryId: string };
+    const { boundaryId, anchor, outside, domainCarrier } = cons.meta as {
+      boundaryId: string;
+      anchor: string;
+      outside: string;
+      domainCarrier: 0 | 1;
+    };
+    S.vm.H.push({
+      type: "boundary_open",
+      tau: S.vm.tau,
+      data: {
+        id: boundaryId,
+        boundaryId,
+        inside: anchor,
+        outside,
+        anchor: 1,
+        domainCarrier
+      }
+    });
     S.vm.E.push({ F: S.vm.F, lambda: "class", D_frame: S.vm.D });
     return { S, h: boundaryId, r: BOT_ID };
   }

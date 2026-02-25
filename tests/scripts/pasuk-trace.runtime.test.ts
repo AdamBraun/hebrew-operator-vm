@@ -9,6 +9,19 @@ import {
   PasukTraceOptions
 } from "@ref/scripts/pasukTrace/runtime";
 
+function eventDataContainsHandleId(value: unknown, handleId: string): boolean {
+  if (value === handleId) {
+    return true;
+  }
+  if (Array.isArray(value)) {
+    return value.some((entry) => eventDataContainsHandleId(entry, handleId));
+  }
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  return Object.values(value).some((entry) => eventDataContainsHandleId(entry, handleId));
+}
+
 describe("pasuk trace runtime", () => {
   it("parses ref keys", () => {
     expect(parseRefKey("Genesis/1/2")).toEqual({ book: "Genesis", chapter: 1, verse: 2 });
@@ -139,6 +152,44 @@ describe("pasuk trace runtime", () => {
           item.composite?.kind === "hataf_segol"
       )
     ).toBe(true);
+  });
+
+  it("keeps each final boundary handle trace-addressable via vm.H data refs", async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-boundary-refs-"));
+    const outJsonPath = path.join(tmpDir, "trace.json");
+    const outReportPath = path.join(tmpDir, "trace.txt");
+
+    const opts: PasukTraceOptions = {
+      input: path.join(tmpDir, "unused.json"),
+      ref: "Genesis/1/1",
+      text: "אבי",
+      lang: "he",
+      normalizeFinals: false,
+      keepTeamim: false,
+      allowRuntimeErrors: false,
+      includeSnapshots: false,
+      outJson: outJsonPath,
+      outReport: outReportPath,
+      printReport: false
+    };
+
+    const result = await runPasukTrace(opts);
+    const boundaryHandleIds = Array.isArray(result.final_state?.handles)
+      ? result.final_state.handles
+          .filter((handle: { kind?: string; id?: string }) => handle.kind === "boundary")
+          .map((handle: { id?: string }) => handle.id)
+          .filter((id: unknown): id is string => typeof id === "string" && id.length > 0)
+      : [];
+    expect(boundaryHandleIds.length).toBeGreaterThan(0);
+
+    const vmEvents = Array.isArray(result.final_state?.vm?.H) ? result.final_state.vm.H : [];
+    const missing = boundaryHandleIds.filter(
+      (handleId) =>
+        !vmEvents.some((event: { data?: unknown }) =>
+          eventDataContainsHandleId(event?.data, handleId)
+        )
+    );
+    expect(missing).toEqual([]);
   });
 
   it("shows explicit join-in consumption at word entry", async () => {

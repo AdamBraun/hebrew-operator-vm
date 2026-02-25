@@ -48,6 +48,7 @@ export function applyEventLinks(state: State, events: readonly VMEvent[]): void 
       case "endpoint":
         link(state, data.endpoint, data.id, "endpoint");
         break;
+      case "boundary_open":
       case "boundary_close":
       case "boundary_auto_close":
       case "boundary_cut_close":
