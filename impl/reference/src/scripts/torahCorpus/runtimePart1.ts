@@ -1,45 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-unused-vars */
 // @ts-nocheck
+import { sanitizeHebrewText } from "../shared/hebrewSanitizer";
 
 const SPACE_TOKEN = "□";
-
-const FINAL_MAP = {
-  ך: "כ",
-  ם: "מ",
-  ן: "נ",
-  ף: "פ",
-  ץ: "צ"
-};
-
-const HEBREW_LETTERS = new Set([
-  "א",
-  "ב",
-  "ג",
-  "ד",
-  "ה",
-  "ו",
-  "ז",
-  "ח",
-  "ט",
-  "י",
-  "כ",
-  "ך",
-  "ל",
-  "מ",
-  "ם",
-  "נ",
-  "ן",
-  "ס",
-  "ע",
-  "פ",
-  "ף",
-  "צ",
-  "ץ",
-  "ק",
-  "ר",
-  "ש",
-  "ת"
-]);
 
 const ALLOWED_MARKS = new Set([
   "\u05B0",
@@ -57,26 +20,6 @@ const ALLOWED_MARKS = new Set([
   "\u05C1",
   "\u05C2"
 ]);
-const TEAMIM_MIN = 0x0591;
-const TEAMIM_MAX = 0x05af;
-const MAQQEF = "\u05BE";
-const SOF_PASUQ = "\u05C3";
-const STRUCTURAL_TAGS = new Set([
-  "br",
-  "p",
-  "div",
-  "li",
-  "tr",
-  "td",
-  "th",
-  "h1",
-  "h2",
-  "h3",
-  "h4",
-  "h5",
-  "h6"
-]);
-const SPACE_ENTITIES = new Set(["&nbsp;", "&thinsp;", "&ensp;", "&emsp;"]);
 const ALLOWED_MARK_CODEPOINTS = new Set(
   Array.from(ALLOWED_MARKS)
     .map((mark) => mark.codePointAt(0))
@@ -181,79 +124,11 @@ const SAFETY_RAIL_ALLOWLIST = new Set([
   "FINAL_MEM.CLOSE"
 ]);
 
-function isTeamim(mark) {
-  const codepoint = mark.codePointAt(0);
-  return codepoint !== undefined && codepoint >= TEAMIM_MIN && codepoint <= TEAMIM_MAX;
-}
-
-function extractTagName(markupTag) {
-  const match = String(markupTag ?? "").match(/^<\s*\/?\s*([A-Za-z0-9:-]+)/u);
-  return match?.[1]?.toLowerCase() ?? null;
-}
-
-function stripMarkupAndEntities(text) {
-  let out = String(text ?? "").replace(/<[^>]*>/g, (match) => {
-    const tagName = extractTagName(match);
-    if (tagName && STRUCTURAL_TAGS.has(tagName)) {
-      return " ";
-    }
-    return "";
-  });
-  out = out.replace(/&[^;\s]+;/g, (match) => (SPACE_ENTITIES.has(match.toLowerCase()) ? " " : ""));
-  out = out.replace(/[\u00A0\u2009]/g, " ");
-  return out.replace(/\{\s*[פס]\s*\}/gu, " ");
-}
-
 function sanitizeText(text, opts) {
-  if (!text) {
-    return "";
-  }
-  let cleaned = stripMarkupAndEntities(String(text));
-  cleaned = cleaned.normalize("NFD");
-
-  cleaned = cleaned.replace(/\u05C7/g, "\u05B8");
-  cleaned = cleaned.replace(/\u05C0/g, " ");
-  cleaned = cleaned.replace(/\u05F3|\u05F4/g, "");
-  if (!opts.keepTeamim) {
-    cleaned = cleaned.replace(/\u05BE/g, " ");
-    cleaned = cleaned.replace(/\u05C3/g, " ");
-  }
-
-  let out = "";
-  let lastWasLetter = false;
-  for (const ch of cleaned) {
-    if (HEBREW_LETTERS.has(ch) || FINAL_MAP[ch]) {
-      const normalized = opts.normalizeFinals && FINAL_MAP[ch] ? FINAL_MAP[ch] : ch;
-      if (!HEBREW_LETTERS.has(normalized)) {
-        continue;
-      }
-      out += normalized;
-      lastWasLetter = true;
-      continue;
-    }
-    if (ALLOWED_MARKS.has(ch) || (opts.keepTeamim && isTeamim(ch))) {
-      if (lastWasLetter) {
-        out += ch;
-      }
-      continue;
-    }
-    if (opts.keepTeamim && (ch === MAQQEF || ch === SOF_PASUQ)) {
-      out += ch;
-      lastWasLetter = false;
-      continue;
-    }
-    if (/\s/u.test(ch)) {
-      out += " ";
-      lastWasLetter = false;
-    }
-  }
-
-  let normalized = out;
-  if (opts.keepTeamim) {
-    normalized = normalized.replace(/\s*־\s*/gu, "־");
-    normalized = normalized.replace(/\s*׃\s*/gu, "׃ ");
-  }
-  return normalized.replace(/\s+/g, " ").trim();
+  return sanitizeHebrewText(text, {
+    keepTeamim: Boolean(opts?.keepTeamim),
+    normalizeFinals: Boolean(opts?.normalizeFinals)
+  });
 }
 
 function uniqPreserveOrder(values) {

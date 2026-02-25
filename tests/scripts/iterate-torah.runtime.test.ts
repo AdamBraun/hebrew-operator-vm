@@ -55,6 +55,21 @@ describe("iterate torah runtime", () => {
     expect(kept).not.toContain("בְּ רֵאשִׁ֖ית");
   });
 
+  it("removes sefaria editorial notes, including malformed orphaned fragments", () => {
+    const rawWithFootnote =
+      'זֶ֣ה סֵ֔פֶר<sup class="footnote-marker">*</sup><i class="footnote">(בספרי תימן <big>סֵ֔</big>פֶר בסמ״ך גדולה)</i> תּוֹלְדֹ֖ת';
+    const malformed = "זֶ֣ה סֵ֔פֶרבספרי תימן סֵ֔פֶר בסמך גדולה תּוֹלְדֹ֖ת";
+    const expected = sanitizeText("זֶ֣ה סֵ֔פֶר תּוֹלְדֹ֖ת", { ...DEFAULT_OPTS, keepTeamim: true });
+
+    const cleanedMarkup = sanitizeText(rawWithFootnote, { ...DEFAULT_OPTS, keepTeamim: true });
+    const cleanedMalformed = sanitizeText(malformed, { ...DEFAULT_OPTS, keepTeamim: true });
+
+    expect(cleanedMarkup).toBe(expected);
+    expect(cleanedMarkup).not.toContain("בספרי");
+    expect(cleanedMarkup).not.toContain("*");
+    expect(cleanedMalformed).toBe(expected);
+  });
+
   it("iterates payload and tracks summary counts", () => {
     const inputs: string[] = [];
     const summary = iteratePayload(

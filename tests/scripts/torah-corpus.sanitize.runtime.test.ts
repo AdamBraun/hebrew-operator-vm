@@ -18,6 +18,30 @@ describe("torah corpus sanitizer", () => {
     expect(kept).not.toContain("בְּ רֵאשִׁ֖ית");
   });
 
+  it("removes sefaria editorial notes from corpus sanitizer", () => {
+    const rawWithFootnote =
+      'זֶ֣ה סֵ֔פֶר<sup class="footnote-marker">*</sup><i class="footnote">(בספרי תימן <big>סֵ֔</big>פֶר בסמ״ך גדולה)</i> תּוֹלְדֹ֖ת';
+    const malformed = "זֶ֣ה סֵ֔פֶרבספרי תימן סֵ֔פֶר בסמך גדולה תּוֹלְדֹ֖ת";
+    const expected = sanitizeText("זֶ֣ה סֵ֔פֶר תּוֹלְדֹ֖ת", {
+      keepTeamim: true,
+      normalizeFinals: false
+    });
+
+    const cleanedMarkup = sanitizeText(rawWithFootnote, {
+      keepTeamim: true,
+      normalizeFinals: false
+    });
+    const cleanedMalformed = sanitizeText(malformed, {
+      keepTeamim: true,
+      normalizeFinals: false
+    });
+
+    expect(cleanedMarkup).toBe(expected);
+    expect(cleanedMarkup).not.toContain("בספרי");
+    expect(cleanedMarkup).not.toContain("*");
+    expect(cleanedMalformed).toBe(expected);
+  });
+
   it("keeps Genesis 1:1 word boundaries stable in collectExecutableVerses", () => {
     const source = {
       books: [
