@@ -215,6 +215,22 @@ Resume behavior with `--skip-existing`:
 }
 ```
 
+## Tiered Navigation Indexes
+
+For clients that avoid loading the full `refs/index.json` at startup, run:
+
+```bash
+node scripts/split-index.mjs
+```
+
+This reads `outputs/pasuk-trace-corpus/latest/refs/index.json` and writes:
+
+- `outputs/pasuk-trace-corpus/latest/refs/books.json`
+- `outputs/pasuk-trace-corpus/latest/refs/{book}/chapters.json`
+- `outputs/pasuk-trace-corpus/latest/refs/{book}/{chapter}/verses.json`
+
+All arrays are sorted ascending and encoded as pretty JSON (`2` spaces + trailing newline).
+
 ## `manifest.json` Contract
 
 Run-level metadata and accounting:
@@ -270,7 +286,9 @@ In continue mode, failures are recorded in `manifest.json -> errors[]`.
 Recommended client flow:
 
 1. Load `manifest.json` to validate run metadata and show coverage.
-2. Load `refs/index.json` to build verse navigation.
+2. Build navigation using either:
+   - tiered files (`refs/books.json` -> `refs/{book}/chapters.json` -> `refs/{book}/{chapter}/verses.json`), or
+   - `refs/index.json` when full row metadata is required up front.
 3. For selected verse:
    - fetch `trace_json` for raw interpreter state and final snapshot,
    - fetch `trace_report` for human-readable debug view,

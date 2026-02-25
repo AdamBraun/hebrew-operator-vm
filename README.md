@@ -75,6 +75,7 @@ Build a verse-by-verse archive with:
 - `trace.txt` human report
 - `graph.dot` Graphviz DOT generated from each trace payload
 - `refs/index.json` for UI traversal
+- `refs/books.json`, `refs/{book}/chapters.json`, and `refs/{book}/{chapter}/verses.json` for tiered UI navigation
 - `manifest.json` run-level metadata and counts
 
 Integrity model:
@@ -126,6 +127,18 @@ npm run pasuk-trace-corpus -- \
   --skip-existing \
   --repair-existing
 ```
+
+Generate tiered refs navigation indexes from `refs/index.json`:
+
+```bash
+node scripts/split-index.mjs
+```
+
+This writes:
+
+- `outputs/pasuk-trace-corpus/latest/refs/books.json`
+- `outputs/pasuk-trace-corpus/latest/refs/{book}/chapters.json`
+- `outputs/pasuk-trace-corpus/latest/refs/{book}/{chapter}/verses.json`
 
 Resume behavior with `--skip-existing`:
 
