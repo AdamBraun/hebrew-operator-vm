@@ -33,6 +33,11 @@ const CONTEXT_SPAN = 12;
 const ORDER_SAMPLE_LIMIT = 10;
 const IDEMPOTENCE_SAMPLE_LIMIT = 10;
 const PARASHA_MARKER = /\{\s*[פס]\s*\}/gu;
+const EDITORIAL_NOTE_WITH_MARKER = /\*\s*\([^)]*\)/gu;
+const EDITORIAL_NOTE_PAREN = /\([^)]*\)/gu;
+const ORPHANED_EDITORIAL_NOTE = /בספרי[^׃\n]{0,200}?(?:גדולה|קטנה|רגילה|זעירא|קטיעא|בתיבה\s+אחת)/gu;
+const ORPHANED_NO_PARASHA_NOTE = /אין\s+פרשה\s+בספרי[^׃\n]*/gu;
+const FOOTNOTE_MARKER = /\*/gu;
 const SPACE_ENTITIES = new Set(["&nbsp;", "&thinsp;"]);
 const STRUCTURAL_TAGS = new Set(["br", "p", "div", "li", "tr", "td", "th", "hr"]);
 
@@ -66,6 +71,7 @@ const POLICY_TRANSFORMATION_KEYS = [
   "markup_tags_removed",
   "html_entities_removed",
   "nbsp_to_space",
+  "editorial_notes_removed",
   "parasha_markers_removed",
   "collapsed_horizontal_whitespace",
   "trimmed_line_edges",
@@ -394,8 +400,18 @@ function stripMarkupAndEntities(text: string): {
   let markupTagsRemoved = 0;
   let htmlEntitiesRemoved = 0;
   let nbspToSpace = 0;
+  let editorialNotesRemoved = 0;
 
-  let out = text.replace(/<[^>]*>/g, (match) => {
+  let out = text.replace(EDITORIAL_NOTE_WITH_MARKER, () => {
+    editorialNotesRemoved += 1;
+    return " ";
+  });
+  out = out.replace(EDITORIAL_NOTE_PAREN, () => {
+    editorialNotesRemoved += 1;
+    return " ";
+  });
+
+  out = out.replace(/<[^>]*>/g, (match) => {
     markupTagsRemoved += 1;
     const tagName = extractTagName(match);
     if (tagName && STRUCTURAL_TAGS.has(tagName)) {
@@ -416,6 +432,19 @@ function stripMarkupAndEntities(text: string): {
     nbspToSpace += literalSpaceEntities;
     out = out.replace(/[\u00A0\u2009]/g, " ");
   }
+  out = out.replace(ORPHANED_EDITORIAL_NOTE, () => {
+    editorialNotesRemoved += 1;
+    return " ";
+  });
+  out = out.replace(ORPHANED_NO_PARASHA_NOTE, () => {
+    editorialNotesRemoved += 1;
+    return " ";
+  });
+  const standaloneFootnoteMarkers = countMatches(out, FOOTNOTE_MARKER);
+  if (standaloneFootnoteMarkers > 0) {
+    editorialNotesRemoved += standaloneFootnoteMarkers;
+    out = out.replace(FOOTNOTE_MARKER, " ");
+  }
   const parashaMarkersRemoved = countMatches(out, PARASHA_MARKER);
   out = out.replace(PARASHA_MARKER, " ");
 
@@ -434,6 +463,9 @@ function stripMarkupAndEntities(text: string): {
   }
   if (nbspToSpace > 0) {
     transformations.set("nbsp_to_space", nbspToSpace);
+  }
+  if (editorialNotesRemoved > 0) {
+    transformations.set("editorial_notes_removed", editorialNotesRemoved);
   }
   if (parashaMarkersRemoved > 0) {
     transformations.set("parasha_markers_removed", parashaMarkersRemoved);

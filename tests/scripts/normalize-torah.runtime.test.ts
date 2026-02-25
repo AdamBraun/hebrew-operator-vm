@@ -67,6 +67,23 @@ describe("normalize torah runtime", () => {
     expect(kept.stats.policyTransformations.get("parasha_markers_removed")).toBe(1);
   });
 
+  it("removes sefaria editorial notes, including malformed orphaned note text", () => {
+    const expected = normalizeVerse("זֶ֣ה סֵ֔פֶר תּוֹלְדֹ֖ת", true).normalized;
+    const withFootnoteMarkup =
+      'זֶ֣ה סֵ֔פֶר<sup class="footnote-marker">*</sup><i class="footnote">(בספרי תימן <big>סֵ֔</big>פֶר בסמ״ך גדולה)</i> תּוֹלְדֹ֖ת';
+    const cleanedMarkup = normalizeVerse(withFootnoteMarkup, true);
+
+    expect(cleanedMarkup.normalized).toBe(expected);
+    expect(cleanedMarkup.normalized).not.toContain("בספרי");
+    expect(cleanedMarkup.normalized).not.toContain("*");
+    expect(
+      cleanedMarkup.stats.policyTransformations.get("editorial_notes_removed")
+    ).toBeGreaterThan(0);
+
+    const malformed = normalizeVerse("זֶ֣ה סֵ֔פֶרבספרי תימן סֵ֔פֶר בסמך גדולה תּוֹלְדֹ֖ת", true);
+    expect(malformed.normalized).toBe(expected);
+  });
+
   it("fails loudly on unsupported combining marks", () => {
     expect(() => normalizeVerse("א\u0301", true, "Genesis 1:1")).toThrow(
       /Unsupported combining mark U\+0301/
