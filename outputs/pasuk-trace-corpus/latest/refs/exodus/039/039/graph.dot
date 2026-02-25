@@ -1,8 +1,8 @@
-// trace_file_sha256: 4ef3788564d8118a8c0d094119c20cd9817dea7390f33fac93e628bc4f1d2dab
+// trace_file_sha256: e77e250766dabd89bda9f8a74115e55715d9d36ecfdc77dbe5388e6b68947e7e
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: e95a8a5b98c33f7a6287368dcdd5ddb495e08c780b9dacdd042e77a6c393d506
+// trace_semantic_sha256: 95b3b72adbf8fde100328bbbcf3862e87a46318848d340528bc6bcf6fcbc177f
 
 digraph Exodus_39_39_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -454,6 +454,7 @@ digraph Exodus_39_39_Boot {
 
   "C:12:9" -> "Ω" [xlabel="transport"];
   "C:12:9" -> "ת:12:14" [xlabel="finalize"];
+  "C:13:10" -> "ב:13:3" [xlabel="boundary"];
   "C:18:14" -> "Ω" [xlabel="transport"];
   "C:18:14" -> "ת:18:20" [xlabel="finalize"];
   "C:19:15" -> "ה:19:3" [xlabel="declare"];
@@ -474,8 +475,11 @@ digraph Exodus_39_39_Boot {
   "Ω" -> "ו:14:7" [xlabel="transport"];
   "Ω" -> "ו:20:11" [xlabel="transport"];
   "Ω" -> "ו:5:1" [xlabel="transport"];
+  "ב:13:3" -> "C:13:10" [xlabel="boundary"];
   "ב:13:3" -> "ד:13:1" [xlabel="boundary"];
+  "ב:2:1" -> "ז:2:1" [xlabel="boundary"];
   "ב:2:1" -> "ח:2:2" [xlabel="compartment"];
+  "ב:6:2" -> "כ:6:1" [xlabel="boundary"];
   "ב:6:2" -> "ר:6:1" [xlabel="boundary"];
   "ד:13:1" -> "Ω" [xlabel="boundary"];
   "ה:3:1" -> "support_debt:5:1" [xlabel="support_debt"];
@@ -486,6 +490,7 @@ digraph Exodus_39_39_Boot {
   "ו:20:11" -> "ת:20:23" [xlabel="finalize"];
   "ו:5:1" -> "Ω" [xlabel="transport"];
   "ו:5:1" -> "ת:5:8" [xlabel="finalize"];
+  "ז:2:1" -> "ב:2:1" [xlabel="boundary"];
   "ח:3:4" -> "ש:3:4" [xlabel="construct"];
   "ח:7:6" -> "ש:7:8" [xlabel="construct"];
   "י:13:1" -> "ד:13:1" [xlabel="vav"];
@@ -494,6 +499,7 @@ digraph Exodus_39_39_Boot {
   "כ:15:3" -> "ל:15:4" [xlabel="endpoint"];
   "כ:16:5" -> "ל:16:6" [xlabel="endpoint"];
   "כ:21:9" -> "support_debt:24:3" [xlabel="support_debt"];
+  "כ:6:1" -> "ב:6:2" [xlabel="boundary"];
   "ל:10:2" -> "C:9:7" [xlabel="vav"];
   "נ:21:3" -> "כ:21:9" [xlabel="vav"];
   "נ:3:1" -> "ח:3:4" [xlabel="compartment"];

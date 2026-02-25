@@ -1,8 +1,8 @@
-// trace_file_sha256: ab7d765b0715a0f762f429e1c673b4d7d3e9afc7b2ce8b8f4976ace7565c3ee7
+// trace_file_sha256: e1f3593a313c15d1391867e1dcbcbe6a84494df664243e030b23f2317c487551
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 55fe78897e1a69b3b083f6ce082e42a56deddf5a872798a3478aaca30b38b2c5
+// trace_semantic_sha256: ee008a39fb18341ad3cffc2f7e2062400a01fcb077fc26befdf8565a075bf176
 
 digraph Genesis_31_3_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -259,6 +259,7 @@ digraph Genesis_31_3_Boot {
     "ת:11:5";
   }
 
+  "C:10:8" -> "ב:10:3" [xlabel="boundary"];
   "C:10:8" -> "ץ:9:1" [xlabel="transport"];
   "C:4:3" -> "Ω" [xlabel="transport"];
   "C:4:3" -> "ל:4:2" [xlabel="endpoint"];
@@ -271,7 +272,10 @@ digraph Genesis_31_3_Boot {
   "Ω" -> "C:8:6" [xlabel="transport"];
   "Ω" -> "ו:13:13" [xlabel="transport"];
   "Ω" -> "י:1:1" [xlabel="transport"];
+  "ב:10:3" -> "C:10:8" [xlabel="boundary"];
   "ב:10:3" -> "C:10:8" [xlabel="vav"];
+  "ב:5:1" -> "ק:5:1" [xlabel="boundary"];
+  "ב:7:2" -> "ו:7:5" [xlabel="boundary"];
   "ד:11:1" -> "Ω" [xlabel="boundary"];
   "ד:11:1" -> "ת:11:5" [xlabel="finalize"];
   "ה:2:1" -> "י:2:2" [xlabel="vav"];
@@ -280,6 +284,7 @@ digraph Genesis_31_3_Boot {
   "ו:11:9" -> "ל:11:6" [xlabel="endpoint"];
   "ו:13:13" -> "Ω" [xlabel="transport"];
   "ו:13:13" -> "ה:13:2" [xlabel="declare"];
+  "ו:7:5" -> "ב:7:2" [xlabel="boundary"];
   "י:1:1" -> "Ω" [xlabel="transport"];
   "י:1:1" -> "ר:1:1" [xlabel="boundary"];
   "י:2:2" -> "ה:2:1" [xlabel="declare"];
@@ -288,6 +293,7 @@ digraph Genesis_31_3_Boot {
   "ל:8:4" -> "C:9:7" [xlabel="transport"];
   "ע:5:1" -> "ל:4:2" [xlabel="approx"];
   "ץ:9:1" -> "C:10:8" [xlabel="transport"];
+  "ק:5:1" -> "ב:5:1" [xlabel="boundary"];
   "ר:1:1" -> "Ω" [xlabel="boundary"];
   "ר:9:2" -> "Ω" [xlabel="boundary"];
   "ר:9:2" -> "ץ:9:1" [xlabel="align"];

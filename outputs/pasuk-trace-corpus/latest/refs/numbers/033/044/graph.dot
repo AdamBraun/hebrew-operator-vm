@@ -1,8 +1,8 @@
-// trace_file_sha256: c6cdfd5d2876371a22883230916a674b3eb5b7f6c3abfac6477e126f3e4f3616
+// trace_file_sha256: aa2245f374b64d4b0e89cef55e9bbe84c69d0215df81ec993bfd9ecbe5b3d65d
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: a7b6af658de55028faaedcfa8d28dcd310b9632bcba5c3eb55f53147e8427ea6
+// trace_semantic_sha256: af2a842504fe27e7851fdd792e7cc8035416ae2a3af032dc66ded66fa15f14f6
 
 digraph Numbers_33_44_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -207,21 +207,33 @@ digraph Numbers_33_44_Boot {
   }
 
   "C:2:2" -> "Ω" [xlabel="transport"];
+  "C:2:2" -> "ב:2:1" [xlabel="boundary"];
   "C:6:5" -> "ה:6:1" [xlabel="declare"];
   "C:8:7" -> "ל:7:2" [xlabel="vav"];
   "support_debt:5:1" -> "נ:4:1" [xlabel="support_debt"];
   "Ω" -> "C:2:2" [xlabel="transport"];
+  "ב:2:1" -> "C:2:2" [xlabel="boundary"];
   "ב:2:1" -> "ת:2:2" [xlabel="finalize"];
+  "ב:5:2" -> "ב:5:3" [xlabel="boundary"];
+  "ב:5:3" -> "C:5:4" [xlabel="boundary"];
+  "ב:6:4" -> "ע:6:3" [xlabel="boundary"];
   "ב:6:4" -> "ר:6:1" [xlabel="boundary"];
+  "ב:7:5" -> "ב:7:6" [xlabel="boundary"];
+  "ב:7:6" -> "C:7:6" [xlabel="boundary"];
   "ב:7:6" -> "⊥" [xlabel="bestow"];
+  "ב:7:7" -> "ג:7:1" [xlabel="boundary"];
   "ב:7:7" -> "ג:7:1" [xlabel="vav"];
+  "ב:8:8" -> "ו:8:11" [xlabel="boundary"];
+  "ג:7:1" -> "ב:7:7" [xlabel="boundary"];
   "ו:7:9" -> "ל:7:2" [xlabel="endpoint"];
+  "ו:8:11" -> "ב:8:8" [xlabel="boundary"];
   "ו:8:11" -> "ל:7:2" [xlabel="transport"];
   "ח:4:2" -> "support_debt:5:1" [xlabel="support_debt"];
   "י:4:2" -> "ח:4:2" [xlabel="compartment"];
   "ל:7:2" -> "ו:8:11" [xlabel="transport"];
   "נ:4:1" -> "ח:4:2" [xlabel="vav"];
   "ע:1:1" -> "י:1:1" [xlabel="vav"];
+  "ע:6:3" -> "ב:6:4" [xlabel="boundary"];
   "ר:6:1" -> "Ω" [xlabel="boundary"];
   "ת:2:2" -> "ת:2:3" [xlabel="residue"];
   "⊥" -> "Ω" [xlabel="vav"];

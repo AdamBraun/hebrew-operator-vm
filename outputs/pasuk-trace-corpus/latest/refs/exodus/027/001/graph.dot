@@ -1,8 +1,8 @@
-// trace_file_sha256: d3a785fb66e8f1dcfa2fc5a67158a56de7d74ed03d647fa4abe1c7adb9a8bb66
+// trace_file_sha256: 2167c99ed928ee6da3ab2f5a11bc063d2330edbfe113a9a03f39fce110836548
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 8d9c979e68dd4d4e6c60ae71be41b6002f3173a4f88dbb6f80bb5967b0052841
+// trace_semantic_sha256: 51c9da1cde3f8e447115e318452f94eefad847bc1ae2bab8d65566b1c1f2b376
 
 digraph Exodus_27_1_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -441,8 +441,12 @@ digraph Exodus_27_1_Boot {
   "C:9:8" -> "ת:8:8" [xlabel="transport"];
   "Ω" -> "C:8:7" [xlabel="transport"];
   "Ω" -> "⊥" [xlabel="approx"];
+  "ב:12:2" -> "ח:12:8" [xlabel="boundary"];
+  "ב:14:3" -> "ר:14:3" [xlabel="boundary"];
   "ב:14:3" -> "ר:14:3" [xlabel="vav"];
+  "ב:17:4" -> "ז:17:2" [xlabel="boundary"];
   "ב:17:4" -> "ח:17:10" [xlabel="compartment"];
+  "ב:3:1" -> "ז:3:1" [xlabel="boundary"];
   "ב:3:1" -> "ח:3:2" [xlabel="compartment"];
   "ה:17:3" -> "ז:17:2" [xlabel="gate"];
   "ה:3:1" -> "ז:3:1" [xlabel="gate"];
@@ -451,7 +455,10 @@ digraph Exodus_27_1_Boot {
   "ו:19:11" -> "ש:19:16" [xlabel="construct"];
   "ו:20:13" -> "ת:20:14" [xlabel="finalize"];
   "ו:8:3" -> "ת:8:8" [xlabel="finalize"];
+  "ז:17:2" -> "ב:17:4" [xlabel="boundary"];
+  "ז:3:1" -> "ב:3:1" [xlabel="boundary"];
   "ח:10:6" -> "ש:10:12" [xlabel="construct"];
+  "ח:12:8" -> "ב:12:2" [xlabel="boundary"];
   "ח:7:4" -> "ש:7:8" [xlabel="construct"];
   "י:15:4" -> "ה:15:2" [xlabel="declare"];
   "י:1:1" -> "ת:1:2" [xlabel="finalize"];
@@ -461,6 +468,7 @@ digraph Exodus_27_1_Boot {
   "ר:12:2" -> "ח:12:8" [xlabel="compartment"];
   "ר:12:2" -> "ת:11:11" [xlabel="boundary"];
   "ר:14:3" -> "Ω" [xlabel="boundary"];
+  "ר:14:3" -> "ב:14:3" [xlabel="boundary"];
   "ר:9:1" -> "Ω" [xlabel="boundary"];
   "ש:10:12" -> "C:11:10" [xlabel="transport"];
   "ש:19:16" -> "ל:19:2" [xlabel="endpoint"];

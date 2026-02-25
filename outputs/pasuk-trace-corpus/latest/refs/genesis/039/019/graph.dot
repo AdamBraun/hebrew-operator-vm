@@ -1,8 +1,8 @@
-// trace_file_sha256: 9c9a35d5e8f7aa68827961a832cb5b796aa70edb270563086905f579a2af2e41
+// trace_file_sha256: 34c48e1d5f5f082d8161c769253c6235d28d8e203bdd2b42f9f91325c6a7ff71
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 1d93edf1e9daa612dc6e93720b3976a2e9bf630a9b28aafd90cb866da090f697
+// trace_semantic_sha256: c7202827482378d17399b67f49684eec5b51890538bd3ae60a0af84ce8d8beb4
 
 digraph Genesis_39_19_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -440,16 +440,23 @@ digraph Genesis_39_19_Boot {
   "Ω" -> "C:4:4" [xlabel="transport"];
   "Ω" -> "C:8:7" [xlabel="transport"];
   "Ω" -> "ל:12:4" [xlabel="transport"];
+  "ב:14:3" -> "ד:14:4" [xlabel="boundary"];
   "ב:14:3" -> "ר:14:5" [xlabel="boundary"];
   "ב:19:4" -> "ד:19:5" [xlabel="boundary"];
+  "ב:19:4" -> "ע:19:3" [xlabel="boundary"];
+  "ב:5:1" -> "ד:5:2" [xlabel="boundary"];
   "ב:5:1" -> "ר:5:1" [xlabel="boundary"];
+  "ב:9:2" -> "ד:9:3" [xlabel="boundary"];
   "ב:9:2" -> "ר:9:3" [xlabel="boundary"];
+  "ד:14:4" -> "ב:14:3" [xlabel="boundary"];
   "ד:14:4" -> "כ:14:4" [xlabel="boundary"];
   "ד:19:5" -> "Ω" [xlabel="boundary"];
   "ד:3:1" -> "support_debt:4:1" [xlabel="support_debt"];
   "ד:3:1" -> "Ω" [xlabel="boundary"];
+  "ד:5:2" -> "ב:5:1" [xlabel="boundary"];
   "ד:5:2" -> "ת:4:2" [xlabel="boundary"];
   "ד:9:3" -> "Ω" [xlabel="boundary"];
+  "ד:9:3" -> "ב:9:2" [xlabel="boundary"];
   "ה:15:2" -> "ל:15:6" [xlabel="endpoint"];
   "ה:15:2" -> "ם:14:1" [xlabel="transport"];
   "ח:21:2" -> "ר:21:6" [xlabel="boundary"];
@@ -464,6 +471,7 @@ digraph Genesis_39_19_Boot {
   "ל:12:4" -> "ר:12:4" [xlabel="boundary"];
   "ם:14:1" -> "ה:15:2" [xlabel="transport"];
   "ע:17:2" -> "ל:18:8" [xlabel="endpoint"];
+  "ע:19:3" -> "ב:19:4" [xlabel="boundary"];
   "ע:2:1" -> "C:3:3" [xlabel="transport"];
   "פ:22:1" -> "ע:19:3" [xlabel="vav"];
   "ר:12:4" -> "Ω" [xlabel="boundary"];

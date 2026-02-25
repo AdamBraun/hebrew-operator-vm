@@ -1,8 +1,8 @@
-// trace_file_sha256: cd5bed38e7f701514e8f4caee46ec30b185406cf66a2cdddff9ca7a384eb9821
+// trace_file_sha256: 4145b8d75388cf6ac6199f7169405e66f2f5750ee752e45987d383d67b45b6cb
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: f02e1f9875fc6e4f8e29a525d8084b58095951abd3069ddda39ed0956ac89c35
+// trace_semantic_sha256: aeb8bca1edea39d5ee499dc6634d70999dffc2762ba44f6968ceab812cd3a966
 
 digraph Leviticus_15_33_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -324,7 +324,13 @@ digraph Leviticus_15_33_Boot {
   "Ω" -> "C:15:9" [xlabel="transport"];
   "Ω" -> "C:7:4" [xlabel="transport"];
   "Ω" -> "ל:13:6" [xlabel="transport"];
+  "ב:11:5" -> "ק:11:1" [xlabel="boundary"];
+  "ב:16:6" -> "כ:16:3" [xlabel="boundary"];
+  "ב:3:1" -> "ב:3:2" [xlabel="boundary"];
+  "ב:3:2" -> "C:3:2" [xlabel="boundary"];
   "ב:3:2" -> "support_debt:5:1" [xlabel="support_debt"];
+  "ב:5:3" -> "ז:5:1" [xlabel="boundary"];
+  "ב:8:4" -> "ו:8:7" [xlabel="boundary"];
   "ב:8:4" -> "ו:8:7" [xlabel="vav"];
   "ד:1:1" -> "Ω" [xlabel="boundary"];
   "ד:1:1" -> "ה:1:1" [xlabel="vav"];
@@ -337,11 +343,14 @@ digraph Leviticus_15_33_Boot {
   "ו:13:13" -> "ל:13:6" [xlabel="endpoint"];
   "ו:1:1" -> "ה:1:1" [xlabel="declare"];
   "ו:5:5" -> "ה:5:4" [xlabel="declare"];
+  "ו:8:7" -> "ב:8:4" [xlabel="boundary"];
+  "ז:5:1" -> "ב:5:3" [xlabel="boundary"];
   "ז:8:2" -> "ת:7:6" [xlabel="vav"];
   "ט:18:1" -> "ם:17:1" [xlabel="transport"];
   "י:13:1" -> "ש:13:4" [xlabel="construct"];
   "י:16:2" -> "ש:16:12" [xlabel="construct"];
   "כ:10:1" -> "ר:10:1" [xlabel="boundary"];
+  "כ:16:3" -> "ב:16:6" [xlabel="boundary"];
   "ל:10:2" -> "ז:10:3" [xlabel="gate"];
   "ל:11:4" -> "support_debt:13:2" [xlabel="support_debt"];
   "ל:11:4" -> "נ:11:2" [xlabel="approx"];
@@ -349,6 +358,7 @@ digraph Leviticus_15_33_Boot {
   "ם:17:1" -> "ט:18:1" [xlabel="transport"];
   "נ:11:2" -> "ל:11:4" [xlabel="approx"];
   "נ:3:1" -> "ד:3:2" [xlabel="boundary"];
+  "ק:11:1" -> "ב:11:5" [xlabel="boundary"];
   "ר:10:1" -> "כ:10:2" [xlabel="boundary"];
   "ר:15:2" -> "Ω" [xlabel="boundary"];
   "ש:15:8" -> "ר:15:2" [xlabel="boundary"];

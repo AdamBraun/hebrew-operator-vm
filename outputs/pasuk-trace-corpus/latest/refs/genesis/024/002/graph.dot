@@ -1,8 +1,8 @@
-// trace_file_sha256: 64811ff0a151907eb61bb392b2fbf1f1f62800dd60acaeae35fcda6ddd456be9
+// trace_file_sha256: 504675418b88e25ede6ca98bb9fc8293e9bfcfa714862e201be257dea1774f43
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 00c724577c1202f9641716a6c13ff67c59f5b697814697e1868b51b1f0f9c65c
+// trace_semantic_sha256: 77c9b87bb4ee60c2b38fca896fb226c1336d5dd5b1d3000a6681018efed5085f
 
 digraph Genesis_24_2_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -372,15 +372,22 @@ digraph Genesis_24_2_Boot {
   "C:12:9" -> "ש:12:8" [xlabel="construct"];
   "C:16:12" -> "support_debt:18:1" [xlabel="support_debt"];
   "C:18:14" -> "ת:18:5" [xlabel="finalize"];
+  "C:2:2" -> "ב:2:1" [xlabel="boundary"];
   "C:2:2" -> "ר:1:1" [xlabel="transport"];
   "C:4:3" -> "Ω" [xlabel="transport"];
   "C:4:3" -> "ל:4:2" [xlabel="endpoint"];
   "C:7:5" -> "ז:7:1" [xlabel="gate"];
+  "C:8:6" -> "ב:8:3" [xlabel="boundary"];
   "support_debt:18:1" -> "נ:16:1" [xlabel="support_debt"];
   "Ω" -> "C:4:3" [xlabel="transport"];
   "Ω" -> "י:1:1" [xlabel="transport"];
+  "ב:11:4" -> "ב:11:5" [xlabel="boundary"];
+  "ב:11:5" -> "C:11:8" [xlabel="boundary"];
+  "ב:2:1" -> "C:2:2" [xlabel="boundary"];
   "ב:2:1" -> "ר:2:2" [xlabel="boundary"];
   "ב:5:2" -> "ד:5:1" [xlabel="boundary"];
+  "ב:5:2" -> "ע:5:1" [xlabel="boundary"];
+  "ב:8:3" -> "C:8:6" [xlabel="boundary"];
   "ד:17:2" -> "Ω" [xlabel="boundary"];
   "ד:5:1" -> "Ω" [xlabel="boundary"];
   "ד:5:1" -> "ב:5:2" [xlabel="vav"];
@@ -397,6 +404,7 @@ digraph Genesis_24_2_Boot {
   "ל:13:8" -> "C:12:9" [xlabel="vav"];
   "ם:15:2" -> "נ:16:1" [xlabel="transport"];
   "נ:16:1" -> "ם:15:2" [xlabel="transport"];
+  "ע:5:1" -> "ב:5:2" [xlabel="boundary"];
   "ר:12:3" -> "Ω" [xlabel="boundary"];
   "ר:12:3" -> "ל:13:8" [xlabel="endpoint"];
   "ר:19:4" -> "Ω" [xlabel="boundary"];

@@ -1,8 +1,8 @@
-// trace_file_sha256: 4a4325bf755ce50327d93ba8d6a26b93f2d4f0968b78cc5bd9dbd0041b5cf73e
+// trace_file_sha256: 3cad4696d8e522115abffea948df949449db5e01c892f3281171fbd0dc0018ef
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: ab9462d9e10c0824b2d49e0f785546ea5c47bd045f936bfd3e2a874eb3191a79
+// trace_semantic_sha256: 57d4a0062c23778c0ba12f23d11f5d539a80e02ea4048bf3c4efdafe88ffa1c3
 
 digraph Genesis_27_6_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -366,6 +366,7 @@ digraph Genesis_27_6_Boot {
   "C:10:7" -> "ה:10:3" [xlabel="declare"];
   "C:13:9" -> "Ω" [xlabel="transport"];
   "C:13:9" -> "ת:13:5" [xlabel="finalize"];
+  "C:14:10" -> "ב:14:4" [xlabel="boundary"];
   "C:14:10" -> "ת:13:5" [xlabel="transport"];
   "C:16:11" -> "ד:16:1" [xlabel="boundary"];
   "C:17:12" -> "Ω" [xlabel="transport"];
@@ -376,6 +377,7 @@ digraph Genesis_27_6_Boot {
   "C:3:2" -> "ר:3:2" [xlabel="boundary"];
   "C:5:3" -> "Ω" [xlabel="transport"];
   "C:5:3" -> "ל:5:2" [xlabel="endpoint"];
+  "C:7:5" -> "ב:7:3" [xlabel="boundary"];
   "support_debt:13:2" -> "נ:10:2" [xlabel="support_debt"];
   "support_debt:8:1" -> "נ:7:1" [xlabel="support_debt"];
   "Ω" -> "C:13:9" [xlabel="transport"];
@@ -384,10 +386,16 @@ digraph Genesis_27_6_Boot {
   "Ω" -> "C:5:3" [xlabel="transport"];
   "Ω" -> "ל:20:8" [xlabel="transport"];
   "Ω" -> "ל:8:4" [xlabel="transport"];
+  "ב:14:4" -> "C:14:10" [xlabel="boundary"];
+  "ב:16:5" -> "ד:16:1" [xlabel="boundary"];
   "ב:16:5" -> "ר:16:4" [xlabel="boundary"];
   "ב:1:1" -> "ר:1:1" [xlabel="approx"];
+  "ב:1:1" -> "ר:1:1" [xlabel="boundary"];
+  "ב:6:2" -> "ק:6:2" [xlabel="boundary"];
+  "ב:7:3" -> "C:7:5" [xlabel="boundary"];
   "ב:7:3" -> "support_debt:8:1" [xlabel="support_debt"];
   "ד:16:1" -> "Ω" [xlabel="boundary"];
+  "ד:16:1" -> "ב:16:5" [xlabel="boundary"];
   "ה:10:3" -> "support_debt:13:2" [xlabel="support_debt"];
   "ה:7:1" -> "ה:7:2" [xlabel="pin"];
   "ו:18:3" -> "C:19:14" [xlabel="transport"];
@@ -400,8 +408,10 @@ digraph Genesis_27_6_Boot {
   "נ:7:1" -> "ה:7:1" [xlabel="declare"];
   "ע:11:2" -> "ת:11:2" [xlabel="finalize"];
   "ע:6:1" -> "ל:5:2" [xlabel="approx"];
+  "ק:6:2" -> "ב:6:2" [xlabel="boundary"];
   "ר:16:4" -> "Ω" [xlabel="boundary"];
   "ר:1:1" -> "ב:1:1" [xlabel="approx"];
+  "ר:1:1" -> "ב:1:1" [xlabel="boundary"];
   "ר:1:1" -> "ו:1:2" [xlabel="boundary"];
   "ר:20:5" -> "Ω" [xlabel="boundary"];
   "ר:3:2" -> "Ω" [xlabel="boundary"];

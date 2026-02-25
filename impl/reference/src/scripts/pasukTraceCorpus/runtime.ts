@@ -126,6 +126,36 @@ type ExistingSkipCheckResult = {
   parsedReportProvenance: ParsedReportProvenance | null;
 };
 
+function isFullCorpusSelection(
+  opts: Pick<PasukTraceCorpusOptions, "books" | "fromRef" | "toRef" | "limit">
+): boolean {
+  return (
+    opts.books.length === 0 &&
+    opts.fromRef.trim().length === 0 &&
+    opts.toRef.trim().length === 0 &&
+    opts.limit === 0
+  );
+}
+
+function shouldResetOutputBeforeRun(
+  opts: Pick<
+    PasukTraceCorpusOptions,
+    "books" | "fromRef" | "toRef" | "limit" | "skipExisting" | "verifyExisting" | "repairExisting"
+  >
+): boolean {
+  return (
+    isFullCorpusSelection(opts) &&
+    !opts.skipExisting &&
+    !opts.verifyExisting &&
+    !opts.repairExisting
+  );
+}
+
+async function resetOutputDirForFullRun(outDir: string): Promise<void> {
+  await fs.rm(path.join(outDir, "refs"), { recursive: true, force: true });
+  await fs.rm(path.join(outDir, "manifest.json"), { force: true });
+}
+
 type ExpectedProvenance = {
   traceFileSha256: string;
   traceSemanticSha256: string;
@@ -2252,6 +2282,10 @@ export async function runPasukTraceCorpus(
   const traceExecutionMode = deps.traceExecutionMode ?? "in-process";
   const graphOpts = buildGraphOptions(opts);
   const graphOptsSha256 = sha256Text(stableStringify(graphOpts));
+
+  if (shouldResetOutputBeforeRun(opts)) {
+    await resetOutputDirForFullRun(outDir);
+  }
 
   await fs.mkdir(outDir, { recursive: true });
   const existingIndexRowsByRef = await loadExistingIndexRows(outDir);

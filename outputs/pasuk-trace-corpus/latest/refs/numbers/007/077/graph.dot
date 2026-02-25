@@ -1,8 +1,8 @@
-// trace_file_sha256: 960fb621b80ead6c6ba7a7faf2c5d41d24452c51800a4984ccc77f699102d73f
+// trace_file_sha256: ecfb638fab6f75db017ea941754edc1d28502d35e2487e8fe1012c6756fc358e
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: fd5a8f90d1bd6f2713a6a9e4d15ee17f2c945de771a3438f6e0e3bb380653bdd
+// trace_semantic_sha256: ddfd26fe8f34281fce5aa140999e464102d12b88cda4945c80ae958e7b9d0527
 
 digraph Numbers_7_77_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -347,6 +347,7 @@ digraph Numbers_7_77_Boot {
     "ת:6:2";
   }
 
+  "C:10:8" -> "ב:10:4" [xlabel="boundary"];
   "C:11:9" -> "ש:11:16" [xlabel="construct"];
   "C:12:10" -> "ח:12:6" [xlabel="compartment"];
   "C:14:11" -> "ז:14:1" [xlabel="gate"];
@@ -358,8 +359,15 @@ digraph Numbers_7_77_Boot {
   "support_debt:3:1" -> "נ:1:1" [xlabel="support_debt"];
   "Ω" -> "C:3:3" [xlabel="transport"];
   "Ω" -> "⊥" [xlabel="approx"];
+  "ב:0:1" -> "ב:0:2" [xlabel="boundary"];
+  "ב:0:2" -> "C:0:1" [xlabel="boundary"];
   "ב:0:2" -> "⊥" [xlabel="approx"];
+  "ב:10:4" -> "C:10:8" [xlabel="boundary"];
   "ב:10:4" -> "support_debt:12:3" [xlabel="support_debt"];
+  "ב:15:5" -> "ר:15:2" [xlabel="boundary"];
+  "ב:17:6" -> "ב:17:7" [xlabel="boundary"];
+  "ב:17:7" -> "C:17:14" [xlabel="boundary"];
+  "ב:9:3" -> "כ:9:1" [xlabel="boundary"];
   "ד:6:1" -> "ת:6:2" [xlabel="boundary"];
   "ח:12:6" -> "ש:12:20" [xlabel="construct"];
   "ח:4:2" -> "ש:4:8" [xlabel="construct"];
@@ -368,6 +376,7 @@ digraph Numbers_7_77_Boot {
   "י:16:6" -> "ן:15:1" [xlabel="transport"];
   "י:3:2" -> "ל:3:2" [xlabel="endpoint"];
   "כ:18:3" -> "ר:18:3" [xlabel="boundary"];
+  "כ:9:1" -> "ב:9:3" [xlabel="boundary"];
   "ן:15:1" -> "י:16:6" [xlabel="transport"];
   "ע:6:1" -> "ת:6:2" [xlabel="finalize"];
   "פ:16:1" -> "ק:15:2" [xlabel="bestow"];
@@ -375,6 +384,7 @@ digraph Numbers_7_77_Boot {
   "ק:15:2" -> "ר:15:2" [xlabel="boundary"];
   "ר:0:1" -> "Ω" [xlabel="boundary"];
   "ר:15:2" -> "Ω" [xlabel="boundary"];
+  "ר:15:2" -> "ב:15:5" [xlabel="boundary"];
   "ר:18:3" -> "כ:18:4" [xlabel="boundary"];
   "ש:11:16" -> "support_debt:12:2" [xlabel="support_debt"];
   "ש:1:4" -> "support_debt:3:1" [xlabel="support_debt"];

@@ -1,8 +1,8 @@
-// trace_file_sha256: 020da4a43ba1911cb9339f54e5bcb22893ddb019cff7e146597fb514c9c99e37
+// trace_file_sha256: 8019c5f064befac0e5424783b039a54c5a537cc1fbb9a71df53897c510c80909
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 8ee40a420abc476dc1c24ac32f51998b1cabac949bb9e7ec6b24850277ae46e5
+// trace_semantic_sha256: e932330e82ccb3a3fd4c9436f1984db2b0546c030f568a15faab6075fd590ab3
 
 digraph Leviticus_23_8_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -363,7 +363,13 @@ digraph Leviticus_23_8_Boot {
   "Ω" -> "ל:16:8" [xlabel="transport"];
   "Ω" -> "ר:10:2" [xlabel="transport"];
   "ב:15:6" -> "ד:15:2" [xlabel="boundary"];
+  "ב:15:6" -> "ע:15:3" [xlabel="boundary"];
+  "ב:1:1" -> "ר:1:1" [xlabel="boundary"];
   "ב:1:1" -> "ת:1:2" [xlabel="finalize"];
+  "ב:4:2" -> "ש:4:8" [xlabel="boundary"];
+  "ב:7:3" -> "ב:7:4" [xlabel="boundary"];
+  "ב:7:4" -> "C:7:6" [xlabel="boundary"];
+  "ב:8:5" -> "ש:8:12" [xlabel="boundary"];
   "ד:11:1" -> "Ω" [xlabel="boundary"];
   "ד:11:1" -> "ש:11:16" [xlabel="construct"];
   "ד:15:2" -> "Ω" [xlabel="boundary"];
@@ -379,6 +385,7 @@ digraph Leviticus_23_8_Boot {
   "ל:13:4" -> "ל:14:6" [xlabel="transport"];
   "ל:14:6" -> "ל:13:4" [xlabel="transport"];
   "ל:16:8" -> "Ω" [xlabel="transport"];
+  "ע:15:3" -> "ב:15:6" [xlabel="boundary"];
   "ע:4:1" -> "ת:4:5" [xlabel="finalize"];
   "ק:10:2" -> "ר:10:2" [xlabel="boundary"];
   "ק:11:3" -> "ד:11:1" [xlabel="boundary"];
@@ -386,6 +393,9 @@ digraph Leviticus_23_8_Boot {
   "ר:10:2" -> "Ω" [xlabel="boundary"];
   "ר:10:2" -> "Ω" [xlabel="transport"];
   "ר:1:1" -> "Ω" [xlabel="boundary"];
+  "ר:1:1" -> "ב:1:1" [xlabel="boundary"];
+  "ש:4:8" -> "ב:4:2" [xlabel="boundary"];
+  "ש:8:12" -> "ב:8:5" [xlabel="boundary"];
   "ת:14:8" -> "ת:14:9" [xlabel="residue"];
   "ת:17:11" -> "ת:17:12" [xlabel="residue"];
   "ת:1:2" -> "C:2:2" [xlabel="transport"];

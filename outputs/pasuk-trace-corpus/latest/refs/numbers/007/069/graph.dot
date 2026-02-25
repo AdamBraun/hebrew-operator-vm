@@ -1,8 +1,8 @@
-// trace_file_sha256: f9b80ea4a7ea7ae2a8159ccb31e1206a19f1466947bbaee85260b31ee025f77b
+// trace_file_sha256: cfbdedfccdc387f5fc3720f8ec8ba1986f0871cfe0f6e934d2288bd673fb1686
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 76b104d54e0a8e868412057384ab40a7f5cb2bb24c43bb06b37f2f028586f48e
+// trace_semantic_sha256: 870917022022fbe5c23db1e429195a3ee4528b147c5768c4c477c2011ca248d2
 
 digraph Numbers_7_69_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -301,9 +301,11 @@ digraph Numbers_7_69_Boot {
     "ת:11:2";
   }
 
+  "C:10:9" -> "ב:10:5" [xlabel="boundary"];
   "C:11:10" -> "ש:11:4" [xlabel="construct"];
   "C:2:2" -> "ח:2:2" [xlabel="compartment"];
   "C:2:2" -> "ר:1:1" [xlabel="transport"];
+  "C:4:4" -> "ב:4:3" [xlabel="boundary"];
   "C:6:5" -> "Ω" [xlabel="transport"];
   "C:7:6" -> "ח:7:4" [xlabel="compartment"];
   "C:7:6" -> "ל:6:2" [xlabel="transport"];
@@ -311,8 +313,13 @@ digraph Numbers_7_69_Boot {
   "C:9:8" -> "ח:9:6" [xlabel="compartment"];
   "support_debt:12:1" -> "נ:11:1" [xlabel="support_debt"];
   "Ω" -> "C:6:5" [xlabel="transport"];
+  "ב:10:5" -> "C:10:9" [xlabel="boundary"];
+  "ב:3:1" -> "ב:3:2" [xlabel="boundary"];
+  "ב:3:2" -> "C:3:3" [xlabel="boundary"];
+  "ב:4:3" -> "C:4:4" [xlabel="boundary"];
   "ב:4:3" -> "ן:3:1" [xlabel="approx"];
   "ב:8:4" -> "C:9:8" [xlabel="transport"];
+  "ב:8:4" -> "כ:8:1" [xlabel="boundary"];
   "ד:2:1" -> "Ω" [xlabel="boundary"];
   "ד:7:2" -> "Ω" [xlabel="boundary"];
   "ד:9:3" -> "Ω" [xlabel="boundary"];
@@ -320,6 +327,7 @@ digraph Numbers_7_69_Boot {
   "ח:7:4" -> "ד:7:2" [xlabel="boundary"];
   "ח:9:6" -> "ד:9:3" [xlabel="boundary"];
   "י:6:1" -> "ל:6:2" [xlabel="endpoint"];
+  "כ:8:1" -> "ב:8:4" [xlabel="boundary"];
   "ל:6:2" -> "C:7:6" [xlabel="transport"];
   "ן:3:1" -> "ב:4:3" [xlabel="approx"];
   "נ:11:1" -> "ת:11:2" [xlabel="finalize"];

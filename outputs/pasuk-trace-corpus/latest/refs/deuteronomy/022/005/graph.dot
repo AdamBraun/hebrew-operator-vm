@@ -1,8 +1,8 @@
-// trace_file_sha256: e9ce0ffcae727a7f8f33417ec9e8d27c46654c306736881e13c31ca329e32b13
+// trace_file_sha256: 19b2061a843e41285ecf74207fa01d3176f99c6cf72fe16fb27a88e995f654e7
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: f5472c0497516ac6c0e572effb21cf0c725fc4cc92f135f2748a9ebb2fa4fd6f
+// trace_semantic_sha256: a0f9c27b5cd56984c73d854c35e873408298fe42fcc94c2fbcc9b308cd37be68
 
 digraph Deuteronomy_22_5_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -417,10 +417,16 @@ digraph Deuteronomy_22_5_Boot {
   "C:7:6" -> "ש:7:4" [xlabel="construct"];
   "Ω" -> "ל:1:2" [xlabel="transport"];
   "Ω" -> "ל:9:8" [xlabel="transport"];
+  "ב:10:2" -> "ל:10:10" [xlabel="boundary"];
   "ב:10:2" -> "ש:10:8" [xlabel="construct"];
+  "ב:11:3" -> "ג:11:2" [xlabel="boundary"];
   "ב:11:3" -> "ר:11:2" [xlabel="boundary"];
+  "ב:16:4" -> "ע:16:2" [xlabel="boundary"];
   "ב:16:4" -> "ת:16:8" [xlabel="finalize"];
+  "ב:4:1" -> "ג:4:1" [xlabel="boundary"];
   "ב:4:1" -> "ר:4:1" [xlabel="boundary"];
+  "ג:11:2" -> "ב:11:3" [xlabel="boundary"];
+  "ג:4:1" -> "ב:4:1" [xlabel="boundary"];
   "ה:17:2" -> "י:17:6" [xlabel="vav"];
   "ו:17:5" -> "C:18:15" [xlabel="transport"];
   "ו:9:1" -> "ל:9:8" [xlabel="endpoint"];
@@ -430,11 +436,13 @@ digraph Deuteronomy_22_5_Boot {
   "י:3:3" -> "ל:3:4" [xlabel="bestow"];
   "כ:19:5" -> "ל:19:16" [xlabel="endpoint"];
   "כ:3:1" -> "ל:3:4" [xlabel="endpoint"];
+  "ל:10:10" -> "ב:10:2" [xlabel="boundary"];
   "ל:12:12" -> "ת:12:2" [xlabel="finalize"];
   "ל:18:14" -> "ה:18:3" [xlabel="declare"];
   "ל:1:2" -> "Ω" [xlabel="transport"];
   "ל:6:6" -> "C:7:6" [xlabel="transport"];
   "ל:9:8" -> "Ω" [xlabel="transport"];
+  "ע:16:2" -> "ב:16:4" [xlabel="boundary"];
   "ע:20:3" -> "C:21:18" [xlabel="transport"];
   "ע:6:1" -> "ל:6:6" [xlabel="endpoint"];
   "ר:11:2" -> "Ω" [xlabel="boundary"];

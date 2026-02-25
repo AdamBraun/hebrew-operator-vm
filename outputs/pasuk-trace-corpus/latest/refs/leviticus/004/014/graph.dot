@@ -1,8 +1,8 @@
-// trace_file_sha256: fa19cfb0621aed66ad2d204d3d501dfda1df24fb452ddfdb242eba8a3b41348c
+// trace_file_sha256: 8ee47106c1033927742b2a13ccc739d6f5d5e74299b68de75e62403ab2edb2a0
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: d1ded12049df6298de607af1bd1e76a5a8a07ee3b210016833347ff928243323
+// trace_semantic_sha256: 4052d98607d5d80a43c474dbbccfa47e07d4cc435caa062be4627dfc8f667a13
 
 digraph Leviticus_4_14_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -442,6 +442,8 @@ digraph Leviticus_4_14_Boot {
   }
 
   "C:10:7" -> "ה:10:3" [xlabel="declare"];
+  "C:12:9" -> "ב:12:2" [xlabel="boundary"];
+  "C:13:10" -> "ב:13:3" [xlabel="boundary"];
   "C:18:13" -> "ו:17:13" [xlabel="transport"];
   "C:18:13" -> "ת:18:8" [xlabel="finalize"];
   "C:21:15" -> "Ω" [xlabel="transport"];
@@ -458,12 +460,17 @@ digraph Leviticus_4_14_Boot {
   "Ω" -> "ט:15:3" [xlabel="transport"];
   "Ω" -> "ט:3:1" [xlabel="transport"];
   "Ω" -> "י:17:3" [xlabel="transport"];
+  "ב:12:2" -> "C:12:9" [xlabel="boundary"];
+  "ב:13:3" -> "C:13:10" [xlabel="boundary"];
   "ב:13:3" -> "ן:12:1" [xlabel="approx"];
+  "ב:17:4" -> "ה:17:5" [xlabel="boundary"];
+  "ב:9:1" -> "י:9:2" [xlabel="boundary"];
   "ב:9:1" -> "י:9:2" [xlabel="vav"];
   "ד:1:1" -> "ו:1:4" [xlabel="boundary"];
   "ד:22:2" -> "Ω" [xlabel="boundary"];
   "ה:10:3" -> "ו:9:9" [xlabel="approx"];
   "ה:10:4" -> "ל:10:4" [xlabel="endpoint"];
+  "ה:17:5" -> "ב:17:4" [xlabel="boundary"];
   "ה:21:6" -> "ל:21:10" [xlabel="endpoint"];
   "ה:3:1" -> "ח:3:2" [xlabel="compartment"];
   "ה:9:2" -> "ו:9:7" [xlabel="approx"];
@@ -480,6 +487,7 @@ digraph Leviticus_4_14_Boot {
   "ט:3:1" -> "ת:3:2" [xlabel="finalize"];
   "ט:6:2" -> "ר:5:1" [xlabel="transport"];
   "י:17:3" -> "Ω" [xlabel="transport"];
+  "י:9:2" -> "ב:9:1" [xlabel="boundary"];
   "ל:15:6" -> "ח:15:6" [xlabel="compartment"];
   "ן:12:1" -> "ב:13:3" [xlabel="approx"];
   "נ:1:1" -> "ו:1:1" [xlabel="vav"];

@@ -1,8 +1,8 @@
-// trace_file_sha256: c5d4fac7714092d11e266b331b768db516b87710217880a5480e7246c0a5737d
+// trace_file_sha256: 4c90dd770d69e132f57ae7afb920bd4b4657a8f67f70a3e06f27716fcc9b3fa4
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 1961b04d6dd31d7bc433bfbd491c53935da0272aaefd841df23582b0f56a6cf0
+// trace_semantic_sha256: 0694fcebc9fb9e83b3e5da5b9bcc54e9eb338b1b302de6a4872bc52df60fd5c5
 
 digraph Genesis_42_29_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -322,6 +322,7 @@ digraph Genesis_42_29_Boot {
   "C:2:2" -> "Ω" [xlabel="transport"];
   "C:2:2" -> "ל:2:2" [xlabel="endpoint"];
   "C:4:4" -> "ב:3:2" [xlabel="transport"];
+  "C:4:4" -> "ב:4:3" [xlabel="boundary"];
   "C:5:5" -> "Ω" [xlabel="transport"];
   "C:5:5" -> "ר:5:1" [xlabel="boundary"];
   "support_debt:8:1" -> "נ:6:1" [xlabel="support_debt"];
@@ -331,11 +332,15 @@ digraph Genesis_42_29_Boot {
   "Ω" -> "ב:1:1" [xlabel="transport"];
   "Ω" -> "ל:15:8" [xlabel="transport"];
   "ב:1:1" -> "Ω" [xlabel="transport"];
+  "ב:1:1" -> "י:1:1" [xlabel="boundary"];
   "ב:3:2" -> "C:4:4" [xlabel="transport"];
+  "ב:3:2" -> "ק:3:1" [xlabel="boundary"];
+  "ב:4:3" -> "C:4:4" [xlabel="boundary"];
   "ד:8:1" -> "Ω" [xlabel="boundary"];
   "ד:8:1" -> "י:8:5" [xlabel="vav"];
   "ה:13:2" -> "ל:12:6" [xlabel="approx"];
   "ו:8:7" -> "ל:9:4" [xlabel="endpoint"];
+  "י:1:1" -> "ב:1:1" [xlabel="boundary"];
   "י:4:3" -> "ה:4:1" [xlabel="declare"];
   "י:8:4" -> "ו:8:5" [xlabel="bestow"];
   "י:8:5" -> "ד:8:1" [xlabel="boundary"];
@@ -348,6 +353,7 @@ digraph Genesis_42_29_Boot {
   "ל:9:4" -> "ע:6:2" [xlabel="vav"];
   "ע:3:1" -> "ל:2:2" [xlabel="approx"];
   "ק:13:2" -> "ר:13:2" [xlabel="boundary"];
+  "ק:3:1" -> "ב:3:2" [xlabel="boundary"];
   "ר:13:2" -> "Ω" [xlabel="boundary"];
   "ר:13:2" -> "ת:13:5" [xlabel="finalize"];
   "ר:15:3" -> "Ω" [xlabel="boundary"];

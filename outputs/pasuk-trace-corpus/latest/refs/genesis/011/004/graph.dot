@@ -1,8 +1,8 @@
-// trace_file_sha256: f7cb13506952a291ae95165017ed6e49ce14f09fb036b878f1ae07904ad62639
+// trace_file_sha256: 7fabe90decb966dd696c07c994312caf70b60fff6bcc13cbced4852c642be23b
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 7c0d61fe635301e94c6b4b42d44395a971366df7684ead1294df3b9cc3018bd1
+// trace_semantic_sha256: 5373a880f09ca0125de98935892b48a2ae87a928c50eaf6897803eaefdc4221c
 
 digraph Genesis_11_4_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -341,6 +341,7 @@ digraph Genesis_11_4_Boot {
     "ו:9:9";
   }
 
+  "C:10:8" -> "ב:10:3" [xlabel="boundary"];
   "C:21:17" -> "ה:21:2" [xlabel="declare"];
   "C:2:2" -> "ה:2:1" [xlabel="declare"];
   "C:3:3" -> "support_debt:7:3" [xlabel="support_debt"];
@@ -353,13 +354,17 @@ digraph Genesis_11_4_Boot {
   "support_debt:7:3" -> "נ:3:1" [xlabel="support_debt"];
   "Ω" -> "י:1:1" [xlabel="transport"];
   "Ω" -> "ר:9:3" [xlabel="transport"];
+  "ב:10:3" -> "C:10:8" [xlabel="boundary"];
   "ב:10:3" -> "ש:10:8" [xlabel="construct"];
+  "ב:2:1" -> "ה:2:1" [xlabel="boundary"];
   "ב:3:2" -> "support_debt:7:2" [xlabel="support_debt"];
+  "ב:3:2" -> "נ:3:1" [xlabel="boundary"];
   "ג:7:1" -> "ד:7:1" [xlabel="boundary"];
   "ד:7:1" -> "Ω" [xlabel="boundary"];
   "ד:7:1" -> "ל:7:4" [xlabel="endpoint"];
   "ה:21:2" -> "ל:20:10" [xlabel="transport"];
   "ה:21:2" -> "ר:21:4" [xlabel="boundary"];
+  "ה:2:1" -> "ב:2:1" [xlabel="boundary"];
   "ו:12:13" -> "support_debt:14:5" [xlabel="support_debt"];
   "ו:17:17" -> "ץ:17:1" [xlabel="align"];
   "ו:9:9" -> "ר:9:3" [xlabel="boundary"];
@@ -371,6 +376,7 @@ digraph Genesis_11_4_Boot {
   "ל:20:10" -> "ה:21:2" [xlabel="transport"];
   "ל:4:2" -> "support_debt:7:1" [xlabel="support_debt"];
   "נ:13:5" -> "ל:13:6" [xlabel="vav"];
+  "נ:3:1" -> "ב:3:2" [xlabel="boundary"];
   "נ:3:2" -> "ל:4:2" [xlabel="endpoint"];
   "נ:4:3" -> "ל:4:2" [xlabel="vav"];
   "ע:12:2" -> "ל:13:6" [xlabel="endpoint"];

@@ -1,8 +1,8 @@
-// trace_file_sha256: dc1a84f85d9bcd538014cda77717d3a9088b64b9e26658f53ee4b83fed2f2db0
+// trace_file_sha256: 51061554a72429159fc2bc48e8a92e30554f83d6f00da77a8ef9f6af0a02fa78
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 3f11adb36ee88d920644dd3641b743c379e47232d9c76677a1b566065ee41c59
+// trace_semantic_sha256: 9e1c78e88eeb5d28fc585fed7f76774fe7ea8c4ef4ca755a95b2644cdb054d02
 
 digraph Genesis_46_19_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -168,11 +168,17 @@ digraph Genesis_46_19_Boot {
   "support_debt:11:2" -> "נ:8:2" [xlabel="support_debt"];
   "support_debt:4:1" -> "נ:1:1" [xlabel="support_debt"];
   "Ω" -> "C:4:3" [xlabel="transport"];
+  "ב:1:1" -> "ב:1:2" [xlabel="boundary"];
+  "ב:1:2" -> "C:1:1" [xlabel="boundary"];
   "ב:1:2" -> "support_debt:4:1" [xlabel="support_debt"];
+  "ב:5:3" -> "ק:5:1" [xlabel="boundary"];
   "ב:8:4" -> "support_debt:11:2" [xlabel="support_debt"];
+  "ב:8:4" -> "ו:8:3" [xlabel="boundary"];
+  "ו:8:3" -> "ב:8:4" [xlabel="boundary"];
   "ח:2:2" -> "ל:2:2" [xlabel="endpoint"];
   "י:7:3" -> "⊥" [xlabel="vav"];
   "ע:5:1" -> "ת:4:3" [xlabel="approx"];
+  "ק:5:1" -> "ב:5:3" [xlabel="boundary"];
   "ר:2:1" -> "Ω" [xlabel="boundary"];
   "ר:2:1" -> "ח:2:2" [xlabel="compartment"];
   "ש:4:4" -> "ת:4:2" [xlabel="finalize"];

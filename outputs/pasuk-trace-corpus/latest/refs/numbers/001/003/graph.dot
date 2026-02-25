@@ -1,8 +1,8 @@
-// trace_file_sha256: e8b38aff2920073f2884037ee33fe379763078774d4c52fad52daf1380b2b96a
+// trace_file_sha256: d8c6431a902ca6dd2f1e307ec1f3c6d6c2315423a7b73e0dffa68b3b8406235a
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 3914839be2321aa23d87d45f8fe84a6dd09e14d0cb9ebf09a15e062f9efbf1a3
+// trace_semantic_sha256: c6b64a8cc45cef01adc2f117404f20258d22c518bedc9dc07c4147638a5431d5
 
 digraph Numbers_1_3_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -340,14 +340,20 @@ digraph Numbers_1_3_Boot {
   "C:13:10" -> "ת:13:5" [xlabel="finalize"];
   "C:15:12" -> "Ω" [xlabel="transport"];
   "C:15:12" -> "ת:15:11" [xlabel="finalize"];
+  "C:1:1" -> "ב:1:1" [xlabel="boundary"];
   "C:3:3" -> "ש:3:4" [xlabel="construct"];
   "support_debt:5:1" -> "נ:3:1" [xlabel="support_debt"];
   "Ω" -> "C:15:12" [xlabel="transport"];
   "Ω" -> "ב:14:5" [xlabel="transport"];
   "Ω" -> "ר:10:2" [xlabel="transport"];
+  "ב:10:3" -> "ב:10:4" [xlabel="boundary"];
+  "ב:10:4" -> "C:10:8" [xlabel="boundary"];
   "ב:14:5" -> "Ω" [xlabel="transport"];
+  "ב:14:5" -> "צ:14:3" [xlabel="boundary"];
   "ב:14:5" -> "ת:14:8" [xlabel="finalize"];
+  "ב:1:1" -> "C:1:1" [xlabel="boundary"];
   "ב:9:2" -> "צ:8:1" [xlabel="transport"];
+  "ב:9:2" -> "צ:9:2" [xlabel="boundary"];
   "ד:12:1" -> "Ω" [xlabel="boundary"];
   "ד:12:1" -> "ק:12:1" [xlabel="vav"];
   "ה:16:1" -> "ר:16:3" [xlabel="boundary"];
@@ -362,9 +368,11 @@ digraph Numbers_1_3_Boot {
   "ע:5:2" -> "ל:5:2" [xlabel="endpoint"];
   "ע:5:2" -> "פ:12:1" [xlabel="approx"];
   "פ:12:1" -> "ע:5:2" [xlabel="approx"];
+  "צ:14:3" -> "ב:14:5" [xlabel="boundary"];
   "צ:8:1" -> "ב:9:2" [xlabel="transport"];
   "צ:8:1" -> "ל:7:4" [xlabel="transport"];
   "צ:8:1" -> "צ:9:2" [xlabel="align"];
+  "צ:9:2" -> "ב:9:2" [xlabel="boundary"];
   "ק:12:1" -> "ד:12:1" [xlabel="boundary"];
   "ר:10:2" -> "Ω" [xlabel="boundary"];
   "ר:10:2" -> "Ω" [xlabel="transport"];

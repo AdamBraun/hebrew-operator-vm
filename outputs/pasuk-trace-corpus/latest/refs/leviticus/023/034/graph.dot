@@ -1,8 +1,8 @@
-// trace_file_sha256: d9cb98922507f4f544ad87f62dc1018a7993e958164fd5e58f66e622061ba921
+// trace_file_sha256: 6b4eff254e9a5c391c004d033e60f389972727e0217ea4d3d1bc97f3a47e1c31
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: e27eaac6b856505f76f57bff01aba8e406b7730ea2154b163b38f39277e3cc3e
+// trace_semantic_sha256: 20bb2107ae12b00da7e6741d5c9fdfd935864dbfcf15270e86e4fe76ef826614
 
 digraph Leviticus_23_34_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -420,15 +420,23 @@ digraph Leviticus_23_34_Boot {
   "C:1:1" -> "ד:1:1" [xlabel="boundary"];
   "C:2:2" -> "Ω" [xlabel="transport"];
   "C:2:2" -> "ל:2:2" [xlabel="endpoint"];
+  "C:3:3" -> "ב:3:2" [xlabel="boundary"];
   "support_debt:5:1" -> "נ:3:1" [xlabel="support_debt"];
   "Ω" -> "C:2:2" [xlabel="transport"];
   "Ω" -> "ל:5:6" [xlabel="transport"];
+  "ב:12:5" -> "ש:12:12" [xlabel="boundary"];
+  "ב:18:6" -> "ש:18:16" [xlabel="boundary"];
+  "ב:1:1" -> "ד:1:1" [xlabel="boundary"];
   "ב:1:1" -> "ר:1:1" [xlabel="boundary"];
+  "ב:3:2" -> "C:3:3" [xlabel="boundary"];
   "ב:3:2" -> "support_debt:5:1" [xlabel="support_debt"];
+  "ב:7:3" -> "ב:7:4" [xlabel="boundary"];
+  "ב:7:4" -> "C:7:6" [xlabel="boundary"];
   "ב:7:4" -> "ח:7:2" [xlabel="compartment"];
   "ד:11:2" -> "Ω" [xlabel="boundary"];
   "ד:11:2" -> "ש:11:8" [xlabel="construct"];
   "ד:1:1" -> "Ω" [xlabel="boundary"];
+  "ד:1:1" -> "ב:1:1" [xlabel="boundary"];
   "ה:12:1" -> "ש:12:12" [xlabel="construct"];
   "ה:14:2" -> "ז:14:1" [xlabel="gate"];
   "ה:20:4" -> "י:20:8" [xlabel="vav"];
@@ -452,6 +460,8 @@ digraph Leviticus_23_34_Boot {
   "ר:4:2" -> "ל:4:4" [xlabel="endpoint"];
   "ר:5:3" -> "Ω" [xlabel="boundary"];
   "ר:8:4" -> "Ω" [xlabel="boundary"];
+  "ש:12:12" -> "ב:12:5" [xlabel="boundary"];
+  "ש:18:16" -> "ב:18:6" [xlabel="boundary"];
   "ת:17:2" -> "ת:17:3" [xlabel="residue"];
   "ת:18:5" -> "ת:18:6" [xlabel="residue"];
   "⊥" -> "ל:11:8" [xlabel="endpoint"];

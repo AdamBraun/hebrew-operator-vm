@@ -1,8 +1,8 @@
-// trace_file_sha256: f9343400f31f1b01e07f690a027ea181ec28880e2749340e9f7832b692960eff
+// trace_file_sha256: d06b4f2aedb59c514ff8b3e457fe5b3e34a7cfbd304bb8ae80471a84c86cfcb0
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 8c8d6a0bd7641485b9321e0d7285c67ae318a47664e85d52b5200f2c470f98be
+// trace_semantic_sha256: c10ab7950c566b9460176cab1f3c81ae27d2f23488109e05065f064a6e28b47a
 
 digraph Leviticus_12_2_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -412,6 +412,7 @@ digraph Leviticus_12_2_Boot {
   "C:24:17" -> "ת:24:14" [xlabel="finalize"];
   "C:2:2" -> "Ω" [xlabel="transport"];
   "C:2:2" -> "ל:2:2" [xlabel="endpoint"];
+  "C:3:3" -> "ב:3:2" [xlabel="boundary"];
   "C:8:6" -> "Ω" [xlabel="transport"];
   "C:8:6" -> "ש:8:4" [xlabel="construct"];
   "support_debt:24:2" -> "נ:22:2" [xlabel="support_debt"];
@@ -421,10 +422,14 @@ digraph Leviticus_12_2_Boot {
   "Ω" -> "ט:16:1" [xlabel="transport"];
   "Ω" -> "ט:24:2" [xlabel="transport"];
   "Ω" -> "ל:6:6" [xlabel="transport"];
+  "ב:18:3" -> "ש:18:8" [xlabel="boundary"];
+  "ב:1:1" -> "ד:1:1" [xlabel="boundary"];
   "ב:1:1" -> "ר:1:1" [xlabel="boundary"];
+  "ב:3:2" -> "C:3:3" [xlabel="boundary"];
   "ב:3:2" -> "support_debt:6:1" [xlabel="support_debt"];
   "ד:13:2" -> "Ω" [xlabel="boundary"];
   "ד:1:1" -> "Ω" [xlabel="boundary"];
+  "ד:1:1" -> "ב:1:1" [xlabel="boundary"];
   "ד:22:3" -> "Ω" [xlabel="boundary"];
   "ד:22:3" -> "ת:22:8" [xlabel="finalize"];
   "ד:23:4" -> "ת:22:8" [xlabel="boundary"];
@@ -450,6 +455,7 @@ digraph Leviticus_12_2_Boot {
   "ר:4:2" -> "י:3:1" [xlabel="transport"];
   "ר:4:2" -> "ל:4:4" [xlabel="endpoint"];
   "ר:6:3" -> "Ω" [xlabel="boundary"];
+  "ש:18:8" -> "ב:18:3" [xlabel="boundary"];
   "ת:11:2" -> "ת:11:3" [xlabel="residue"];
   "ת:11:3" -> "ז:11:1" [xlabel="gate"];
   "ת:18:5" -> "ת:18:6" [xlabel="residue"];

@@ -1,8 +1,8 @@
-// trace_file_sha256: ab114449e6ccbe8a9e16ec269097cb79af63dcd374453bd0afdc37bd39e9e178
+// trace_file_sha256: bac8e38993b58b69137a44102c43e131b283e73052271cfed00f85d556fd4f60
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 3b6c5c1f7fc8d93f787aacbba8bfda5f88e560de6294e3134c12870683d67696
+// trace_semantic_sha256: c683387c917da12b8b0f31afa335f80ff6a8772a8a03f838d491b678c5c68003
 
 digraph Leviticus_26_43_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -474,8 +474,15 @@ digraph Leviticus_26_43_Boot {
   "support_debt:29:2" -> "נ:26:2" [xlabel="support_debt"];
   "Ω" -> "ה:1:1" [xlabel="transport"];
   "Ω" -> "ו:23:15" [xlabel="transport"];
+  "ב:18:5" -> "ו:18:11" [xlabel="boundary"];
+  "ב:20:6" -> "ב:20:7" [xlabel="boundary"];
+  "ב:20:7" -> "C:20:15" [xlabel="boundary"];
   "ב:20:7" -> "ש:20:12" [xlabel="construct"];
+  "ב:2:1" -> "ז:2:1" [xlabel="boundary"];
+  "ב:6:2" -> "ש:6:4" [xlabel="boundary"];
   "ב:6:2" -> "ת:6:11" [xlabel="finalize"];
+  "ב:8:3" -> "ב:8:4" [xlabel="boundary"];
+  "ב:8:4" -> "C:8:7" [xlabel="boundary"];
   "ב:8:4" -> "ה:8:3" [xlabel="declare"];
   "ה:1:1" -> "Ω" [xlabel="transport"];
   "ה:1:1" -> "ר:1:1" [xlabel="boundary"];
@@ -483,10 +490,12 @@ digraph Leviticus_26_43_Boot {
   "ו:12:5" -> "ה:12:5" [xlabel="declare"];
   "ו:13:7" -> "C:14:11" [xlabel="transport"];
   "ו:15:9" -> "support_debt:17:1" [xlabel="support_debt"];
+  "ו:18:11" -> "ב:18:5" [xlabel="boundary"];
   "ו:1:1" -> "ה:1:1" [xlabel="declare"];
   "ו:23:15" -> "Ω" [xlabel="transport"];
   "ו:23:15" -> "ת:23:20" [xlabel="finalize"];
   "ו:4:3" -> "ת:4:5" [xlabel="finalize"];
+  "ז:2:1" -> "ב:2:1" [xlabel="boundary"];
   "ח:24:2" -> "ת:23:21" [xlabel="approx"];
   "י:13:2" -> "ר:13:3" [xlabel="boundary"];
   "י:20:5" -> "C:21:16" [xlabel="transport"];
@@ -504,6 +513,7 @@ digraph Leviticus_26_43_Boot {
   "ר:1:1" -> "ץ:1:1" [xlabel="align"];
   "ר:4:2" -> "ץ:4:2" [xlabel="align"];
   "ר:4:2" -> "ת:4:5" [xlabel="boundary"];
+  "ש:6:4" -> "ב:6:2" [xlabel="boundary"];
   "ת:14:17" -> "ת:14:18" [xlabel="residue"];
   "ת:23:20" -> "ת:23:21" [xlabel="residue"];
   "ת:23:21" -> "ח:24:2" [xlabel="approx"];

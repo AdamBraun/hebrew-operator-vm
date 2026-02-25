@@ -1,8 +1,8 @@
-// trace_file_sha256: dd600d42c7b6a755b9068de69e2e42a9fc21300036a65a027e34df6ca687aab9
+// trace_file_sha256: 04a487e03b12fad142607fe3f0b93c87143afe03cc2ec7eb8295acffd92dee9a
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 55ac3a65e0b25d982266cc1d45daa9d98759dc951fbd359784198ef9943a3609
+// trace_semantic_sha256: 513c0e11a0b11a9f72e054847e322cdbfd371f950477e6edbb65b9dceda38a5c
 
 digraph Deuteronomy_13_2_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -300,6 +300,7 @@ digraph Deuteronomy_13_2_Boot {
   "C:14:11" -> "Ω" [xlabel="transport"];
   "C:14:11" -> "⊥" [xlabel="vav"];
   "C:15:12" -> "ו:14:11" [xlabel="vav"];
+  "C:3:3" -> "ב:3:1" [xlabel="boundary"];
   "C:5:4" -> "support_debt:7:1" [xlabel="support_debt"];
   "C:7:5" -> "Ω" [xlabel="transport"];
   "C:7:5" -> "⊥" [xlabel="vav"];
@@ -311,7 +312,10 @@ digraph Deuteronomy_13_2_Boot {
   "Ω" -> "C:14:11" [xlabel="transport"];
   "Ω" -> "C:7:5" [xlabel="transport"];
   "Ω" -> "י:5:3" [xlabel="transport"];
+  "ב:3:1" -> "C:3:3" [xlabel="boundary"];
   "ב:3:1" -> "ם:2:1" [xlabel="approx"];
+  "ב:3:2" -> "ר:3:1" [xlabel="boundary"];
+  "ב:5:3" -> "נ:5:1" [xlabel="boundary"];
   "ו:11:7" -> "support_debt:13:2" [xlabel="support_debt"];
   "ו:13:9" -> "ת:13:5" [xlabel="finalize"];
   "ח:8:2" -> "ל:8:2" [xlabel="endpoint"];
@@ -322,9 +326,11 @@ digraph Deuteronomy_13_2_Boot {
   "ל:9:4" -> "ל:8:2" [xlabel="vav"];
   "ם:2:1" -> "ב:3:1" [xlabel="approx"];
   "נ:11:2" -> "ת:11:2" [xlabel="finalize"];
+  "נ:5:1" -> "ב:5:3" [xlabel="boundary"];
   "פ:15:1" -> "ת:15:8" [xlabel="finalize"];
   "ק:3:2" -> "ר:3:1" [xlabel="boundary"];
   "ר:3:1" -> "Ω" [xlabel="boundary"];
+  "ר:3:1" -> "ב:3:2" [xlabel="boundary"];
   "ת:11:2" -> "C:12:9" [xlabel="transport"];
   "ת:11:2" -> "ת:11:3" [xlabel="residue"];
   "ת:13:5" -> "ת:13:6" [xlabel="residue"];

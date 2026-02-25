@@ -1,8 +1,8 @@
-// trace_file_sha256: 0d50ecf02193063ebfe03490eb56d3139266fdca87a5b5bef7cbab0695fa03a5
+// trace_file_sha256: 38cae6dee9e1eb9a1fe5a93007fc0a84daa0c8bef7bf2d836e245f310b3e88a5
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 129cafc5c9a2d7b619410c36a1a64b8c8eb2991d518a92501a37d51ea5a80f4a
+// trace_semantic_sha256: c8b0e3e39754d83422e9efadc746956e62a735cf4d8b0bd0dfa1f67d0145d4b5
 
 digraph Deuteronomy_28_35_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -374,7 +374,10 @@ digraph Deuteronomy_28_35_Boot {
   "C:7:6" -> "ה:7:2" [xlabel="declare"];
   "Ω" -> "C:12:9" [xlabel="transport"];
   "Ω" -> "פ:15:1" [xlabel="transport"];
+  "ב:3:1" -> "ב:3:2" [xlabel="boundary"];
+  "ב:3:2" -> "C:3:3" [xlabel="boundary"];
   "ב:3:2" -> "ש:3:4" [xlabel="construct"];
+  "ב:7:3" -> "ה:7:2" [xlabel="boundary"];
   "ב:7:3" -> "ר:7:2" [xlabel="boundary"];
   "ג:18:1" -> "ל:18:12" [xlabel="endpoint"];
   "ד:19:1" -> "Ω" [xlabel="boundary"];
@@ -386,6 +389,7 @@ digraph Deuteronomy_28_35_Boot {
   "ה:10:3" -> "ש:10:8" [xlabel="construct"];
   "ה:15:4" -> "ר:15:4" [xlabel="boundary"];
   "ה:2:1" -> "י:2:2" [xlabel="vav"];
+  "ה:7:2" -> "ב:7:3" [xlabel="boundary"];
   "י:2:2" -> "ה:2:1" [xlabel="declare"];
   "כ:14:7" -> "ל:14:8" [xlabel="endpoint"];
   "ל:13:6" -> "ר:12:3" [xlabel="transport"];

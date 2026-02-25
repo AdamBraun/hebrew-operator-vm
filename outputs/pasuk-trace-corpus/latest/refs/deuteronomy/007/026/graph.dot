@@ -1,8 +1,8 @@
-// trace_file_sha256: 0fe9aa8cf86d49a555838d081bafeca302103bc493c51a5dee0217b8b872ef90
+// trace_file_sha256: 1fee7379325fe9b171f5c6b420b6383bc124b1803c78affdb5c7ef35139f4716
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: b04c74c9dca8dd139fff429a47e9d34529daeb6898466315aa9c1a2ec93f04c3
+// trace_semantic_sha256: e1661701dee42cef0df5f53873b3d8623e272c89bcd37a59f6f9deaf04b2c6ca
 
 digraph Deuteronomy_7_26_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -428,12 +428,18 @@ digraph Deuteronomy_7_26_Boot {
   "C:3:3" -> "ת:3:5" [xlabel="finalize"];
   "C:5:4" -> "Ω" [xlabel="transport"];
   "C:5:4" -> "ל:5:4" [xlabel="endpoint"];
+  "C:6:5" -> "ב:6:3" [xlabel="boundary"];
   "C:9:7" -> "ח:9:2" [xlabel="compartment"];
   "support_debt:14:1" -> "נ:13:1" [xlabel="support_debt"];
   "support_debt:16:2" -> "נ:15:2" [xlabel="support_debt"];
   "Ω" -> "C:5:4" [xlabel="transport"];
   "Ω" -> "ל:1:2" [xlabel="transport"];
+  "ב:14:4" -> "ע:14:2" [xlabel="boundary"];
   "ב:15:5" -> "support_debt:16:2" [xlabel="support_debt"];
+  "ב:15:5" -> "ע:15:3" [xlabel="boundary"];
+  "ב:2:1" -> "ת:2:3" [xlabel="boundary"];
+  "ב:3:2" -> "ע:3:1" [xlabel="boundary"];
+  "ב:6:3" -> "C:6:5" [xlabel="boundary"];
   "ה:10:2" -> "כ:10:1" [xlabel="vav"];
   "ה:18:3" -> "ם:17:2" [xlabel="vav"];
   "ו:14:11" -> "ת:14:17" [xlabel="finalize"];
@@ -451,6 +457,9 @@ digraph Deuteronomy_7_26_Boot {
   "ם:17:2" -> "ו:18:15" [xlabel="transport"];
   "נ:13:1" -> "צ:13:1" [xlabel="vav"];
   "נ:15:2" -> "ב:15:5" [xlabel="vav"];
+  "ע:14:2" -> "ב:14:4" [xlabel="boundary"];
+  "ע:15:3" -> "ב:15:5" [xlabel="boundary"];
+  "ע:3:1" -> "ב:3:2" [xlabel="boundary"];
   "צ:13:1" -> "support_debt:14:1" [xlabel="support_debt"];
   "ק:12:1" -> "ץ:12:1" [xlabel="align"];
   "ר:17:2" -> "Ω" [xlabel="boundary"];
@@ -465,6 +474,7 @@ digraph Deuteronomy_7_26_Boot {
   "ת:15:21" -> "ת:15:23" [xlabel="finalize"];
   "ת:15:23" -> "ת:15:24" [xlabel="residue"];
   "ת:2:2" -> "ת:2:3" [xlabel="residue"];
+  "ת:2:3" -> "ב:2:1" [xlabel="boundary"];
   "ת:3:5" -> "ת:3:6" [xlabel="residue"];
   "ת:3:6" -> "י:2:1" [xlabel="vav"];
   "ת:6:8" -> "ת:6:9" [xlabel="residue"];

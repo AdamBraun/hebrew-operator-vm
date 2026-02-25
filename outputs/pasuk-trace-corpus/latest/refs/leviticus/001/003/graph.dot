@@ -1,8 +1,8 @@
-// trace_file_sha256: 3870b19862a0603d6d736d0e9fb320bcb277ae2940de94fbd8cffa368570a40a
+// trace_file_sha256: 7e4bd7dbd137aff8c97ad1cebd53524c16f5b0eecd19022a884f5f47cdac4ed1
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: b89cb4788d82d73f9398b05197939063e3a74a30046274fde3b303855c185695
+// trace_semantic_sha256: 98d11d11208f1d63dced06668ee5c32d95f38a0965f5d3d98e265a0375fe0934
 
 digraph Leviticus_1_3_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -439,15 +439,22 @@ digraph Leviticus_1_3_Boot {
   "Ω" -> "C:14:11" [xlabel="transport"];
   "Ω" -> "C:1:1" [xlabel="transport"];
   "ב:10:3" -> "support_debt:12:2" [xlabel="support_debt"];
+  "ב:10:3" -> "י:10:3" [xlabel="boundary"];
   "ב:17:4" -> "C:18:14" [xlabel="transport"];
+  "ב:17:4" -> "י:17:5" [xlabel="boundary"];
   "ב:3:1" -> "support_debt:5:1" [xlabel="support_debt"];
+  "ב:3:1" -> "ר:3:1" [xlabel="boundary"];
   "ב:6:2" -> "ה:6:1" [xlabel="approx"];
+  "ב:6:2" -> "ה:6:1" [xlabel="boundary"];
   "ד:15:1" -> "Ω" [xlabel="boundary"];
   "ה:14:2" -> "ל:14:6" [xlabel="endpoint"];
   "ה:22:3" -> "י:22:7" [xlabel="vav"];
   "ה:6:1" -> "ב:6:2" [xlabel="approx"];
+  "ה:6:1" -> "ב:6:2" [xlabel="boundary"];
   "י:10:2" -> "⊥" [xlabel="approx"];
+  "י:10:3" -> "ב:10:3" [xlabel="boundary"];
   "י:17:4" -> "⊥" [xlabel="approx"];
+  "י:17:5" -> "ב:17:4" [xlabel="boundary"];
   "י:22:7" -> "ה:22:3" [xlabel="declare"];
   "כ:8:1" -> "ר:8:3" [xlabel="boundary"];
   "ל:20:8" -> "ר:20:6" [xlabel="boundary"];
@@ -468,6 +475,7 @@ digraph Leviticus_1_3_Boot {
   "ר:20:6" -> "Ω" [xlabel="boundary"];
   "ר:20:6" -> "צ:20:1" [xlabel="align"];
   "ר:3:1" -> "Ω" [xlabel="boundary"];
+  "ר:3:1" -> "ב:3:1" [xlabel="boundary"];
   "ר:6:2" -> "Ω" [xlabel="boundary"];
   "ר:8:3" -> "כ:8:2" [xlabel="boundary"];
   "ת:13:5" -> "ת:13:6" [xlabel="residue"];

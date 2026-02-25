@@ -1,8 +1,8 @@
-// trace_file_sha256: 390dbc482405172c38ce7e95493ebf69db9d5cb032d2d29ed77882b28269a0a6
+// trace_file_sha256: da5fe9a2766232b5cce1c3a45bad7e386ebc1513d96ea07f42f9b208137bbe10
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 0f6866bb43a40ba27d746115f29c8690cbbc0abdadae27cf0dfafb66b875d310
+// trace_semantic_sha256: b7bd8aa9f456d2ec0ee3f12fc64b9fabc4130ef2fb055cc97f9724fa3cc9dedd
 
 digraph Genesis_28_6_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -503,6 +503,7 @@ digraph Genesis_28_6_Boot {
   "C:23:17" -> "ת:23:14" [xlabel="finalize"];
   "C:24:18" -> "ש:24:16" [xlabel="construct"];
   "C:24:18" -> "ת:23:14" [xlabel="transport"];
+  "C:25:19" -> "ב:25:5" [xlabel="boundary"];
   "C:4:4" -> "ח:3:2" [xlabel="transport"];
   "C:4:4" -> "ת:4:5" [xlabel="finalize"];
   "C:7:6" -> "נ:6:1" [xlabel="transport"];
@@ -514,7 +515,13 @@ digraph Genesis_28_6_Boot {
   "Ω" -> "C:12:10" [xlabel="transport"];
   "Ω" -> "ל:20:10" [xlabel="transport"];
   "Ω" -> "ל:22:12" [xlabel="transport"];
+  "ב:14:2" -> "ב:14:3" [xlabel="boundary"];
+  "ב:14:3" -> "C:14:11" [xlabel="boundary"];
+  "ב:14:3" -> "ב:14:4" [xlabel="boundary"];
+  "ב:14:4" -> "ב:14:3" [xlabel="boundary"];
   "ב:14:4" -> "ר:14:2" [xlabel="boundary"];
+  "ב:1:1" -> "ק:1:1" [xlabel="boundary"];
+  "ב:25:5" -> "C:25:19" [xlabel="boundary"];
   "ב:25:5" -> "support_debt:29:3" [xlabel="support_debt"];
   "ד:6:1" -> "support_debt:9:1" [xlabel="support_debt"];
   "ד:6:1" -> "Ω" [xlabel="boundary"];
@@ -541,6 +548,7 @@ digraph Genesis_28_6_Boot {
   "ע:1:1" -> "ת:0:3" [xlabel="approx"];
   "פ:6:1" -> "ד:6:1" [xlabel="boundary"];
   "צ:17:1" -> "ע:1:1" [xlabel="vav"];
+  "ק:1:1" -> "ב:1:1" [xlabel="boundary"];
   "ק:23:3" -> "ח:23:6" [xlabel="compartment"];
   "ק:9:2" -> "ח:9:4" [xlabel="compartment"];
   "ר:14:2" -> "Ω" [xlabel="boundary"];

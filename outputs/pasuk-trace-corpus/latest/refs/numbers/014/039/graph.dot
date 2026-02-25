@@ -1,8 +1,8 @@
-// trace_file_sha256: e3c13fe713d6c0783c92a1bb31b86a4dab3125d236824dd1ed58fe9d0aad2edd
+// trace_file_sha256: df3baaae1c5c56a47d312d11cf8a6a6de13a327a4ad71d9e153c6aaf6f88f61a
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 59e08afbff0d03716bc4f28d86b44e24cb36829f8b43aa514c7fcff6617d5edc
+// trace_semantic_sha256: 1bea094241f751a6ec9913eb381d9f3cfd55bb29ca5aadec6d53a03ddfa44b3a
 
 digraph Numbers_14_39_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -322,6 +322,7 @@ digraph Numbers_14_39_Boot {
     "ת:4:2";
   }
 
+  "C:10:8" -> "ב:10:3" [xlabel="boundary"];
   "C:14:11" -> "ה:14:3" [xlabel="declare"];
   "C:15:12" -> "Ω" [xlabel="transport"];
   "C:15:12" -> "ד:15:3" [xlabel="boundary"];
@@ -338,13 +339,19 @@ digraph Numbers_14_39_Boot {
   "Ω" -> "C:8:6" [xlabel="transport"];
   "Ω" -> "ר:11:3" [xlabel="transport"];
   "Ω" -> "ת:13:6" [xlabel="transport"];
+  "ב:10:3" -> "C:10:8" [xlabel="boundary"];
   "ב:10:3" -> "support_debt:11:1" [xlabel="support_debt"];
   "ב:13:4" -> "ל:13:10" [xlabel="endpoint"];
+  "ב:13:4" -> "ת:13:6" [xlabel="boundary"];
+  "ב:1:1" -> "ד:1:1" [xlabel="boundary"];
   "ב:1:1" -> "ר:1:1" [xlabel="boundary"];
+  "ב:5:2" -> "ד:5:2" [xlabel="boundary"];
   "ב:5:2" -> "ר:5:2" [xlabel="boundary"];
   "ד:15:3" -> "Ω" [xlabel="boundary"];
   "ד:1:1" -> "Ω" [xlabel="boundary"];
+  "ד:1:1" -> "ב:1:1" [xlabel="boundary"];
   "ד:5:2" -> "Ω" [xlabel="boundary"];
+  "ד:5:2" -> "ב:5:2" [xlabel="boundary"];
   "ה:5:1" -> "ד:5:2" [xlabel="boundary"];
   "ה:6:2" -> "ל:6:2" [xlabel="endpoint"];
   "ה:6:2" -> "ם:5:1" [xlabel="transport"];
@@ -361,6 +368,7 @@ digraph Numbers_14_39_Boot {
   "ר:5:2" -> "Ω" [xlabel="boundary"];
   "ת:13:5" -> "ת:13:6" [xlabel="residue"];
   "ת:13:6" -> "Ω" [xlabel="transport"];
+  "ת:13:6" -> "ב:13:4" [xlabel="boundary"];
   "ת:4:2" -> "ת:4:3" [xlabel="residue"];
   "⊥" -> "Ω" [xlabel="vav"];
   "⊥" -> "Ω" [xlabel="vav"];

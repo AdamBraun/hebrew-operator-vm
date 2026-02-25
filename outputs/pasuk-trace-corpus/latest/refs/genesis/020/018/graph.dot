@@ -1,8 +1,8 @@
-// trace_file_sha256: 81dc513ce4afa9fdcd3667550c96b8d5aa0e5da0079e05ea9aa8154c85968388
+// trace_file_sha256: ab371c11b787e5c8ac7023ac7b3c42a43fd1aacd9661fae3484f730e4a8b5951
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: d1a5c2d6958cf9f40cc9688bacc71f30676cf650419cba550ddce069e0bf6e26
+// trace_semantic_sha256: ce7dc44a6e0708849097fa1d349a8e1c8067fb7f48a5377bdf9dd00dc338f6d3
 
 digraph Genesis_20_18_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -360,23 +360,33 @@ digraph Genesis_20_18_Boot {
     "ת:16:5";
   }
 
+  "C:11:9" -> "ב:11:4" [xlabel="boundary"];
   "C:11:9" -> "ת:10:2" [xlabel="transport"];
   "C:14:11" -> "ד:14:2" [xlabel="boundary"];
   "C:15:12" -> "ר:15:5" [xlabel="boundary"];
   "C:16:13" -> "Ω" [xlabel="transport"];
   "C:16:13" -> "ש:16:4" [xlabel="construct"];
+  "C:17:14" -> "ב:17:6" [xlabel="boundary"];
   "C:17:14" -> "ת:16:5" [xlabel="transport"];
   "C:9:7" -> "ר:9:3" [xlabel="boundary"];
   "Ω" -> "C:16:13" [xlabel="transport"];
+  "ב:10:3" -> "ל:10:4" [xlabel="boundary"];
+  "ב:11:4" -> "C:11:9" [xlabel="boundary"];
+  "ב:14:5" -> "ד:14:2" [xlabel="boundary"];
   "ב:14:5" -> "ר:14:4" [xlabel="boundary"];
+  "ב:17:6" -> "C:17:14" [xlabel="boundary"];
   "ב:17:6" -> "ר:17:6" [xlabel="boundary"];
+  "ב:7:1" -> "ב:7:2" [xlabel="boundary"];
+  "ב:7:2" -> "C:7:5" [xlabel="boundary"];
   "ד:14:2" -> "Ω" [xlabel="boundary"];
+  "ד:14:2" -> "ב:14:5" [xlabel="boundary"];
   "ד:7:1" -> "Ω" [xlabel="boundary"];
   "ה:5:1" -> "י:5:2" [xlabel="vav"];
   "י:10:3" -> "ת:10:2" [xlabel="finalize"];
   "י:11:4" -> "ל:11:6" [xlabel="endpoint"];
   "י:5:2" -> "ה:5:1" [xlabel="declare"];
   "כ:8:3" -> "ל:8:2" [xlabel="endpoint"];
+  "ל:10:4" -> "ב:10:3" [xlabel="boundary"];
   "ע:13:4" -> "ל:13:8" [xlabel="endpoint"];
   "ע:2:1" -> "צ:2:1" [xlabel="align"];
   "ע:3:2" -> "צ:3:2" [xlabel="align"];

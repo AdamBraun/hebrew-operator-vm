@@ -1,8 +1,8 @@
-// trace_file_sha256: 587415600834a7b61a266c893e6e8ab09ab2c2eef4fcd6ddd72abbb0c42a19af
+// trace_file_sha256: d12725010646bc28c33118ef865dc172b70c45e918517a223852e88d0766739e
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 3627ed72224e6f00b3754ea30328c3f41e23018560da8a35854f60fcd5ad687a
+// trace_semantic_sha256: 63c5c2fb1c6172c79f22cf86093e925446b6bf9d86a913509e6cd697f5c17c46
 
 digraph Deuteronomy_16_1_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -414,15 +414,23 @@ digraph Deuteronomy_16_1_Boot {
   "Ω" -> "C:11:8" [xlabel="transport"];
   "Ω" -> "C:3:2" [xlabel="transport"];
   "Ω" -> "י:17:7" [xlabel="transport"];
+  "ב:14:3" -> "ב:14:4" [xlabel="boundary"];
+  "ב:14:4" -> "C:14:10" [xlabel="boundary"];
   "ב:14:4" -> "ח:14:6" [xlabel="compartment"];
+  "ב:15:5" -> "ה:15:4" [xlabel="boundary"];
+  "ב:15:6" -> "י:15:6" [xlabel="boundary"];
+  "ב:5:1" -> "ה:5:1" [xlabel="boundary"];
+  "ב:5:2" -> "י:5:1" [xlabel="boundary"];
   "ד:14:2" -> "Ω" [xlabel="boundary"];
   "ד:14:2" -> "ש:14:12" [xlabel="construct"];
   "ד:4:1" -> "Ω" [xlabel="boundary"];
   "ד:4:1" -> "ש:4:8" [xlabel="construct"];
   "ה:10:2" -> "י:10:3" [xlabel="vav"];
+  "ה:15:4" -> "ב:15:5" [xlabel="boundary"];
   "ה:15:4" -> "ש:14:12" [xlabel="transport"];
   "ה:17:5" -> "⊥" [xlabel="vav"];
   "ה:18:6" -> "י:18:8" [xlabel="vav"];
+  "ה:5:1" -> "ב:5:1" [xlabel="boundary"];
   "ה:5:1" -> "ש:4:8" [xlabel="transport"];
   "ו:17:7" -> "צ:17:1" [xlabel="align"];
   "ו:18:9" -> "C:19:14" [xlabel="transport"];
@@ -430,9 +438,11 @@ digraph Deuteronomy_16_1_Boot {
   "ח:14:6" -> "ד:14:2" [xlabel="boundary"];
   "ח:4:2" -> "ד:4:1" [xlabel="boundary"];
   "י:10:3" -> "ה:10:2" [xlabel="declare"];
+  "י:15:6" -> "ב:15:6" [xlabel="boundary"];
   "י:17:7" -> "Ω" [xlabel="transport"];
   "י:18:8" -> "ה:18:6" [xlabel="declare"];
   "י:21:11" -> "ל:21:10" [xlabel="endpoint"];
+  "י:5:1" -> "ב:5:2" [xlabel="boundary"];
   "י:7:2" -> "ת:7:5" [xlabel="finalize"];
   "ל:11:4" -> "ה:11:3" [xlabel="declare"];
   "ל:19:6" -> "ה:19:7" [xlabel="declare"];

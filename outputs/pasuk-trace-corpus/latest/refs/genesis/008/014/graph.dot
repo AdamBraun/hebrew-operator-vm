@@ -1,8 +1,8 @@
-// trace_file_sha256: 5a1f493748fb42ea7f52a464a0f8517957bb574680ea83fdbb65d932300f8a06
+// trace_file_sha256: 0f17213fd441c8a26ddf39a3abf7f75610bce446b1d5a85d78d0441f1eac1d2e
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: eaf219e9a49c22b92b5768c19a38980e857feb9d5ffa75bfef08c75eac72e128
+// trace_semantic_sha256: e14bbccdfd59646b1cf4ad64dc2905d18a464dd63a74d395b14087d6a30ccfeb
 
 digraph Genesis_8_14_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -227,9 +227,14 @@ digraph Genesis_8_14_Boot {
   "C:3:2" -> "ה:3:1" [xlabel="declare"];
   "support_debt:5:1" -> "נ:3:1" [xlabel="support_debt"];
   "Ω" -> "ה:11:2" [xlabel="transport"];
+  "ב:10:5" -> "י:10:4" [xlabel="boundary"];
   "ב:10:5" -> "ש:10:20" [xlabel="construct"];
+  "ב:1:1" -> "ו:1:1" [xlabel="boundary"];
   "ב:1:1" -> "ח:1:2" [xlabel="compartment"];
+  "ב:5:2" -> "ב:5:3" [xlabel="boundary"];
+  "ב:5:3" -> "C:5:3" [xlabel="boundary"];
   "ב:5:3" -> "ש:5:12" [xlabel="construct"];
+  "ב:5:4" -> "ש:5:12" [xlabel="boundary"];
   "ד:1:1" -> "Ω" [xlabel="boundary"];
   "ד:1:1" -> "ש:1:4" [xlabel="construct"];
   "ד:8:2" -> "Ω" [xlabel="boundary"];
@@ -237,8 +242,10 @@ digraph Genesis_8_14_Boot {
   "ה:11:2" -> "Ω" [xlabel="transport"];
   "ה:11:2" -> "ר:11:2" [xlabel="boundary"];
   "ה:3:1" -> "ש:3:8" [xlabel="construct"];
+  "ו:1:1" -> "ב:1:1" [xlabel="boundary"];
   "ח:1:2" -> "ד:1:1" [xlabel="boundary"];
   "ח:8:4" -> "ד:8:2" [xlabel="boundary"];
+  "י:10:4" -> "ב:10:5" [xlabel="boundary"];
   "י:7:3" -> "⊥" [xlabel="vav"];
   "ל:8:2" -> "ח:8:4" [xlabel="compartment"];
   "ע:6:2" -> "ר:6:1" [xlabel="boundary"];
@@ -246,6 +253,7 @@ digraph Genesis_8_14_Boot {
   "ר:11:2" -> "ץ:11:1" [xlabel="align"];
   "ר:6:1" -> "Ω" [xlabel="boundary"];
   "ש:3:8" -> "support_debt:5:1" [xlabel="support_debt"];
+  "ש:5:12" -> "ב:5:4" [xlabel="boundary"];
   "⊥" -> "Ω" [xlabel="vav"];
   "⊥" -> "ל:8:2" [xlabel="endpoint"];
   legend -> "Ω" [style=invis];

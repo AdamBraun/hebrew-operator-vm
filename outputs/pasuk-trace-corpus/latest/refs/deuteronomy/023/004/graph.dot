@@ -1,8 +1,8 @@
-// trace_file_sha256: 415951a3a54c04ab863eeab2414459bee4f8e0ed5881698c0e8bbcb4e5b9ad14
+// trace_file_sha256: 0d0d6a91b810e1b7d0c28e29926cafda89048741f8658b4789be8acf9b3d3f52
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 2364f6a9ac09ea07bc568f9f180592b6d5dad19817a3ba1439a09e4099466e7a
+// trace_semantic_sha256: 3aaf139191243cc4b68ef7c0fb33146db900a36c847be32bdb5c3839e4c934ba
 
 digraph Deuteronomy_23_4_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -340,10 +340,17 @@ digraph Deuteronomy_23_4_Boot {
   "Ω" -> "ו:4:5" [xlabel="transport"];
   "Ω" -> "ל:12:6" [xlabel="transport"];
   "Ω" -> "ל:1:2" [xlabel="transport"];
+  "ב:13:5" -> "י:13:7" [xlabel="boundary"];
   "ב:13:5" -> "ל:12:6" [xlabel="transport"];
   "ב:13:5" -> "ל:14:8" [xlabel="endpoint"];
+  "ב:15:6" -> "ב:15:7" [xlabel="boundary"];
+  "ב:15:7" -> "C:15:13" [xlabel="boundary"];
   "ב:15:7" -> "⊥" [xlabel="approx"];
+  "ב:2:1" -> "י:2:1" [xlabel="boundary"];
   "ב:2:1" -> "ל:1:2" [xlabel="transport"];
+  "ב:4:2" -> "ו:4:5" [xlabel="boundary"];
+  "ב:5:3" -> "ב:5:4" [xlabel="boundary"];
+  "ב:5:4" -> "C:5:5" [xlabel="boundary"];
   "ב:5:4" -> "⊥" [xlabel="approx"];
   "ד:17:2" -> "Ω" [xlabel="boundary"];
   "ד:9:1" -> "Ω" [xlabel="boundary"];
@@ -355,9 +362,12 @@ digraph Deuteronomy_23_4_Boot {
   "ו:18:13" -> "ל:18:12" [xlabel="endpoint"];
   "ו:3:1" -> "support_debt:4:1" [xlabel="support_debt"];
   "ו:4:5" -> "Ω" [xlabel="transport"];
+  "ו:4:5" -> "ב:4:2" [xlabel="boundary"];
   "ו:9:9" -> "ר:9:1" [xlabel="boundary"];
   "י:10:5" -> "ר:10:2" [xlabel="boundary"];
+  "י:13:7" -> "ב:13:5" [xlabel="boundary"];
   "י:16:8" -> "ה:16:5" [xlabel="declare"];
+  "י:2:1" -> "ב:2:1" [xlabel="boundary"];
   "י:6:4" -> "ה:6:2" [xlabel="declare"];
   "ל:12:6" -> "Ω" [xlabel="transport"];
   "ל:12:6" -> "ב:13:5" [xlabel="transport"];

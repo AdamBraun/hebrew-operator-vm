@@ -1,8 +1,8 @@
-// trace_file_sha256: 4da0c3c556bcebe4910582ce95cbec5dc2ef5405da0576f08877bb4fdb740ec9
+// trace_file_sha256: 9f0b588da9ef111ca3fb72314993bca918231d964ed2ef8eb6c5a053b16dd7e6
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 3b824436c2f262ade0f998839b5bd470a68da35a36841a8f310e4a0ff2a50867
+// trace_semantic_sha256: 7c72cf6a3cbd15b214e3e515f53b0ea3ee0eb8fa310de522fe35d507b5e573f8
 
 digraph Exodus_25_12_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -554,14 +554,24 @@ digraph Exodus_25_12_Boot {
   "Ω" -> "C:12:8" [xlabel="transport"];
   "Ω" -> "C:4:3" [xlabel="transport"];
   "Ω" -> "ה:21:2" [xlabel="transport"];
+  "ב:12:4" -> "ר:12:2" [xlabel="boundary"];
+  "ב:16:5" -> "ט:16:2" [xlabel="boundary"];
+  "ב:25:6" -> "ט:25:3" [xlabel="boundary"];
+  "ב:4:1" -> "ר:4:1" [xlabel="boundary"];
+  "ב:6:2" -> "ט:6:1" [xlabel="boundary"];
+  "ב:7:3" -> "ה:7:1" [xlabel="boundary"];
   "ה:21:2" -> "Ω" [xlabel="transport"];
   "ה:21:2" -> "ח:21:2" [xlabel="compartment"];
   "ה:29:3" -> "ש:29:12" [xlabel="construct"];
+  "ה:7:1" -> "ב:7:3" [xlabel="boundary"];
   "ו:15:9" -> "ש:15:4" [xlabel="construct"];
   "ו:23:13" -> "ש:23:8" [xlabel="construct"];
   "ו:9:5" -> "support_debt:11:1" [xlabel="support_debt"];
   "ז:7:1" -> "ה:7:1" [xlabel="declare"];
   "ח:21:2" -> "ת:21:23" [xlabel="finalize"];
+  "ט:16:2" -> "ב:16:5" [xlabel="boundary"];
+  "ט:25:3" -> "ב:25:6" [xlabel="boundary"];
+  "ט:6:1" -> "ב:6:2" [xlabel="boundary"];
   "י:13:2" -> "ת:13:15" [xlabel="vav"];
   "י:1:1" -> "צ:1:1" [xlabel="align"];
   "י:29:5" -> "ת:29:32" [xlabel="finalize"];
@@ -579,7 +589,9 @@ digraph Exodus_25_12_Boot {
   "צ:28:3" -> "ל:28:12" [xlabel="endpoint"];
   "ק:1:1" -> "ת:1:2" [xlabel="finalize"];
   "ר:12:2" -> "Ω" [xlabel="boundary"];
+  "ר:12:2" -> "ב:12:4" [xlabel="boundary"];
   "ר:4:1" -> "Ω" [xlabel="boundary"];
+  "ר:4:1" -> "ב:4:1" [xlabel="boundary"];
   "ש:15:4" -> "ת:15:17" [xlabel="finalize"];
   "ש:23:8" -> "ת:23:26" [xlabel="finalize"];
   "ש:29:12" -> "support_debt:32:2" [xlabel="support_debt"];

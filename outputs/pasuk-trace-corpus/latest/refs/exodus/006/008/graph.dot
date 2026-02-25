@@ -1,8 +1,8 @@
-// trace_file_sha256: 3fa74134f404c86cf827e3de080eb03bc65303012bf0412335f296dd060b40c0
+// trace_file_sha256: c0f29d9d2fb58e6a661ce8f0edfef99173567cc37cce7d4eb3031d5d52cc86d3
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: e79110bde94c0202d128aaa7b5e378ef10995285da72ef656412989aee6e6d5f
+// trace_semantic_sha256: eb3b6f9e359df21fcd60dc61ee54f3e27b8b36ee59c9c8e553d39775a4d7888e
 
 digraph Exodus_6_8_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -548,11 +548,15 @@ digraph Exodus_6_8_Boot {
   "Ω" -> "C:7:5" [xlabel="transport"];
   "Ω" -> "ב:1:1" [xlabel="transport"];
   "Ω" -> "ל:16:6" [xlabel="transport"];
+  "ב:16:2" -> "ל:16:6" [xlabel="boundary"];
   "ב:16:2" -> "ר:16:3" [xlabel="boundary"];
+  "ב:18:3" -> "ק:18:2" [xlabel="boundary"];
   "ב:1:1" -> "Ω" [xlabel="transport"];
+  "ב:1:1" -> "ה:1:1" [xlabel="boundary"];
   "ב:1:1" -> "ת:1:2" [xlabel="finalize"];
   "ד:11:1" -> "Ω" [xlabel="boundary"];
   "ה:14:3" -> "ה:14:4" [xlabel="pin"];
+  "ה:1:1" -> "ב:1:1" [xlabel="boundary"];
   "ה:21:6" -> "ה:21:7" [xlabel="pin"];
   "ה:21:7" -> "ל:22:12" [xlabel="endpoint"];
   "ה:25:8" -> "י:25:9" [xlabel="vav"];
@@ -568,6 +572,7 @@ digraph Exodus_6_8_Boot {
   "י:25:9" -> "ה:25:8" [xlabel="declare"];
   "ל:13:4" -> "ת:13:14" [xlabel="finalize"];
   "ל:16:6" -> "Ω" [xlabel="transport"];
+  "ל:16:6" -> "ב:16:2" [xlabel="boundary"];
   "ל:18:10" -> "ע:18:1" [xlabel="approx"];
   "ל:4:2" -> "ה:5:2" [xlabel="transport"];
   "ם:16:2" -> "ל:17:8" [xlabel="endpoint"];
@@ -577,6 +582,7 @@ digraph Exodus_6_8_Boot {
   "ע:18:1" -> "ל:18:10" [xlabel="approx"];
   "צ:17:1" -> "ח:17:2" [xlabel="approx"];
   "צ:17:1" -> "ח:17:2" [xlabel="compartment"];
+  "ק:18:2" -> "ב:18:3" [xlabel="boundary"];
   "ר:16:3" -> "Ω" [xlabel="boundary"];
   "ר:16:3" -> "ה:16:5" [xlabel="declare"];
   "ר:23:4" -> "ו:23:8" [xlabel="boundary"];

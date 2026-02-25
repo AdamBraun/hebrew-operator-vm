@@ -1,8 +1,8 @@
-// trace_file_sha256: 0075aa733e54f5a54734dbebedd1ecd959abcc0c89467ace3adfcf68a291f685
+// trace_file_sha256: 1a2323710bbe52bcaca184aab24f59f9fd9515844635b8f2bbc1fc983fef3644
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: fe66c55d3377a9e0953e9b521f34d6a3fa9c34fb26783bc5dc3e484496cb6f31
+// trace_semantic_sha256: 1d5868a229fa6fb501324f6390e542862c5eaf5c2d393d4e5aeaaecbd3a019bb
 
 digraph Genesis_12_13_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -313,6 +313,7 @@ digraph Genesis_12_13_Boot {
     "ת:4:5";
   }
 
+  "C:10:8" -> "ב:10:2" [xlabel="boundary"];
   "C:1:1" -> "Ω" [xlabel="transport"];
   "C:1:1" -> "ר:1:1" [xlabel="boundary"];
   "C:2:2" -> "support_debt:3:1" [xlabel="support_debt"];
@@ -324,17 +325,24 @@ digraph Genesis_12_13_Boot {
   "support_debt:3:1" -> "נ:2:1" [xlabel="support_debt"];
   "Ω" -> "C:1:1" [xlabel="transport"];
   "Ω" -> "C:3:3" [xlabel="transport"];
+  "ב:10:2" -> "C:10:8" [xlabel="boundary"];
+  "ב:10:3" -> "ע:10:2" [xlabel="boundary"];
   "ב:10:3" -> "ע:10:2" [xlabel="vav"];
+  "ב:14:4" -> "ב:14:5" [xlabel="boundary"];
+  "ב:14:5" -> "C:14:11" [xlabel="boundary"];
   "ב:14:5" -> "⊥" [xlabel="bestow"];
+  "ב:8:1" -> "ט:8:1" [xlabel="boundary"];
   "ב:8:1" -> "ל:9:4" [xlabel="endpoint"];
   "ג:14:1" -> "ל:14:6" [xlabel="endpoint"];
   "ו:10:1" -> "ר:10:2" [xlabel="boundary"];
   "ו:12:3" -> "ח:12:4" [xlabel="compartment"];
   "ח:3:2" -> "ת:3:2" [xlabel="finalize"];
+  "ט:8:1" -> "ב:8:1" [xlabel="boundary"];
   "י:12:6" -> "ת:12:8" [xlabel="finalize"];
   "י:1:1" -> "נ:2:1" [xlabel="transport"];
   "ל:14:6" -> "ל:14:8" [xlabel="endpoint"];
   "נ:2:1" -> "י:1:1" [xlabel="transport"];
+  "ע:10:2" -> "ב:10:3" [xlabel="boundary"];
   "פ:13:1" -> "ש:13:4" [xlabel="construct"];
   "ר:10:2" -> "ו:10:2" [xlabel="boundary"];
   "ר:1:1" -> "Ω" [xlabel="boundary"];

@@ -1,8 +1,8 @@
-// trace_file_sha256: fb18cadc5d7a21c38e13bfd7212f17488b764f9261aa58bbdecad047168eca60
+// trace_file_sha256: d561a5edc5a718d1163baa6a432363ccf3f7f5bc31805627e0a4bcde05a19136
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 47aa9b0782488a279911c474b476a45bfd14e1ee918af29827744b43ac379744
+// trace_semantic_sha256: 6afbe1c43cfc84aed64052faf09d35aa4465db5be5050f5841684459562e46ea
 
 digraph Exodus_12_31_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -412,17 +412,22 @@ digraph Exodus_12_31_Boot {
   "C:11:8" -> "ת:11:2" [xlabel="finalize"];
   "C:15:11" -> "ם:14:1" [xlabel="transport"];
   "C:15:11" -> "ת:15:5" [xlabel="finalize"];
+  "C:17:13" -> "ב:17:1" [xlabel="boundary"];
   "C:22:17" -> "ו:21:19" [xlabel="transport"];
   "C:22:17" -> "ת:22:8" [xlabel="finalize"];
   "support_debt:20:1" -> "נ:17:1" [xlabel="support_debt"];
   "Ω" -> "י:6:3" [xlabel="transport"];
   "Ω" -> "ר:1:1" [xlabel="transport"];
   "Ω" -> "⊥" [xlabel="approx"];
+  "ב:17:1" -> "C:17:13" [xlabel="boundary"];
   "ב:17:1" -> "support_debt:20:1" [xlabel="support_debt"];
   "ב:21:2" -> "ד:21:1" [xlabel="boundary"];
+  "ב:21:2" -> "ע:21:2" [xlabel="boundary"];
+  "ב:24:3" -> "ד:24:2" [xlabel="boundary"];
   "ב:24:3" -> "ר:24:5" [xlabel="boundary"];
   "ד:21:1" -> "Ω" [xlabel="boundary"];
   "ד:21:1" -> "ב:21:2" [xlabel="vav"];
+  "ד:24:2" -> "ב:24:3" [xlabel="boundary"];
   "ד:24:2" -> "כ:24:4" [xlabel="boundary"];
   "ה:23:2" -> "י:23:7" [xlabel="vav"];
   "ה:3:1" -> "ר:3:2" [xlabel="boundary"];
@@ -445,6 +450,7 @@ digraph Exodus_12_31_Boot {
   "ל:3:4" -> "ה:3:1" [xlabel="declare"];
   "ל:3:4" -> "ש:2:4" [xlabel="transport"];
   "ם:14:1" -> "C:15:11" [xlabel="transport"];
+  "ע:21:2" -> "ב:21:2" [xlabel="boundary"];
   "צ:9:1" -> "ו:8:9" [xlabel="transport"];
   "ק:1:1" -> "ר:1:1" [xlabel="boundary"];
   "ר:18:4" -> "Ω" [xlabel="boundary"];

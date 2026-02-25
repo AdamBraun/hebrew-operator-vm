@@ -1,8 +1,8 @@
-// trace_file_sha256: a872f06a5ea81bf6882619a0a220c26202bf11d8d4e4874a6a4feeec50bc81d5
+// trace_file_sha256: d1353eeb5a9efc8249b697be58f817667442a7e0011aaaa1aa2af6c3e441522a
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 4b6c75be1f3d8f3a091ddd795b18ff9f9f9aefd46498a8adb3fa0d4333efa62b
+// trace_semantic_sha256: 79a762a0ca8ed50d2cf80a92d3957f48049626e4869964f863a0fec05b0118a6
 
 digraph Genesis_43_22_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -324,6 +324,7 @@ digraph Genesis_43_22_Boot {
   "C:2:2" -> "ח:2:2" [xlabel="compartment"];
   "C:2:2" -> "ף:1:1" [xlabel="transport"];
   "C:3:3" -> "ה:3:1" [xlabel="declare"];
+  "C:4:4" -> "ב:4:1" [xlabel="boundary"];
   "C:6:6" -> "ר:5:3" [xlabel="transport"];
   "support_debt:11:3" -> "נ:9:3" [xlabel="support_debt"];
   "support_debt:14:4" -> "נ:13:4" [xlabel="support_debt"];
@@ -332,9 +333,13 @@ digraph Genesis_43_22_Boot {
   "support_debt:5:2" -> "נ:3:1" [xlabel="support_debt"];
   "Ω" -> "ב:14:4" [xlabel="transport"];
   "Ω" -> "ל:8:6" [xlabel="transport"];
+  "ב:14:3" -> "ב:14:4" [xlabel="boundary"];
+  "ב:14:4" -> "C:14:12" [xlabel="boundary"];
   "ב:14:4" -> "Ω" [xlabel="transport"];
   "ב:14:4" -> "ת:14:2" [xlabel="finalize"];
+  "ב:4:1" -> "C:4:4" [xlabel="boundary"];
   "ב:5:2" -> "ר:5:3" [xlabel="boundary"];
+  "ב:5:2" -> "ש:5:4" [xlabel="boundary"];
   "ד:3:1" -> "support_debt:5:2" [xlabel="support_debt"];
   "ד:3:1" -> "Ω" [xlabel="boundary"];
   "ד:4:2" -> "support_debt:5:1" [xlabel="support_debt"];
@@ -363,6 +368,7 @@ digraph Genesis_43_22_Boot {
   "ר:3:2" -> "ו:3:4" [xlabel="boundary"];
   "ר:5:3" -> "C:6:6" [xlabel="transport"];
   "ר:5:3" -> "Ω" [xlabel="boundary"];
+  "ש:5:4" -> "ב:5:2" [xlabel="boundary"];
   "ת:14:2" -> "ת:14:3" [xlabel="residue"];
   "ת:14:3" -> "ח:14:4" [xlabel="compartment"];
   "ת:14:5" -> "ת:14:6" [xlabel="residue"];

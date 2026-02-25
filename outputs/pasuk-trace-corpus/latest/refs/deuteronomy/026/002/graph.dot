@@ -1,8 +1,8 @@
-// trace_file_sha256: d41019b2ba15bbeede1fc4b803679f67f454a5b74608c86ad6cbbf53bc32506a
+// trace_file_sha256: ceb955909ebf5b864f4fcfe44ac51c4ed690f58ef95230da563f9a3ece4a5015
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 573db0498e7c05393b4c49505aff05914cd633ef5f0608d6bbd564eb785a7fcd
+// trace_semantic_sha256: 984de786f65cd625cdebfcf7c3287b9ba79c26f3780637412e902691fd59457c
 
 digraph Deuteronomy_26_2_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -607,6 +607,7 @@ digraph Deuteronomy_26_2_Boot {
   "C:12:11" -> "ו:11:3" [xlabel="transport"];
   "C:12:11" -> "ל:12:6" [xlabel="endpoint"];
   "C:13:12" -> "support_debt:15:1" [xlabel="support_debt"];
+  "C:16:15" -> "ב:16:2" [xlabel="boundary"];
   "C:20:17" -> "Ω" [xlabel="transport"];
   "C:20:17" -> "ל:20:12" [xlabel="endpoint"];
   "C:21:18" -> "ה:21:5" [xlabel="declare"];
@@ -628,7 +629,10 @@ digraph Deuteronomy_26_2_Boot {
   "Ω" -> "C:23:19" [xlabel="transport"];
   "Ω" -> "C:7:6" [xlabel="transport"];
   "Ω" -> "ר:2:1" [xlabel="transport"];
+  "ב:16:2" -> "C:16:15" [xlabel="boundary"];
   "ב:24:3" -> "ח:24:4" [xlabel="compartment"];
+  "ב:24:3" -> "י:24:6" [xlabel="boundary"];
+  "ב:8:1" -> "ת:8:9" [xlabel="boundary"];
   "ד:5:1" -> "Ω" [xlabel="boundary"];
   "ה:11:2" -> "י:11:4" [xlabel="vav"];
   "ה:18:4" -> "ל:18:10" [xlabel="endpoint"];
@@ -644,6 +648,7 @@ digraph Deuteronomy_26_2_Boot {
   "ח:24:4" -> "ר:24:7" [xlabel="boundary"];
   "ט:16:1" -> "support_debt:18:2" [xlabel="support_debt"];
   "י:11:4" -> "ה:11:2" [xlabel="declare"];
+  "י:24:6" -> "ב:24:3" [xlabel="boundary"];
   "י:26:7" -> "ה:26:6" [xlabel="declare"];
   "י:2:1" -> "ת:2:5" [xlabel="finalize"];
   "י:4:2" -> "ה:5:1" [xlabel="transport"];
@@ -681,6 +686,7 @@ digraph Deuteronomy_26_2_Boot {
   "ת:2:5" -> "ת:2:6" [xlabel="residue"];
   "ת:8:8" -> "C:9:8" [xlabel="transport"];
   "ת:8:8" -> "ת:8:9" [xlabel="residue"];
+  "ת:8:9" -> "ב:8:1" [xlabel="boundary"];
   "⊥" -> "Ω" [xlabel="vav"];
   "⊥" -> "Ω" [xlabel="vav"];
   "⊥" -> "Ω" [xlabel="vav"];

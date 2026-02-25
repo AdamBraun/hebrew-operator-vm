@@ -1,8 +1,8 @@
-// trace_file_sha256: b3e418bc0ddb56a447a4fb33e61b87dbe094fc53d7e03cbfcb16caf5247e4894
+// trace_file_sha256: a82c8dd2fc6d8e2b8e994b6229f9d9a6e3b4e12aaaabb9bf05ffafe94a7a0752
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 1253a4eec387948d4cb021c1cf3b3342fd091ba45740d55fcc08f7e1bb9f3927
+// trace_semantic_sha256: 97a9ed17f839e4b4e1a2f2fb95a2791f32a349b867a465a150374ad754e6b5e2
 
 digraph Numbers_31_53_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -123,6 +123,9 @@ digraph Numbers_31_53_Boot {
   "Ω" -> "C:6:4" [xlabel="transport"];
   "Ω" -> "ב:3:1" [xlabel="transport"];
   "ב:3:1" -> "Ω" [xlabel="transport"];
+  "ב:3:1" -> "צ:3:1" [xlabel="boundary"];
+  "ב:5:2" -> "ב:5:3" [xlabel="boundary"];
+  "ב:5:3" -> "C:5:3" [xlabel="boundary"];
   "ב:5:3" -> "ז:5:1" [xlabel="gate"];
   "ה:3:1" -> "צ:3:1" [xlabel="align"];
   "ז:5:1" -> "ז:5:2" [xlabel="gate"];
@@ -130,6 +133,7 @@ digraph Numbers_31_53_Boot {
   "י:6:2" -> "ש:6:8" [xlabel="construct"];
   "ל:7:2" -> "C:6:4" [xlabel="vav"];
   "נ:1:1" -> "ש:1:4" [xlabel="construct"];
+  "צ:3:1" -> "ב:3:1" [xlabel="boundary"];
   "ש:6:8" -> "ל:7:2" [xlabel="endpoint"];
   legend -> "Ω" [style=invis];
 }

@@ -1,8 +1,8 @@
-// trace_file_sha256: 8941a1fe71a256a5b1b3c526835d8e9c6b10d9eb1986e03c7485c51d9b046e7d
+// trace_file_sha256: 77689b5508c75ada4cb557c46b2b160908ee91347b32e3ce9df377f19da24dc6
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 696e8c6ceebc4cd0df693f4cc9d981dceeff2bfde59242695dd30d6686228b5c
+// trace_semantic_sha256: abc438ec54bddfd72dd426f8047c14decdccda78b01e451103b62c7da4874378
 
 digraph Numbers_19_18_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -509,10 +509,13 @@ digraph Numbers_19_18_Boot {
   "C:18:15" -> "ה:18:8" [xlabel="declare"];
   "C:22:17" -> "Ω" [xlabel="transport"];
   "C:22:17" -> "⊥" [xlabel="vav"];
+  "C:23:18" -> "ב:23:3" [xlabel="boundary"];
   "C:25:19" -> "Ω" [xlabel="transport"];
   "C:25:19" -> "⊥" [xlabel="vav"];
+  "C:26:20" -> "ב:26:4" [xlabel="boundary"];
   "C:27:21" -> "Ω" [xlabel="transport"];
   "C:27:21" -> "⊥" [xlabel="vav"];
+  "C:28:22" -> "ב:28:5" [xlabel="boundary"];
   "C:5:5" -> "ה:5:3" [xlabel="declare"];
   "C:9:8" -> "ה:9:5" [xlabel="declare"];
   "support_debt:13:1" -> "נ:12:1" [xlabel="support_debt"];
@@ -522,9 +525,15 @@ digraph Numbers_19_18_Boot {
   "Ω" -> "C:22:17" [xlabel="transport"];
   "Ω" -> "C:25:19" [xlabel="transport"];
   "Ω" -> "C:27:21" [xlabel="transport"];
+  "ב:20:1" -> "ב:20:2" [xlabel="boundary"];
+  "ב:20:2" -> "C:20:16" [xlabel="boundary"];
+  "ב:23:3" -> "C:23:18" [xlabel="boundary"];
   "ב:23:3" -> "ח:23:2" [xlabel="compartment"];
+  "ב:26:4" -> "C:26:20" [xlabel="boundary"];
   "ב:26:4" -> "ת:26:5" [xlabel="finalize"];
+  "ב:28:5" -> "C:28:22" [xlabel="boundary"];
   "ב:28:5" -> "ו:27:19" [xlabel="approx"];
+  "ב:28:6" -> "ק:28:1" [xlabel="boundary"];
   "ב:28:6" -> "ר:28:3" [xlabel="boundary"];
   "ה:12:6" -> "support_debt:13:1" [xlabel="support_debt"];
   "ה:18:8" -> "support_debt:20:2" [xlabel="support_debt"];
@@ -552,6 +561,7 @@ digraph Numbers_19_18_Boot {
   "ע:4:1" -> "ל:4:2" [xlabel="endpoint"];
   "ע:7:2" -> "ל:7:6" [xlabel="endpoint"];
   "פ:12:1" -> "ש:12:8" [xlabel="construct"];
+  "ק:28:1" -> "ב:28:6" [xlabel="boundary"];
   "ר:13:2" -> "Ω" [xlabel="boundary"];
   "ר:1:1" -> "ו:1:2" [xlabel="boundary"];
   "ר:28:3" -> "Ω" [xlabel="boundary"];

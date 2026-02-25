@@ -1,8 +1,8 @@
-// trace_file_sha256: 268bc1bf8196adec305eea45206de267892c299fec15487e617884d5e5aa6433
+// trace_file_sha256: 35dbb6960f7d6bad0b0e2bcb320d99c0974344566568bd036d1a2629dd318b9a
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 4f13908103224361b9fcb5d73abcd9c6583b768662162c3e48debdfe8c66ddab
+// trace_semantic_sha256: 8ee0754b383dd3279c775af95ee9f7093d89e356c9030b72f04ed777a1798269
 
 digraph Numbers_7_61_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -393,6 +393,7 @@ digraph Numbers_7_61_Boot {
   "C:10:8" -> "ה:10:3" [xlabel="declare"];
   "C:13:10" -> "ל:13:8" [xlabel="endpoint"];
   "C:15:11" -> "ל:15:10" [xlabel="endpoint"];
+  "C:17:13" -> "ב:17:6" [xlabel="boundary"];
   "C:2:2" -> "ז:2:1" [xlabel="gate"];
   "C:3:3" -> "ח:3:2" [xlabel="compartment"];
   "C:3:3" -> "ק:2:2" [xlabel="transport"];
@@ -400,8 +401,14 @@ digraph Numbers_7_61_Boot {
   "C:8:6" -> "ש:8:12" [xlabel="construct"];
   "support_debt:15:1" -> "נ:12:1" [xlabel="support_debt"];
   "support_debt:21:2" -> "נ:18:2" [xlabel="support_debt"];
+  "ב:16:4" -> "ב:16:5" [xlabel="boundary"];
+  "ב:16:5" -> "C:16:12" [xlabel="boundary"];
   "ב:16:5" -> "ל:16:12" [xlabel="endpoint"];
+  "ב:17:6" -> "C:17:13" [xlabel="boundary"];
   "ב:17:6" -> "ש:17:28" [xlabel="construct"];
+  "ב:7:1" -> "ש:7:8" [xlabel="boundary"];
+  "ב:9:2" -> "ב:9:3" [xlabel="boundary"];
+  "ב:9:3" -> "C:9:7" [xlabel="boundary"];
   "ב:9:3" -> "ש:9:16" [xlabel="approx"];
   "ב:9:3" -> "ש:9:16" [xlabel="construct"];
   "ד:10:2" -> "Ω" [xlabel="boundary"];
@@ -431,6 +438,7 @@ digraph Numbers_7_61_Boot {
   "ר:2:1" -> "Ω" [xlabel="boundary"];
   "ר:2:1" -> "ז:2:1" [xlabel="approx"];
   "ש:12:24" -> "support_debt:15:1" [xlabel="support_debt"];
+  "ש:7:8" -> "ב:7:1" [xlabel="boundary"];
   "ש:8:12" -> "ם:7:1" [xlabel="approx"];
   "ש:9:16" -> "ב:9:3" [xlabel="approx"];
   "ת:15:2" -> "ת:15:3" [xlabel="residue"];

@@ -1,8 +1,8 @@
-// trace_file_sha256: 0b52cb40c47177def8573be41176200218f96b516eee8e693336873399fb3e12
+// trace_file_sha256: ef7e9f4d7bd4e857d6e2017dbd67806a14c1625e9011e614ab55031de065c143
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 2903b6d646491bf7a7d332933f7931581657ad2637a3505ddc73a78096ef9ea2
+// trace_semantic_sha256: 85aa8df38b53a1c6e3681a4864e148f418ca124fd276c2b9574a9ad628f20cd2
 
 digraph Deuteronomy_15_18_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -428,6 +428,7 @@ digraph Deuteronomy_15_18_Boot {
   "C:28:19" -> "Ω" [xlabel="transport"];
   "C:28:19" -> "ש:28:32" [xlabel="construct"];
   "C:29:20" -> "ת:29:5" [xlabel="finalize"];
+  "C:3:3" -> "ב:3:1" [xlabel="boundary"];
   "C:6:5" -> "ך:5:3" [xlabel="transport"];
   "C:6:5" -> "ת:6:2" [xlabel="finalize"];
   "C:7:6" -> "ח:7:4" [xlabel="compartment"];
@@ -437,10 +438,18 @@ digraph Deuteronomy_15_18_Boot {
   "Ω" -> "C:28:19" [xlabel="transport"];
   "Ω" -> "ל:1:2" [xlabel="transport"];
   "ב:18:4" -> "ד:18:1" [xlabel="boundary"];
+  "ב:18:4" -> "ע:18:3" [xlabel="boundary"];
+  "ב:22:5" -> "ו:22:3" [xlabel="boundary"];
   "ב:22:5" -> "ר:22:3" [xlabel="boundary"];
+  "ב:27:6" -> "ב:27:7" [xlabel="boundary"];
+  "ב:27:7" -> "C:27:18" [xlabel="boundary"];
+  "ב:3:1" -> "C:3:3" [xlabel="boundary"];
+  "ב:5:2" -> "ב:5:3" [xlabel="boundary"];
+  "ב:5:3" -> "C:5:4" [xlabel="boundary"];
   "ב:5:3" -> "ש:5:8" [xlabel="construct"];
   "ד:18:1" -> "Ω" [xlabel="boundary"];
   "ה:24:1" -> "י:24:7" [xlabel="vav"];
+  "ו:22:3" -> "ב:22:5" [xlabel="boundary"];
   "ו:24:5" -> "C:25:17" [xlabel="transport"];
   "י:16:5" -> "ר:16:2" [xlabel="boundary"];
   "י:24:7" -> "ה:24:1" [xlabel="declare"];
@@ -453,6 +462,7 @@ digraph Deuteronomy_15_18_Boot {
   "ל:1:2" -> "י:2:1" [xlabel="approx"];
   "ל:25:6" -> "ה:25:2" [xlabel="declare"];
   "ל:5:4" -> "ח:5:2" [xlabel="compartment"];
+  "ע:18:3" -> "ב:18:4" [xlabel="boundary"];
   "פ:7:1" -> "ש:7:12" [xlabel="construct"];
   "ק:2:1" -> "ש:2:4" [xlabel="construct"];
   "ר:15:1" -> "כ:15:4" [xlabel="boundary"];

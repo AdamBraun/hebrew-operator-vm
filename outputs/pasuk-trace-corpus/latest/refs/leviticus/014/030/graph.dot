@@ -1,8 +1,8 @@
-// trace_file_sha256: b4b2b095d245f0995aebb75843f659af115cf6576408cea413aa9198ce854ba2
+// trace_file_sha256: c0e51f24b045356ef5f8eaf06cce769730625fccb8e35ec4917f52ce15ea70ff
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 9a85a431294493a7e76d4d6f1d0829c4612d693bea5148286a2e02d93a0c08ac
+// trace_semantic_sha256: e42b975a24ef57be7737fabad0f5c6ac40a7a2f263c55af2b9e08f7b5f528416
 
 digraph Leviticus_14_30_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -232,6 +232,7 @@ digraph Leviticus_14_30_Boot {
     "ת:6:5";
   }
 
+  "C:10:8" -> "ב:10:1" [xlabel="boundary"];
   "C:11:9" -> "ה:11:3" [xlabel="declare"];
   "C:13:10" -> "Ω" [xlabel="transport"];
   "C:13:10" -> "ש:13:4" [xlabel="construct"];
@@ -246,6 +247,7 @@ digraph Leviticus_14_30_Boot {
   "support_debt:13:2" -> "נ:10:1" [xlabel="support_debt"];
   "Ω" -> "C:13:10" [xlabel="transport"];
   "Ω" -> "C:8:6" [xlabel="transport"];
+  "ב:10:1" -> "C:10:8" [xlabel="boundary"];
   "ב:10:1" -> "support_debt:13:2" [xlabel="support_debt"];
   "ד:15:2" -> "Ω" [xlabel="boundary"];
   "ד:15:2" -> "י:15:5" [xlabel="vav"];

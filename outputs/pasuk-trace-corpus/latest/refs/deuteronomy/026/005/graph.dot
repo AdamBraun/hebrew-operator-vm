@@ -1,8 +1,8 @@
-// trace_file_sha256: 20c22f924bdc831f0584456b71b8ba69f96b49b06b013f6e8b171699a25adf63
+// trace_file_sha256: 086cd1538779f3f289d5cec5e4b9019c9319d94e67c025268990805b97e8254d
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 0903870e9899cede464a783d41353f47ab332836a52e7f010a6e68fba50a1e40
+// trace_semantic_sha256: 6fde300e04bc5fbd2ced25f761cc649e9c23ca70b924c1ba13a0235ac9facead
 
 digraph Deuteronomy_26_5_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -448,6 +448,7 @@ digraph Deuteronomy_26_5_Boot {
     "ת:2:5";
   }
 
+  "C:10:8" -> "ב:10:2" [xlabel="boundary"];
   "C:10:8" -> "ד:9:1" [xlabel="transport"];
   "C:13:10" -> "צ:13:1" [xlabel="align"];
   "C:5:5" -> "ו:4:5" [xlabel="transport"];
@@ -455,11 +456,17 @@ digraph Deuteronomy_26_5_Boot {
   "C:7:6" -> "Ω" [xlabel="transport"];
   "C:7:6" -> "ר:7:2" [xlabel="boundary"];
   "C:9:7" -> "Ω" [xlabel="transport"];
+  "C:9:7" -> "ב:9:1" [xlabel="boundary"];
   "support_debt:3:1" -> "נ:1:1" [xlabel="support_debt"];
   "support_debt:7:2" -> "נ:3:2" [xlabel="support_debt"];
   "Ω" -> "C:7:6" [xlabel="transport"];
   "Ω" -> "C:9:7" [xlabel="transport"];
+  "ב:10:2" -> "C:10:8" [xlabel="boundary"];
+  "ב:17:3" -> "ב:17:4" [xlabel="boundary"];
+  "ב:17:4" -> "C:17:13" [xlabel="boundary"];
   "ב:17:4" -> "ת:17:8" [xlabel="finalize"];
+  "ב:26:5" -> "ר:26:6" [xlabel="boundary"];
+  "ב:9:1" -> "C:9:7" [xlabel="boundary"];
   "ב:9:1" -> "ד:9:1" [xlabel="boundary"];
   "ג:15:1" -> "ר:15:5" [xlabel="boundary"];
   "ג:23:2" -> "ע:18:2" [xlabel="vav"];
@@ -493,6 +500,7 @@ digraph Deuteronomy_26_5_Boot {
   "ר:12:3" -> "ד:12:2" [xlabel="boundary"];
   "ר:13:4" -> "Ω" [xlabel="boundary"];
   "ר:15:5" -> "Ω" [xlabel="boundary"];
+  "ר:26:6" -> "ב:26:5" [xlabel="boundary"];
   "ר:26:6" -> "ו:26:20" [xlabel="boundary"];
   "ר:2:1" -> "Ω" [xlabel="boundary"];
   "ר:2:1" -> "ת:2:5" [xlabel="finalize"];

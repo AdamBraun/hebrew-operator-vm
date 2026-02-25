@@ -1,8 +1,8 @@
-// trace_file_sha256: c6f60f67e758f2fd81c5b7f7ab1b9ebaf20a95a06e6c7ca427afba563d803937
+// trace_file_sha256: 69046b1d2ae587f17e25955398794a9afa29f4f21a1c456cd77c4ac4aa8223db
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 482ad51b25d1f79b5f25e34de5b3c446eb162369495c89e0b6983f34a6f36d99
+// trace_semantic_sha256: 3e77048fc83b0d7346bfbc427dbe03b7f9c9a98319abf838fbed42374ce22a4e
 
 digraph Leviticus_2_13_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -507,11 +507,19 @@ digraph Leviticus_2_13_Boot {
   "support_debt:13:1" -> "נ:11:1" [xlabel="support_debt"];
   "support_debt:16:2" -> "נ:15:2" [xlabel="support_debt"];
   "Ω" -> "ל:3:6" [xlabel="transport"];
+  "ב:0:1" -> "ב:0:2" [xlabel="boundary"];
+  "ב:0:2" -> "C:0:1" [xlabel="boundary"];
   "ב:0:2" -> "ל:0:2" [xlabel="endpoint"];
   "ב:15:6" -> "support_debt:16:2" [xlabel="support_debt"];
+  "ב:15:6" -> "ר:15:2" [xlabel="boundary"];
+  "ב:16:7" -> "י:16:4" [xlabel="boundary"];
+  "ב:4:3" -> "ש:4:4" [xlabel="boundary"];
+  "ב:7:4" -> "ב:7:5" [xlabel="boundary"];
+  "ב:7:5" -> "C:7:6" [xlabel="boundary"];
   "ב:7:5" -> "ר:7:1" [xlabel="boundary"];
   "ו:3:1" -> "ל:3:6" [xlabel="endpoint"];
   "ח:11:8" -> "ת:11:14" [xlabel="finalize"];
+  "י:16:4" -> "ב:16:7" [xlabel="boundary"];
   "י:4:1" -> "ת:4:8" [xlabel="finalize"];
   "י:7:2" -> "ת:7:11" [xlabel="finalize"];
   "כ:14:1" -> "ל:14:16" [xlabel="endpoint"];
@@ -529,8 +537,10 @@ digraph Leviticus_2_13_Boot {
   "ק:15:1" -> "ר:15:2" [xlabel="boundary"];
   "ק:16:2" -> "ר:16:3" [xlabel="boundary"];
   "ר:15:2" -> "Ω" [xlabel="boundary"];
+  "ר:15:2" -> "ב:15:6" [xlabel="boundary"];
   "ר:16:3" -> "Ω" [xlabel="boundary"];
   "ר:7:1" -> "Ω" [xlabel="boundary"];
+  "ש:4:4" -> "ב:4:3" [xlabel="boundary"];
   "ת:11:14" -> "ת:11:15" [xlabel="residue"];
   "ת:16:17" -> "ת:16:18" [xlabel="residue"];
   "ת:16:18" -> "⊥" [xlabel="approx"];

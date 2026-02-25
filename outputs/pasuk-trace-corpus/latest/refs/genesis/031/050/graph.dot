@@ -1,8 +1,8 @@
-// trace_file_sha256: eb663a23129995579675905451a06fe5475d36959d6dc17745a92ab33a8d5fd0
+// trace_file_sha256: be92232f21d467998008f9d371a9b3c4c7e3bac682332144e641ed595f8277e3
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 9252a0bebefa0f8b359b2875d059a19f041943bb43aadd76b9c505be34952559
+// trace_semantic_sha256: aac31f6c00665ec0e762eca337d76866c6dc74e933373866508c5f8dad121347
 
 digraph Genesis_31_50_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -382,6 +382,7 @@ digraph Genesis_31_50_Boot {
     "ת:7:11";
   }
 
+  "C:11:9" -> "ב:11:2" [xlabel="boundary"];
   "C:13:10" -> "Ω" [xlabel="transport"];
   "C:14:11" -> "ן:13:1" [xlabel="transport"];
   "C:17:13" -> "ר:17:1" [xlabel="boundary"];
@@ -391,6 +392,7 @@ digraph Genesis_31_50_Boot {
   "C:2:2" -> "ת:2:2" [xlabel="finalize"];
   "C:3:3" -> "ת:2:2" [xlabel="transport"];
   "C:3:3" -> "ת:3:5" [xlabel="finalize"];
+  "C:4:4" -> "ב:4:1" [xlabel="boundary"];
   "C:7:6" -> "ת:7:11" [xlabel="finalize"];
   "support_debt:10:3" -> "נ:8:3" [xlabel="support_debt"];
   "support_debt:13:4" -> "נ:11:4" [xlabel="support_debt"];
@@ -404,9 +406,15 @@ digraph Genesis_31_50_Boot {
   "Ω" -> "C:1:1" [xlabel="transport"];
   "Ω" -> "ו:6:1" [xlabel="transport"];
   "Ω" -> "ר:17:1" [xlabel="transport"];
+  "ב:11:2" -> "C:11:9" [xlabel="boundary"];
   "ב:11:2" -> "support_debt:13:4" [xlabel="support_debt"];
+  "ב:21:3" -> "ב:21:4" [xlabel="boundary"];
+  "ב:21:4" -> "C:21:16" [xlabel="boundary"];
+  "ב:22:5" -> "ו:22:5" [xlabel="boundary"];
+  "ב:4:1" -> "C:4:4" [xlabel="boundary"];
   "ב:4:1" -> "support_debt:6:1" [xlabel="support_debt"];
   "ד:20:1" -> "Ω" [xlabel="boundary"];
+  "ו:22:5" -> "ב:22:5" [xlabel="boundary"];
   "ו:6:1" -> "Ω" [xlabel="transport"];
   "י:14:5" -> "ש:14:8" [xlabel="construct"];
   "י:21:7" -> "support_debt:25:7" [xlabel="support_debt"];

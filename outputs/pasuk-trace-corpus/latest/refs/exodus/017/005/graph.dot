@@ -1,8 +1,8 @@
-// trace_file_sha256: fab0bf1a40ae0e1abac677fef05e93a786b4721e2cc7fe4fdc4267c8f5b9f9e2
+// trace_file_sha256: f155bf11a45d3edb5070b98b6841173157e1ed7777204ec844ce5503cccf3663
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 0e1234538ff98438fb906ae23111296638a08fcea7173980e4e78c0065fc28a5
+// trace_semantic_sha256: 461083d5a0cbc164140cb3add300666a4330e3148451ffef1c0140cea4645c85
 
 digraph Exodus_17_5_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -450,9 +450,11 @@ digraph Exodus_17_5_Boot {
   "C:18:13" -> "Ω" [xlabel="transport"];
   "C:18:13" -> "ש:18:8" [xlabel="construct"];
   "C:19:14" -> "ה:19:3" [xlabel="declare"];
+  "C:20:15" -> "ב:20:2" [xlabel="boundary"];
   "C:22:16" -> "Ω" [xlabel="transport"];
   "C:22:16" -> "ת:22:8" [xlabel="finalize"];
   "C:23:17" -> "ה:23:4" [xlabel="declare"];
+  "C:26:19" -> "ב:26:3" [xlabel="boundary"];
   "C:3:3" -> "Ω" [xlabel="transport"];
   "C:3:3" -> "ל:3:2" [xlabel="endpoint"];
   "C:4:4" -> "ש:4:4" [xlabel="construct"];
@@ -464,7 +466,10 @@ digraph Exodus_17_5_Boot {
   "Ω" -> "C:3:3" [xlabel="transport"];
   "Ω" -> "י:1:1" [xlabel="transport"];
   "Ω" -> "⊥" [xlabel="approx"];
+  "ב:20:2" -> "C:20:15" [xlabel="boundary"];
   "ב:20:2" -> "ת:19:6" [xlabel="vav"];
+  "ב:26:3" -> "C:26:19" [xlabel="boundary"];
+  "ב:6:1" -> "ע:6:1" [xlabel="boundary"];
   "ב:6:1" -> "ר:6:2" [xlabel="boundary"];
   "ד:26:1" -> "Ω" [xlabel="boundary"];
   "ה:27:5" -> "ל:27:8" [xlabel="endpoint"];
@@ -482,6 +487,7 @@ digraph Exodus_17_5_Boot {
   "י:26:8" -> "ד:26:1" [xlabel="boundary"];
   "י:2:2" -> "ה:2:1" [xlabel="declare"];
   "כ:27:3" -> "ת:27:11" [xlabel="finalize"];
+  "ע:6:1" -> "ב:6:1" [xlabel="boundary"];
   "ע:9:2" -> "ו:11:5" [xlabel="approx"];
   "פ:8:1" -> "support_debt:11:1" [xlabel="support_debt"];
   "ק:11:1" -> "ח:11:2" [xlabel="compartment"];

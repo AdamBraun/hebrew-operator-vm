@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-02-25T21:56:04.847Z",
+  "generated_at": "2026-02-25T23:13:15.357Z",
   "ref_key": "Genesis/1/10",
   "options": {
     "input": "/Users/adambraun/projects/letters/data/torah.json",
@@ -4050,7 +4050,20 @@
       "OStackLength": 0,
       "pending_join_consumed": "join:3:4",
       "barrier": null,
-      "events": [],
+      "events": [
+        {
+          "type": "boundary_open",
+          "tau": 3,
+          "data": {
+            "id": "ב:3:1",
+            "boundaryId": "ב:3:1",
+            "inside": "י:3:3",
+            "outside": "י:3:3",
+            "anchor": 1,
+            "domainCarrier": 0
+          }
+        }
+      ],
       "token_raw": "בָּ",
       "dot_kind": "dagesh",
       "inside_dot_kind": "dagesh",
@@ -4150,7 +4163,8 @@
               "meta": {
                 "boundaryId": "ב:3:1",
                 "anchor": "י:3:3",
-                "outside": "י:3:3"
+                "outside": "י:3:3",
+                "domainCarrier": 0
               }
             }
           }
@@ -4173,7 +4187,8 @@
               "meta": {
                 "boundaryId": "ב:3:1",
                 "anchor": "י:3:3",
-                "outside": "י:3:3"
+                "outside": "י:3:3",
+                "domainCarrier": 0
               }
             },
             "letter_mode": null,
@@ -11966,7 +11981,20 @@
       "OStackLength": 0,
       "pending_join_consumed": "join:15:13",
       "barrier": null,
-      "events": [],
+      "events": [
+        {
+          "type": "boundary_open",
+          "tau": 15,
+          "data": {
+            "id": "ב:15:2",
+            "boundaryId": "ב:15:2",
+            "inside": "ו:15:9",
+            "outside": "ו:15:9",
+            "anchor": 1,
+            "domainCarrier": 0
+          }
+        }
+      ],
       "token_raw": "ב",
       "dot_kind": "none",
       "inside_dot_kind": "none",
@@ -12052,7 +12080,8 @@
               "meta": {
                 "boundaryId": "ב:15:2",
                 "anchor": "ו:15:9",
-                "outside": "ו:15:9"
+                "outside": "ו:15:9",
+                "domainCarrier": 0
               }
             }
           }
@@ -12075,7 +12104,8 @@
               "meta": {
                 "boundaryId": "ב:15:2",
                 "anchor": "ו:15:9",
-                "outside": "ו:15:9"
+                "outside": "ו:15:9",
+                "domainCarrier": 0
               }
             },
             "letter_mode": null,
@@ -12222,10 +12252,10 @@
       "tau_end": 18,
       "metrics": {
         "handles": 60,
-        "links": 42,
+        "links": 46,
         "boundaries": 10,
         "rules": 3,
-        "events": 58
+        "events": 60
       },
       "state_dump": {
         "boundaries": [
@@ -13842,9 +13872,24 @@
             "to": "⊥"
           },
           {
+            "from": "ב:15:2",
+            "label": "boundary",
+            "to": "ו:15:9"
+          },
+          {
+            "from": "ב:3:1",
+            "label": "boundary",
+            "to": "י:3:3"
+          },
+          {
             "from": "ב:3:1",
             "label": "construct",
             "to": "ש:3:4"
+          },
+          {
+            "from": "ו:15:9",
+            "label": "boundary",
+            "to": "ב:15:2"
           },
           {
             "from": "ו:1:1",
@@ -13870,6 +13915,11 @@
             "from": "י:1:1",
             "label": "approx",
             "to": "ו:1:1"
+          },
+          {
+            "from": "י:3:3",
+            "label": "boundary",
+            "to": "ב:3:1"
           },
           {
             "from": "ל:13:8",
@@ -14214,6 +14264,18 @@
               },
               "tau": 3,
               "type": "endpoint"
+            },
+            {
+              "data": {
+                "anchor": 1,
+                "boundaryId": "ב:3:1",
+                "domainCarrier": 0,
+                "id": "ב:3:1",
+                "inside": "י:3:3",
+                "outside": "י:3:3"
+              },
+              "tau": 3,
+              "type": "boundary_open"
             },
             {
               "data": {
@@ -14705,6 +14767,18 @@
               },
               "tau": 15,
               "type": "covert"
+            },
+            {
+              "data": {
+                "anchor": 1,
+                "boundaryId": "ב:15:2",
+                "domainCarrier": 0,
+                "id": "ב:15:2",
+                "inside": "ו:15:9",
+                "outside": "ו:15:9"
+              },
+              "tau": 15,
+              "type": "boundary_open"
             },
             {
               "data": {
@@ -16432,9 +16506,24 @@
         "to": "⊥"
       },
       {
+        "from": "ב:15:2",
+        "label": "boundary",
+        "to": "ו:15:9"
+      },
+      {
+        "from": "ב:3:1",
+        "label": "boundary",
+        "to": "י:3:3"
+      },
+      {
         "from": "ב:3:1",
         "label": "construct",
         "to": "ש:3:4"
+      },
+      {
+        "from": "ו:15:9",
+        "label": "boundary",
+        "to": "ב:15:2"
       },
       {
         "from": "ו:1:1",
@@ -16460,6 +16549,11 @@
         "from": "י:1:1",
         "label": "approx",
         "to": "ו:1:1"
+      },
+      {
+        "from": "י:3:3",
+        "label": "boundary",
+        "to": "ב:3:1"
       },
       {
         "from": "ל:13:8",
@@ -16804,6 +16898,18 @@
           },
           "tau": 3,
           "type": "endpoint"
+        },
+        {
+          "data": {
+            "anchor": 1,
+            "boundaryId": "ב:3:1",
+            "domainCarrier": 0,
+            "id": "ב:3:1",
+            "inside": "י:3:3",
+            "outside": "י:3:3"
+          },
+          "tau": 3,
+          "type": "boundary_open"
         },
         {
           "data": {
@@ -17295,6 +17401,18 @@
           },
           "tau": 15,
           "type": "covert"
+        },
+        {
+          "data": {
+            "anchor": 1,
+            "boundaryId": "ב:15:2",
+            "domainCarrier": 0,
+            "id": "ב:15:2",
+            "inside": "ו:15:9",
+            "outside": "ו:15:9"
+          },
+          "tau": 15,
+          "type": "boundary_open"
         },
         {
           "data": {
@@ -20059,7 +20177,20 @@
           "OStackLength": 0,
           "pending_join_consumed": "join:3:4",
           "barrier": null,
-          "events": [],
+          "events": [
+            {
+              "type": "boundary_open",
+              "tau": 3,
+              "data": {
+                "id": "ב:3:1",
+                "boundaryId": "ב:3:1",
+                "inside": "י:3:3",
+                "outside": "י:3:3",
+                "anchor": 1,
+                "domainCarrier": 0
+              }
+            }
+          ],
           "token_raw": "בָּ",
           "dot_kind": "dagesh",
           "inside_dot_kind": "dagesh",
@@ -20159,7 +20290,8 @@
                   "meta": {
                     "boundaryId": "ב:3:1",
                     "anchor": "י:3:3",
-                    "outside": "י:3:3"
+                    "outside": "י:3:3",
+                    "domainCarrier": 0
                   }
                 }
               }
@@ -20182,7 +20314,8 @@
                   "meta": {
                     "boundaryId": "ב:3:1",
                     "anchor": "י:3:3",
-                    "outside": "י:3:3"
+                    "outside": "י:3:3",
+                    "domainCarrier": 0
                   }
                 },
                 "letter_mode": null,
@@ -28074,7 +28207,20 @@
           "OStackLength": 0,
           "pending_join_consumed": "join:15:13",
           "barrier": null,
-          "events": [],
+          "events": [
+            {
+              "type": "boundary_open",
+              "tau": 15,
+              "data": {
+                "id": "ב:15:2",
+                "boundaryId": "ב:15:2",
+                "inside": "ו:15:9",
+                "outside": "ו:15:9",
+                "anchor": 1,
+                "domainCarrier": 0
+              }
+            }
+          ],
           "token_raw": "ב",
           "dot_kind": "none",
           "inside_dot_kind": "none",
@@ -28160,7 +28306,8 @@
                   "meta": {
                     "boundaryId": "ב:15:2",
                     "anchor": "ו:15:9",
-                    "outside": "ו:15:9"
+                    "outside": "ו:15:9",
+                    "domainCarrier": 0
                   }
                 }
               }
@@ -28183,7 +28330,8 @@
                   "meta": {
                     "boundaryId": "ב:15:2",
                     "anchor": "ו:15:9",
-                    "outside": "ו:15:9"
+                    "outside": "ו:15:9",
+                    "domainCarrier": 0
                   }
                 },
                 "letter_mode": null,
@@ -30000,9 +30148,24 @@
         "to": "⊥"
       },
       {
+        "from": "ב:15:2",
+        "label": "boundary",
+        "to": "ו:15:9"
+      },
+      {
+        "from": "ב:3:1",
+        "label": "boundary",
+        "to": "י:3:3"
+      },
+      {
         "from": "ב:3:1",
         "label": "construct",
         "to": "ש:3:4"
+      },
+      {
+        "from": "ו:15:9",
+        "label": "boundary",
+        "to": "ב:15:2"
       },
       {
         "from": "ו:1:1",
@@ -30028,6 +30191,11 @@
         "from": "י:1:1",
         "label": "approx",
         "to": "ו:1:1"
+      },
+      {
+        "from": "י:3:3",
+        "label": "boundary",
+        "to": "ב:3:1"
       },
       {
         "from": "ל:13:8",
@@ -30372,6 +30540,18 @@
           },
           "tau": 3,
           "type": "endpoint"
+        },
+        {
+          "data": {
+            "anchor": 1,
+            "boundaryId": "ב:3:1",
+            "domainCarrier": 0,
+            "id": "ב:3:1",
+            "inside": "י:3:3",
+            "outside": "י:3:3"
+          },
+          "tau": 3,
+          "type": "boundary_open"
         },
         {
           "data": {
@@ -30863,6 +31043,18 @@
           },
           "tau": 15,
           "type": "covert"
+        },
+        {
+          "data": {
+            "anchor": 1,
+            "boundaryId": "ב:15:2",
+            "domainCarrier": 0,
+            "id": "ב:15:2",
+            "inside": "ו:15:9",
+            "outside": "ו:15:9"
+          },
+          "tau": 15,
+          "type": "boundary_open"
         },
         {
           "data": {

@@ -1,8 +1,8 @@
-// trace_file_sha256: be021a2b59731c45bc1f595e5eab9b576aaee9728c60d3726999dac42214af5d
+// trace_file_sha256: d385af6c17e1d73908692ad3bc2ea24a5d7a87b168b755176f3a827b002606c2
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 14e1687969030a1cb0a4659de509c23fb43c8c586c127f37a52aed10569b6072
+// trace_semantic_sha256: fabe98ce39131eb2f1476336c5a2f19c3859f47942d8c14259b6a6d080523221
 
 digraph Numbers_32_33_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -721,6 +721,7 @@ digraph Numbers_32_33_Boot {
 
   "C:10:9" -> "ש:10:8" [xlabel="construct"];
   "C:11:10" -> "support_debt:15:3" [xlabel="support_debt"];
+  "C:12:11" -> "ב:12:5" [xlabel="boundary"];
   "C:15:13" -> "Ω" [xlabel="transport"];
   "C:15:13" -> "ת:15:5" [xlabel="finalize"];
   "C:16:14" -> "ל:16:10" [xlabel="endpoint"];
@@ -731,6 +732,7 @@ digraph Numbers_32_33_Boot {
   "C:28:22" -> "ה:28:3" [xlabel="declare"];
   "C:30:23" -> "ה:30:4" [xlabel="declare"];
   "C:37:27" -> "ה:37:5" [xlabel="declare"];
+  "C:38:28" -> "ב:38:10" [xlabel="boundary"];
   "C:3:3" -> "ש:3:4" [xlabel="construct"];
   "C:8:7" -> "ר:8:1" [xlabel="boundary"];
   "support_debt:15:3" -> "נ:11:3" [xlabel="support_debt"];
@@ -739,15 +741,28 @@ digraph Numbers_32_33_Boot {
   "Ω" -> "C:15:13" [xlabel="transport"];
   "Ω" -> "ה:30:4" [xlabel="transport"];
   "Ω" -> "ו:23:11" [xlabel="transport"];
+  "ב:10:4" -> "ש:10:8" [xlabel="boundary"];
+  "ב:12:5" -> "C:12:11" [xlabel="boundary"];
+  "ב:28:6" -> "ה:28:3" [xlabel="boundary"];
   "ב:28:6" -> "ש:28:16" [xlabel="construct"];
+  "ב:34:7" -> "ב:34:8" [xlabel="boundary"];
+  "ב:34:8" -> "C:34:25" [xlabel="boundary"];
   "ב:34:8" -> "⊥" [xlabel="bestow"];
+  "ב:34:9" -> "ג:34:3" [xlabel="boundary"];
   "ב:34:9" -> "ל:34:20" [xlabel="endpoint"];
+  "ב:38:10" -> "C:38:28" [xlabel="boundary"];
+  "ב:38:11" -> "י:38:10" [xlabel="boundary"];
   "ב:5:1" -> "support_debt:7:1" [xlabel="support_debt"];
+  "ב:5:1" -> "ל:5:4" [xlabel="boundary"];
   "ב:7:2" -> "support_debt:9:2" [xlabel="support_debt"];
+  "ב:7:2" -> "ל:7:6" [xlabel="boundary"];
+  "ב:8:3" -> "ו:8:5" [xlabel="boundary"];
+  "ג:34:3" -> "ב:34:9" [xlabel="boundary"];
   "ג:6:1" -> "ד:6:1" [xlabel="boundary"];
   "ד:6:1" -> "Ω" [xlabel="boundary"];
   "ה:21:2" -> "ך:20:1" [xlabel="transport"];
   "ה:21:2" -> "ר:21:2" [xlabel="boundary"];
+  "ה:28:3" -> "ב:28:6" [xlabel="boundary"];
   "ה:30:4" -> "Ω" [xlabel="transport"];
   "ה:30:4" -> "ר:30:3" [xlabel="boundary"];
   "ה:37:5" -> "י:36:9" [xlabel="transport"];
@@ -756,12 +771,14 @@ digraph Numbers_32_33_Boot {
   "ו:23:11" -> "ת:23:11" [xlabel="finalize"];
   "ו:26:13" -> "ע:26:1" [xlabel="bestow"];
   "ו:7:3" -> "ל:7:6" [xlabel="endpoint"];
+  "ו:8:5" -> "ב:8:3" [xlabel="boundary"];
   "ו:9:7" -> "ל:9:8" [xlabel="endpoint"];
   "ח:9:2" -> "צ:9:1" [xlabel="align"];
   "י:13:5" -> "ן:12:3" [xlabel="vav"];
   "י:18:6" -> "ח:18:4" [xlabel="compartment"];
   "י:1:1" -> "ת:1:2" [xlabel="finalize"];
   "י:36:9" -> "ה:37:5" [xlabel="transport"];
+  "י:38:10" -> "ב:38:11" [xlabel="boundary"];
   "י:5:2" -> "נ:5:1" [xlabel="bestow"];
   "י:7:3" -> "ר:8:1" [xlabel="transport"];
   "ך:20:1" -> "ה:21:2" [xlabel="transport"];
@@ -769,6 +786,8 @@ digraph Numbers_32_33_Boot {
   "כ:24:3" -> "ת:24:14" [xlabel="finalize"];
   "ל:2:2" -> "ה:2:1" [xlabel="declare"];
   "ל:34:20" -> "ת:34:17" [xlabel="finalize"];
+  "ל:5:4" -> "ב:5:1" [xlabel="boundary"];
+  "ל:7:6" -> "ב:7:2" [xlabel="boundary"];
   "ל:9:8" -> "ח:9:2" [xlabel="compartment"];
   "ן:1:1" -> "ל:2:2" [xlabel="endpoint"];
   "נ:11:3" -> "ש:11:12" [xlabel="construct"];
@@ -784,6 +803,7 @@ digraph Numbers_32_33_Boot {
   "ר:37:6" -> "ץ:37:2" [xlabel="align"];
   "ר:8:1" -> "Ω" [xlabel="boundary"];
   "ר:8:1" -> "י:7:3" [xlabel="transport"];
+  "ש:10:8" -> "ב:10:4" [xlabel="boundary"];
   "ת:15:5" -> "ת:15:6" [xlabel="residue"];
   "ת:16:8" -> "ת:16:9" [xlabel="residue"];
   "ת:1:2" -> "ת:1:3" [xlabel="residue"];

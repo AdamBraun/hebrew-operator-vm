@@ -177,6 +177,49 @@ describe("pasuk trace corpus runtime", () => {
     expect(reportProv.report_schema).toBe(2);
   });
 
+  it("full runs reset output before processing to force latest overwrite semantics", async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-corpus-full-reset-"));
+    const inputPath = path.join(tmpDir, "torah.json");
+    const outDir = path.join(tmpDir, "out");
+
+    const payload = {
+      books: [
+        {
+          name: "Genesis",
+          chapters: [{ n: 1, verses: [{ n: 1, he: "א ב" }] }]
+        }
+      ]
+    };
+    await fs.writeFile(inputPath, JSON.stringify(payload, null, 2), "utf8");
+
+    const first = await runPasukTraceCorpus(
+      parseArgs([
+        `--input=${inputPath}`,
+        `--out-dir=${outDir}`,
+        "--no-snapshots",
+        "--no-print-progress"
+      ]),
+      { renderDotFromTraceJson: fakeRenderDot, rendererIds: TEST_RENDERER_IDS }
+    );
+    expect(first.manifest.totals.processed).toBe(1);
+
+    const stalePath = path.join(outDir, "refs", "stale.txt");
+    await fs.writeFile(stalePath, "stale", "utf8");
+
+    const second = await runPasukTraceCorpus(
+      parseArgs([
+        `--input=${inputPath}`,
+        `--out-dir=${outDir}`,
+        "--no-snapshots",
+        "--no-print-progress"
+      ]),
+      { renderDotFromTraceJson: fakeRenderDot, rendererIds: TEST_RENDERER_IDS }
+    );
+    expect(second.manifest.totals.processed).toBe(1);
+    expect(second.manifest.totals.skipped_existing).toBe(0);
+    await expect(fs.stat(stalePath)).rejects.toThrow();
+  });
+
   it("auto-skips unchanged existing artifacts without --skip-existing", async () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-corpus-autoskip-"));
     const inputPath = path.join(tmpDir, "torah.json");

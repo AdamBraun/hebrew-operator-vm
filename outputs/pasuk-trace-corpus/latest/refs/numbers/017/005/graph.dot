@@ -1,8 +1,8 @@
-// trace_file_sha256: fde9a1f64e3ebf22ffb602aa16292f43002bf5393b127dd03a013f8b15893a98
+// trace_file_sha256: 840c5d2315561c7687283c5552b0df05d6fc16284ba3327642aa40c6bcc6946c
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: be270ebcfc487a4379782976588ae7b44bf98f8922457e5ad622c45c28ecbbf9
+// trace_semantic_sha256: d4008d574126082604a3366f8e432f270c596a047f6c79543ffa2a667e38a8e8
 
 digraph Numbers_17_5_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -666,10 +666,16 @@ digraph Numbers_17_5_Boot {
   "Ω" -> "ל:13:10" [xlabel="transport"];
   "Ω" -> "ל:24:16" [xlabel="transport"];
   "ב:2:1" -> "support_debt:5:1" [xlabel="support_debt"];
+  "ב:2:1" -> "ל:2:2" [xlabel="boundary"];
+  "ב:31:3" -> "ד:31:2" [xlabel="boundary"];
   "ב:31:3" -> "ר:31:13" [xlabel="boundary"];
+  "ב:33:4" -> "ב:33:5" [xlabel="boundary"];
+  "ב:33:5" -> "C:33:26" [xlabel="boundary"];
+  "ב:8:2" -> "ר:8:4" [xlabel="boundary"];
   "ד:28:1" -> "Ω" [xlabel="boundary"];
   "ד:28:1" -> "ת:28:5" [xlabel="finalize"];
   "ד:31:2" -> "Ω" [xlabel="boundary"];
+  "ד:31:2" -> "ב:31:3" [xlabel="boundary"];
   "ד:33:3" -> "Ω" [xlabel="boundary"];
   "ה:15:1" -> "ר:15:8" [xlabel="boundary"];
   "ה:17:2" -> "⊥" [xlabel="vav"];
@@ -700,6 +706,7 @@ digraph Numbers_17_5_Boot {
   "ל:19:12" -> "ה:19:3" [xlabel="approx"];
   "ל:19:12" -> "ה:19:3" [xlabel="declare"];
   "ל:24:16" -> "Ω" [xlabel="transport"];
+  "ל:2:2" -> "ב:2:1" [xlabel="boundary"];
   "ל:35:18" -> "ע:28:3" [xlabel="vav"];
   "ל:7:8" -> "י:8:3" [xlabel="approx"];
   "ל:7:8" -> "ר:6:3" [xlabel="transport"];
@@ -729,6 +736,7 @@ digraph Numbers_17_5_Boot {
   "ר:6:3" -> "ל:7:8" [xlabel="endpoint"];
   "ר:6:3" -> "ל:7:8" [xlabel="transport"];
   "ר:8:4" -> "Ω" [xlabel="boundary"];
+  "ר:8:4" -> "ב:8:2" [xlabel="boundary"];
   "ש:12:12" -> "ר:12:6" [xlabel="boundary"];
   "ש:30:16" -> "ר:30:12" [xlabel="boundary"];
   "ש:6:4" -> "ר:6:3" [xlabel="boundary"];

@@ -1,8 +1,8 @@
-// trace_file_sha256: 912162d27a09ae0d38739bc91975e3306cada1f53df5b117d7c7043921037fed
+// trace_file_sha256: fbea91a7adc74246c288007b97f250b0f733a1134faaa1a11ba9966f53f67004
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 2d862b3d3abdc86bb83f3ba0db5ced35ac1e6cbe268c67e9f38a8603580feeb1
+// trace_semantic_sha256: 4ccdd9653c0a303c030b6295b3ab25f59258129d618f66018b8ca64f08ec4099
 
 digraph Exodus_24_9_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -199,12 +199,17 @@ digraph Exodus_24_9_Boot {
   "Ω" -> "ו:3:3" [xlabel="transport"];
   "Ω" -> "ו:7:5" [xlabel="transport"];
   "Ω" -> "ו:7:7" [xlabel="transport"];
+  "ב:5:1" -> "ד:5:1" [xlabel="boundary"];
+  "ב:7:2" -> "ו:7:5" [xlabel="boundary"];
+  "ב:9:3" -> "ש:9:8" [xlabel="boundary"];
   "ד:5:1" -> "Ω" [xlabel="boundary"];
+  "ד:5:1" -> "ב:5:1" [xlabel="boundary"];
   "ה:3:1" -> "ר:3:1" [xlabel="boundary"];
   "ה:7:2" -> "י:7:2" [xlabel="vav"];
   "ו:3:3" -> "Ω" [xlabel="transport"];
   "ו:3:3" -> "ה:3:1" [xlabel="declare"];
   "ו:7:5" -> "Ω" [xlabel="transport"];
+  "ו:7:5" -> "ב:7:2" [xlabel="boundary"];
   "ו:7:7" -> "Ω" [xlabel="transport"];
   "ו:9:9" -> "ש:9:8" [xlabel="construct"];
   "י:10:4" -> "ר:11:2" [xlabel="transport"];
@@ -216,6 +221,7 @@ digraph Exodus_24_9_Boot {
   "ר:11:2" -> "י:10:4" [xlabel="transport"];
   "ר:11:2" -> "ל:11:4" [xlabel="endpoint"];
   "ר:3:1" -> "Ω" [xlabel="boundary"];
+  "ש:9:8" -> "ב:9:3" [xlabel="boundary"];
   "⊥" -> "Ω" [xlabel="vav"];
   "⊥" -> "Ω" [xlabel="vav"];
   "⊥" -> "Ω" [xlabel="vav"];

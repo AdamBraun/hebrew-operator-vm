@@ -1,8 +1,8 @@
-// trace_file_sha256: 3c6c75aeaacd09a9bffbd90a04425ba69fb5b19cbc430c83ad45faf2a79defbb
+// trace_file_sha256: 95367150283b6895f97abde39a868a6f3ee26b91001cbcb2a5a28998b812c44d
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 3de1d4ff189ba588d1e13443a366c0cb5496d35a75f60819f5cf8c8944ed3abb
+// trace_semantic_sha256: 3a76144b18f548e1baca8bcc974f10ca5cab82c28190588eab73779f8f65603c
 
 digraph Exodus_34_1_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -605,6 +605,7 @@ digraph Exodus_34_1_Boot {
     "ת:28:20";
   }
 
+  "C:11:9" -> "ב:11:1" [xlabel="boundary"];
   "C:11:9" -> "ת:10:2" [xlabel="transport"];
   "C:17:13" -> "ה:17:2" [xlabel="declare"];
   "C:19:14" -> "Ω" [xlabel="transport"];
@@ -632,11 +633,16 @@ digraph Exodus_34_1_Boot {
   "Ω" -> "C:4:3" [xlabel="transport"];
   "Ω" -> "י:1:1" [xlabel="transport"];
   "Ω" -> "ר:12:2" [xlabel="transport"];
+  "ב:11:1" -> "C:11:9" [xlabel="boundary"];
   "ב:11:1" -> "support_debt:12:1" [xlabel="support_debt"];
+  "ב:14:2" -> "ת:14:6" [xlabel="boundary"];
   "ב:14:2" -> "ת:14:8" [xlabel="finalize"];
+  "ב:20:3" -> "ד:20:1" [xlabel="boundary"];
   "ב:20:3" -> "ר:20:3" [xlabel="boundary"];
   "ב:28:4" -> "ר:28:7" [xlabel="boundary"];
+  "ב:28:4" -> "ש:28:28" [xlabel="boundary"];
   "ד:20:1" -> "Ω" [xlabel="boundary"];
+  "ד:20:1" -> "ב:20:3" [xlabel="boundary"];
   "ה:17:2" -> "ל:17:12" [xlabel="endpoint"];
   "ה:20:3" -> "ד:20:1" [xlabel="boundary"];
   "ה:25:5" -> "ל:25:16" [xlabel="endpoint"];
@@ -675,10 +681,12 @@ digraph Exodus_34_1_Boot {
   "ש:22:16" -> "ר:22:4" [xlabel="boundary"];
   "ש:26:20" -> "support_debt:27:4" [xlabel="support_debt"];
   "ש:27:24" -> "ר:27:6" [xlabel="boundary"];
+  "ש:28:28" -> "ב:28:4" [xlabel="boundary"];
   "ש:9:8" -> "support_debt:12:2" [xlabel="support_debt"];
   "ת:10:2" -> "C:11:9" [xlabel="transport"];
   "ת:10:2" -> "ת:10:3" [xlabel="residue"];
   "ת:14:5" -> "ת:14:6" [xlabel="residue"];
+  "ת:14:6" -> "ב:14:2" [xlabel="boundary"];
   "ת:14:8" -> "ת:14:9" [xlabel="residue"];
   "ת:17:11" -> "ת:17:12" [xlabel="residue"];
   "ת:19:14" -> "ת:19:15" [xlabel="residue"];

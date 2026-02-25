@@ -1,8 +1,8 @@
-// trace_file_sha256: 3a8e0eb5fa6a88aab1e74497b2c2e171ade77900776b347cd27b71c3815a6c7c
+// trace_file_sha256: 1b74610f7bfd0579ddf8d855b57a533acdcbfe2bade232cefa16e09de45e53bc
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 51afa4d9a52659ddfc1932caf81e1b5203c76bf0630e01782bb76fc004a3b9a5
+// trace_semantic_sha256: 2b5a872393f3ba190c0a9621f94c05baf633c80f642acf003b973df8119bcd9d
 
 digraph Numbers_3_41_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -616,8 +616,10 @@ digraph Numbers_3_41_Boot {
     "ת:9:8";
   }
 
+  "C:11:9" -> "ב:11:1" [xlabel="boundary"];
   "C:18:14" -> "ה:18:4" [xlabel="declare"];
   "C:20:15" -> "ת:20:20" [xlabel="finalize"];
+  "C:22:17" -> "ב:22:7" [xlabel="boundary"];
   "C:2:2" -> "ת:1:2" [xlabel="transport"];
   "C:2:2" -> "ת:2:5" [xlabel="finalize"];
   "C:3:3" -> "ה:3:1" [xlabel="declare"];
@@ -629,9 +631,23 @@ digraph Numbers_3_41_Boot {
   "support_debt:9:1" -> "נ:6:1" [xlabel="support_debt"];
   "Ω" -> "C:6:5" [xlabel="transport"];
   "Ω" -> "ו:15:7" [xlabel="transport"];
+  "ב:11:1" -> "C:11:9" [xlabel="boundary"];
+  "ב:12:2" -> "ב:12:3" [xlabel="boundary"];
+  "ב:12:3" -> "C:12:10" [xlabel="boundary"];
+  "ב:12:3" -> "ב:12:4" [xlabel="boundary"];
   "ב:12:4" -> "support_debt:15:2" [xlabel="support_debt"];
+  "ב:12:4" -> "ב:12:3" [xlabel="boundary"];
+  "ב:17:5" -> "ב:17:6" [xlabel="boundary"];
+  "ב:17:6" -> "C:17:13" [xlabel="boundary"];
   "ב:17:6" -> "ה:17:3" [xlabel="declare"];
+  "ב:22:7" -> "C:22:17" [xlabel="boundary"];
+  "ב:24:10" -> "ב:24:9" [xlabel="boundary"];
   "ב:24:10" -> "ה:24:5" [xlabel="declare"];
+  "ב:24:8" -> "ב:24:9" [xlabel="boundary"];
+  "ב:24:9" -> "C:24:18" [xlabel="boundary"];
+  "ב:24:9" -> "ב:24:10" [xlabel="boundary"];
+  "ב:25:11" -> "ב:25:12" [xlabel="boundary"];
+  "ב:25:12" -> "C:25:19" [xlabel="boundary"];
   "ב:25:12" -> "support_debt:29:3" [xlabel="support_debt"];
   "ה:17:3" -> "ת:17:17" [xlabel="finalize"];
   "ה:18:4" -> "ל:18:12" [xlabel="endpoint"];

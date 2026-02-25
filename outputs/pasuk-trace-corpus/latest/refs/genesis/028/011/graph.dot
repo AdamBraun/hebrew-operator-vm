@@ -1,8 +1,8 @@
-// trace_file_sha256: 47332e03a97e5d169c4f8d48769de8a484c6fe6d2f48dfad6202c9893a8c2b59
+// trace_file_sha256: 9878335e40460f00aef72a6161ad64079a19cefd91ad4c29f522044a938e54c9
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: cd12ca5c1fef403e5b8e0d7e3623a4663814fa8446838769db25f608b54748c9
+// trace_semantic_sha256: ac2a0666e22ff7ac6a5b2219fd23e536415eaf58f3c7bb2ff019258705c71a9f
 
 digraph Genesis_28_11_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -293,14 +293,23 @@ digraph Genesis_28_11_Boot {
   }
 
   "C:12:9" -> "Ω" [xlabel="transport"];
+  "C:12:9" -> "ב:12:3" [xlabel="boundary"];
   "C:13:10" -> "ה:13:2" [xlabel="declare"];
   "C:16:12" -> "ר:16:1" [xlabel="boundary"];
   "C:20:15" -> "ה:20:3" [xlabel="declare"];
+  "C:2:2" -> "ב:2:1" [xlabel="boundary"];
+  "C:7:6" -> "ב:7:2" [xlabel="boundary"];
   "C:8:7" -> "ה:8:1" [xlabel="declare"];
   "support_debt:15:1" -> "נ:12:1" [xlabel="support_debt"];
   "Ω" -> "C:12:9" [xlabel="transport"];
   "Ω" -> "ר:16:1" [xlabel="transport"];
+  "ב:12:3" -> "C:12:9" [xlabel="boundary"];
   "ב:12:3" -> "support_debt:15:1" [xlabel="support_debt"];
+  "ב:18:4" -> "כ:18:3" [xlabel="boundary"];
+  "ב:19:5" -> "ב:19:6" [xlabel="boundary"];
+  "ב:19:6" -> "C:19:14" [xlabel="boundary"];
+  "ב:2:1" -> "C:2:2" [xlabel="boundary"];
+  "ב:7:2" -> "C:7:6" [xlabel="boundary"];
   "ב:7:2" -> "י:6:3" [xlabel="transport"];
   "ה:20:3" -> "ה:20:4" [xlabel="declare"];
   "ה:20:4" -> "ה:20:3" [xlabel="vav"];
@@ -312,6 +321,7 @@ digraph Genesis_28_11_Boot {
   "י:18:8" -> "ש:18:20" [xlabel="construct"];
   "י:3:2" -> "ל:3:2" [xlabel="endpoint"];
   "י:6:3" -> "ב:7:2" [xlabel="transport"];
+  "כ:18:3" -> "ב:18:4" [xlabel="boundary"];
   "ם:19:5" -> "ו:20:19" [xlabel="transport"];
   "ק:10:2" -> "ח:10:2" [xlabel="compartment"];
   "ק:13:3" -> "י:12:5" [xlabel="vav"];

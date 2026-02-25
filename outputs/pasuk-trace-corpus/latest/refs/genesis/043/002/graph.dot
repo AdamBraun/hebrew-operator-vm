@@ -1,8 +1,8 @@
-// trace_file_sha256: 4dbfc2a4b0b178dfb3369293c916648b18468751f85b7d1cb24d1965fcb84736
+// trace_file_sha256: beb881afd1a000b306db0f9b042ab91dcc05ddff7a9cb146d00c3b9b9a2a1a6f
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 31a5e2f4b09c88e9746669ebd030dcb18f5f13b9d0b6fddba5f77e8d69b0d985
+// trace_semantic_sha256: 3f9c2b21b51c6c2025abd4b110a978bcd9d1d7dec63acd66acd561e906486fcb
 
 digraph Genesis_43_2_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -401,6 +401,7 @@ digraph Genesis_43_2_Boot {
   "C:15:11" -> "ל:15:8" [xlabel="endpoint"];
   "C:15:11" -> "ר:14:5" [xlabel="transport"];
   "C:17:12" -> "Ω" [xlabel="transport"];
+  "C:17:12" -> "ב:17:3" [xlabel="boundary"];
   "C:19:13" -> "ש:19:16" [xlabel="construct"];
   "C:20:14" -> "ש:20:20" [xlabel="construct"];
   "C:23:17" -> "ט:22:1" [xlabel="transport"];
@@ -413,9 +414,15 @@ digraph Genesis_43_2_Boot {
   "Ω" -> "י:14:5" [xlabel="transport"];
   "Ω" -> "כ:3:1" [xlabel="transport"];
   "Ω" -> "ל:6:4" [xlabel="transport"];
+  "ב:11:2" -> "ה:11:3" [xlabel="boundary"];
+  "ב:17:3" -> "C:17:12" [xlabel="boundary"];
+  "ב:19:4" -> "ש:19:16" [xlabel="boundary"];
   "ב:19:4" -> "ש:19:16" [xlabel="vav"];
   "ב:20:5" -> "ר:20:6" [xlabel="boundary"];
+  "ב:20:5" -> "ש:20:20" [xlabel="boundary"];
   "ב:8:1" -> "ר:8:2" [xlabel="boundary"];
+  "ב:8:1" -> "ש:8:8" [xlabel="boundary"];
+  "ה:11:3" -> "ב:11:2" [xlabel="boundary"];
   "ה:8:2" -> "ש:8:8" [xlabel="construct"];
   "ו:20:11" -> "ל:21:10" [xlabel="endpoint"];
   "ט:22:1" -> "C:23:17" [xlabel="transport"];
@@ -446,7 +453,10 @@ digraph Genesis_43_2_Boot {
   "ר:3:1" -> "Ω" [xlabel="boundary"];
   "ר:8:2" -> "Ω" [xlabel="boundary"];
   "ש:10:12" -> "ר:10:3" [xlabel="boundary"];
+  "ש:19:16" -> "ב:19:4" [xlabel="boundary"];
+  "ש:20:20" -> "ב:20:5" [xlabel="boundary"];
   "ש:3:4" -> "ר:3:1" [xlabel="boundary"];
+  "ש:8:8" -> "ב:8:1" [xlabel="boundary"];
   "ת:7:2" -> "ת:7:3" [xlabel="residue"];
   "⊥" -> "Ω" [xlabel="vav"];
   "⊥" -> "Ω" [xlabel="vav"];

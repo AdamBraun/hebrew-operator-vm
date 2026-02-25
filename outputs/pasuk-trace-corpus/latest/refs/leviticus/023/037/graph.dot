@@ -1,8 +1,8 @@
-// trace_file_sha256: db003efdab267aaa382e3c6cd225592e92a328d6754e4500cb85145bc196a2f3
+// trace_file_sha256: 29d8f74b3fa82370f809a495ee584abab2270bcf243d1f082d04a14482e851a4
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 637f49c11b0be84f33724f223f24344d85dcef310b834b5caa225084b767c78a
+// trace_semantic_sha256: d94182978538e363a12dbac4111f68b0d2f4bbf5acf3f84b41f95ea05fa50673
 
 digraph Leviticus_23_37_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -421,6 +421,7 @@ digraph Leviticus_23_37_Boot {
   "C:19:16" -> "ד:19:3" [xlabel="boundary"];
   "C:1:1" -> "Ω" [xlabel="transport"];
   "C:1:1" -> "ל:1:2" [xlabel="endpoint"];
+  "C:21:18" -> "ב:21:4" [xlabel="boundary"];
   "C:2:2" -> "⊥" [xlabel="vav"];
   "C:5:4" -> "Ω" [xlabel="transport"];
   "C:5:4" -> "ש:5:4" [xlabel="construct"];
@@ -433,9 +434,14 @@ digraph Leviticus_23_37_Boot {
   "Ω" -> "C:5:4" [xlabel="transport"];
   "Ω" -> "ר:8:3" [xlabel="transport"];
   "ב:11:1" -> "C:12:10" [xlabel="transport"];
+  "ב:11:1" -> "י:11:4" [xlabel="boundary"];
+  "ב:17:2" -> "ז:17:1" [xlabel="boundary"];
   "ב:17:2" -> "ח:17:4" [xlabel="compartment"];
+  "ב:19:3" -> "ד:19:3" [xlabel="boundary"];
   "ב:19:3" -> "ר:19:5" [xlabel="boundary"];
+  "ב:21:4" -> "C:21:18" [xlabel="boundary"];
   "ד:19:3" -> "Ω" [xlabel="boundary"];
+  "ד:19:3" -> "ב:19:3" [xlabel="boundary"];
   "ד:2:1" -> "Ω" [xlabel="boundary"];
   "ד:9:2" -> "Ω" [xlabel="boundary"];
   "ד:9:2" -> "ש:9:8" [xlabel="construct"];
@@ -443,7 +449,9 @@ digraph Leviticus_23_37_Boot {
   "ה:13:3" -> "י:13:5" [xlabel="vav"];
   "ה:3:1" -> "י:3:2" [xlabel="vav"];
   "ו:16:9" -> "support_debt:17:1" [xlabel="support_debt"];
+  "ז:17:1" -> "ב:17:2" [xlabel="boundary"];
   "ח:17:4" -> "ב:17:2" [xlabel="vav"];
+  "י:11:4" -> "ב:11:1" [xlabel="boundary"];
   "י:13:5" -> "ה:13:3" [xlabel="declare"];
   "י:20:7" -> "ר:19:5" [xlabel="vav"];
   "י:21:8" -> "ב:21:4" [xlabel="vav"];

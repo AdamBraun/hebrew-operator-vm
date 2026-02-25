@@ -1,8 +1,8 @@
-// trace_file_sha256: e55f14a52f74613c6da62aa64f293d0fdcef311350700b86c2702b60d71670c8
+// trace_file_sha256: a0cade942fb46ce496775b63973ffcfb34f9eb6bf429a2400e57cb49070d10e6
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: c3d0d2ded2d2f61b8f93a82af8b1a52ac144d74c96a62a11a911ac9b6d292411
+// trace_semantic_sha256: 59bbb75881a26096125d277356ca529e8167f714289fd6c32d10e25ae9aded84
 
 digraph Leviticus_10_19_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -580,9 +580,15 @@ digraph Leviticus_10_19_Boot {
   "Ω" -> "ו:21:13" [xlabel="transport"];
   "Ω" -> "כ:19:1" [xlabel="transport"];
   "Ω" -> "ר:17:4" [xlabel="transport"];
+  "ב:1:1" -> "ד:1:1" [xlabel="boundary"];
   "ב:1:1" -> "ר:1:1" [xlabel="boundary"];
+  "ב:26:3" -> "ט:26:3" [xlabel="boundary"];
+  "ב:27:4" -> "ב:27:5" [xlabel="boundary"];
+  "ב:27:5" -> "C:27:21" [xlabel="boundary"];
+  "ב:8:2" -> "י:8:3" [xlabel="boundary"];
   "ב:8:2" -> "י:8:3" [xlabel="vav"];
   "ד:1:1" -> "Ω" [xlabel="boundary"];
+  "ד:1:1" -> "ב:1:1" [xlabel="boundary"];
   "ה:15:5" -> "י:15:5" [xlabel="vav"];
   "ה:28:8" -> "י:28:13" [xlabel="vav"];
   "ה:2:1" -> "ר:2:2" [xlabel="boundary"];
@@ -597,12 +603,14 @@ digraph Leviticus_10_19_Boot {
   "ט:10:1" -> "ת:9:2" [xlabel="transport"];
   "ט:22:2" -> "ת:21:20" [xlabel="transport"];
   "ט:22:2" -> "ת:22:23" [xlabel="finalize"];
+  "ט:26:3" -> "ב:26:3" [xlabel="boundary"];
   "י:15:5" -> "ה:15:5" [xlabel="declare"];
   "י:1:1" -> "ד:1:1" [xlabel="boundary"];
   "י:24:8" -> "ה:24:6" [xlabel="vav"];
   "י:27:11" -> "support_debt:31:3" [xlabel="support_debt"];
   "י:28:13" -> "ה:28:8" [xlabel="declare"];
   "י:7:2" -> "ה:7:3" [xlabel="vav"];
+  "י:8:3" -> "ב:8:2" [xlabel="boundary"];
   "כ:19:1" -> "Ω" [xlabel="transport"];
   "כ:19:1" -> "ל:19:8" [xlabel="endpoint"];
   "כ:21:3" -> "ל:21:10" [xlabel="endpoint"];

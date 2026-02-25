@@ -1,8 +1,8 @@
-// trace_file_sha256: 1a3c9fb32c56c3d0e73898de31250a0a63aa3a1486230c7954fd7eebe75c70ab
+// trace_file_sha256: 5455e06fdb9964e3246c0a03387d62a14a1684c0d6cfed898520765115be9489
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 208b83e6e499fb929864ec13f55edd0a350f0c1ca34b987ba1d0a11ec5ef57e0
+// trace_semantic_sha256: 3d87f05bdaef4f2aba7f4141d0489399e6b404bda3013a38d3db5ea0233a10dd
 
 digraph Deuteronomy_21_21_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -337,10 +337,16 @@ digraph Deuteronomy_21_21_Boot {
   "C:11:9" -> "⊥" [xlabel="approx"];
   "C:3:3" -> "support_debt:7:2" [xlabel="support_debt"];
   "C:3:3" -> "ל:2:2" [xlabel="transport"];
+  "C:5:5" -> "ב:5:1" [xlabel="boundary"];
   "support_debt:7:1" -> "נ:5:2" [xlabel="support_debt"];
   "support_debt:7:2" -> "נ:3:1" [xlabel="support_debt"];
+  "ב:11:4" -> "ר:11:5" [xlabel="boundary"];
+  "ב:5:1" -> "C:5:5" [xlabel="boundary"];
+  "ב:5:1" -> "ב:5:2" [xlabel="boundary"];
   "ב:5:1" -> "ו:4:5" [xlabel="transport"];
   "ב:5:2" -> "support_debt:7:1" [xlabel="support_debt"];
+  "ב:5:2" -> "ב:5:1" [xlabel="boundary"];
+  "ב:9:3" -> "ו:9:9" [xlabel="boundary"];
   "ג:1:1" -> "ה:1:1" [xlabel="declare"];
   "ה:10:2" -> "ר:10:4" [xlabel="boundary"];
   "ה:1:1" -> "ג:1:1" [xlabel="vav"];
@@ -349,6 +355,7 @@ digraph Deuteronomy_21_21_Boot {
   "ו:1:1" -> "ר:1:1" [xlabel="boundary"];
   "ו:4:5" -> "ב:5:1" [xlabel="transport"];
   "ו:7:7" -> "ת:7:2" [xlabel="finalize"];
+  "ו:9:9" -> "ב:9:3" [xlabel="boundary"];
   "י:14:4" -> "ר:14:6" [xlabel="boundary"];
   "י:15:5" -> "ש:15:8" [xlabel="construct"];
   "י:16:6" -> "ר:16:7" [xlabel="boundary"];
@@ -363,6 +370,7 @@ digraph Deuteronomy_21_21_Boot {
   "ק:11:1" -> "ר:11:5" [xlabel="boundary"];
   "ר:10:4" -> "Ω" [xlabel="boundary"];
   "ר:11:5" -> "Ω" [xlabel="boundary"];
+  "ר:11:5" -> "ב:11:4" [xlabel="boundary"];
   "ר:14:6" -> "Ω" [xlabel="boundary"];
   "ר:14:6" -> "ל:13:4" [xlabel="transport"];
   "ר:14:6" -> "ל:14:6" [xlabel="endpoint"];

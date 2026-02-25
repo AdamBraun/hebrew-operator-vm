@@ -1,8 +1,8 @@
-// trace_file_sha256: af885f51130cf0a0b37e5c5ae540de2168f5a07bbf73c7cc78b1721c0d6657c1
+// trace_file_sha256: 0a1a9cf9ab287b8f89597ab4f8ad8da1e0a3ff9963729ca2138e05f1ba05059a
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: a6bc319dfaa6cd541ceaf69e4cdb2404c4a3517ede77f1b7c9592a56279ffc40
+// trace_semantic_sha256: 84f1c911eb57a09e77a90b65779733a0b210d8b39ff6d4340760edff9ff2b46a
 
 digraph Leviticus_23_18_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -582,6 +582,8 @@ digraph Leviticus_23_18_Boot {
   }
 
   "C:10:8" -> "ש:10:8" [xlabel="construct"];
+  "C:13:10" -> "ב:13:6" [xlabel="boundary"];
+  "C:14:11" -> "ב:14:7" [xlabel="boundary"];
   "C:15:12" -> "Ω" [xlabel="transport"];
   "C:15:12" -> "ח:15:4" [xlabel="compartment"];
   "C:28:20" -> "Ω" [xlabel="transport"];
@@ -598,8 +600,15 @@ digraph Leviticus_23_18_Boot {
   "Ω" -> "C:15:12" [xlabel="transport"];
   "Ω" -> "C:28:20" [xlabel="transport"];
   "Ω" -> "ו:16:5" [xlabel="transport"];
+  "ב:13:6" -> "C:13:10" [xlabel="boundary"];
+  "ב:14:7" -> "C:14:11" [xlabel="boundary"];
   "ב:14:7" -> "ן:13:1" [xlabel="approx"];
+  "ב:1:1" -> "ר:1:1" [xlabel="boundary"];
   "ב:1:1" -> "ת:1:2" [xlabel="finalize"];
+  "ב:5:2" -> "ש:5:4" [xlabel="boundary"];
+  "ב:6:3" -> "כ:6:1" [xlabel="boundary"];
+  "ב:9:4" -> "ב:9:5" [xlabel="boundary"];
+  "ב:9:5" -> "C:9:7" [xlabel="boundary"];
   "ב:9:5" -> "support_debt:12:2" [xlabel="support_debt"];
   "ד:15:1" -> "Ω" [xlabel="boundary"];
   "ה:1:1" -> "ו:1:1" [xlabel="approx"];
@@ -621,6 +630,7 @@ digraph Leviticus_23_18_Boot {
   "י:29:10" -> "ח:29:8" [xlabel="compartment"];
   "י:30:11" -> "ח:30:10" [xlabel="compartment"];
   "י:31:12" -> "ה:31:6" [xlabel="declare"];
+  "כ:6:1" -> "ב:6:3" [xlabel="boundary"];
   "ל:3:4" -> "ח:3:2" [xlabel="compartment"];
   "ן:13:1" -> "ב:14:7" [xlabel="approx"];
   "נ:24:4" -> "ח:24:6" [xlabel="compartment"];
@@ -633,9 +643,11 @@ digraph Leviticus_23_18_Boot {
   "ר:12:2" -> "Ω" [xlabel="boundary"];
   "ר:14:3" -> "Ω" [xlabel="boundary"];
   "ר:1:1" -> "Ω" [xlabel="boundary"];
+  "ר:1:1" -> "ב:1:1" [xlabel="boundary"];
   "ר:29:4" -> "Ω" [xlabel="boundary"];
   "ש:10:8" -> "support_debt:12:1" [xlabel="support_debt"];
   "ש:17:12" -> "support_debt:19:3" [xlabel="support_debt"];
+  "ש:5:4" -> "ב:5:2" [xlabel="boundary"];
   "ת:1:2" -> "ת:1:3" [xlabel="residue"];
   "ת:24:11" -> "ת:24:12" [xlabel="residue"];
   "ת:5:5" -> "ת:5:6" [xlabel="residue"];

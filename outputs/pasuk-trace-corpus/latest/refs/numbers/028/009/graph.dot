@@ -1,8 +1,8 @@
-// trace_file_sha256: b5763eff0265b37cc2322b68dc705cafc697cf1347bba6b01b01d60cf26c089b
+// trace_file_sha256: 2af4d8a01028cb14ba7d768aed3b5ed3b775bca79fe7f510b2c55b894789c30c
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 44a72df6e0fd785de26730273e270cedca8f9c6600f601e5cff4f4a33f071473
+// trace_semantic_sha256: 45d6be232ecbda076b94299e89bd7e9ef2e5cf68dfd39aa7b76891589bec4377
 
 digraph Numbers_28_9_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -345,7 +345,9 @@ digraph Numbers_28_9_Boot {
 
   "C:14:10" -> "ל:14:2" [xlabel="endpoint"];
   "C:15:11" -> "support_debt:16:6" [xlabel="support_debt"];
+  "C:17:13" -> "ב:17:7" [xlabel="boundary"];
   "C:3:2" -> "ה:3:1" [xlabel="declare"];
+  "C:7:5" -> "ב:7:4" [xlabel="boundary"];
   "C:8:6" -> "ש:8:12" [xlabel="construct"];
   "C:9:7" -> "ת:9:5" [xlabel="finalize"];
   "support_debt:14:4" -> "נ:12:5" [xlabel="support_debt"];
@@ -354,15 +356,24 @@ digraph Numbers_28_9_Boot {
   "support_debt:9:1" -> "נ:8:3" [xlabel="support_debt"];
   "support_debt:9:2" -> "נ:7:2" [xlabel="support_debt"];
   "support_debt:9:3" -> "נ:5:1" [xlabel="support_debt"];
+  "ב:16:5" -> "ב:16:6" [xlabel="boundary"];
+  "ב:16:6" -> "C:16:12" [xlabel="boundary"];
   "ב:16:6" -> "ל:16:4" [xlabel="endpoint"];
+  "ב:17:7" -> "C:17:13" [xlabel="boundary"];
   "ב:17:7" -> "ש:17:20" [xlabel="construct"];
+  "ב:1:1" -> "ו:1:1" [xlabel="boundary"];
+  "ב:3:2" -> "ש:3:4" [xlabel="boundary"];
   "ב:3:2" -> "ת:3:2" [xlabel="finalize"];
+  "ב:6:3" -> "כ:6:1" [xlabel="boundary"];
+  "ב:7:4" -> "C:7:5" [xlabel="boundary"];
   "ב:7:4" -> "support_debt:9:2" [xlabel="support_debt"];
   "ה:3:1" -> "ש:3:4" [xlabel="construct"];
   "ו:11:5" -> "ש:11:16" [xlabel="construct"];
   "ו:16:7" -> "ל:16:6" [xlabel="endpoint"];
+  "ו:1:1" -> "ב:1:1" [xlabel="boundary"];
   "י:1:1" -> "ב:1:1" [xlabel="vav"];
   "כ:18:3" -> "ו:18:9" [xlabel="vav"];
+  "כ:6:1" -> "ב:6:3" [xlabel="boundary"];
   "ל:14:2" -> "ת:14:8" [xlabel="finalize"];
   "ל:16:4" -> "Ω" [xlabel="vav"];
   "נ:15:6" -> "ח:15:2" [xlabel="compartment"];
@@ -370,6 +381,7 @@ digraph Numbers_28_9_Boot {
   "ר:12:1" -> "support_debt:14:4" [xlabel="support_debt"];
   "ר:12:1" -> "Ω" [xlabel="boundary"];
   "ש:11:16" -> "support_debt:14:5" [xlabel="support_debt"];
+  "ש:3:4" -> "ב:3:2" [xlabel="boundary"];
   "ש:5:8" -> "support_debt:9:3" [xlabel="support_debt"];
   "ש:8:12" -> "support_debt:9:1" [xlabel="support_debt"];
   "ת:14:8" -> "ת:14:9" [xlabel="residue"];

@@ -1,8 +1,8 @@
-// trace_file_sha256: 3465243105e597f802ed3375be85ac77bd8782e2f2366cb292c4daca5498b1d2
+// trace_file_sha256: 5eefa0782c2489693314fc9b720f8464cf08ddafa44b6d7968eba4b33ae8b865
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 7b467edbffaae00a080353affbf22944438807f6ba47bc5bc6d9e96367b51f33
+// trace_semantic_sha256: 810fb610939c62be0b2935296ee2d6692bca58799c52d2feed1e017ab38dfdd5
 
 digraph Deuteronomy_24_3_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -509,6 +509,7 @@ digraph Deuteronomy_24_3_Boot {
   }
 
   "C:0:1" -> "ה:0:1" [xlabel="declare"];
+  "C:12:10" -> "ב:12:3" [xlabel="boundary"];
   "C:14:11" -> "Ω" [xlabel="transport"];
   "C:14:11" -> "⊥" [xlabel="vav"];
   "C:18:14" -> "ה:18:9" [xlabel="declare"];
@@ -517,13 +518,17 @@ digraph Deuteronomy_24_3_Boot {
   "C:21:16" -> "Ω" [xlabel="transport"];
   "C:21:16" -> "ל:22:6" [xlabel="approx"];
   "C:21:16" -> "ש:21:16" [xlabel="construct"];
+  "C:9:8" -> "ב:9:2" [xlabel="boundary"];
   "support_debt:11:1" -> "נ:8:1" [xlabel="support_debt"];
   "Ω" -> "C:14:11" [xlabel="transport"];
   "Ω" -> "C:21:16" [xlabel="transport"];
   "Ω" -> "ה:0:1" [xlabel="transport"];
   "Ω" -> "ה:18:9" [xlabel="transport"];
   "Ω" -> "ל:24:10" [xlabel="transport"];
+  "ב:12:3" -> "C:12:10" [xlabel="boundary"];
   "ב:3:1" -> "ל:4:2" [xlabel="endpoint"];
+  "ב:3:1" -> "ת:3:3" [xlabel="boundary"];
+  "ב:9:2" -> "C:9:8" [xlabel="boundary"];
   "ד:9:1" -> "Ω" [xlabel="boundary"];
   "ד:9:1" -> "ה:9:5" [xlabel="declare"];
   "ה:0:1" -> "Ω" [xlabel="transport"];
@@ -576,6 +581,7 @@ digraph Deuteronomy_24_3_Boot {
   "ת:12:15" -> "י:12:4" [xlabel="vav"];
   "ת:16:17" -> "ת:16:18" [xlabel="residue"];
   "ת:3:2" -> "ת:3:3" [xlabel="residue"];
+  "ת:3:3" -> "ב:3:1" [xlabel="boundary"];
   "ת:6:5" -> "ת:6:6" [xlabel="residue"];
   "ת:6:6" -> "ת:6:8" [xlabel="finalize"];
   "ת:6:8" -> "ת:6:9" [xlabel="residue"];

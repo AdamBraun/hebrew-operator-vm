@@ -1,8 +1,8 @@
-// trace_file_sha256: ba2386f0cb7b63e3abef9d6b40d951d2a4204144bd321d141b651b75e5071a96
+// trace_file_sha256: be10105c2f936c2c7702de065ac4458339c9d656a8e89f08cbe865645f7a417b
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 0e62df3bba98970de02944e20db30cea720d2b43202fa915e73a8911ea424fe4
+// trace_semantic_sha256: 44664cd406afeb9dcf0951490bfe9da61321629e66534b17119960e9c9daca8e
 
 digraph Genesis_44_22_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -318,9 +318,11 @@ digraph Genesis_44_22_Boot {
 
   "C:10:8" -> "ב:9:1" [xlabel="transport"];
   "C:10:8" -> "ת:10:2" [xlabel="finalize"];
+  "C:11:9" -> "ב:11:2" [xlabel="boundary"];
   "C:11:9" -> "ת:10:2" [xlabel="transport"];
   "C:14:11" -> "ב:13:3" [xlabel="transport"];
   "C:14:11" -> "ת:14:5" [xlabel="finalize"];
+  "C:15:12" -> "ב:15:4" [xlabel="boundary"];
   "C:15:12" -> "ת:14:5" [xlabel="transport"];
   "C:3:2" -> "Ω" [xlabel="transport"];
   "C:3:2" -> "ל:3:2" [xlabel="endpoint"];
@@ -333,13 +335,19 @@ digraph Genesis_44_22_Boot {
   "Ω" -> "C:3:2" [xlabel="transport"];
   "Ω" -> "ל:6:4" [xlabel="transport"];
   "Ω" -> "נ:1:1" [xlabel="transport"];
+  "ב:11:2" -> "C:11:9" [xlabel="boundary"];
   "ב:13:3" -> "C:14:11" [xlabel="transport"];
+  "ב:13:3" -> "ז:13:2" [xlabel="boundary"];
+  "ב:15:4" -> "C:15:12" [xlabel="boundary"];
   "ב:9:1" -> "C:10:8" [xlabel="transport"];
+  "ב:9:1" -> "ז:9:1" [xlabel="boundary"];
   "ד:4:1" -> "support_debt:6:2" [xlabel="support_debt"];
   "ד:4:1" -> "Ω" [xlabel="boundary"];
   "ה:8:1" -> "support_debt:9:3" [xlabel="support_debt"];
   "ו:16:11" -> "ת:16:8" [xlabel="finalize"];
   "ו:1:1" -> "support_debt:3:1" [xlabel="support_debt"];
+  "ז:13:2" -> "ב:13:3" [xlabel="boundary"];
+  "ז:9:1" -> "ב:9:1" [xlabel="boundary"];
   "י:11:3" -> "ב:11:2" [xlabel="vav"];
   "י:15:4" -> "ב:15:4" [xlabel="vav"];
   "י:7:2" -> "ל:6:4" [xlabel="vav"];

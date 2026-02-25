@@ -1,8 +1,8 @@
-// trace_file_sha256: f2a0fb4ce51b315e18c686e4df00e48bb66ee8ee25dacf3e9672000115aa8610
+// trace_file_sha256: 24a4c3e3e94c475184fe2c0627283d760867f9f9ec85d42523c488c815cc04c9
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 4b78eff9ead883ceda82ea62ae6c8eeefd7c17c1b3f556bdba318836996ffd8a
+// trace_semantic_sha256: a80686e872a83fb37a4e37b92497989df1af9abf837630d0ebc28fd2ee14d610
 
 digraph Genesis_45_13_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -432,6 +432,7 @@ digraph Genesis_45_13_Boot {
   "C:13:10" -> "ר:13:3" [xlabel="boundary"];
   "C:17:13" -> "ת:16:17" [xlabel="transport"];
   "C:17:13" -> "ת:17:20" [xlabel="finalize"];
+  "C:18:14" -> "ב:18:5" [xlabel="boundary"];
   "C:18:14" -> "ת:17:20" [xlabel="transport"];
   "C:19:15" -> "ה:19:4" [xlabel="declare"];
   "C:4:3" -> "Ω" [xlabel="transport"];
@@ -439,7 +440,12 @@ digraph Genesis_45_13_Boot {
   "support_debt:22:1" -> "נ:19:1" [xlabel="support_debt"];
   "Ω" -> "C:4:3" [xlabel="transport"];
   "Ω" -> "ו:10:5" [xlabel="transport"];
+  "ב:18:5" -> "C:18:14" [xlabel="boundary"];
+  "ב:2:1" -> "ל:2:2" [xlabel="boundary"];
+  "ב:6:2" -> "כ:6:3" [xlabel="boundary"];
   "ב:6:2" -> "כ:6:3" [xlabel="vav"];
+  "ב:8:3" -> "ב:8:4" [xlabel="boundary"];
+  "ב:8:4" -> "C:8:6" [xlabel="boundary"];
   "ב:8:4" -> "צ:8:1" [xlabel="align"];
   "ג:1:1" -> "ד:1:1" [xlabel="boundary"];
   "ד:16:3" -> "Ω" [xlabel="boundary"];
@@ -461,7 +467,9 @@ digraph Genesis_45_13_Boot {
   "י:13:4" -> "ת:13:11" [xlabel="finalize"];
   "כ:11:5" -> "ל:11:6" [xlabel="endpoint"];
   "כ:5:1" -> "ל:5:4" [xlabel="endpoint"];
+  "כ:6:3" -> "ב:6:2" [xlabel="boundary"];
   "ל:11:6" -> "C:12:9" [xlabel="transport"];
+  "ל:2:2" -> "ב:2:1" [xlabel="boundary"];
   "ל:2:2" -> "ת:1:2" [xlabel="transport"];
   "ם:1:1" -> "ל:2:2" [xlabel="endpoint"];
   "צ:8:1" -> "ר:8:1" [xlabel="boundary"];

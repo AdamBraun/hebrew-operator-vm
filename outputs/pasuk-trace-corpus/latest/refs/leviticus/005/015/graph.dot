@@ -1,8 +1,8 @@
-// trace_file_sha256: 0b272974a76ff0901467d8bc791125b181d61a3863d5382493e7c790f4ce33f7
+// trace_file_sha256: da7d621f8b273218c5dd72334d0cb3982dd4997056dc495bf470be486d0b77e3
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 774a05e9ddb29be848cb259a607064860909e6a0d131f1df3c4b07ba18362858
+// trace_semantic_sha256: 4a3d9249ae4c68f8ac3b838259c65d37e9f679f38dd455d389999e75f8e10fa4
 
 digraph Leviticus_5_15_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -489,6 +489,7 @@ digraph Leviticus_5_15_Boot {
   "C:18:14" -> "ת:18:8" [xlabel="finalize"];
   "C:20:16" -> "ה:20:4" [xlabel="declare"];
   "C:24:19" -> "ש:24:20" [xlabel="construct"];
+  "C:25:20" -> "ב:25:6" [xlabel="boundary"];
   "C:26:21" -> "ה:26:5" [xlabel="declare"];
   "C:3:3" -> "ת:3:2" [xlabel="finalize"];
   "support_debt:2:1" -> "נ:1:1" [xlabel="support_debt"];
@@ -497,8 +498,14 @@ digraph Leviticus_5_15_Boot {
   "Ω" -> "ט:6:1" [xlabel="transport"];
   "Ω" -> "י:13:4" [xlabel="transport"];
   "Ω" -> "ל:27:14" [xlabel="transport"];
+  "ב:13:3" -> "ה:13:2" [xlabel="boundary"];
+  "ב:22:4" -> "ב:22:5" [xlabel="boundary"];
+  "ב:22:5" -> "C:22:17" [xlabel="boundary"];
+  "ב:25:6" -> "C:25:20" [xlabel="boundary"];
   "ב:25:6" -> "ש:25:24" [xlabel="approx"];
   "ב:25:6" -> "ש:25:24" [xlabel="construct"];
+  "ב:8:1" -> "ב:8:2" [xlabel="boundary"];
+  "ב:8:2" -> "C:8:6" [xlabel="boundary"];
   "ב:8:2" -> "ש:8:8" [xlabel="construct"];
   "ג:8:1" -> "Ω" [xlabel="bestow"];
   "ד:10:1" -> "Ω" [xlabel="boundary"];
@@ -506,6 +513,7 @@ digraph Leviticus_5_15_Boot {
   "ד:26:2" -> "Ω" [xlabel="boundary"];
   "ד:26:2" -> "ש:26:28" [xlabel="construct"];
   "ה:11:1" -> "י:11:3" [xlabel="vav"];
+  "ה:13:2" -> "ב:13:3" [xlabel="boundary"];
   "ה:16:3" -> "י:16:5" [xlabel="vav"];
   "ה:20:4" -> "צ:20:1" [xlabel="align"];
   "ה:26:5" -> "ל:25:12" [xlabel="approx"];

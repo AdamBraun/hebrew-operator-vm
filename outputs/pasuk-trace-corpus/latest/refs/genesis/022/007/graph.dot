@@ -1,8 +1,8 @@
-// trace_file_sha256: 0c5f197f5aa427f79e336f83751fe364f54cc5ca91f9f1c8fe629fd831e0ad02
+// trace_file_sha256: 08699786ff1212bba3aa42e6c25667146bff14c4737c807315eb8d230296699f
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: f5e38d9ae1bf673bd705e4279cf18b611f0e2b3c63060d104f80a5c53269077d
+// trace_semantic_sha256: 9b500d0a7954b2b638eba6e00f5c191d2e300870e336e1e9a3c71acbba7a71fc
 
 digraph Genesis_22_7_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -345,13 +345,17 @@ digraph Genesis_22_7_Boot {
   }
 
   "C:11:9" -> "ה:11:2" [xlabel="declare"];
+  "C:12:10" -> "ב:12:4" [xlabel="boundary"];
   "C:16:12" -> "ה:16:3" [xlabel="declare"];
   "C:17:13" -> "ה:17:4" [xlabel="declare"];
   "C:22:16" -> "ה:22:6" [xlabel="declare"];
   "C:3:3" -> "Ω" [xlabel="transport"];
   "C:3:3" -> "ל:3:2" [xlabel="endpoint"];
+  "C:4:4" -> "ב:4:1" [xlabel="boundary"];
   "C:4:4" -> "ל:3:2" [xlabel="transport"];
+  "C:5:5" -> "ב:5:2" [xlabel="boundary"];
   "C:5:5" -> "ם:4:1" [xlabel="transport"];
+  "C:8:7" -> "ב:8:3" [xlabel="boundary"];
   "C:8:7" -> "ר:7:3" [xlabel="transport"];
   "support_debt:14:1" -> "נ:12:3" [xlabel="support_debt"];
   "support_debt:14:2" -> "נ:11:2" [xlabel="support_debt"];
@@ -363,8 +367,12 @@ digraph Genesis_22_7_Boot {
   "Ω" -> "י:14:9" [xlabel="transport"];
   "Ω" -> "י:1:1" [xlabel="transport"];
   "Ω" -> "י:7:4" [xlabel="transport"];
+  "ב:12:4" -> "C:12:10" [xlabel="boundary"];
   "ב:12:4" -> "support_debt:14:1" [xlabel="support_debt"];
+  "ב:4:1" -> "C:4:4" [xlabel="boundary"];
   "ב:4:1" -> "ר:4:2" [xlabel="boundary"];
+  "ב:5:2" -> "C:5:5" [xlabel="boundary"];
+  "ב:8:3" -> "C:8:7" [xlabel="boundary"];
   "ה:11:2" -> "support_debt:14:3" [xlabel="support_debt"];
   "ה:16:3" -> "support_debt:19:4" [xlabel="support_debt"];
   "ה:17:4" -> "נ:16:4" [xlabel="transport"];

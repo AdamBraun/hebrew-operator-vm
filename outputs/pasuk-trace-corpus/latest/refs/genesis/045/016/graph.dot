@@ -1,8 +1,8 @@
-// trace_file_sha256: a6fb3bb4f94317400628dfdbf40b160baa6faa707091c5012ec372c5f90bd71b
+// trace_file_sha256: 6f51e663851c51f0ee6e5a52a587f4f3c0e19a30658a2e997c972704af614a58
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: fd79b06d886c7a212bc718727455ca1a13374e9db47ce1bb52890a6a1eb2d2ce
+// trace_semantic_sha256: 8312060b20f343b66558790338c1ddb2d46e748af5fd4fc0db421d180241887a
 
 digraph Genesis_45_16_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -316,12 +316,23 @@ digraph Genesis_45_16_Boot {
   "Ω" -> "C:10:7" [xlabel="transport"];
   "Ω" -> "ב:9:4" [xlabel="transport"];
   "Ω" -> "ל:7:4" [xlabel="transport"];
+  "ב:13:5" -> "ט:13:1" [xlabel="boundary"];
+  "ב:15:6" -> "ב:15:7" [xlabel="boundary"];
+  "ב:15:7" -> "C:15:10" [xlabel="boundary"];
+  "ב:18:8" -> "ו:18:9" [xlabel="boundary"];
   "ב:19:9" -> "ד:19:1" [xlabel="boundary"];
+  "ב:19:9" -> "ע:19:6" [xlabel="boundary"];
+  "ב:4:1" -> "ב:4:2" [xlabel="boundary"];
+  "ב:4:2" -> "C:4:3" [xlabel="boundary"];
+  "ב:9:3" -> "ב:9:4" [xlabel="boundary"];
+  "ב:9:4" -> "C:9:6" [xlabel="boundary"];
   "ב:9:4" -> "Ω" [xlabel="transport"];
   "ד:19:1" -> "Ω" [xlabel="boundary"];
   "ה:1:1" -> "ו:1:1" [xlabel="approx"];
+  "ו:18:9" -> "ב:18:8" [xlabel="boundary"];
   "ו:1:1" -> "ה:1:1" [xlabel="approx"];
   "ו:1:1" -> "ה:1:1" [xlabel="declare"];
+  "ט:13:1" -> "ב:13:5" [xlabel="boundary"];
   "י:11:3" -> "י:10:2" [xlabel="vav"];
   "י:15:6" -> "support_debt:18:2" [xlabel="support_debt"];
   "י:18:8" -> "support_debt:19:3" [xlabel="support_debt"];
@@ -330,6 +341,7 @@ digraph Genesis_45_16_Boot {
   "ל:7:4" -> "Ω" [xlabel="transport"];
   "ל:7:4" -> "ר:7:2" [xlabel="boundary"];
   "נ:2:1" -> "ש:2:4" [xlabel="construct"];
+  "ע:19:6" -> "ב:19:9" [xlabel="boundary"];
   "פ:16:2" -> "ר:16:3" [xlabel="boundary"];
   "פ:5:1" -> "ר:5:1" [xlabel="boundary"];
   "ק:1:1" -> "ל:1:2" [xlabel="endpoint"];

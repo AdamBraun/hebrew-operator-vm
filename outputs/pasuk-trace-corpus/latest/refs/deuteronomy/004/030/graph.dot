@@ -1,8 +1,8 @@
-// trace_file_sha256: cec4b76d695edc8b62eb3fbc5a3d9535a7191f53b17f89b5e3597920ba644d7e
+// trace_file_sha256: a59c76b3389fa11fa708668e1c0d63f2f3ef7e960f1a0fb05301610e8aa62f2c
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 810a0629c310faf7033f086f88708dff56776f545e0382488c1a3e9b1cdcdc3d
+// trace_semantic_sha256: 1ea298f0347306c64751c3d6dde41e8946a86f5155b86e02a141b6eb06476c4c
 
 digraph Deuteronomy_4_30_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -391,14 +391,23 @@ digraph Deuteronomy_4_30_Boot {
   "C:8:6" -> "ה:8:2" [xlabel="declare"];
   "Ω" -> "ב:10:5" [xlabel="transport"];
   "Ω" -> "צ:4:2" [xlabel="transport"];
+  "ב:10:4" -> "ב:10:5" [xlabel="boundary"];
+  "ב:10:5" -> "C:10:7" [xlabel="boundary"];
   "ב:10:5" -> "Ω" [xlabel="transport"];
   "ב:10:5" -> "ח:10:2" [xlabel="compartment"];
+  "ב:14:6" -> "ש:14:4" [xlabel="boundary"];
   "ב:14:6" -> "ת:14:5" [xlabel="finalize"];
+  "ב:1:1" -> "ב:1:2" [xlabel="boundary"];
+  "ב:1:2" -> "C:1:1" [xlabel="boundary"];
   "ב:1:2" -> "צ:1:1" [xlabel="align"];
+  "ב:21:7" -> "ב:21:8" [xlabel="boundary"];
+  "ב:21:8" -> "C:21:14" [xlabel="boundary"];
   "ב:21:8" -> "⊥" [xlabel="approx"];
+  "ב:7:3" -> "ד:7:1" [xlabel="boundary"];
   "ב:7:3" -> "ר:7:2" [xlabel="boundary"];
   "ד:16:2" -> "Ω" [xlabel="boundary"];
   "ד:7:1" -> "Ω" [xlabel="boundary"];
+  "ד:7:1" -> "ב:7:3" [xlabel="boundary"];
   "ה:17:4" -> "י:17:5" [xlabel="vav"];
   "ה:7:1" -> "ד:7:1" [xlabel="boundary"];
   "ה:8:2" -> "ל:8:6" [xlabel="endpoint"];
@@ -423,6 +432,7 @@ digraph Deuteronomy_4_30_Boot {
   "ר:1:1" -> "Ω" [xlabel="boundary"];
   "ר:1:1" -> "ל:2:2" [xlabel="endpoint"];
   "ר:7:2" -> "Ω" [xlabel="boundary"];
+  "ש:14:4" -> "ב:14:6" [xlabel="boundary"];
   "ת:10:2" -> "ת:10:3" [xlabel="residue"];
   "ת:14:5" -> "ת:14:6" [xlabel="residue"];
   "ת:20:8" -> "ת:20:9" [xlabel="residue"];

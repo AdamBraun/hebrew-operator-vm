@@ -1,8 +1,8 @@
-// trace_file_sha256: b113d0d8277c62f3a131859577fe33e3623511e5a34f4400d8c14434039f387c
+// trace_file_sha256: 02fc00702d1f0eef22b2fc52f7dac3ab37a26ac5f1c5d6615b04c883208368ca
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: a04d32ddc67a6278bab037e798c156778fd610b8de88db9111565b64abf61380
+// trace_semantic_sha256: 522dd591abe924f9f7db22e770f001c8d12da7116a3af37bfc4c2d9642e23918
 
 digraph Deuteronomy_10_11_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -425,17 +425,22 @@ digraph Deuteronomy_10_11_Boot {
   "Ω" -> "י:1:1" [xlabel="transport"];
   "Ω" -> "⊥" [xlabel="approx"];
   "ב:12:1" -> "Ω" [xlabel="transport"];
+  "ב:12:1" -> "י:12:5" [xlabel="boundary"];
+  "ב:19:2" -> "ש:19:12" [xlabel="boundary"];
+  "ב:20:3" -> "ל:20:10" [xlabel="boundary"];
   "ב:20:3" -> "ת:20:8" [xlabel="finalize"];
   "ה:16:3" -> "ר:16:3" [xlabel="boundary"];
   "ה:16:3" -> "ת:15:2" [xlabel="transport"];
   "ה:2:1" -> "י:2:2" [xlabel="vav"];
   "ו:14:13" -> "C:15:11" [xlabel="transport"];
+  "י:12:5" -> "ב:12:1" [xlabel="boundary"];
   "י:14:7" -> "ר:14:2" [xlabel="boundary"];
   "י:19:8" -> "ל:20:10" [xlabel="endpoint"];
   "י:1:1" -> "Ω" [xlabel="transport"];
   "י:1:1" -> "ר:1:1" [xlabel="boundary"];
   "י:2:2" -> "ה:2:1" [xlabel="declare"];
   "ך:7:1" -> "ל:8:6" [xlabel="endpoint"];
+  "ל:20:10" -> "ב:20:3" [xlabel="boundary"];
   "ל:20:10" -> "ת:19:5" [xlabel="transport"];
   "ל:21:12" -> "ת:21:11" [xlabel="finalize"];
   "ל:22:14" -> "ה:22:4" [xlabel="declare"];
@@ -450,6 +455,7 @@ digraph Deuteronomy_10_11_Boot {
   "ר:1:1" -> "Ω" [xlabel="boundary"];
   "ש:14:4" -> "ר:14:2" [xlabel="vav"];
   "ש:18:8" -> "ר:18:4" [xlabel="boundary"];
+  "ש:19:12" -> "ב:19:2" [xlabel="boundary"];
   "ת:15:2" -> "ה:16:3" [xlabel="transport"];
   "ת:15:2" -> "ת:15:3" [xlabel="residue"];
   "ת:19:5" -> "ל:20:10" [xlabel="transport"];

@@ -1,8 +1,8 @@
-// trace_file_sha256: 470142e8ee4e6950d9c84c7361ed782779da065d6dedec834bf65e51876009ed
+// trace_file_sha256: 2adde7af9552f626bbdbd50d7cdc8e6d479fb34eda6701ed620410e43be9719f
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: e5ee97cffaa8be6698ba86ab58084eb20708f2cca7f5a808e6e3cb4ba533f7e8
+// trace_semantic_sha256: 6fa9b38fa6d116f5386773b4c1e9f1dacffe9df99f058d6d331e302540cbc19f
 
 digraph Leviticus_20_22_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -494,9 +494,11 @@ digraph Leviticus_20_22_Boot {
   "C:19:14" -> "ש:19:12" [xlabel="construct"];
   "C:20:15" -> "support_debt:21:1" [xlabel="support_debt"];
   "C:20:15" -> "ר:19:3" [xlabel="transport"];
+  "C:21:16" -> "ב:21:1" [xlabel="boundary"];
   "C:22:17" -> "י:21:6" [xlabel="transport"];
   "C:22:17" -> "ת:22:26" [xlabel="finalize"];
   "C:23:18" -> "ש:23:16" [xlabel="construct"];
+  "C:25:20" -> "ב:25:3" [xlabel="boundary"];
   "C:2:2" -> "ת:1:2" [xlabel="transport"];
   "C:2:2" -> "ת:2:5" [xlabel="finalize"];
   "C:4:4" -> "ח:4:2" [xlabel="compartment"];
@@ -507,7 +509,10 @@ digraph Leviticus_20_22_Boot {
   "Ω" -> "ו:6:3" [xlabel="transport"];
   "Ω" -> "י:21:6" [xlabel="transport"];
   "Ω" -> "ל:13:6" [xlabel="transport"];
+  "ב:21:1" -> "C:21:16" [xlabel="boundary"];
+  "ב:24:2" -> "ש:24:20" [xlabel="boundary"];
   "ב:24:2" -> "ת:24:29" [xlabel="finalize"];
+  "ב:25:3" -> "C:25:20" [xlabel="boundary"];
   "ב:25:3" -> "ה:25:2" [xlabel="declare"];
   "ה:17:1" -> "Ω" [xlabel="transport"];
   "ה:17:1" -> "ר:17:2" [xlabel="boundary"];
@@ -537,6 +542,7 @@ digraph Leviticus_20_22_Boot {
   "ר:1:1" -> "ת:1:2" [xlabel="finalize"];
   "ש:19:12" -> "ר:19:3" [xlabel="boundary"];
   "ש:1:4" -> "ר:1:1" [xlabel="boundary"];
+  "ש:24:20" -> "ב:24:2" [xlabel="boundary"];
   "ת:10:14" -> "ת:10:15" [xlabel="residue"];
   "ת:11:17" -> "ת:11:18" [xlabel="residue"];
   "ת:14:20" -> "C:15:12" [xlabel="transport"];

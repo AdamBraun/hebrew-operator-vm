@@ -1,8 +1,8 @@
-// trace_file_sha256: 1b3f0db1426e164de4184961b61ee2b2f821885b9877843418dd5686d2eb35df
+// trace_file_sha256: bafbc8794dabc080290b38a400bee3ebe29a3c84bde303bdeb0c5c30727a31e6
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: d4f032aa895001abc7b13737497a24deedfc7b47a350af20367318695ed900f4
+// trace_semantic_sha256: 1b9e899b90063c94c8eb029e657d54fd151031d7c68c6ff801fceaf904913e4a
 
 digraph Genesis_14_5_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -537,10 +537,20 @@ digraph Genesis_14_5_Boot {
   "Ω" -> "ו:19:11" [xlabel="transport"];
   "Ω" -> "ו:23:15" [xlabel="transport"];
   "Ω" -> "⊥" [xlabel="approx"];
+  "ב:16:5" -> "ב:16:6" [xlabel="boundary"];
+  "ב:16:6" -> "C:16:12" [xlabel="boundary"];
   "ב:1:1" -> "Ω" [xlabel="transport"];
+  "ב:1:1" -> "ו:1:1" [xlabel="boundary"];
   "ב:1:1" -> "ר:1:1" [xlabel="boundary"];
+  "ב:1:2" -> "ר:1:1" [xlabel="boundary"];
+  "ב:21:7" -> "ב:21:8" [xlabel="boundary"];
+  "ב:21:8" -> "C:21:16" [xlabel="boundary"];
   "ב:21:8" -> "ה:21:3" [xlabel="declare"];
+  "ב:27:10" -> "C:27:19" [xlabel="boundary"];
   "ב:27:10" -> "ש:27:16" [xlabel="construct"];
+  "ב:27:9" -> "ב:27:10" [xlabel="boundary"];
+  "ב:4:3" -> "ב:4:4" [xlabel="boundary"];
+  "ב:4:4" -> "C:4:4" [xlabel="boundary"];
   "ב:4:4" -> "Ω" [xlabel="transport"];
   "ד:5:1" -> "כ:5:2" [xlabel="boundary"];
   "ד:5:1" -> "ר:5:3" [xlabel="boundary"];
@@ -550,6 +560,7 @@ digraph Genesis_14_5_Boot {
   "ו:12:9" -> "C:13:10" [xlabel="transport"];
   "ו:19:11" -> "Ω" [xlabel="transport"];
   "ו:19:11" -> "ת:19:14" [xlabel="finalize"];
+  "ו:1:1" -> "ב:1:1" [xlabel="boundary"];
   "ו:20:13" -> "ז:20:2" [xlabel="gate"];
   "ו:23:15" -> "Ω" [xlabel="transport"];
   "ו:23:15" -> "ת:23:17" [xlabel="finalize"];
@@ -571,6 +582,7 @@ digraph Genesis_14_5_Boot {
   "ר:17:8" -> "support_debt:19:2" [xlabel="support_debt"];
   "ר:17:8" -> "Ω" [xlabel="boundary"];
   "ר:1:1" -> "Ω" [xlabel="boundary"];
+  "ר:1:1" -> "ב:1:2" [xlabel="boundary"];
   "ר:28:9" -> "Ω" [xlabel="boundary"];
   "ר:2:2" -> "Ω" [xlabel="boundary"];
   "ר:5:3" -> "Ω" [xlabel="boundary"];

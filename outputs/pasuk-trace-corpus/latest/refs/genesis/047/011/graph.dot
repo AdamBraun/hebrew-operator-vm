@@ -1,8 +1,8 @@
-// trace_file_sha256: 5cf08ff47a7fdb31440d3e52d4002c80079889cdfa6372af2256d20cff569fb0
+// trace_file_sha256: d3e33818b5387f915d1cc6a46a3b731aae227fd12268dd3a99cb5420cb3fbeaa
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 8b75d3aa13a0529fcc3c011a43ab151d08a7f5e1cb7d6d82af44e29d28e64bdc
+// trace_semantic_sha256: 040b79e2daeba456e92202d36f990b4dbf0fdae91fe7f4335bff8727b5ee3049
 
 digraph Genesis_47_11_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -390,6 +390,7 @@ digraph Genesis_47_11_Boot {
   "C:10:9" -> "צ:10:1" [xlabel="align"];
   "C:13:11" -> "ה:13:2" [xlabel="declare"];
   "C:15:13" -> "ר:15:5" [xlabel="boundary"];
+  "C:1:2" -> "ב:1:1" [xlabel="boundary"];
   "C:1:2" -> "ת:0:2" [xlabel="transport"];
   "C:3:4" -> "ח:3:2" [xlabel="compartment"];
   "C:3:4" -> "ת:2:5" [xlabel="transport"];
@@ -399,9 +400,17 @@ digraph Genesis_47_11_Boot {
   "Ω" -> "ב:14:8" [xlabel="transport"];
   "Ω" -> "ב:9:3" [xlabel="transport"];
   "Ω" -> "כ:17:1" [xlabel="transport"];
+  "ב:12:4" -> "ב:12:5" [xlabel="boundary"];
+  "ב:12:5" -> "C:12:10" [xlabel="boundary"];
   "ב:12:6" -> "ה:13:2" [xlabel="transport"];
+  "ב:12:6" -> "ט:12:1" [xlabel="boundary"];
+  "ב:14:7" -> "ב:14:8" [xlabel="boundary"];
+  "ב:14:8" -> "C:14:12" [xlabel="boundary"];
   "ב:14:8" -> "Ω" [xlabel="transport"];
   "ב:14:8" -> "ר:14:4" [xlabel="boundary"];
+  "ב:1:1" -> "C:1:2" [xlabel="boundary"];
+  "ב:9:2" -> "ב:9:3" [xlabel="boundary"];
+  "ב:9:3" -> "C:9:8" [xlabel="boundary"];
   "ב:9:3" -> "Ω" [xlabel="transport"];
   "ב:9:3" -> "ר:9:1" [xlabel="boundary"];
   "ה:13:2" -> "ב:12:6" [xlabel="transport"];
@@ -411,6 +420,7 @@ digraph Genesis_47_11_Boot {
   "ו:2:3" -> "ו:1:1" [xlabel="transport"];
   "ו:2:3" -> "ת:2:5" [xlabel="finalize"];
   "ח:7:4" -> "ז:7:1" [xlabel="gate"];
+  "ט:12:1" -> "ב:12:6" [xlabel="boundary"];
   "י:1:1" -> "ב:1:1" [xlabel="vav"];
   "י:3:2" -> "ח:3:2" [xlabel="vav"];
   "י:5:3" -> "ת:5:8" [xlabel="finalize"];

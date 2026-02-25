@@ -1,8 +1,8 @@
-// trace_file_sha256: 689cc2c7fe0d83f0cbb2bf4cabfa5669045b21cda80fbe96a52ce3b17832b8c3
+// trace_file_sha256: 3ad510c9ed97eb58921762a5bbbb9f2bb9380975342d905da246771dbefdc7e8
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: f0d32b063ffa849c8022426c1a15cca16dd620f87e0e42447f57e4f793157c7c
+// trace_semantic_sha256: e949054840a96267784fa8a6f5dbe09cc7453f4d7e572ed869c445fc69f00de0
 
 digraph Exodus_37_13_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -410,8 +410,17 @@ digraph Exodus_37_13_Boot {
   "Ω" -> "C:17:12" [xlabel="transport"];
   "Ω" -> "C:4:3" [xlabel="transport"];
   "Ω" -> "ל:18:6" [xlabel="transport"];
+  "ב:11:4" -> "ט:11:2" [xlabel="boundary"];
+  "ב:14:5" -> "ר:14:2" [xlabel="boundary"];
+  "ב:18:6" -> "ר:18:4" [xlabel="boundary"];
+  "ב:4:1" -> "ר:4:1" [xlabel="boundary"];
+  "ב:5:2" -> "ט:5:1" [xlabel="boundary"];
+  "ב:6:3" -> "ה:6:1" [xlabel="boundary"];
   "ג:19:1" -> "ל:19:8" [xlabel="endpoint"];
+  "ה:6:1" -> "ב:6:3" [xlabel="boundary"];
   "ז:6:1" -> "ה:6:1" [xlabel="declare"];
+  "ט:11:2" -> "ב:11:4" [xlabel="boundary"];
+  "ט:5:1" -> "ב:5:2" [xlabel="boundary"];
   "י:19:3" -> "ל:19:8" [xlabel="vav"];
   "י:1:1" -> "צ:1:1" [xlabel="align"];
   "י:8:2" -> "ת:8:5" [xlabel="finalize"];
@@ -425,11 +434,14 @@ digraph Exodus_37_13_Boot {
   "פ:15:1" -> "ת:15:14" [xlabel="finalize"];
   "ק:1:1" -> "ל:2:2" [xlabel="endpoint"];
   "ר:14:2" -> "Ω" [xlabel="boundary"];
+  "ר:14:2" -> "ב:14:5" [xlabel="boundary"];
   "ר:17:3" -> "Ω" [xlabel="boundary"];
   "ר:18:4" -> "Ω" [xlabel="boundary"];
+  "ר:18:4" -> "ב:18:6" [xlabel="boundary"];
   "ר:19:5" -> "Ω" [xlabel="boundary"];
   "ר:19:5" -> "ע:18:6" [xlabel="bestow"];
   "ר:4:1" -> "Ω" [xlabel="boundary"];
+  "ר:4:1" -> "ב:4:1" [xlabel="boundary"];
   "ש:17:4" -> "ר:17:3" [xlabel="boundary"];
   "ת:10:8" -> "ת:10:9" [xlabel="residue"];
   "ת:11:11" -> "ת:11:12" [xlabel="residue"];

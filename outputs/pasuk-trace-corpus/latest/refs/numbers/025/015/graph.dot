@@ -1,8 +1,8 @@
-// trace_file_sha256: c99748aaaff67601bf67b801287c9b5f49930ad65389bbb569ed1b16a70dc8f6
+// trace_file_sha256: a3c665c9bbb7469eca0b79c663c2ac2ecfe2724bb1ca4a4c7a5652ad39dd14d3
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 76f1353c62fc0509a2e692d9bf8eef825a9ba55fc12623c5ce6c5b220dc343f9
+// trace_semantic_sha256: cddaa3a6d47c1d6796ce1ed6bd7539d05b69857e3e9ac26945c8c04b3498b046
 
 digraph Numbers_25_15_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -318,16 +318,25 @@ digraph Numbers_25_15_Boot {
   }
 
   "C:10:9" -> "ש:9:12" [xlabel="transport"];
+  "C:11:10" -> "ב:11:3" [xlabel="boundary"];
+  "C:12:11" -> "ב:12:4" [xlabel="boundary"];
   "C:12:11" -> "ת:11:11" [xlabel="transport"];
   "C:14:13" -> "ה:14:4" [xlabel="declare"];
   "C:2:2" -> "ה:2:1" [xlabel="declare"];
   "C:3:3" -> "ה:3:2" [xlabel="declare"];
   "C:4:4" -> "ה:4:3" [xlabel="declare"];
+  "C:6:6" -> "ב:6:2" [xlabel="boundary"];
   "C:9:8" -> "ר:9:2" [xlabel="boundary"];
   "support_debt:5:1" -> "נ:4:1" [xlabel="support_debt"];
   "Ω" -> "ו:14:7" [xlabel="transport"];
   "Ω" -> "ר:9:2" [xlabel="transport"];
+  "ב:11:3" -> "C:11:10" [xlabel="boundary"];
+  "ב:12:4" -> "C:12:11" [xlabel="boundary"];
+  "ב:13:5" -> "ב:13:6" [xlabel="boundary"];
+  "ב:13:6" -> "C:13:12" [xlabel="boundary"];
   "ב:13:6" -> "ד:13:2" [xlabel="boundary"];
+  "ב:5:1" -> "ז:5:1" [xlabel="boundary"];
+  "ב:6:2" -> "C:6:6" [xlabel="boundary"];
   "ב:6:2" -> "ת:6:5" [xlabel="finalize"];
   "ד:13:2" -> "Ω" [xlabel="boundary"];
   "ד:4:1" -> "Ω" [xlabel="boundary"];
@@ -339,6 +348,7 @@ digraph Numbers_25_15_Boot {
   "ו:14:7" -> "Ω" [xlabel="transport"];
   "ו:1:1" -> "ש:1:4" [xlabel="construct"];
   "ו:7:3" -> "ר:7:1" [xlabel="boundary"];
+  "ז:5:1" -> "ב:5:1" [xlabel="boundary"];
   "י:11:4" -> "ת:11:11" [xlabel="finalize"];
   "י:4:1" -> "support_debt:5:1" [xlabel="support_debt"];
   "י:4:2" -> "ת:4:2" [xlabel="finalize"];

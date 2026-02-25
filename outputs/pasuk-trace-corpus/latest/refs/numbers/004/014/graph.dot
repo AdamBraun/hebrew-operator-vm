@@ -1,8 +1,8 @@
-// trace_file_sha256: 74f5e18215181ee49c8e708f874101fc910a8bc3f0e9f08030e20b83b32c3cf4
+// trace_file_sha256: 1760d4ec60ea822487ddb94ab552e3760bed8f25c3ef8605e5e7361fefebe5bb
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 68821a65401a18f564cb49dc050ee4ca0c287a228d36907d3ae229153b1452d8
+// trace_semantic_sha256: bd127112cd2b65f606120bf9af45607742ced4fdb2565ffddd3a50f61b2f7aef
 
 digraph Numbers_4_14_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -716,18 +716,23 @@ digraph Numbers_4_14_Boot {
   "C:19:17" -> "ה:19:5" [xlabel="declare"];
   "C:23:20" -> "ה:23:6" [xlabel="declare"];
   "C:30:25" -> "ת:30:35" [xlabel="finalize"];
+  "C:32:27" -> "ב:32:3" [xlabel="boundary"];
   "C:3:3" -> "Ω" [xlabel="transport"];
   "C:3:3" -> "ת:3:5" [xlabel="finalize"];
   "C:6:6" -> "Ω" [xlabel="transport"];
   "C:6:6" -> "ש:6:4" [xlabel="construct"];
+  "C:9:9" -> "ב:9:1" [xlabel="boundary"];
   "support_debt:3:1" -> "נ:1:2" [xlabel="support_debt"];
   "support_debt:3:2" -> "נ:1:1" [xlabel="support_debt"];
   "Ω" -> "C:11:10" [xlabel="transport"];
   "Ω" -> "C:3:3" [xlabel="transport"];
   "Ω" -> "C:6:6" [xlabel="transport"];
   "Ω" -> "ו:16:13" [xlabel="transport"];
+  "ב:23:2" -> "ז:23:3" [xlabel="boundary"];
   "ב:23:2" -> "ח:23:4" [xlabel="compartment"];
+  "ב:32:3" -> "C:32:27" [xlabel="boundary"];
   "ב:32:3" -> "ד:32:1" [xlabel="boundary"];
+  "ב:9:1" -> "C:9:9" [xlabel="boundary"];
   "ב:9:1" -> "ה:9:1" [xlabel="declare"];
   "ג:14:1" -> "ת:14:23" [xlabel="finalize"];
   "ד:32:1" -> "Ω" [xlabel="boundary"];
@@ -744,6 +749,7 @@ digraph Numbers_4_14_Boot {
   "ז:14:1" -> "ל:14:10" [xlabel="endpoint"];
   "ז:19:2" -> "ר:19:3" [xlabel="approx"];
   "ז:19:2" -> "ר:19:3" [xlabel="boundary"];
+  "ז:23:3" -> "ב:23:2" [xlabel="boundary"];
   "ח:12:2" -> "ת:12:14" [xlabel="finalize"];
   "ח:30:6" -> "ש:30:12" [xlabel="construct"];
   "י:26:8" -> "ל:26:16" [xlabel="vav"];

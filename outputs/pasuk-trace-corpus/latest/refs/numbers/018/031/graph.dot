@@ -1,8 +1,8 @@
-// trace_file_sha256: 1716f3d1d9ee13b56b540f68c49a4ae4fa8a26e15ed76ed636266620bdd5c9a4
+// trace_file_sha256: c34667f42ce2e6ba29197c7d03e540117374bd27a46ab4fc8f10a9877d896a06
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
-// graph_renderer_id: hebrew-operator-vm@0.1.0/pasuk-graph
+// graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 8095bb56dfb449d94ed8646b63c6c4a16cb7f421d2ec2654da04d87d395662b7
+// trace_semantic_sha256: c6b46a26ef3ee90e549a27e9e0190f30df25c75cebaab26a456e0d510d2d7fad
 
 digraph Numbers_18_31_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -374,8 +374,14 @@ digraph Numbers_18_31_Boot {
   "Ω" -> "ב:18:6" [xlabel="transport"];
   "Ω" -> "ו:1:1" [xlabel="transport"];
   "ב:17:4" -> "ד:17:1" [xlabel="boundary"];
+  "ב:17:4" -> "ע:17:1" [xlabel="boundary"];
+  "ב:18:5" -> "ב:18:6" [xlabel="boundary"];
+  "ב:18:6" -> "C:18:13" [xlabel="boundary"];
   "ב:18:6" -> "Ω" [xlabel="transport"];
   "ב:18:6" -> "ה:18:2" [xlabel="declare"];
+  "ב:4:1" -> "ב:4:2" [xlabel="boundary"];
+  "ב:4:2" -> "C:4:3" [xlabel="boundary"];
+  "ב:8:3" -> "ו:8:7" [xlabel="boundary"];
   "ד:17:1" -> "Ω" [xlabel="boundary"];
   "ד:17:1" -> "ת:17:14" [xlabel="finalize"];
   "ד:19:2" -> "Ω" [xlabel="boundary"];
@@ -383,6 +389,7 @@ digraph Numbers_18_31_Boot {
   "ה:18:2" -> "ל:18:10" [xlabel="endpoint"];
   "ו:12:9" -> "ר:11:1" [xlabel="transport"];
   "ו:1:1" -> "Ω" [xlabel="transport"];
+  "ו:8:7" -> "ב:8:3" [xlabel="boundary"];
   "ח:16:2" -> "ל:16:8" [xlabel="endpoint"];
   "י:8:1" -> "ת:8:11" [xlabel="finalize"];
   "כ:11:9" -> "ר:11:1" [xlabel="boundary"];
@@ -390,6 +397,7 @@ digraph Numbers_18_31_Boot {
   "כ:4:3" -> "ל:4:4" [xlabel="endpoint"];
   "ל:1:2" -> "ת:1:2" [xlabel="finalize"];
   "ל:4:4" -> "C:5:4" [xlabel="approx"];
+  "ע:17:1" -> "ב:17:4" [xlabel="boundary"];
   "ע:19:2" -> "ד:19:2" [xlabel="boundary"];
   "ר:11:1" -> "ו:12:9" [xlabel="transport"];
   "ר:11:1" -> "כ:11:10" [xlabel="boundary"];
