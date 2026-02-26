@@ -7,6 +7,7 @@ const VOWEL_MARKS: Record<string, { kind: DiacriticKind; tier: DiacriticTier }> 
   "\u05B6": { kind: "segol", tier: "sof" },
   "\u05B7": { kind: "patach", tier: "sof" },
   "\u05B8": { kind: "kamatz", tier: "sof" },
+  "\u05C7": { kind: "kamatz", tier: "sof" },
   "\u05B9": { kind: "holam", tier: "rosh" },
   "\u05BB": { kind: "kubutz", tier: "sof" }
 };

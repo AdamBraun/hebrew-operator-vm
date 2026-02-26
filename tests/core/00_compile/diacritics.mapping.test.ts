@@ -13,12 +13,36 @@ describe("diacritics mapping", () => {
   });
 
   it("shuruk is detected only for the vav carrier pattern", () => {
-    const vav = tokenize("וּ");
-    const vavWithSof = tokenize("וָּ");
-    expect(vav[0].dot_kind).toBe("shuruk");
-    expect(vav[0].inside_dot_kind).toBe("shuruk");
-    expect(vavWithSof[0].dot_kind).toBe("dagesh");
-    expect(vavWithSof[0].inside_dot_kind).toBe("dagesh");
+    const vavDotOnly = tokenize("וּ");
+    expect(vavDotOnly[0].dot_kind).toBe("shuruk");
+    expect(vavDotOnly[0].inside_dot_kind).toBe("shuruk");
+
+    const sofVowelMarks = [
+      "\u05B0", // shva
+      "\u05B4", // hiriq
+      "\u05B5", // tzere
+      "\u05B6", // segol
+      "\u05B7", // patach
+      "\u05B8", // kamatz
+      "\u05BB", // kubutz
+      "\u05B1", // hataf segol -> shva + segol
+      "\u05B2", // hataf patach -> shva + patach
+      "\u05B3", // hataf kamatz -> shva + kamatz
+      "\u05C7" // qamatz qatan -> kamatz
+    ];
+
+    for (const sofMark of sofVowelMarks) {
+      const token = tokenize(`ו${sofMark}\u05BC`)[0];
+      expect(token.dot_kind).toBe("dagesh");
+      expect(token.inside_dot_kind).toBe("dagesh");
+    }
+  });
+
+  it("classifies Exodus 29:34 יִוָּתֵר vav-dot as dagesh", () => {
+    const tokens = tokenize("יִוָּתֵר");
+    expect(tokens[1].raw).toBe("וָּ");
+    expect(tokens[1].dot_kind).toBe("dagesh");
+    expect(tokens[1].inside_dot_kind).toBe("dagesh");
   });
 
   it("he + U+05BC resolves to mappiq", () => {

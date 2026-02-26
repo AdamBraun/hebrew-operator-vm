@@ -58,6 +58,13 @@ describe("token compile pipeline", () => {
           marks: ["U+05B2"],
           signature: "BASE=ב|MARKS=U+05B2",
           count: 2
+        },
+        "6": {
+          token_id: 6,
+          base: "ו",
+          marks: ["U+05B8", "U+05BC"],
+          signature: "BASE=ו|MARKS=U+05B8,U+05BC",
+          count: 6
         }
       }
     };
@@ -81,6 +88,11 @@ describe("token compile pipeline", () => {
     expect(compiled.tokens["2"].derived.modes).toContain("HEH_PINNED");
     expect(compiled.tokens["3"].derived.toch).toContain("SHURUK");
     expect(compiled.tokens["3"].derived.modes).toContain("VAV_SEEDED");
+    expect(compiled.tokens["6"].derived.toch).toContain("DAGESH");
+    expect(compiled.tokens["6"].derived.toch).not.toContain("SHURUK");
+    expect(compiled.tokens["6"].runtime.has_shuruk).toBe(false);
+    expect(compiled.tokens["6"].runtime.should_harden).toBe(true);
+    expect(compiled.tokens["6"].modifiers).toContain("KAMATZ");
     expect(compiled.tokens["4"].op_family).toBe("SIN_COMPOSITE");
     expect(compiled.tokens["4"].runtime.read_letter).toBe("ס");
     expect(compiled.tokens["5"].runtime.sof_modifiers).toEqual([
