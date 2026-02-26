@@ -71,169 +71,6 @@ function canonicalGraphOptions() {
   };
 }
 
-function asNonEmptyString(value) {
-  if (typeof value !== "string") {
-    return null;
-  }
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-function parseDotNodeIds(dotText) {
-  const out = new Set();
-  const lines = String(dotText ?? "")
-    .replace(/\r\n?/gu, "\n")
-    .split("\n");
-  for (const line of lines) {
-    if (/^\s*\/\//u.test(line)) {
-      continue;
-    }
-    let match = line.match(/^\s*"([^"]+)"\s*\[/u);
-    if (match) {
-      out.add(match[1]);
-      continue;
-    }
-    match = line.match(/^\s*"([^"]+)"\s*->\s*"([^"]+)"/u);
-    if (match) {
-      out.add(match[1]);
-      out.add(match[2]);
-      continue;
-    }
-    match = line.match(/^\s*"([^"]+)"\s*;\s*$/u);
-    if (match) {
-      out.add(match[1]);
-    }
-  }
-  return out;
-}
-
-function collectFinalHandleIds(tracePayload) {
-  const out = new Set();
-  const handles = tracePayload?.final_state?.handles;
-  if (!Array.isArray(handles)) {
-    return out;
-  }
-  for (const handle of handles) {
-    const handleId = asNonEmptyString(handle?.id);
-    if (handleId) {
-      out.add(handleId);
-    }
-  }
-  return out;
-}
-
-function collectTargetRefs(value, targetIds, out) {
-  if (typeof value === "string") {
-    const ref = value.trim();
-    if (targetIds.has(ref)) {
-      out.add(ref);
-    }
-    return;
-  }
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      collectTargetRefs(item, targetIds, out);
-    }
-    return;
-  }
-  if (!value || typeof value !== "object") {
-    return;
-  }
-  for (const item of Object.values(value)) {
-    collectTargetRefs(item, targetIds, out);
-  }
-}
-
-function buildVmRefEventIndexById(vmEvents, targetIds) {
-  const out = new Map();
-  for (const [eventIndex, event] of vmEvents.entries()) {
-    const refs = new Set();
-    collectTargetRefs(event, targetIds, refs);
-    for (const ref of refs) {
-      const bucket = out.get(ref);
-      if (bucket) {
-        bucket.add(eventIndex);
-      } else {
-        out.set(ref, new Set([eventIndex]));
-      }
-    }
-  }
-  return out;
-}
-
-function buildLinkIndexEventMap(tracePayload) {
-  const out = new Map();
-  const rows = Array.isArray(tracePayload?.link_index) ? tracePayload.link_index : [];
-  for (const row of rows) {
-    if (!row || typeof row !== "object") {
-      continue;
-    }
-    const handleId = asNonEmptyString(row.handle_id);
-    if (!handleId) {
-      continue;
-    }
-    const rawEventIndices = Array.isArray(row.event_indices) ? row.event_indices : [];
-    const eventIndices = rawEventIndices.filter(
-      (value) => Number.isInteger(value) && Number(value) >= 0
-    );
-    const bucket = out.get(handleId) ?? new Set();
-    for (const eventIndex of eventIndices) {
-      bucket.add(Number(eventIndex));
-    }
-    out.set(handleId, bucket);
-  }
-  return out;
-}
-
-function verifyGraphNodeTraceLinkage({ tracePayload, dotText }) {
-  const failures = [];
-  const finalHandleIds = collectFinalHandleIds(tracePayload);
-  if (finalHandleIds.size === 0) {
-    return failures;
-  }
-
-  const graphNodeIds = parseDotNodeIds(dotText);
-  const targetNodeIds = Array.from(graphNodeIds).filter((nodeId) => finalHandleIds.has(nodeId));
-  if (targetNodeIds.length === 0) {
-    return failures;
-  }
-
-  const vmEvents = Array.isArray(tracePayload?.final_state?.vm?.H)
-    ? tracePayload.final_state.vm.H
-    : [];
-  const vmRefsById = buildVmRefEventIndexById(vmEvents, new Set(targetNodeIds));
-  const linkIndexById = buildLinkIndexEventMap(tracePayload);
-
-  for (const [handleId, eventIndices] of linkIndexById.entries()) {
-    for (const eventIndex of eventIndices) {
-      if (eventIndex >= vmEvents.length) {
-        failures.push(
-          `link_index entry ${handleId} has out-of-range event index ${eventIndex} (vm.H length ${vmEvents.length})`
-        );
-      }
-    }
-  }
-
-  const unresolvedNodeIds = targetNodeIds
-    .filter((nodeId) => {
-      const vmRefs = vmRefsById.get(nodeId);
-      if (vmRefs && vmRefs.size > 0) {
-        return false;
-      }
-      const linkRefs = linkIndexById.get(nodeId);
-      return !linkRefs || linkRefs.size === 0;
-    })
-    .sort((left, right) => left.localeCompare(right));
-
-  if (unresolvedNodeIds.length > 0) {
-    const sample = unresolvedNodeIds.slice(0, 8).join(", ");
-    const suffix = unresolvedNodeIds.length > 8 ? ` (+${unresolvedNodeIds.length - 8} more)` : "";
-    failures.push(`unresolved graph node IDs: ${sample}${suffix}`);
-  }
-
-  return failures;
-}
-
 async function verifyRow(args) {
   const { outDir, row, expectedGraphOptsSha } = args;
   const failures = [];
@@ -282,14 +119,6 @@ async function verifyRow(args) {
   }
 
   const traceSha = sha256Text(traceText);
-  let tracePayload;
-  try {
-    tracePayload = JSON.parse(traceText);
-  } catch (error) {
-    failures.push(`${baseLabel}: trace.json parse failed (${String(error?.message ?? error)})`);
-    return failures;
-  }
-
   if (row?.sha256?.trace_json && row.sha256.trace_json !== traceSha) {
     failures.push(
       `${baseLabel}: index sha256.trace_json mismatch (expected ${row.sha256.trace_json}, got ${traceSha})`
@@ -327,10 +156,6 @@ async function verifyRow(args) {
       failures.push(
         `${baseLabel}: dot_schema mismatch (expected ${DOT_SCHEMA}, got ${String(dotProv.dot_schema ?? "")})`
       );
-    }
-    const linkageFailures = verifyGraphNodeTraceLinkage({ tracePayload, dotText });
-    for (const linkageFailure of linkageFailures) {
-      failures.push(`${baseLabel}: ${linkageFailure}`);
     }
     if (row?.sha256?.graph_dot && row.sha256.graph_dot !== sha256Text(dotText)) {
       failures.push(`${baseLabel}: index sha256.graph_dot mismatch`);

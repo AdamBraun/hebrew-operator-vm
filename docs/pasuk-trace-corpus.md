@@ -146,29 +146,10 @@ Each `trace.json` is equivalent to `pasuk-trace` output payload shape:
 - `verse_snapshots`
 - `final_dump_state`
 - `post_reset_state`
-- `link_index` (deterministic graph-node/handle -> trace-event mapping)
 - `word_sections`
 - `final_state` (same as `final_dump_state`)
 
 `trace.json` is canonical. `trace.txt` and `graph.dot` are treated as derived artifacts.
-
-`link_index` row shape:
-
-```json
-{
-  "handle_id": "י:2:1",
-  "event_indices": [5],
-  "taus": [2]
-}
-```
-
-Contract notes:
-
-- Every graph node ID emitted from `graph.dot` MUST resolve to at least one trace event location via either:
-  - direct `final_state.vm.H` refs, or
-  - `link_index` entry with a non-empty `event_indices`.
-- `event_indices` are stable zero-based offsets into `final_state.vm.H`.
-- `taus` are the corresponding stable VM tau values for those event indices.
 
 ## Derived Provenance Contract
 

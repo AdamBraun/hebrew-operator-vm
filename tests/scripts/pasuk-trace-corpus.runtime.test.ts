@@ -45,32 +45,6 @@ function expectedGraphOptsHash(
   return sha256Text(stableStringify(opts));
 }
 
-function parseDotNodeIds(dotText: string): Set<string> {
-  const nodeIds = new Set<string>();
-  const lines = dotText.replace(/\r\n?/gu, "\n").split("\n");
-  for (const line of lines) {
-    if (/^\s*\/\//u.test(line)) {
-      continue;
-    }
-    let match = line.match(/^\s*"([^"]+)"\s*\[/u);
-    if (match) {
-      nodeIds.add(match[1]);
-      continue;
-    }
-    match = line.match(/^\s*"([^"]+)"\s*->\s*"([^"]+)"/u);
-    if (match) {
-      nodeIds.add(match[1]);
-      nodeIds.add(match[2]);
-      continue;
-    }
-    match = line.match(/^\s*"([^"]+)"\s*;\s*$/u);
-    if (match) {
-      nodeIds.add(match[1]);
-    }
-  }
-  return nodeIds;
-}
-
 describe("pasuk trace corpus runtime", () => {
   it("parses defaults and explicit graph flags", () => {
     const parsed = parseArgs([
@@ -171,8 +145,7 @@ describe("pasuk trace corpus runtime", () => {
       ]),
       {
         renderDotFromTraceJson: fakeRenderDot,
-        rendererIds: TEST_RENDERER_IDS,
-        traceExecutionMode: "in-process"
+        rendererIds: TEST_RENDERER_IDS
       }
     );
 
@@ -188,59 +161,12 @@ describe("pasuk trace corpus runtime", () => {
       fs.readFile(dotPath, "utf8")
     ]);
 
-    const tracePayload = JSON.parse(traceJsonText) as {
-      schema_version?: unknown;
-      link_index?: unknown;
-      final_state?: {
-        handles?: Array<{ id?: unknown }>;
-        vm?: {
-          H?: unknown;
-        };
-      };
-    };
+    const tracePayload = JSON.parse(traceJsonText) as { schema_version?: unknown };
     const traceFileSha = sha256Text(traceJsonText);
     const dotProv = parseDotProvenance(dotText);
     const reportProv = parseReportProvenance(traceTxt);
 
     expect(tracePayload.schema_version).toBe(2);
-    expect(Array.isArray(tracePayload.link_index)).toBe(true);
-    const linkRows = Array.isArray(tracePayload.link_index) ? tracePayload.link_index : [];
-    const finalHandleIds = Array.isArray(tracePayload.final_state?.handles)
-      ? tracePayload.final_state.handles
-          .map((handle) => (typeof handle?.id === "string" ? handle.id : null))
-          .filter((id): id is string => id !== null)
-      : [];
-    expect(linkRows.length).toBe(finalHandleIds.length);
-    const linkRowsById = new Map(
-      linkRows
-        .filter(
-          (
-            row
-          ): row is {
-            handle_id: string;
-            event_indices: number[];
-          } =>
-            !!row &&
-            typeof row === "object" &&
-            typeof (row as { handle_id?: unknown }).handle_id === "string" &&
-            Array.isArray((row as { event_indices?: unknown }).event_indices)
-        )
-        .map((row) => [row.handle_id, row.event_indices])
-    );
-    const vmEvents = Array.isArray(tracePayload.final_state?.vm?.H)
-      ? tracePayload.final_state.vm.H
-      : [];
-    const dotNodeIds = parseDotNodeIds(dotText);
-    const unresolvedDotNodeIds = Array.from(dotNodeIds)
-      .filter((nodeId) => finalHandleIds.includes(nodeId))
-      .filter((nodeId) => {
-        const eventIndices = linkRowsById.get(nodeId) ?? [];
-        const validIndices = eventIndices.filter(
-          (index) => Number.isInteger(index) && index >= 0 && index < vmEvents.length
-        );
-        return validIndices.length === 0;
-      });
-    expect(unresolvedDotNodeIds).toEqual([]);
     expect(dotProv.trace_file_sha256).toBe(traceFileSha);
     expect(dotProv.graph_renderer_id).toBe(TEST_RENDERER_IDS.graphRendererId);
     expect(dotProv.dot_schema).toBe(2);
