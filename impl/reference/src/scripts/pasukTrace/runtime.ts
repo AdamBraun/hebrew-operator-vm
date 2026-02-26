@@ -3,7 +3,7 @@ import path from "node:path";
 import { IterateTorahOptions, sanitizeText } from "../iterateTorah/runtime";
 import { DeepTraceEntry, PreparedTraceToken, runProgramWithDeepTrace } from "../../vm/vm";
 import { createInitialState, serializeState } from "../../state/state";
-import { OMEGA_ID } from "../../state/handles";
+import { BOT_ID, OMEGA_ID } from "../../state/handles";
 import { VerseSnapshot, finalizeVerse } from "../../runtime/finalizeVerse";
 
 type RunLanguage = "he" | "en" | "both";
@@ -61,6 +61,12 @@ export type WordSection = {
   exit_boundary: DeepTraceEntry | null;
 };
 
+export type TraceLinkIndexEntry = {
+  handle_id: string;
+  event_indices: number[];
+  taus: number[];
+};
+
 export type PasukTraceRunResult = {
   ref_key: string;
   source_text: string;
@@ -71,6 +77,7 @@ export type PasukTraceRunResult = {
   final_dump_state: Record<string, any>;
   post_reset_state: Record<string, any>;
   final_state: Record<string, any>;
+  link_index: TraceLinkIndexEntry[];
   word_sections: WordSection[];
   report_text: string;
 };
@@ -510,6 +517,153 @@ function asStringArray(value: unknown): string[] {
     .filter((item): item is string => item !== null);
 }
 
+function isLikelyHandleRef(value: string, handleIds: Set<string>): boolean {
+  if (value.length === 0) {
+    return false;
+  }
+  return handleIds.has(value) || value === OMEGA_ID || value === BOT_ID || value.includes(":");
+}
+
+function collectPotentialHandleRefs(
+  value: unknown,
+  handleIds: Set<string>,
+  out: Set<string>
+): void {
+  if (typeof value === "string") {
+    const ref = value.trim();
+    if (isLikelyHandleRef(ref, handleIds)) {
+      out.add(ref);
+    }
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      collectPotentialHandleRefs(item, handleIds, out);
+    }
+    return;
+  }
+  if (!value || typeof value !== "object") {
+    return;
+  }
+  for (const item of Object.values(value as Record<string, unknown>)) {
+    collectPotentialHandleRefs(item, handleIds, out);
+  }
+}
+
+function buildVmEventRefIndex(
+  vmEvents: Array<Record<string, any>>,
+  handleIds: Set<string>
+): Map<string, Set<number>> {
+  const refsById = new Map<string, Set<number>>();
+  for (const [eventIndex, event] of vmEvents.entries()) {
+    const refs = new Set<string>();
+    collectPotentialHandleRefs(event, handleIds, refs);
+    for (const ref of refs) {
+      const bucket = refsById.get(ref);
+      if (bucket) {
+        bucket.add(eventIndex);
+      } else {
+        refsById.set(ref, new Set([eventIndex]));
+      }
+    }
+  }
+  return refsById;
+}
+
+function collectHandleProvenanceRefs(
+  handle: Record<string, any>,
+  handleIds: Set<string>
+): string[] {
+  const refs = new Set<string>();
+  collectPotentialHandleRefs(handle, handleIds, refs);
+  const selfId = asNonEmptyString(handle?.id);
+  if (selfId) {
+    refs.delete(selfId);
+  }
+  return Array.from(refs).sort((left, right) => left.localeCompare(right));
+}
+
+function toSortedIntArray(values: Set<number>): number[] {
+  return Array.from(values).sort((left, right) => left - right);
+}
+
+export function buildHandleTraceLinkIndex(finalState: Record<string, any>): TraceLinkIndexEntry[] {
+  const handles = Array.isArray(finalState?.handles)
+    ? (finalState.handles as Array<Record<string, any>>)
+    : [];
+  const vmEvents = Array.isArray(finalState?.vm?.H)
+    ? (finalState.vm.H as Array<Record<string, any>>)
+    : [];
+
+  const handleById = new Map<string, Record<string, any>>();
+  for (const handle of handles) {
+    const handleId = asNonEmptyString(handle?.id);
+    if (!handleId || handleById.has(handleId)) {
+      continue;
+    }
+    handleById.set(handleId, handle);
+  }
+
+  const handleIds = new Set(handleById.keys());
+  const vmEventRefs = buildVmEventRefIndex(vmEvents, handleIds);
+  const provenanceRefsByHandle = new Map<string, string[]>();
+  for (const [handleId, handle] of handleById.entries()) {
+    provenanceRefsByHandle.set(handleId, collectHandleProvenanceRefs(handle, handleIds));
+  }
+
+  const entries: TraceLinkIndexEntry[] = [];
+  const sortedHandleIds = Array.from(handleIds).sort((left, right) => left.localeCompare(right));
+  for (const handleId of sortedHandleIds) {
+    const eventIndices = new Set<number>(vmEventRefs.get(handleId) ?? []);
+    const queue = [...(provenanceRefsByHandle.get(handleId) ?? [])];
+    const seenRefs = new Set(queue);
+
+    while (queue.length > 0) {
+      const ref = queue.shift();
+      if (!ref) {
+        continue;
+      }
+
+      for (const eventIndex of vmEventRefs.get(ref) ?? []) {
+        eventIndices.add(eventIndex);
+      }
+
+      const nestedRefs = provenanceRefsByHandle.get(ref);
+      if (!nestedRefs) {
+        continue;
+      }
+      for (const nestedRef of nestedRefs) {
+        if (seenRefs.has(nestedRef)) {
+          continue;
+        }
+        seenRefs.add(nestedRef);
+        queue.push(nestedRef);
+      }
+    }
+
+    if (eventIndices.size === 0 && vmEvents.length > 0) {
+      eventIndices.add(0);
+    }
+
+    const sortedEventIndices = toSortedIntArray(eventIndices);
+    const taus = new Set<number>();
+    for (const index of sortedEventIndices) {
+      const tau = Number(vmEvents[index]?.tau);
+      if (Number.isInteger(tau) && tau >= 0) {
+        taus.add(tau);
+      }
+    }
+
+    entries.push({
+      handle_id: handleId,
+      event_indices: sortedEventIndices,
+      taus: toSortedIntArray(taus)
+    });
+  }
+
+  return entries;
+}
+
 function buildInsideBoundaryIndex(
   boundaries: Array<Record<string, any>>
 ): Map<string, ScopeEdge[]> {
@@ -904,6 +1058,7 @@ export async function runPasukTrace(opts: PasukTraceOptions): Promise<PasukTrace
   const postResetState = withTraceFriendlyVmFlags(
     JSON.parse(JSON.stringify(serializeState(execution.state))) as Record<string, any>
   );
+  const linkIndex = buildHandleTraceLinkIndex(finalDumpState);
 
   const reportText = formatDeepTraceReport({
     refKey: resolved.refKey,
@@ -924,6 +1079,7 @@ export async function runPasukTrace(opts: PasukTraceOptions): Promise<PasukTrace
     final_dump_state: finalDumpState,
     post_reset_state: postResetState,
     final_state: finalDumpState,
+    link_index: linkIndex,
     word_sections: sections,
     report_text: reportText
   };
@@ -954,6 +1110,7 @@ export async function main(rawArgv: string[] = process.argv.slice(2)): Promise<v
     verse_snapshots: result.verse_snapshots,
     final_dump_state: result.final_dump_state,
     post_reset_state: result.post_reset_state,
+    link_index: result.link_index,
     word_sections: result.word_sections,
     final_state: result.final_state
   };

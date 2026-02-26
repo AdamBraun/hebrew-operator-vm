@@ -64,6 +64,7 @@ type TracePayloadLike = {
   final_state?: unknown;
   deep_trace?: unknown;
   verse_snapshots?: unknown;
+  link_index?: unknown;
 };
 
 type DotProvenance = {
@@ -1569,6 +1570,7 @@ function buildTraceDumpPayload(args: {
     prepared_tokens: result.prepared_tokens,
     deep_trace: result.trace,
     verse_snapshots: result.verse_snapshots,
+    link_index: result.link_index,
     final_dump_state: result.final_dump_state,
     post_reset_state: result.post_reset_state,
     word_sections: result.word_sections,

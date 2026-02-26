@@ -22,6 +22,32 @@ function eventDataContainsHandleId(value: unknown, handleId: string): boolean {
   return Object.values(value).some((entry) => eventDataContainsHandleId(entry, handleId));
 }
 
+function valueContainsHandleId(value: unknown, handleId: string): boolean {
+  if (value === handleId) {
+    return true;
+  }
+  if (Array.isArray(value)) {
+    return value.some((entry) => valueContainsHandleId(entry, handleId));
+  }
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  return Object.values(value).some((entry) => valueContainsHandleId(entry, handleId));
+}
+
+function eventIndicesContainingHandleId(
+  events: Array<Record<string, any>>,
+  handleId: string
+): number[] {
+  const indices: number[] = [];
+  for (const [index, event] of events.entries()) {
+    if (valueContainsHandleId(event, handleId)) {
+      indices.push(index);
+    }
+  }
+  return indices;
+}
+
 describe("pasuk trace runtime", () => {
   it("parses ref keys", () => {
     expect(parseRefKey("Genesis/1/2")).toEqual({ book: "Genesis", chapter: 1, verse: 2 });
@@ -190,6 +216,91 @@ describe("pasuk trace runtime", () => {
         )
     );
     expect(missing).toEqual([]);
+  });
+
+  it("emits deterministic handle link_index entries for final handles", async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-link-index-"));
+    const outJsonPath = path.join(tmpDir, "trace.json");
+    const outReportPath = path.join(tmpDir, "trace.txt");
+
+    const opts: PasukTraceOptions = {
+      input: path.join(tmpDir, "unused.json"),
+      ref: "Genesis/1/1",
+      text: "וְאִם יִוָּתֵר",
+      lang: "he",
+      normalizeFinals: false,
+      keepTeamim: true,
+      allowRuntimeErrors: false,
+      includeSnapshots: false,
+      outJson: outJsonPath,
+      outReport: outReportPath,
+      printReport: false
+    };
+
+    const result = await runPasukTrace(opts);
+    const handles = Array.isArray(result.final_state?.handles)
+      ? (result.final_state.handles as Array<{ id?: string; meta?: Record<string, any> }>)
+      : [];
+    const handleIds = handles
+      .map((handle) => handle.id)
+      .filter((id): id is string => typeof id === "string" && id.length > 0);
+    const vmEvents = Array.isArray(result.final_state?.vm?.H)
+      ? (result.final_state.vm.H as Array<Record<string, any>>)
+      : [];
+
+    const linkIndex = Array.isArray(result.link_index)
+      ? (result.link_index as Array<{
+          handle_id?: string;
+          event_indices?: number[];
+          taus?: number[];
+        }>)
+      : [];
+    const linkByHandle = new Map(
+      linkIndex
+        .filter(
+          (row): row is { handle_id: string; event_indices: number[]; taus: number[] } =>
+            typeof row?.handle_id === "string" &&
+            Array.isArray(row?.event_indices) &&
+            Array.isArray(row?.taus)
+        )
+        .map((row) => [row.handle_id, row])
+    );
+
+    expect(linkByHandle.size).toBe(handleIds.length);
+    for (const handleId of handleIds) {
+      const entry = linkByHandle.get(handleId);
+      expect(entry).toBeDefined();
+      expect(entry?.event_indices.length).toBeGreaterThan(0);
+      for (const eventIndex of entry?.event_indices ?? []) {
+        expect(Number.isInteger(eventIndex)).toBe(true);
+        expect(eventIndex).toBeGreaterThanOrEqual(0);
+        expect(eventIndex).toBeLessThan(vmEvents.length);
+      }
+      const expectedTaus = Array.from(
+        new Set(
+          (entry?.event_indices ?? [])
+            .map((eventIndex) => vmEvents[eventIndex]?.tau)
+            .filter((tau): tau is number => Number.isInteger(tau) && tau >= 0)
+        )
+      ).sort((left, right) => left - right);
+      expect(entry?.taus).toEqual(expectedTaus);
+    }
+
+    const seededHandle = handles.find(
+      (handle) =>
+        typeof handle.id === "string" &&
+        typeof handle.meta?.seedOf === "string" &&
+        eventIndicesContainingHandleId(vmEvents, handle.meta.seedOf).length > 0
+    );
+    expect(seededHandle).toBeDefined();
+    const seededHandleId = String(seededHandle?.id ?? "");
+    const seedOf = String(seededHandle?.meta?.seedOf ?? "");
+    const seedEventIndices = eventIndicesContainingHandleId(vmEvents, seedOf);
+    expect(seedEventIndices.length).toBeGreaterThan(0);
+    const seededEntry = linkByHandle.get(seededHandleId);
+    expect(
+      (seededEntry?.event_indices ?? []).some((eventIndex) => seedEventIndices.includes(eventIndex))
+    ).toBe(true);
   });
 
   it("shows explicit join-in consumption at word entry", async () => {
@@ -379,6 +490,7 @@ describe("pasuk trace runtime", () => {
     expect(parsed.ref_key).toBe("Genesis/1/1");
     expect(Array.isArray(parsed.deep_trace)).toBe(true);
     expect(Array.isArray(parsed.verse_snapshots)).toBe(true);
+    expect(Array.isArray(parsed.link_index)).toBe(true);
     expect(parsed.options.show_post_reset).toBe(true);
     expect(parsed.final_dump_state).toEqual(parsed.final_state);
     expect(Array.isArray(parsed.post_reset_state.handles)).toBe(true);
