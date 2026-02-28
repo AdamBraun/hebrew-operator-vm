@@ -80,13 +80,35 @@ type JoinMismatchDrillDown = {
     | "boundary_disagrees";
 };
 
+type JoinSkippedVersesSummary = {
+  count: number;
+  sequences: number[];
+};
+
+type JoinMismatchTransitionCoverage = {
+  total_transitions: number;
+  fully_covered_transitions: number;
+  partially_covered_transitions: number;
+  uncovered_transitions: number;
+  current_only_partial_transitions: number;
+  previous_only_partial_transitions: number;
+};
+
+type JoinSelectionPlan = {
+  verses_selected_for_join: number[];
+  verses_skipped_due_to_limit: JoinSkippedVersesSummary;
+  mismatch_transition_coverage: JoinMismatchTransitionCoverage;
+};
+
 type JoinReport = {
   requested: true;
   available: boolean;
   join_limit: number;
   verses_considered: number;
+  verses_selected_for_join: number[];
   verses_loaded: number;
-  verses_skipped_due_to_limit: number;
+  verses_skipped_due_to_limit: JoinSkippedVersesSummary;
+  mismatch_transition_coverage: JoinMismatchTransitionCoverage;
   load_errors: JoinLoadError[];
   boundary_instrumentation: {
     present_count: number;
@@ -428,16 +450,182 @@ function compareJoinMapped(left: JoinPinnedProvenanceRow, right: JoinPinnedProve
   return left.handleId.localeCompare(right.handleId, "en");
 }
 
+function planJoinVerseSelection(args: {
+  summary: Summary;
+  report: InsightsReport;
+  topN: number;
+  joinLimit: number;
+}): JoinSelectionPlan {
+  const verseBySequence = new Map<number, VerseRow>();
+  for (const row of args.summary.verses) {
+    if (!verseBySequence.has(row.sequence)) {
+      verseBySequence.set(row.sequence, row);
+    }
+  }
+  const knownSequences = new Set(verseBySequence.keys());
+
+  const mismatchTransitions: Array<{ prevSequence: number; sequence: number }> = [];
+  const mismatchTransitionKeys = new Set<string>();
+  for (const mismatch of args.report.continuity.mismatches.all) {
+    const key = `${mismatch.prevSequence}->${mismatch.sequence}`;
+    if (mismatchTransitionKeys.has(key)) {
+      continue;
+    }
+    mismatchTransitionKeys.add(key);
+    mismatchTransitions.push({
+      prevSequence: mismatch.prevSequence,
+      sequence: mismatch.sequence
+    });
+  }
+
+  const candidateOrder: number[] = [];
+  const candidateSeen = new Set<number>();
+  const pushCandidate = (sequence: number): void => {
+    if (!knownSequences.has(sequence) || candidateSeen.has(sequence)) {
+      return;
+    }
+    candidateSeen.add(sequence);
+    candidateOrder.push(sequence);
+  };
+
+  for (const transition of mismatchTransitions) {
+    pushCandidate(transition.prevSequence);
+    pushCandidate(transition.sequence);
+  }
+  for (const row of args.summary.verses) {
+    if (!row.runtimeError) {
+      continue;
+    }
+    pushCandidate(row.sequence);
+  }
+  for (const row of args.report.top.by_handle_count.slice(0, args.topN)) {
+    pushCandidate(row.sequence);
+  }
+  for (const row of args.report.cleanup.outliers.topDroppedCount.slice(0, args.topN)) {
+    pushCandidate(row.sequence);
+  }
+  for (const row of args.report.cleanup.outliers.topDropRate.slice(0, args.topN)) {
+    pushCandidate(row.sequence);
+  }
+  for (const row of args.report.top.by_pinned_count.slice(0, args.topN)) {
+    pushCandidate(row.sequence);
+  }
+
+  const selected: number[] = [];
+  const selectedSet = new Set<number>();
+  const pushSelected = (sequence: number): boolean => {
+    if (
+      selected.length >= args.joinLimit ||
+      selectedSet.has(sequence) ||
+      !knownSequences.has(sequence)
+    ) {
+      return false;
+    }
+    selectedSet.add(sequence);
+    selected.push(sequence);
+    return true;
+  };
+
+  for (const transition of mismatchTransitions) {
+    if (selected.length >= args.joinLimit) {
+      break;
+    }
+    const hasPrev = selectedSet.has(transition.prevSequence);
+    const hasCurr = selectedSet.has(transition.sequence);
+    if (hasPrev && hasCurr) {
+      continue;
+    }
+    const canAddPrev = knownSequences.has(transition.prevSequence) && !hasPrev;
+    const canAddCurr = knownSequences.has(transition.sequence) && !hasCurr;
+    const remaining = args.joinLimit - selected.length;
+
+    if (canAddPrev && canAddCurr) {
+      if (remaining >= 2) {
+        pushSelected(transition.prevSequence);
+        pushSelected(transition.sequence);
+      } else if (remaining === 1) {
+        pushSelected(transition.sequence);
+      }
+      continue;
+    }
+    if (canAddCurr) {
+      pushSelected(transition.sequence);
+      continue;
+    }
+    if (canAddPrev) {
+      pushSelected(transition.prevSequence);
+    }
+  }
+
+  for (const sequence of candidateOrder) {
+    if (selected.length >= args.joinLimit) {
+      break;
+    }
+    pushSelected(sequence);
+  }
+
+  const skipped = candidateOrder.filter((sequence) => !selectedSet.has(sequence));
+
+  let fullyCoveredTransitions = 0;
+  let partiallyCoveredTransitions = 0;
+  let uncoveredTransitions = 0;
+  let currentOnlyPartialTransitions = 0;
+  let previousOnlyPartialTransitions = 0;
+  for (const transition of mismatchTransitions) {
+    const hasPrev = selectedSet.has(transition.prevSequence);
+    const hasCurr = selectedSet.has(transition.sequence);
+    if (hasPrev && hasCurr) {
+      fullyCoveredTransitions += 1;
+      continue;
+    }
+    if (hasPrev || hasCurr) {
+      partiallyCoveredTransitions += 1;
+      if (hasCurr) {
+        currentOnlyPartialTransitions += 1;
+      } else {
+        previousOnlyPartialTransitions += 1;
+      }
+      continue;
+    }
+    uncoveredTransitions += 1;
+  }
+
+  return {
+    verses_selected_for_join: selected,
+    verses_skipped_due_to_limit: {
+      count: skipped.length,
+      sequences: skipped.slice(0, DEFAULT_JOIN_SAMPLE_LIMIT)
+    },
+    mismatch_transition_coverage: {
+      total_transitions: mismatchTransitions.length,
+      fully_covered_transitions: fullyCoveredTransitions,
+      partially_covered_transitions: partiallyCoveredTransitions,
+      uncovered_transitions: uncoveredTransitions,
+      current_only_partial_transitions: currentOnlyPartialTransitions,
+      previous_only_partial_transitions: previousOnlyPartialTransitions
+    }
+  };
+}
+
 async function buildJoinReport(args: {
   summary: Summary;
+  report: InsightsReport;
   workspaceRoot: string;
   joinLimit: number;
+  joinPlan: JoinSelectionPlan;
 }): Promise<JoinReport> {
   const workspaceRootResolved = args.workspaceRoot
     ? path.resolve(args.workspaceRoot)
     : process.cwd();
-  const versesConsidered = args.summary.verses.slice(0, args.joinLimit);
-  const versesSkipped = Math.max(0, args.summary.verses.length - versesConsidered.length);
+  const verseBySequence = new Map<number, VerseRow>();
+  for (const row of args.summary.verses) {
+    if (!verseBySequence.has(row.sequence)) {
+      verseBySequence.set(row.sequence, row);
+    }
+  }
+  const versesConsidered = args.joinPlan.verses_selected_for_join
+    .map((sequence) => verseBySequence.get(sequence))
+    .filter((row): row is VerseRow => Boolean(row));
 
   const loadedVerses: LoadedJoinVerse[] = [];
   const loadErrors: JoinLoadError[] = [];
@@ -542,43 +730,46 @@ async function buildJoinReport(args: {
     }))
     .sort(compareJoinMapped);
 
-  const mismatchItems: JoinMismatchDrillDown[] = [];
-  for (let index = 1; index < loadedVerses.length; index += 1) {
-    const prev = loadedVerses[index - 1];
-    const curr = loadedVerses[index];
-    const fields: CarryField[] = ["omega", "focus", "domain"];
-    for (const field of fields) {
-      const expected = prev.row.carryOut[field];
-      const observed = curr.row.carryIn[field];
-      if (expected === observed) {
-        continue;
-      }
-      const prevBoundary = prev.payload?.verseBoundary;
-      const startNext = readBoundaryField(prevBoundary, "startNext", field);
-      const end = readBoundaryField(prevBoundary, "end", field);
-      const diagnosis: JoinMismatchDrillDown["diagnosis"] = !prevBoundary
-        ? "missing_previous_boundary"
-        : !startNext.exists
-          ? "missing_boundary_start_next_field"
-          : startNext.value === observed
-            ? "boundary_matches_observed"
-            : startNext.value === expected
-              ? "boundary_matches_expected_only"
-              : "boundary_disagrees";
-
-      mismatchItems.push({
-        prevSequence: prev.row.sequence,
-        sequence: curr.row.sequence,
-        prevRefKey: prev.row.ref_key,
-        ref_key: curr.row.ref_key,
-        field,
-        summaryExpected: expected,
-        summaryObserved: observed,
-        boundaryStartNext: startNext.value,
-        boundaryEnd: end.value,
-        diagnosis
-      });
+  const loadedBySequence = new Map<number, LoadedJoinVerse>();
+  for (const loaded of loadedVerses) {
+    if (!loadedBySequence.has(loaded.row.sequence)) {
+      loadedBySequence.set(loaded.row.sequence, loaded);
     }
+  }
+
+  const mismatchItems: JoinMismatchDrillDown[] = [];
+  for (const mismatch of args.report.continuity.mismatches.all) {
+    const prev = loadedBySequence.get(mismatch.prevSequence);
+    const curr = loadedBySequence.get(mismatch.sequence);
+    if (!prev || !curr || prev.loadError || curr.loadError) {
+      continue;
+    }
+
+    const prevBoundary = prev.payload?.verseBoundary;
+    const startNext = readBoundaryField(prevBoundary, "startNext", mismatch.field);
+    const end = readBoundaryField(prevBoundary, "end", mismatch.field);
+    const diagnosis: JoinMismatchDrillDown["diagnosis"] = !prevBoundary
+      ? "missing_previous_boundary"
+      : !startNext.exists
+        ? "missing_boundary_start_next_field"
+        : startNext.value === mismatch.observed
+          ? "boundary_matches_observed"
+          : startNext.value === mismatch.expected
+            ? "boundary_matches_expected_only"
+            : "boundary_disagrees";
+
+    mismatchItems.push({
+      prevSequence: mismatch.prevSequence,
+      sequence: mismatch.sequence,
+      prevRefKey: mismatch.prevRefKey,
+      ref_key: mismatch.refKey,
+      field: mismatch.field,
+      summaryExpected: mismatch.expected,
+      summaryObserved: mismatch.observed,
+      boundaryStartNext: startNext.value,
+      boundaryEnd: end.value,
+      diagnosis
+    });
   }
 
   const diagnosisCounts: Record<JoinMismatchDrillDown["diagnosis"], number> = {
@@ -597,8 +788,10 @@ async function buildJoinReport(args: {
     available: loadedVerses.length > 0,
     join_limit: args.joinLimit,
     verses_considered: versesConsidered.length,
+    verses_selected_for_join: args.joinPlan.verses_selected_for_join,
     verses_loaded: loadedVerses.filter((row) => row.loadError === null).length,
-    verses_skipped_due_to_limit: versesSkipped,
+    verses_skipped_due_to_limit: args.joinPlan.verses_skipped_due_to_limit,
+    mismatch_transition_coverage: args.joinPlan.mismatch_transition_coverage,
     load_errors: loadErrors,
     boundary_instrumentation: {
       present_count: boundaryPresentCount,
@@ -1204,7 +1397,16 @@ export function renderInsightsMarkdown(report: InsightsReport, index?: InsightsI
     lines.push(`- available=${String(joinDetails.available)}`);
     lines.push(`- join_limit=${joinDetails.join_limit}`);
     lines.push(`- verses_considered=${joinDetails.verses_considered}`);
+    lines.push(
+      `- verses_selected_for_join=${joinDetails.verses_selected_for_join.join(", ") || "none"}`
+    );
     lines.push(`- verses_loaded=${joinDetails.verses_loaded}`);
+    lines.push(
+      `- verses_skipped_due_to_limit=${joinDetails.verses_skipped_due_to_limit.count}; sample=[${joinDetails.verses_skipped_due_to_limit.sequences.join(", ")}]`
+    );
+    lines.push(
+      `- mismatch transition coverage: full=${joinDetails.mismatch_transition_coverage.fully_covered_transitions}, partial=${joinDetails.mismatch_transition_coverage.partially_covered_transitions}, uncovered=${joinDetails.mismatch_transition_coverage.uncovered_transitions}`
+    );
     lines.push(
       `- boundary coverage=${formatValue(joinDetails.boundary_instrumentation.coverage_rate)}`
     );
@@ -1242,10 +1444,18 @@ export async function runSummaryInsights(opts: SummaryInsightsOptions): Promise<
   });
 
   if (opts.includeJoins) {
+    const joinPlan = planJoinVerseSelection({
+      summary,
+      report: insights,
+      topN: opts.topN,
+      joinLimit: opts.joinLimit
+    });
     const joinDetails = await buildJoinReport({
       summary,
+      report: insights,
       workspaceRoot: opts.workspaceRoot,
-      joinLimit: opts.joinLimit
+      joinLimit: opts.joinLimit,
+      joinPlan
     });
     insights.joins = joinDetails;
     insights.joinDetails = joinDetails;
