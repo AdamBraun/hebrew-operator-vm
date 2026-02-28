@@ -185,6 +185,33 @@ describe("runtime carry state", () => {
     expect(state.handles.has("omega:new")).toBe(true);
   });
 
+  it("carry_omega_focus keeps verse 1 focus as verse 2 starting focus", () => {
+    const verse1 = createInitialState();
+    verse1.handles.set("focus:end:1", createHandle("focus:end:1", "scope"));
+    verse1.vm.F = "focus:end:1";
+    onVerseStart("Genesis/1/1", verse1, "carry_omega_focus", {});
+    const carry = onVerseEnd("Genesis/1/1", verse1, "carry_omega_focus");
+
+    const verse2 = createInitialState();
+    onVerseStart("Genesis/1/2", verse2, "carry_omega_focus", carry);
+
+    expect(carry.focusHandleId).toBe("focus:end:1");
+    expect(verse2.vm.F).toBe("focus:end:1");
+    expect(verse2.handles.has("focus:end:1")).toBe(true);
+  });
+
+  it("missing carried focus falls back safely by synthesizing a placeholder handle", () => {
+    const state = createInitialState();
+    onVerseStart("Genesis/1/2", state, "carry_omega_focus", {
+      omegaHandleId: "omega:new",
+      focusHandleId: "focus:missing"
+    });
+
+    expect(state.vm.F).toBe("focus:missing");
+    expect(state.handles.has("focus:missing")).toBe(true);
+    expect(state.handles.get("focus:missing")?.meta?.carry_focus_fallback).toBe(1);
+  });
+
   it("onVerseStart restores pinned handles from incoming carry", () => {
     const state = createInitialState();
     onVerseStart("Genesis/1/2", state, "carry_omega", {

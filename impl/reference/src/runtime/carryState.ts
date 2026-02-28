@@ -161,9 +161,9 @@ function collectProducedHandleIds(state: State, omegaHandleId: string): string[]
     .sort(compareText);
 }
 
-function ensureHandleExists(state: State, handleId: string): void {
+function ensureHandleExists(state: State, handleId: string): boolean {
   if (state.handles.has(handleId)) {
-    return;
+    return false;
   }
   state.handles.set(
     handleId,
@@ -174,6 +174,7 @@ function ensureHandleExists(state: State, handleId: string): void {
       }
     })
   );
+  return true;
 }
 
 export function finalizeVerseScope(
@@ -462,7 +463,16 @@ export function applyCarryState(state: State, carry: CarryState): void {
   }
 
   if (focusHandleId) {
-    ensureHandleExists(state, focusHandleId);
+    const focusFallbackApplied = ensureHandleExists(state, focusHandleId);
+    if (focusFallbackApplied) {
+      const focusHandle = state.handles.get(focusHandleId);
+      if (focusHandle) {
+        focusHandle.meta = { ...focusHandle.meta, carry_focus_fallback: 1 };
+      }
+    }
+    if (!state.handles.has(focusHandleId)) {
+      throw new Error(`Unable to restore focus handle from carry state: ${focusHandleId}`);
+    }
     state.vm.F = focusHandleId;
   }
 
