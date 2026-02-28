@@ -17,6 +17,7 @@ describe("torah corpus args parser", () => {
       "/tmp/in.json",
       "--out-dir",
       "/tmp/out",
+      "--verse-boundary-mode=carry_omega_focus",
       "--normalize-finals",
       "--keep-teamim",
       "--allow-runtime-errors"
@@ -27,7 +28,10 @@ describe("torah corpus args parser", () => {
       lang: "both",
       normalizeFinals: true,
       keepTeamim: true,
-      allowRuntimeErrors: true
+      allowRuntimeErrors: true,
+      runtimeConfig: {
+        verseBoundaryMode: "carry_omega_focus"
+      }
     });
   });
 
@@ -36,6 +40,21 @@ describe("torah corpus args parser", () => {
     expect(parsed.mode).toBe("WINDOW");
     expect(parsed.modeLabel).toBe("WINDOW(6)");
     expect(parsed.windowSize).toBe(6);
+    expect(parsed.runtimeConfig.verseBoundaryMode).toBe("reset");
+  });
+
+  it("accepts each supported verse boundary mode", () => {
+    const supported = ["reset", "carry_omega", "carry_omega_focus", "carry_omega_focus_domain"];
+    for (const mode of supported) {
+      const parsed = parseExecuteArgs([`--verse-boundary-mode=${mode}`]);
+      expect(parsed.runtimeConfig.verseBoundaryMode).toBe(mode);
+    }
+  });
+
+  it("rejects invalid verse boundary mode with valid values listed", () => {
+    expect(() => parseExecuteArgs(["--verse-boundary-mode=carry_everything"])).toThrow(
+      /Invalid --verse-boundary-mode value: carry_everything\. Expected one of: reset, carry_omega, carry_omega_focus, carry_omega_focus_domain/
+    );
   });
 
   it("rejects invalid safety-rail threshold", () => {

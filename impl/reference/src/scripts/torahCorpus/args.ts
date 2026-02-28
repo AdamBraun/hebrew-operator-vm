@@ -1,4 +1,9 @@
 import path from "node:path";
+import {
+  DEFAULT_VERSE_BOUNDARY_MODE,
+  SUPPORTED_VERSE_BOUNDARY_MODES,
+  type VerseBoundaryMode
+} from "../../runtime/carryState";
 
 export const DEFAULT_INPUT = path.resolve(process.cwd(), "data", "torah.json");
 export const DEFAULT_OUT_DIR = path.resolve(process.cwd(), "outputs", "torah-corpus", "latest");
@@ -56,6 +61,10 @@ export const DEFAULT_SAFETY_RAIL_THRESHOLD = 0.35;
 export type RunLanguage = "he" | "en" | "both";
 export type ExecutionMode = "WORD" | "VERSE" | "WINDOW";
 
+export type RuntimeConfig = {
+  verseBoundaryMode: VerseBoundaryMode;
+};
+
 type OptionValue = {
   value: string;
   nextIndex: number;
@@ -68,6 +77,7 @@ export type CommonRunArgs = {
   normalizeFinals: boolean;
   keepTeamim: boolean;
   allowRuntimeErrors: boolean;
+  runtimeConfig: RuntimeConfig;
 };
 
 export type ExecuteArgs = CommonRunArgs & {
@@ -147,6 +157,9 @@ export function printHelp(): void {
     "  node scripts/torah-corpus.mjs execute [--token-registry=path] [--compiled-bundles=path] [--semantic-version=value] [--debug-raw-events]"
   );
   console.log(
+    "  node scripts/torah-corpus.mjs execute [--verse-boundary-mode=reset|carry_omega|carry_omega_focus|carry_omega_focus_domain]"
+  );
+  console.log(
     "  node scripts/torah-corpus.mjs run-all [--input=path] [--out-dir=path] [--lang=he|en|both]"
   );
   console.log(
@@ -184,10 +197,23 @@ export function printHelp(): void {
   console.log(`  --mode=${DEFAULT_EXECUTION_MODE}`);
   console.log(`  --window-size=${DEFAULT_WINDOW_SIZE}`);
   console.log(`  --safety-rail-threshold=${DEFAULT_SAFETY_RAIL_THRESHOLD}`);
+  console.log(`  --verse-boundary-mode=${DEFAULT_VERSE_BOUNDARY_MODE}`);
   console.log("  --lang=he");
   console.log("  normalize-finals=false");
   console.log("  keep-teamim=false");
   console.log("  allow-runtime-errors=false");
+}
+
+function parseVerseBoundaryMode(rawMode: string): VerseBoundaryMode {
+  const normalized = String(rawMode ?? "")
+    .trim()
+    .toLowerCase();
+  if ((SUPPORTED_VERSE_BOUNDARY_MODES as readonly string[]).includes(normalized)) {
+    return normalized as VerseBoundaryMode;
+  }
+  throw new Error(
+    `Invalid --verse-boundary-mode value: ${rawMode}. Expected one of: ${SUPPORTED_VERSE_BOUNDARY_MODES.join(", ")}`
+  );
 }
 
 export function parseCommonRunArgs(argv: string[]): CommonRunArgs {
@@ -197,7 +223,10 @@ export function parseCommonRunArgs(argv: string[]): CommonRunArgs {
     lang: "he",
     normalizeFinals: false,
     keepTeamim: false,
-    allowRuntimeErrors: false
+    allowRuntimeErrors: false,
+    runtimeConfig: {
+      verseBoundaryMode: DEFAULT_VERSE_BOUNDARY_MODE
+    }
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -222,6 +251,12 @@ export function parseCommonRunArgs(argv: string[]): CommonRunArgs {
     if (langOpt) {
       opts.lang = langOpt.value as RunLanguage;
       index = langOpt.nextIndex;
+      continue;
+    }
+    const verseBoundaryModeOpt = readOptionValue(argv, index, "--verse-boundary-mode");
+    if (verseBoundaryModeOpt) {
+      opts.runtimeConfig.verseBoundaryMode = parseVerseBoundaryMode(verseBoundaryModeOpt.value);
+      index = verseBoundaryModeOpt.nextIndex;
       continue;
     }
     if (arg === "--normalize-finals") {

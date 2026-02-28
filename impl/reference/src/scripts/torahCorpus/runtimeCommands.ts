@@ -126,7 +126,8 @@ async function runAll(argv) {
   const runConfig = {
     lang: opts.lang,
     normalize_finals: opts.normalizeFinals,
-    allow_runtime_errors: opts.allowRuntimeErrors
+    allow_runtime_errors: opts.allowRuntimeErrors,
+    verse_boundary_mode: opts.runtimeConfig.verseBoundaryMode
   };
   const inputMeta = {
     path: workspaceRelativePath(inputPath),
