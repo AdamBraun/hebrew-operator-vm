@@ -50,7 +50,7 @@ import {
   resolveSemanticVersion,
   selectModeExecutions
 } from "./execute";
-import { onVerseEnd, onVerseStart, type CarryState } from "../../runtime/carryState";
+import { onVerseEndDetailed, onVerseStart, type CarryState } from "../../runtime/carryState";
 import {
   buildCuratedGoldens,
   buildRegressionReport,
@@ -580,7 +580,12 @@ async function runExecute(argv) {
       verseRefKey: verseEntry.ref_key
     });
 
-    carryState = onVerseEnd(verseEntry.ref_key, verseState, opts.runtimeConfig.verseBoundaryMode);
+    const verseBoundaryEnd = onVerseEndDetailed(
+      verseEntry.ref_key,
+      verseState,
+      opts.runtimeConfig.verseBoundaryMode
+    );
+    carryState = verseBoundaryEnd.carryState;
 
     assertModeExecutionLength({
       modeLabel: opts.modeLabel,
@@ -687,7 +692,8 @@ async function runExecute(argv) {
       boundaryByType,
       sortCountObjectByKey,
       buildVerseBoundaryResolution,
-      buildVerseMotifs
+      buildVerseMotifs,
+      verseBoundary: verseBoundaryEnd.verseBoundary
     });
     verseRows.push(canonicalizeVerseTraceRecord(verseRecord));
   }

@@ -443,6 +443,7 @@ type BuildVerseTraceRecordInput = {
     crossWordEvents: unknown[];
     verseBoundaryResolution: unknown;
   }) => unknown[];
+  verseBoundary?: Record<string, unknown>;
 };
 
 export function resolveExecutePaths(opts: ExecutePathOpts): ExecutePaths {
@@ -1749,6 +1750,9 @@ export function buildVerseTraceRecord(args: BuildVerseTraceRecordInput): Record<
   }
   if (args.mode === "WINDOW") {
     verseRecord.window_size = args.windowSize;
+  }
+  if (args.verseBoundary && Object.keys(args.verseBoundary).length > 0) {
+    verseRecord.verseBoundary = args.verseBoundary;
   }
   if (args.traceExtensions && Object.keys(args.traceExtensions).length > 0) {
     verseRecord.extensions = args.traceExtensions;

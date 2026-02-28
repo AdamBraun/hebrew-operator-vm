@@ -7,6 +7,7 @@ import {
   extractCarryState,
   finalizeVerseScope,
   onVerseEnd,
+  onVerseEndDetailed,
   onVerseStart,
   type CarryState
 } from "@ref/runtime/carryState";
@@ -155,6 +156,8 @@ describe("runtime carry state", () => {
 
   it("onVerseEnd delegates to mode-specific carry extraction with finalized omega", () => {
     const state = createInitialState();
+    state.handles.set("focus:end", createHandle("focus:end", "scope"));
+    state.handles.set("domain:end", createHandle("domain:end", "scope"));
     state.vm.F = "focus:end";
     state.vm.D = "domain:end";
 
@@ -165,6 +168,25 @@ describe("runtime carry state", () => {
       domainHandleId: "domain:end"
     });
     expect((state as { Omega?: string }).Omega).toBe("Ωv:Genesis_1_1");
+  });
+
+  it("onVerseEndDetailed returns carry trace block with cleanup stats in continual modes", () => {
+    const state = createInitialState();
+    state.handles.set("focus:end", createHandle("focus:end", "scope"));
+    state.vm.F = "focus:end";
+    onVerseStart("Genesis/1/1", state, "carry_omega_focus", {});
+
+    const result = onVerseEndDetailed("Genesis/1/1", state, "carry_omega_focus");
+
+    expect(result.cleanup).toBeDefined();
+    expect(result.verseBoundary).toBeDefined();
+    expect(result.verseBoundary?.mode).toBe("carry_omega_focus");
+    expect(result.verseBoundary?.end.omega).toBe("Ωv:Genesis_1_1");
+    expect(result.verseBoundary?.end.focus).toBe("focus:end");
+    expect(result.verseBoundary?.startNext.omega).toBe("Ωv:Genesis_1_1");
+    expect(result.verseBoundary?.startNext.focus).toBe("focus:end");
+    expect(result.verseBoundary?.startNext.domain).toBeNull();
+    expect(result.verseBoundary?.end.keptCount).toBeGreaterThan(0);
   });
 
   it("onVerseStart applies incoming carry in non-reset modes", () => {

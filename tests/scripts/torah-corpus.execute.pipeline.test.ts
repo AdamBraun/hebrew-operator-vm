@@ -155,5 +155,37 @@ describe("torah corpus execute pipeline", () => {
     expect(secondRunOut).toContain("execute: words=5");
     expect(fs.readFileSync(tracesPath, "utf8")).toBe(tracesText);
     expect(fs.readFileSync(verseTracesPath, "utf8")).toBe(verseTraceText);
+
+    const carryRunOut = runNode([
+      CORPUS_SCRIPT,
+      "execute",
+      `--input=${inputPath}`,
+      "--lang=he",
+      "--verse-boundary-mode=carry_omega_focus",
+      `--trace-out=${tracesPath}`,
+      `--flows-out=${flowsPath}`,
+      `--report-out=${executionReportPath}`,
+      `--verse-trace-out=${verseTracesPath}`,
+      `--verse-report-out=${verseExecutionReportPath}`,
+      `--verse-motif-index-out=${verseMotifIndexPath}`,
+      `--token-registry=${tokenRegistryPath}`,
+      `--compiled-bundles=${compiledBundlesPath}`
+    ]);
+    expect(carryRunOut).toContain("execute: words=5");
+
+    const carryVerseRows = fs
+      .readFileSync(verseTracesPath, "utf8")
+      .split(/\r?\n/)
+      .filter((line) => line.trim().length > 0)
+      .map((line) => JSON.parse(line));
+    expect(carryVerseRows).toHaveLength(2);
+    for (const row of carryVerseRows) {
+      expect(row.verseBoundary).toBeDefined();
+      expect(row.verseBoundary.mode).toBe("carry_omega_focus");
+      expect(row.verseBoundary.end).toBeDefined();
+      expect(typeof row.verseBoundary.end.keptCount).toBe("number");
+      expect(typeof row.verseBoundary.end.droppedCount).toBe("number");
+      expect(row.verseBoundary.startNext.domain).toBeNull();
+    }
   });
 });

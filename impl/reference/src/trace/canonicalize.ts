@@ -267,6 +267,39 @@ function normalizeSafetyRail(
   };
 }
 
+function normalizeTraceNodeRef(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function normalizeVerseBoundaryTrace(
+  verseBoundary: VerseTraceRecord["verseBoundary"]
+): VerseTraceRecord["verseBoundary"] {
+  if (!verseBoundary) {
+    return undefined;
+  }
+  const pinned =
+    Array.isArray(verseBoundary.end?.pinned) && verseBoundary.end.pinned.length > 0
+      ? [...verseBoundary.end.pinned].map(String).sort(compareText)
+      : [];
+  return {
+    mode: String(verseBoundary.mode),
+    end: {
+      omega: normalizeTraceNodeRef(verseBoundary.end?.omega),
+      focus: normalizeTraceNodeRef(verseBoundary.end?.focus),
+      domain: normalizeTraceNodeRef(verseBoundary.end?.domain),
+      pinned,
+      pinnedCount: Number(verseBoundary.end?.pinnedCount ?? pinned.length),
+      keptCount: Number(verseBoundary.end?.keptCount ?? 0),
+      droppedCount: Number(verseBoundary.end?.droppedCount ?? 0)
+    },
+    startNext: {
+      omega: normalizeTraceNodeRef(verseBoundary.startNext?.omega),
+      focus: normalizeTraceNodeRef(verseBoundary.startNext?.focus),
+      domain: normalizeTraceNodeRef(verseBoundary.startNext?.domain)
+    }
+  };
+}
+
 function normalizeExtensions(
   extensions: Record<string, unknown> | undefined
 ): Record<string, unknown> | undefined {
@@ -361,6 +394,7 @@ export function canonicalizeVerseTraceRecord(input: VerseTraceRecord): VerseTrac
   const crossWordEvents = normalizeCrossWordEvents(input.cross_word_events);
   const notableMotifs = normalizeNotableMotifs(input.notable_motifs);
   const safetyRail = normalizeSafetyRail(input.safety_rail);
+  const verseBoundary = normalizeVerseBoundaryTrace(input.verseBoundary);
   const extensions = normalizeExtensions(input.extensions);
 
   const base: VerseTraceRecord = {
@@ -378,6 +412,9 @@ export function canonicalizeVerseTraceRecord(input: VerseTraceRecord): VerseTrac
     notable_motifs: notableMotifs
   };
 
+  if (verseBoundary !== undefined) {
+    base.verseBoundary = verseBoundary;
+  }
   if (input.window_size !== undefined) {
     base.window_size = asPositiveInt(input.window_size, 1);
   }

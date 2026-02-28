@@ -262,7 +262,24 @@ describe("torah corpus execute module helpers", () => {
             return acc;
           }, {}),
       buildVerseBoundaryResolution: () => ({ action: "preserve" }),
-      buildVerseMotifs: () => [{ motif: "operator_chain", count: 1 }]
+      buildVerseMotifs: () => [{ motif: "operator_chain", count: 1 }],
+      verseBoundary: {
+        mode: "carry_omega_focus",
+        end: {
+          omega: "Ωv:Genesis_1_1",
+          focus: "focus:end",
+          domain: "domain:end",
+          pinned: ["pin:1"],
+          pinnedCount: 1,
+          keptCount: 5,
+          droppedCount: 2
+        },
+        startNext: {
+          omega: "Ωv:Genesis_1_1",
+          focus: "focus:end",
+          domain: null
+        }
+      }
     });
 
     expect(verseRecord.record_kind).toBe("VERSE_TRACE");
@@ -274,6 +291,8 @@ describe("torah corpus execute module helpers", () => {
     });
     expect(verseRecord.boundary_events.by_type.PHRASE_BREAK).toBe(1);
     expect(verseRecord.boundary_events.phrase_breaks).toHaveLength(1);
+    expect(verseRecord.verseBoundary).toBeDefined();
+    expect(verseRecord.verseBoundary.mode).toBe("carry_omega_focus");
   });
 
   it("builds word execution artifacts with delta and runtime samples", () => {

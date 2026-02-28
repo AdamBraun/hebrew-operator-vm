@@ -474,6 +474,24 @@ export type SafetyRail = {
   threshold: number;
 };
 
+export type VerseBoundaryCarryTrace = {
+  mode: string;
+  end: {
+    omega: string | null;
+    focus: string | null;
+    domain: string | null;
+    pinned: string[];
+    pinnedCount: number;
+    keptCount: number;
+    droppedCount: number;
+  };
+  startNext: {
+    omega: string | null;
+    focus: string | null;
+    domain: string | null;
+  };
+};
+
 export type WordTraceRecord = {
   record_kind: "WORD_TRACE";
   trace_version: TraceVersion;
@@ -505,6 +523,7 @@ export type VerseTraceRecord = {
   boundary_events: VerseBoundaryEvents;
   cross_word_events: CrossWordEvent[];
   notable_motifs: NotableMotif[];
+  verseBoundary?: VerseBoundaryCarryTrace;
   window_size?: number;
   safety_rail?: SafetyRail;
   canonical_hash?: string;

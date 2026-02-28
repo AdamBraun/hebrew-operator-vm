@@ -34,6 +34,33 @@ export type BoundaryCleanupResult = {
 };
 
 export const SEMANTIC_EDGE_LABELS = ["*"] as const;
+const DEFAULT_PINNED_TRACE_LIMIT = 12;
+
+type VerseBoundaryNodeRef = string | null;
+
+export type VerseBoundaryTraceBlock = {
+  mode: VerseBoundaryMode;
+  end: {
+    omega: VerseBoundaryNodeRef;
+    focus: VerseBoundaryNodeRef;
+    domain: VerseBoundaryNodeRef;
+    pinned: string[];
+    pinnedCount: number;
+    keptCount: number;
+    droppedCount: number;
+  };
+  startNext: {
+    omega: VerseBoundaryNodeRef;
+    focus: VerseBoundaryNodeRef;
+    domain: VerseBoundaryNodeRef;
+  };
+};
+
+export type VerseBoundaryEndResult = {
+  carryState: CarryState;
+  cleanup: BoundaryCleanupResult | null;
+  verseBoundary: VerseBoundaryTraceBlock | undefined;
+};
 
 type StateWithOmega = State & {
   Omega?: string;
@@ -121,6 +148,76 @@ function isSemanticEdgeLabel(label: string): boolean {
 
 function remapOrBot(id: string, removed: Set<string>): string {
   return removed.has(id) ? BOT_ID : id;
+}
+
+function toTraceNodeRef(value: unknown): VerseBoundaryNodeRef {
+  const id = normalizeHandleId(value);
+  return id ?? null;
+}
+
+function assertHandleExistsForTrace(
+  state: State,
+  handleId: VerseBoundaryNodeRef,
+  label: string,
+  ref: string
+): void {
+  if (!handleId) {
+    return;
+  }
+  if (!state.handles.has(handleId)) {
+    throw new Error(`Verse boundary trace ${label} missing handle '${handleId}' at ${ref}`);
+  }
+}
+
+function buildVerseBoundaryTraceBlock(args: {
+  ref: string;
+  mode: VerseBoundaryMode;
+  state: State;
+  carryState: CarryState;
+  cleanup: BoundaryCleanupResult;
+  pinnedLimit?: number;
+}): VerseBoundaryTraceBlock {
+  const pinnedAll = listPinned(args.state);
+  const pinnedLimit = Math.max(
+    1,
+    Math.trunc(Number(args.pinnedLimit ?? DEFAULT_PINNED_TRACE_LIMIT))
+  );
+  const pinned = pinnedAll.slice(0, pinnedLimit);
+  const projectedCarry = projectCarryStateForMode(args.mode, args.carryState);
+  const endOmega = toTraceNodeRef(getStateOmegaId(args.state));
+  const endFocus = toTraceNodeRef(args.state.vm.F);
+  const endDomain = toTraceNodeRef(args.state.vm.D);
+  const startNextOmega = toTraceNodeRef(projectedCarry.omegaHandleId);
+  const startNextFocus = toTraceNodeRef(projectedCarry.focusHandleId);
+  const startNextDomain = toTraceNodeRef(projectedCarry.domainHandleId);
+
+  assertHandleExistsForTrace(args.state, endOmega, "end.omega", args.ref);
+  assertHandleExistsForTrace(args.state, endFocus, "end.focus", args.ref);
+  assertHandleExistsForTrace(args.state, endDomain, "end.domain", args.ref);
+  assertHandleExistsForTrace(args.state, startNextOmega, "startNext.omega", args.ref);
+  assertHandleExistsForTrace(args.state, startNextFocus, "startNext.focus", args.ref);
+  assertHandleExistsForTrace(args.state, startNextDomain, "startNext.domain", args.ref);
+  for (const pinnedHandleId of pinned) {
+    assertHandleExistsForTrace(args.state, pinnedHandleId, "end.pinned", args.ref);
+  }
+
+  return {
+    mode: args.mode,
+    end: {
+      omega: endOmega,
+      focus: endFocus,
+      domain: endDomain,
+      pinned,
+      pinnedCount: pinnedAll.length,
+      keptCount: args.cleanup.keptCount,
+      droppedCount: args.cleanup.droppedCount
+    },
+    startNext: {
+      omega: startNextOmega,
+      focus: startNextFocus,
+      domain: startNextDomain
+    }
+  };
 }
 
 function sanitizeRef(ref: string): string {
@@ -507,14 +604,38 @@ function projectCarryStateForMode(mode: VerseBoundaryMode, carryState: CarryStat
   return projected;
 }
 
-export function onVerseEnd(ref: string, state: State, mode: VerseBoundaryMode): CarryState {
+export function onVerseEndDetailed(
+  ref: string,
+  state: State,
+  mode: VerseBoundaryMode
+): VerseBoundaryEndResult {
   finalizeVerseScope(state, ref);
   const carryState = extractCarryState(state, mode);
+  let cleanup: BoundaryCleanupResult | null = null;
+  let verseBoundary: VerseBoundaryTraceBlock | undefined = undefined;
+
   if (mode !== "reset") {
-    cleanupAtVerseBoundary(state, carryState);
+    cleanup = cleanupAtVerseBoundary(state, carryState);
+    verseBoundary = buildVerseBoundaryTraceBlock({
+      ref,
+      mode,
+      state,
+      carryState,
+      cleanup
+    });
   }
+
   clearVerseStartHandles(state);
-  return carryState;
+
+  return {
+    carryState,
+    cleanup,
+    verseBoundary
+  };
+}
+
+export function onVerseEnd(ref: string, state: State, mode: VerseBoundaryMode): CarryState {
+  return onVerseEndDetailed(ref, state, mode).carryState;
 }
 
 export function onVerseStart(
