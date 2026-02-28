@@ -106,9 +106,20 @@ describe("summary insights runtime", () => {
       format: "both",
       topN: 25,
       includeJoins: false,
+      joinLimit: 250,
       workspaceRoot: ""
     });
     expect(defaultOutDirForSummary("/tmp/run/summary.json")).toBe("/tmp/run/insights");
+  });
+
+  it("parses join options", () => {
+    const parsed = parseArgs([
+      "--summary=/tmp/run/summary.json",
+      "--include-joins",
+      "--join-limit=10"
+    ]);
+    expect(parsed.includeJoins).toBe(true);
+    expect(parsed.joinLimit).toBe(10);
   });
 
   it("writes json and markdown reports", async () => {
@@ -122,7 +133,8 @@ describe("summary insights runtime", () => {
       outDir,
       format: "both",
       topN: 2,
-      includeJoins: true,
+      includeJoins: false,
+      joinLimit: 250,
       workspaceRoot: process.cwd()
     });
 
@@ -135,11 +147,122 @@ describe("summary insights runtime", () => {
     expect(json.overview.mode).toBe("carry_omega_focus");
     expect(json.top.by_handle_count).toHaveLength(2);
     expect(json.top.by_dropped_count[0].ref_key).toBe("Genesis/1/2");
-    expect(json.joins.requested).toBe(true);
+    expect(json.joins).toBeUndefined();
+    expect(json.options.join_limit).toBe(250);
 
     const markdown = fs.readFileSync(path.join(outDir, "insights.md"), "utf8");
     expect(markdown).toContain("# Continual Run Insights");
     expect(markdown).toContain("## Top By Dropped Count");
+  });
+
+  it("loads per-verse payloads and emits join drill-down when include-joins is enabled", async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "summary-insights-joins-"));
+    const versesDir = path.join(tmpDir, "verses");
+    fs.mkdirSync(versesDir, { recursive: true });
+
+    const verse1 = path.join(versesDir, "001.json");
+    const verse2 = path.join(versesDir, "002.json");
+    const verse3 = path.join(versesDir, "003.json");
+
+    fs.writeFileSync(
+      verse1,
+      JSON.stringify(
+        {
+          verseBoundary: {
+            mode: "carry_omega_focus",
+            end: { omega: "Ωv:Genesis_1_1", focus: "focus:1", domain: null },
+            startNext: { omega: "Ωv:Genesis_1_1", focus: "focus:1", domain: null }
+          },
+          provenance: {
+            handles: {
+              "pin:1": ["token:י"]
+            }
+          }
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
+    fs.writeFileSync(
+      verse2,
+      JSON.stringify(
+        {
+          verseBoundary: {
+            mode: "carry_omega_focus",
+            end: { omega: "Ωv:Genesis_1_2", focus: "focus:2", domain: null },
+            startNext: { omega: "Ωv:Genesis_1_2", focus: "focus:2", domain: null }
+          },
+          provenance: {
+            handleOrigins: {
+              "pin:2": ["token:ב"]
+            }
+          }
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
+    fs.writeFileSync(
+      verse3,
+      JSON.stringify(
+        {
+          verseBoundary: {
+            mode: "carry_omega_focus",
+            end: { omega: "Ωv:Genesis_1_3", focus: "focus:3", domain: null },
+            startNext: { omega: "Ωv:Genesis_1_3", focus: "focus:3", domain: null }
+          }
+        },
+        null,
+        2
+      ),
+      "utf8"
+    );
+
+    const fixture = buildSummaryFixture() as {
+      continuity: { focusMatches: number; mismatches: { focus: string[] } };
+      verses: Array<{
+        outputPath: string;
+        carryIn: { focus: string | null };
+        carryOut: { focus: string | null; pinned: string[] };
+      }>;
+    };
+    fixture.verses[0].outputPath = verse1;
+    fixture.verses[1].outputPath = verse2;
+    fixture.verses[2].outputPath = verse3;
+    fixture.verses[2].carryIn.focus = "focus:DIFF";
+    fixture.continuity.focusMatches = 1;
+    fixture.continuity.mismatches.focus = [
+      "Genesis/1/2 -> Genesis/1/3: expected focus:2, got focus:DIFF"
+    ];
+
+    const summaryPath = path.join(tmpDir, "summary.json");
+    const outDir = path.join(tmpDir, "insights");
+    fs.writeFileSync(summaryPath, JSON.stringify(fixture, null, 2), "utf8");
+
+    const result = await runSummaryInsights({
+      summary: summaryPath,
+      outDir,
+      format: "json",
+      topN: 2,
+      includeJoins: true,
+      joinLimit: 3,
+      workspaceRoot: tmpDir
+    });
+
+    const json = JSON.parse(fs.readFileSync(result.jsonPath ?? "", "utf8"));
+    expect(json.joins.requested).toBe(true);
+    expect(json.joins.available).toBe(true);
+    expect(json.joins.join_limit).toBe(3);
+    expect(json.joins.verses_loaded).toBe(3);
+    expect(json.joins.boundary_instrumentation.present_count).toBe(3);
+    expect(json.joins.continuity_mismatch_drilldown.mismatch_count).toBe(1);
+    expect(
+      json.joins.continuity_mismatch_drilldown.diagnosis_counts.boundary_matches_expected_only
+    ).toBe(1);
+    expect(json.joins.pinned_provenance.mapped_handles).toBeGreaterThanOrEqual(2);
+    expect(json.joins.pinned_provenance.top_mapped_handles[0].handleId).toMatch(/^pin:/);
   });
 
   it("fails cleanly on invalid summary schema", async () => {
@@ -154,6 +277,7 @@ describe("summary insights runtime", () => {
         format: "json",
         topN: 25,
         includeJoins: false,
+        joinLimit: 250,
         workspaceRoot: ""
       })
     ).rejects.toThrow(/Invalid summary\.json/);
