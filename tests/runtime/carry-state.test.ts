@@ -3,6 +3,7 @@ import { createInitialState } from "@ref/state/state";
 import { OMEGA_ID, createHandle } from "@ref/state/handles";
 import {
   applyCarryState,
+  cleanupAtVerseBoundary,
   extractCarryState,
   finalizeVerseScope,
   onVerseEnd,
@@ -195,6 +196,46 @@ describe("runtime carry state", () => {
     expect(state.handles.has("pin:2")).toBe(true);
     expect(state.handles.get("pin:1")?.pinned).toBe(true);
     expect(state.handles.get("pin:2")?.pinned).toBe(true);
+  });
+
+  it("cleanupAtVerseBoundary keeps root-reachable handles and drops mem-zones/unreachable", () => {
+    const state = createInitialState();
+    state.handles.set("omega:root", createHandle("omega:root", "boundary"));
+    state.handles.set("focus:root", createHandle("focus:root", "scope"));
+    state.handles.set("keep:linked", createHandle("keep:linked", "entity"));
+    state.handles.set("drop:free", createHandle("drop:free", "entity"));
+    state.handles.set("drop:mem", createHandle("drop:mem", "memZone"));
+    state.links.push({ from: "focus:root", to: "keep:linked", label: "member_of" });
+    state.links.push({ from: "focus:root", to: "drop:mem", label: "member_of" });
+
+    const result = cleanupAtVerseBoundary(state, {
+      omegaHandleId: "omega:root",
+      focusHandleId: "focus:root"
+    });
+
+    expect(result.droppedCount).toBe(2);
+    expect(state.handles.has("omega:root")).toBe(true);
+    expect(state.handles.has("focus:root")).toBe(true);
+    expect(state.handles.has("keep:linked")).toBe(true);
+    expect(state.handles.has("drop:free")).toBe(false);
+    expect(state.handles.has("drop:mem")).toBe(false);
+    expect(state.links.some((link) => link.from === "focus:root" && link.to === "drop:mem")).toBe(
+      false
+    );
+  });
+
+  it("continual mode cleanup drops stale pre-verse handles while keeping current roots", () => {
+    const state = createInitialState();
+    state.handles.set("stale:1", createHandle("stale:1", "entity"));
+
+    onVerseStart("Genesis/1/2", state, "carry_omega", {});
+    state.handles.set("new:1", createHandle("new:1", "entity"));
+
+    const carry = onVerseEnd("Genesis/1/2", state, "carry_omega");
+    expect(carry.omegaHandleId).toBe("Ωv:Genesis_1_2");
+    expect(state.handles.has("stale:1")).toBe(false);
+    expect(state.handles.has("new:1")).toBe(true);
+    expect(state.handles.has("Ωv:Genesis_1_2")).toBe(true);
   });
 
   it("onVerseStart is a no-op in reset mode", () => {
