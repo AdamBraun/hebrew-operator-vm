@@ -93,9 +93,14 @@ describe("summary insights pipeline", () => {
     expect(output).toContain("summary-insights: outDir=");
     expect(fs.existsSync(path.join(outDir, "insights.json"))).toBe(true);
     expect(fs.existsSync(path.join(outDir, "insights.md"))).toBe(true);
+    expect(fs.existsSync(path.join(outDir, "index.json"))).toBe(true);
 
     const report = JSON.parse(fs.readFileSync(path.join(outDir, "insights.json"), "utf8"));
     expect(report.overview.verses_selected).toBe(2);
     expect(report.top.by_handle_count).toHaveLength(1);
+    expect(report.meta.mode).toBe("carry_omega_focus");
+
+    const index = JSON.parse(fs.readFileSync(path.join(outDir, "index.json"), "utf8"));
+    expect(index.meta.versesSelected).toBe(2);
   });
 });

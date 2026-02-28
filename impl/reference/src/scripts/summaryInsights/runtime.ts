@@ -7,6 +7,13 @@ import {
   resolvePerVerseOutputPath,
   type PerVerseJoinPayload
 } from "./joiners/perVerse";
+import { extractContinuity, type ContinuityReport } from "./extractors/continuity";
+import { extractPinned, type PinnedReport } from "./extractors/pinned";
+import { extractCleanup, type CleanupReport } from "./extractors/cleanup";
+import { extractStateShape, type StateShapeReport } from "./extractors/stateShape";
+import { extractCarrySemantics, type CarrySemanticsReport } from "./extractors/carrySemantics";
+import { extractErrors, type ErrorsReport } from "./extractors/errors";
+import { extractSegmentation, type SegmentationReport } from "./extractors/segmentation";
 
 export type InsightsFormat = "json" | "md" | "both";
 
@@ -121,6 +128,22 @@ export type InsightsReport = {
     join_limit: number;
     workspace_root: string | null;
   };
+  meta: {
+    mode: string;
+    from: string;
+    to: string;
+    versesSelected: number;
+    runtimeErrors: number;
+    expectedTransitions: number;
+  };
+  continuity: ContinuityReport;
+  pinned: PinnedReport;
+  cleanup: CleanupReport;
+  stateShape: StateShapeReport;
+  carrySemantics: CarrySemanticsReport;
+  errors: ErrorsReport;
+  segmentation: SegmentationReport;
+  joinDetails?: JoinReport;
   overview: {
     mode: string;
     from: string;
@@ -141,6 +164,32 @@ export type InsightsReport = {
     by_pinned_count: ResolvedTopVerse[];
   };
   joins?: JoinReport;
+};
+
+export type InsightsIndexRow = {
+  category: string;
+  metric: string;
+  sequence: number;
+  ref_key: string;
+  outputPath: string;
+  resolvedOutputPath: string;
+  value: number | string | null;
+  details?: string;
+};
+
+export type InsightsIndex = {
+  schema_version: 1;
+  generated_at: string;
+  source_summary_path: string;
+  meta: {
+    mode: string;
+    from: string;
+    to: string;
+    versesSelected: number;
+  };
+  anomalies: InsightsIndexRow[];
+  byCategory: Record<string, InsightsIndexRow[]>;
+  totalAnomalies: number;
 };
 
 export type SummaryInsightsOptions = {
@@ -574,6 +623,239 @@ async function buildJoinReport(args: {
   };
 }
 
+type VersePointer = {
+  sequence: number;
+  ref_key: string;
+  outputPath: string;
+  resolvedOutputPath: string;
+};
+
+const INDEX_CATEGORY_ORDER = [
+  "errors",
+  "continuity",
+  "cleanup",
+  "stateShape",
+  "carrySemantics"
+] as const;
+
+function toVerseKey(sequence: number, refKey: string): string {
+  return `${sequence}::${refKey}`;
+}
+
+function buildVersePointerMaps(
+  summary: Summary,
+  workspaceRootResolved: string
+): {
+  byKey: Map<string, VersePointer>;
+  bySequence: Map<number, VersePointer>;
+} {
+  const byKey = new Map<string, VersePointer>();
+  const bySequence = new Map<number, VersePointer>();
+  for (const row of summary.verses) {
+    const pointer: VersePointer = {
+      sequence: row.sequence,
+      ref_key: row.ref_key,
+      outputPath: row.outputPath,
+      resolvedOutputPath: resolvePerVerseOutputPath(row.outputPath, workspaceRootResolved)
+    };
+    byKey.set(toVerseKey(row.sequence, row.ref_key), pointer);
+    if (!bySequence.has(row.sequence)) {
+      bySequence.set(row.sequence, pointer);
+    }
+  }
+  return {
+    byKey,
+    bySequence
+  };
+}
+
+function lookupVersePointer(
+  maps: {
+    byKey: Map<string, VersePointer>;
+    bySequence: Map<number, VersePointer>;
+  },
+  sequence: number,
+  refKey: string
+): VersePointer {
+  const exact = maps.byKey.get(toVerseKey(sequence, refKey));
+  if (exact) {
+    return exact;
+  }
+  const fallback = maps.bySequence.get(sequence);
+  if (fallback) {
+    return fallback;
+  }
+  return {
+    sequence,
+    ref_key: refKey,
+    outputPath: "",
+    resolvedOutputPath: ""
+  };
+}
+
+function formatValue(value: number | string | null): string {
+  if (value === null) {
+    return "null";
+  }
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      return String(value);
+    }
+    const abs = Math.abs(value);
+    if (abs >= 1000 || (abs > 0 && abs < 0.001)) {
+      return value.toExponential(3);
+    }
+    if (Number.isInteger(value)) {
+      return String(value);
+    }
+    return value.toFixed(6).replace(/0+$/u, "").replace(/\.$/u, "");
+  }
+  return value;
+}
+
+function markdownEscapeCell(value: string): string {
+  return String(value ?? "").replace(/\|/gu, "\\|");
+}
+
+function markdownOutlierTable(rows: readonly InsightsIndexRow[]): string[] {
+  if (rows.length === 0) {
+    return ["No rows."];
+  }
+  const lines = [
+    "| sequence | ref_key | metric | value | outputPath |",
+    "| ---: | --- | --- | --- | --- |"
+  ];
+  for (const row of rows) {
+    lines.push(
+      `| ${row.sequence} | ${markdownEscapeCell(row.ref_key)} | ${markdownEscapeCell(
+        row.metric
+      )} | ${markdownEscapeCell(formatValue(row.value))} | ${markdownEscapeCell(row.outputPath)} |`
+    );
+  }
+  return lines;
+}
+
+function buildInsightsIndex(args: {
+  summary: Summary;
+  report: InsightsReport;
+  summaryPath: string;
+  generatedAt: string;
+  workspaceRoot: string;
+  topN: number;
+}): InsightsIndex {
+  const workspaceRootResolved = args.workspaceRoot
+    ? path.resolve(args.workspaceRoot)
+    : process.cwd();
+  const maps = buildVersePointerMaps(args.summary, workspaceRootResolved);
+
+  const byCategory: Record<string, InsightsIndexRow[]> = {};
+  for (const category of INDEX_CATEGORY_ORDER) {
+    byCategory[category] = [];
+  }
+
+  const pushRow = (category: string, row: InsightsIndexRow): void => {
+    const current = byCategory[category] ?? [];
+    current.push(row);
+    byCategory[category] = current;
+  };
+
+  for (const row of args.report.errors.errorVerses.slice(0, args.topN)) {
+    const pointer = lookupVersePointer(maps, row.sequence, row.ref_key);
+    pushRow("errors", {
+      category: "errors",
+      metric: "runtimeError",
+      sequence: row.sequence,
+      ref_key: row.ref_key,
+      outputPath: pointer.outputPath,
+      resolvedOutputPath: pointer.resolvedOutputPath,
+      value: row.runtimeError
+    });
+  }
+
+  for (const row of args.report.continuity.mismatches.all.slice(0, args.topN)) {
+    const pointer = lookupVersePointer(maps, row.sequence, row.refKey);
+    pushRow("continuity", {
+      category: "continuity",
+      metric: `mismatch:${row.field}`,
+      sequence: row.sequence,
+      ref_key: row.refKey,
+      outputPath: pointer.outputPath,
+      resolvedOutputPath: pointer.resolvedOutputPath,
+      value: `${String(row.expected)} -> ${String(row.observed)}`,
+      details: row.message
+    });
+  }
+
+  for (const row of args.report.cleanup.outliers.topDroppedCount.slice(0, args.topN)) {
+    const pointer = lookupVersePointer(maps, row.sequence, row.ref_key);
+    pushRow("cleanup", {
+      category: "cleanup",
+      metric: "droppedCount",
+      sequence: row.sequence,
+      ref_key: row.ref_key,
+      outputPath: pointer.outputPath,
+      resolvedOutputPath: pointer.resolvedOutputPath,
+      value: row.value
+    });
+  }
+  for (const row of args.report.cleanup.outliers.topDropRate.slice(0, args.topN)) {
+    const pointer = lookupVersePointer(maps, row.sequence, row.ref_key);
+    pushRow("cleanup", {
+      category: "cleanup",
+      metric: "dropRate",
+      sequence: row.sequence,
+      ref_key: row.ref_key,
+      outputPath: pointer.outputPath,
+      resolvedOutputPath: pointer.resolvedOutputPath,
+      value: row.value
+    });
+  }
+
+  for (const row of args.report.stateShape.deltas.topAcrossMetrics.slice(0, args.topN)) {
+    const pointer = lookupVersePointer(maps, row.sequence, row.ref_key);
+    pushRow("stateShape", {
+      category: "stateShape",
+      metric: `delta:${row.metric}`,
+      sequence: row.sequence,
+      ref_key: row.ref_key,
+      outputPath: pointer.outputPath,
+      resolvedOutputPath: pointer.resolvedOutputPath,
+      value: row.delta,
+      details: `absDelta=${formatValue(row.absDelta)}`
+    });
+  }
+
+  for (const row of args.report.carrySemantics.rankings.longestFocusRuns.slice(0, args.topN)) {
+    const pointer = lookupVersePointer(maps, row.startSeq, row.startRefKey);
+    pushRow("carrySemantics", {
+      category: "carrySemantics",
+      metric: "longestFocusRun",
+      sequence: row.startSeq,
+      ref_key: row.startRefKey,
+      outputPath: pointer.outputPath,
+      resolvedOutputPath: pointer.resolvedOutputPath,
+      value: row.length,
+      details: `${row.startRefKey} -> ${row.endRefKey}`
+    });
+  }
+
+  const anomalies = INDEX_CATEGORY_ORDER.flatMap((category) => byCategory[category] ?? []);
+  return {
+    schema_version: 1,
+    generated_at: args.generatedAt,
+    source_summary_path: workspaceRelativePath(path.resolve(args.summaryPath)),
+    meta: {
+      mode: args.summary.mode,
+      from: args.summary.from,
+      to: args.summary.to,
+      versesSelected: args.summary.versesSelected
+    },
+    anomalies,
+    byCategory,
+    totalAnomalies: anomalies.length
+  };
+}
+
 export function defaultOutDirForSummary(summaryPath: string): string {
   return path.join(path.dirname(path.resolve(summaryPath)), "insights");
 }
@@ -706,6 +988,14 @@ export function buildInsightsReport(args: {
     .sort((left, right) => compareTop(left, right, "pinnedCount"))
     .slice(0, args.topN);
 
+  const continuity = extractContinuity(args.summary);
+  const pinned = extractPinned(args.summary);
+  const cleanup = extractCleanup(args.summary);
+  const stateShape = extractStateShape(args.summary);
+  const carrySemantics = extractCarrySemantics(args.summary);
+  const errors = extractErrors(args.summary);
+  const segmentation = extractSegmentation(args.summary);
+
   const report: InsightsReport = {
     schema_version: 1,
     generated_at: new Date().toISOString(),
@@ -717,17 +1007,32 @@ export function buildInsightsReport(args: {
       join_limit: args.joinLimit,
       workspace_root: args.workspaceRoot ? workspaceRelativePath(workspaceRootResolved) : null
     },
+    meta: {
+      mode: args.summary.mode,
+      from: args.summary.from,
+      to: args.summary.to,
+      versesSelected: args.summary.versesSelected,
+      runtimeErrors: args.summary.runtimeErrors,
+      expectedTransitions: args.summary.continuity.expectedTransitions
+    },
+    continuity,
+    pinned,
+    cleanup,
+    stateShape,
+    carrySemantics,
+    errors,
+    segmentation,
     overview: {
       mode: args.summary.mode,
       from: args.summary.from,
       to: args.summary.to,
       verses_selected: args.summary.versesSelected,
       runtime_errors: args.summary.runtimeErrors,
-      expected_transitions: args.summary.continuity.expectedTransitions,
+      expected_transitions: continuity.transitionCount,
       mismatch_counts: {
-        omega: args.summary.continuity.mismatches.omega.length,
-        focus: args.summary.continuity.mismatches.focus.length,
-        domain: args.summary.continuity.mismatches.domain.length
+        omega: continuity.mismatches.counts.omega,
+        focus: continuity.mismatches.counts.focus,
+        domain: continuity.mismatches.counts.domain
       },
       non_increasing_handle_count: args.summary.sanity.nonIncreasingHandleCount
     },
@@ -741,81 +1046,187 @@ export function buildInsightsReport(args: {
   return report;
 }
 
-function rowLine(row: ResolvedTopVerse): string {
-  return `${row.sequence}. ${row.ref_key} (handles=${row.handles}, dropped=${row.droppedCount}, pinned=${row.pinnedCount})`;
-}
-
-export function renderInsightsMarkdown(report: InsightsReport): string {
+export function renderInsightsMarkdown(report: InsightsReport, index?: InsightsIndex): string {
   const lines: string[] = [];
+  const indexRows = index?.byCategory ?? {};
+  const cleanupTop = report.cleanup.outliers.topDroppedCount[0];
+  const stateTop = report.stateShape.deltas.topAcrossMetrics[0];
+
   lines.push("# Continual Run Insights");
+  lines.push("");
+  lines.push("## Executive Summary");
+  lines.push("");
+  lines.push(
+    `- mode=${report.meta.mode}; range=${report.meta.from} -> ${report.meta.to}; verses=${report.meta.versesSelected}`
+  );
+  lines.push(
+    `- runtimeErrors=${report.meta.runtimeErrors}; errorRate=${formatValue(report.errors.errorRate)}`
+  );
+  lines.push(
+    `- continuity mismatches: omega=${report.continuity.mismatches.counts.omega}, focus=${report.continuity.mismatches.counts.focus}, domain=${report.continuity.mismatches.counts.domain}`
+  );
+  lines.push(
+    `- cleanup: executedRate=${formatValue(report.cleanup.cleanupExecution.executedRate)}, meanDropRate=${formatValue(report.cleanup.dropRate.meanWhenExecuted)}`
+  );
+  if (cleanupTop) {
+    lines.push(
+      `- worst cleanup drop: ${cleanupTop.ref_key} (seq=${cleanupTop.sequence}, dropped=${formatValue(
+        cleanupTop.value
+      )})`
+    );
+  }
+  if (stateTop) {
+    lines.push(
+      `- largest state delta: ${stateTop.ref_key} (seq=${stateTop.sequence}, metric=${stateTop.metric}, delta=${formatValue(
+        stateTop.delta
+      )})`
+    );
+  }
+  lines.push("");
+  lines.push("## meta");
   lines.push("");
   lines.push(`- generated_at: ${report.generated_at}`);
   lines.push(`- source_summary_path: ${report.source_summary_path}`);
-  lines.push(`- mode: ${report.overview.mode}`);
-  lines.push(`- range: ${report.overview.from} -> ${report.overview.to}`);
-  lines.push(`- verses_selected: ${report.overview.verses_selected}`);
-  lines.push(`- runtime_errors: ${report.overview.runtime_errors}`);
+  lines.push(`- mode: ${report.meta.mode}`);
+  lines.push(`- from: ${report.meta.from}`);
+  lines.push(`- to: ${report.meta.to}`);
+  lines.push(`- versesSelected: ${report.meta.versesSelected}`);
+  lines.push(`- runtimeErrors: ${report.meta.runtimeErrors}`);
+  lines.push(`- expectedTransitions: ${report.meta.expectedTransitions}`);
+
+  lines.push("");
+  lines.push("## continuity");
+  lines.push("");
   lines.push(
-    `- mismatch_counts: omega=${report.overview.mismatch_counts.omega}, focus=${report.overview.mismatch_counts.focus}, domain=${report.overview.mismatch_counts.domain}`
+    `- match rates: omega=${formatValue(report.continuity.rates.omega.rate)}, focus=${formatValue(report.continuity.rates.focus.rate)}, domain=${formatValue(report.continuity.rates.domain.rate)}`
+  );
+  lines.push(`- mode compliance: compliant=${String(report.continuity.modeCompliance.compliant)}`);
+  lines.push("");
+  lines.push("### Top Continuity Outliers");
+  lines.push("");
+  lines.push(...markdownOutlierTable((indexRows.continuity ?? []).slice(0, report.options.top_n)));
+
+  lines.push("");
+  lines.push("## pinned");
+  lines.push("");
+  lines.push(
+    `- pinnedCount mean=${formatValue(report.pinned.pinnedCount.describe.mean)}, max=${formatValue(report.pinned.pinnedCount.describe.max)}`
+  );
+  lines.push(`- accumulationRisk=${report.pinned.qualitySignals.accumulationRisk}`);
+  lines.push(`- brittlenessRisk=${report.pinned.qualitySignals.brittlenessRisk}`);
+  lines.push(
+    `- immortal candidates=${report.pinned.longevity.immortals.handles.length} (thresholdPct=${report.pinned.longevity.immortals.thresholdPct})`
+  );
+
+  lines.push("");
+  lines.push("## cleanup");
+  lines.push("");
+  lines.push(
+    `- executed=${report.cleanup.cleanupExecution.executedCount}/${report.cleanup.verses}; skipped=${report.cleanup.cleanupExecution.skippedCount}`
   );
   lines.push(
-    `- non_increasing_handle_count: ${String(report.overview.non_increasing_handle_count)}`
+    `- work=${report.cleanup.qualitySignals.cleanupWork}; leakRisk=${report.cleanup.qualitySignals.leakRisk}`
   );
   lines.push("");
-  lines.push("## Top By Handle Count");
+  lines.push("### Top Cleanup Outliers");
   lines.push("");
-  if (report.top.by_handle_count.length === 0) {
-    lines.push("- none");
-  } else {
-    for (const row of report.top.by_handle_count) {
-      lines.push(`- ${rowLine(row)}`);
-    }
-  }
+  lines.push(...markdownOutlierTable((indexRows.cleanup ?? []).slice(0, report.options.top_n)));
+
   lines.push("");
-  lines.push("## Top By Dropped Count");
+  lines.push("## stateShape");
   lines.push("");
-  if (report.top.by_dropped_count.length === 0) {
-    lines.push("- none");
-  } else {
-    for (const row of report.top.by_dropped_count) {
-      lines.push(`- ${rowLine(row)}`);
-    }
-  }
+  lines.push(`- densitySignal=${report.stateShape.ratios.trend.densitySignal}`);
+  lines.push(`- regimeChanges=${report.stateShape.regimeChange.events.length}`);
   lines.push("");
-  lines.push("## Top By Pinned Count");
+  lines.push("### Top StateShape Outliers");
   lines.push("");
-  if (report.top.by_pinned_count.length === 0) {
-    lines.push("- none");
-  } else {
-    for (const row of report.top.by_pinned_count) {
-      lines.push(`- ${rowLine(row)}`);
-    }
-  }
-  if (report.joins) {
-    lines.push("");
-    lines.push("## Joins");
-    lines.push("");
-    lines.push(`- requested: ${String(report.joins.requested)}`);
-    lines.push(`- available: ${String(report.joins.available)}`);
-    lines.push(`- join_limit: ${report.joins.join_limit}`);
-    lines.push(`- verses_considered: ${report.joins.verses_considered}`);
-    lines.push(`- verses_loaded: ${report.joins.verses_loaded}`);
-    lines.push(`- boundary_present: ${report.joins.boundary_instrumentation.present_count}`);
-    lines.push(`- boundary_missing: ${report.joins.boundary_instrumentation.missing_count}`);
+  lines.push(...markdownOutlierTable((indexRows.stateShape ?? []).slice(0, report.options.top_n)));
+
+  lines.push("");
+  lines.push("## carrySemantics");
+  lines.push("");
+  lines.push(
+    `- stickyFocus thresholdLength=${report.carrySemantics.stickyFocus.thresholdLength}; segments=${report.carrySemantics.stickyFocus.segments.length}`
+  );
+  lines.push(
+    `- longest focus run length=${formatValue(report.carrySemantics.rankings.longestFocusRuns[0]?.length ?? null)}`
+  );
+  lines.push(
+    `- longest domain run length=${formatValue(report.carrySemantics.rankings.longestDomainRuns[0]?.length ?? null)}`
+  );
+  lines.push("");
+  lines.push("### Top CarrySemantics Outliers");
+  lines.push("");
+  lines.push(
+    ...markdownOutlierTable((indexRows.carrySemantics ?? []).slice(0, report.options.top_n))
+  );
+
+  lines.push("");
+  lines.push("## errors");
+  lines.push("");
+  lines.push(
+    `- errorCount=${report.errors.errorCount}; errorRate=${formatValue(report.errors.errorRate)}`
+  );
+  lines.push(
+    `- clusters=${report.errors.clustering.byMessagePrefix.length}; chaptersWithErrors=${report.errors.density.byBookChapter.filter((row) => row.errorCount > 0).length}`
+  );
+  lines.push("");
+  lines.push("### Top Error Outliers");
+  lines.push("");
+  lines.push(...markdownOutlierTable((indexRows.errors ?? []).slice(0, report.options.top_n)));
+
+  lines.push("");
+  lines.push("## segmentation");
+  lines.push("");
+  lines.push(`- books tracked=${report.segmentation.perBook.length}`);
+  lines.push(`- chapters tracked=${report.segmentation.perChapter.length}`);
+  lines.push(
+    `- chapter-boundary spike detected=${formatValue(report.segmentation.chapterTransitionChecks.spikeDetected ? 1 : report.segmentation.chapterTransitionChecks.spikeDetected === false ? 0 : null)}`
+  );
+  lines.push("");
+  lines.push("| segment | errorRate | mismatchRate | growth |");
+  lines.push("| --- | ---: | ---: | ---: |");
+  for (const row of report.segmentation.perChapter.slice(0, Math.min(10, report.options.top_n))) {
     lines.push(
-      `- mismatches_drilldown: ${report.joins.continuity_mismatch_drilldown.mismatch_count}`
+      `| ${markdownEscapeCell(row.key)} | ${markdownEscapeCell(
+        formatValue(row.errorRate)
+      )} | ${markdownEscapeCell(formatValue(row.mismatchTransitionRate))} | ${markdownEscapeCell(
+        formatValue(row.handles.growth)
+      )} |`
     );
-    lines.push(`- pinned_mapped_handles: ${report.joins.pinned_provenance.mapped_handles}`);
   }
+
+  const joinDetails = report.joinDetails ?? report.joins;
+  if (joinDetails) {
+    lines.push("");
+    lines.push("## joinDetails");
+    lines.push("");
+    lines.push(`- available=${String(joinDetails.available)}`);
+    lines.push(`- join_limit=${joinDetails.join_limit}`);
+    lines.push(`- verses_considered=${joinDetails.verses_considered}`);
+    lines.push(`- verses_loaded=${joinDetails.verses_loaded}`);
+    lines.push(
+      `- boundary coverage=${formatValue(joinDetails.boundary_instrumentation.coverage_rate)}`
+    );
+    lines.push(
+      `- pinned mapped handles=${joinDetails.pinned_provenance.mapped_handles}, unmapped observations=${joinDetails.pinned_provenance.unmapped_observations}`
+    );
+    lines.push(
+      `- continuity mismatch drilldown count=${joinDetails.continuity_mismatch_drilldown.mismatch_count}`
+    );
+  }
+
   lines.push("");
   return `${lines.join("\n")}\n`;
 }
 
 export async function runSummaryInsights(opts: SummaryInsightsOptions): Promise<{
   insights: InsightsReport;
+  index: InsightsIndex;
   outDir: string;
   jsonPath: string | null;
   markdownPath: string | null;
+  indexPath: string;
 }> {
   const summaryPath = path.resolve(opts.summary);
   const outDir = path.resolve(opts.outDir);
@@ -831,16 +1242,28 @@ export async function runSummaryInsights(opts: SummaryInsightsOptions): Promise<
   });
 
   if (opts.includeJoins) {
-    insights.joins = await buildJoinReport({
+    const joinDetails = await buildJoinReport({
       summary,
       workspaceRoot: opts.workspaceRoot,
       joinLimit: opts.joinLimit
     });
+    insights.joins = joinDetails;
+    insights.joinDetails = joinDetails;
   }
+
+  const index = buildInsightsIndex({
+    summary,
+    report: insights,
+    summaryPath,
+    generatedAt: insights.generated_at,
+    workspaceRoot: opts.workspaceRoot,
+    topN: opts.topN
+  });
 
   await fs.mkdir(outDir, { recursive: true });
   let jsonPath: string | null = null;
   let markdownPath: string | null = null;
+  const indexPath = path.join(outDir, "index.json");
 
   if (opts.format === "json" || opts.format === "both") {
     jsonPath = path.join(outDir, "insights.json");
@@ -848,21 +1271,24 @@ export async function runSummaryInsights(opts: SummaryInsightsOptions): Promise<
   }
   if (opts.format === "md" || opts.format === "both") {
     markdownPath = path.join(outDir, "insights.md");
-    await fs.writeFile(markdownPath, renderInsightsMarkdown(insights), "utf8");
+    await fs.writeFile(markdownPath, renderInsightsMarkdown(insights, index), "utf8");
   }
+  await fs.writeFile(indexPath, `${JSON.stringify(index, null, 2)}\n`, "utf8");
 
   return {
     insights,
+    index,
     outDir,
     jsonPath,
-    markdownPath
+    markdownPath,
+    indexPath
   };
 }
 
 export async function main(rawArgv: string[] = process.argv.slice(2)): Promise<void> {
   const opts = parseArgs(rawArgv);
   const result = await runSummaryInsights(opts);
-  const outputs = [result.jsonPath, result.markdownPath]
+  const outputs = [result.jsonPath, result.markdownPath, result.indexPath]
     .filter((value): value is string => Boolean(value))
     .map((value) => workspaceRelativePath(value))
     .join(", ");

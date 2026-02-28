@@ -140,19 +140,48 @@ describe("summary insights runtime", () => {
 
     expect(result.jsonPath).toBe(path.join(outDir, "insights.json"));
     expect(result.markdownPath).toBe(path.join(outDir, "insights.md"));
+    expect(result.indexPath).toBe(path.join(outDir, "index.json"));
     expect(fs.existsSync(path.join(outDir, "insights.json"))).toBe(true);
     expect(fs.existsSync(path.join(outDir, "insights.md"))).toBe(true);
+    expect(fs.existsSync(path.join(outDir, "index.json"))).toBe(true);
 
     const json = JSON.parse(fs.readFileSync(path.join(outDir, "insights.json"), "utf8"));
+    expect(json.meta).toEqual({
+      mode: "carry_omega_focus",
+      from: "Genesis/1/1",
+      to: "Genesis/1/3",
+      versesSelected: 3,
+      runtimeErrors: 0,
+      expectedTransitions: 2
+    });
+    expect(json.continuity).toBeDefined();
+    expect(json.pinned).toBeDefined();
+    expect(json.cleanup).toBeDefined();
+    expect(json.stateShape).toBeDefined();
+    expect(json.carrySemantics).toBeDefined();
+    expect(json.errors).toBeDefined();
+    expect(json.segmentation).toBeDefined();
     expect(json.overview.mode).toBe("carry_omega_focus");
     expect(json.top.by_handle_count).toHaveLength(2);
     expect(json.top.by_dropped_count[0].ref_key).toBe("Genesis/1/2");
     expect(json.joins).toBeUndefined();
     expect(json.options.join_limit).toBe(250);
 
+    const index = JSON.parse(fs.readFileSync(path.join(outDir, "index.json"), "utf8"));
+    expect(index.meta).toEqual({
+      mode: "carry_omega_focus",
+      from: "Genesis/1/1",
+      to: "Genesis/1/3",
+      versesSelected: 3
+    });
+    expect(Array.isArray(index.anomalies)).toBe(true);
+    expect(index.byCategory.errors).toBeDefined();
+
     const markdown = fs.readFileSync(path.join(outDir, "insights.md"), "utf8");
     expect(markdown).toContain("# Continual Run Insights");
-    expect(markdown).toContain("## Top By Dropped Count");
+    expect(markdown).toContain("## Executive Summary");
+    expect(markdown).toContain("## continuity");
+    expect(markdown).toContain("## segmentation");
   });
 
   it("loads per-verse payloads and emits join drill-down when include-joins is enabled", async () => {
@@ -253,6 +282,7 @@ describe("summary insights runtime", () => {
 
     const json = JSON.parse(fs.readFileSync(result.jsonPath ?? "", "utf8"));
     expect(json.joins.requested).toBe(true);
+    expect(json.joinDetails.requested).toBe(true);
     expect(json.joins.available).toBe(true);
     expect(json.joins.join_limit).toBe(3);
     expect(json.joins.verses_loaded).toBe(3);
