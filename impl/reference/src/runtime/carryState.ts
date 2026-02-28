@@ -458,7 +458,16 @@ export function applyCarryState(state: State, carry: CarryState): void {
   }
 
   if (domainHandleId) {
-    ensureHandleExists(state, domainHandleId);
+    const domainFallbackApplied = ensureHandleExists(state, domainHandleId);
+    if (domainFallbackApplied) {
+      const domainHandle = state.handles.get(domainHandleId);
+      if (domainHandle) {
+        domainHandle.meta = { ...domainHandle.meta, carry_domain_fallback: 1 };
+      }
+    }
+    if (!state.handles.has(domainHandleId)) {
+      throw new Error(`Unable to restore domain handle from carry state: ${domainHandleId}`);
+    }
     state.vm.D = domainHandleId;
   }
 
@@ -484,6 +493,20 @@ export function applyCarryState(state: State, carry: CarryState): void {
   }
 }
 
+function projectCarryStateForMode(mode: VerseBoundaryMode, carryState: CarryState): CarryState {
+  const projected: CarryState = {
+    omegaHandleId: carryState.omegaHandleId,
+    pinnedHandleIds: carryState.pinnedHandleIds
+  };
+  if (mode === "carry_omega_focus" || mode === "carry_omega_focus_domain") {
+    projected.focusHandleId = carryState.focusHandleId;
+  }
+  if (mode === "carry_omega_focus_domain") {
+    projected.domainHandleId = carryState.domainHandleId;
+  }
+  return projected;
+}
+
 export function onVerseEnd(ref: string, state: State, mode: VerseBoundaryMode): CarryState {
   finalizeVerseScope(state, ref);
   const carryState = extractCarryState(state, mode);
@@ -505,6 +528,6 @@ export function onVerseStart(
     markVerseStartHandles(state);
     return;
   }
-  applyCarryState(state, carryState);
+  applyCarryState(state, projectCarryStateForMode(mode, carryState));
   markVerseStartHandles(state);
 }

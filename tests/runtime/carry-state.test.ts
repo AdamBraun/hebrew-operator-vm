@@ -200,6 +200,23 @@ describe("runtime carry state", () => {
     expect(verse2.handles.has("focus:end:1")).toBe(true);
   });
 
+  it("carry_omega_focus_domain keeps verse 1 domain as verse 2 starting domain", () => {
+    const verse1 = createInitialState();
+    verse1.handles.set("domain:end:1", createHandle("domain:end:1", "scope"));
+    verse1.handles.set("focus:end:1", createHandle("focus:end:1", "scope"));
+    verse1.vm.D = "domain:end:1";
+    verse1.vm.F = "focus:end:1";
+    onVerseStart("Genesis/1/1", verse1, "carry_omega_focus_domain", {});
+    const carry = onVerseEnd("Genesis/1/1", verse1, "carry_omega_focus_domain");
+
+    const verse2 = createInitialState();
+    onVerseStart("Genesis/1/2", verse2, "carry_omega_focus_domain", carry);
+
+    expect(carry.domainHandleId).toBe("domain:end:1");
+    expect(verse2.vm.D).toBe("domain:end:1");
+    expect(verse2.handles.has("domain:end:1")).toBe(true);
+  });
+
   it("missing carried focus falls back safely by synthesizing a placeholder handle", () => {
     const state = createInitialState();
     onVerseStart("Genesis/1/2", state, "carry_omega_focus", {
@@ -210,6 +227,31 @@ describe("runtime carry state", () => {
     expect(state.vm.F).toBe("focus:missing");
     expect(state.handles.has("focus:missing")).toBe(true);
     expect(state.handles.get("focus:missing")?.meta?.carry_focus_fallback).toBe(1);
+  });
+
+  it("missing carried domain falls back safely by synthesizing a placeholder handle", () => {
+    const state = createInitialState();
+    onVerseStart("Genesis/1/2", state, "carry_omega_focus_domain", {
+      omegaHandleId: "omega:new",
+      domainHandleId: "domain:missing"
+    });
+
+    expect(state.vm.D).toBe("domain:missing");
+    expect(state.handles.has("domain:missing")).toBe(true);
+    expect(state.handles.get("domain:missing")?.meta?.carry_domain_fallback).toBe(1);
+  });
+
+  it("does not apply carried domain outside carry_omega_focus_domain mode", () => {
+    const state = createInitialState();
+    state.vm.D = "domain:old";
+    onVerseStart("Genesis/1/2", state, "carry_omega_focus", {
+      omegaHandleId: "omega:new",
+      focusHandleId: "focus:new",
+      domainHandleId: "domain:ignored"
+    });
+
+    expect(state.vm.D).toBe("domain:old");
+    expect(state.vm.F).toBe("focus:new");
   });
 
   it("onVerseStart restores pinned handles from incoming carry", () => {
