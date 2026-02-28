@@ -1,73 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { workspaceRelativePath } from "../torahCorpus/report";
+import { loadSummary as loadSummaryModel, type Summary, type VerseRow } from "./model";
 
 export type InsightsFormat = "json" | "md" | "both";
 
 type OptionValue = {
   value: string;
   nextIndex: number;
-};
-
-type CarryIds = {
-  omega: string | null;
-  focus: string | null;
-  domain: string | null;
-  pinned: string[];
-  pinnedCount: number;
-};
-
-type StateSize = {
-  handles: number;
-  links: number;
-  boundaries: number;
-  rules: number;
-  cont: number;
-  aliasEdges: number;
-};
-
-type SummaryVerseRow = {
-  sequence: number;
-  ref_key: string;
-  outputPath: string;
-  carryIn: CarryIds;
-  carryOut: CarryIds;
-  stateSize: StateSize;
-  cleanup: {
-    keptCount: number | null;
-    droppedCount: number | null;
-  };
-  runtimeError: string | null;
-};
-
-type SummaryContinuity = {
-  expectedTransitions: number;
-  omegaMatches: number;
-  focusMatches: number;
-  domainMatches: number;
-  mismatches: {
-    omega: string[];
-    focus: string[];
-    domain: string[];
-  };
-};
-
-type SummarySanity = {
-  handleCounts: number[];
-  nonIncreasingHandleCount: boolean;
-};
-
-export type ContinualRunSummary = {
-  mode: string;
-  from: string;
-  to: string;
-  input: string;
-  outDir: string;
-  versesSelected: number;
-  runtimeErrors: number;
-  continuity: SummaryContinuity;
-  sanity: SummarySanity;
-  verses: SummaryVerseRow[];
 };
 
 type ResolvedTopVerse = {
@@ -156,149 +96,6 @@ function readOptionValue(argv: string[], index: number, optionName: string): Opt
   return null;
 }
 
-function asObject(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error("expected object");
-  }
-  return value as Record<string, unknown>;
-}
-
-function asString(value: unknown, field: string): string {
-  if (typeof value !== "string") {
-    throw new Error(`expected string at '${field}'`);
-  }
-  return value;
-}
-
-function asNullableString(value: unknown, field: string): string | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  return asString(value, field);
-}
-
-function asNumber(value: unknown, field: string): number {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) {
-    throw new Error(`expected number at '${field}'`);
-  }
-  return parsed;
-}
-
-function asNullableNumber(value: unknown, field: string): number | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  return asNumber(value, field);
-}
-
-function asBoolean(value: unknown, field: string): boolean {
-  if (typeof value !== "boolean") {
-    throw new Error(`expected boolean at '${field}'`);
-  }
-  return value;
-}
-
-function asStringArray(value: unknown, field: string): string[] {
-  if (!Array.isArray(value)) {
-    throw new Error(`expected string[] at '${field}'`);
-  }
-  return value.map((entry, index) => asString(entry, `${field}[${index}]`));
-}
-
-function parseCarryIds(value: unknown, field: string): CarryIds {
-  const row = asObject(value);
-  const pinned = Array.isArray(row.pinned)
-    ? row.pinned.map((entry, index) => asString(entry, `${field}.pinned[${index}]`))
-    : [];
-  return {
-    omega: asNullableString(row.omega, `${field}.omega`),
-    focus: asNullableString(row.focus, `${field}.focus`),
-    domain: asNullableString(row.domain, `${field}.domain`),
-    pinned,
-    pinnedCount: asNumber(row.pinnedCount ?? pinned.length, `${field}.pinnedCount`)
-  };
-}
-
-function parseStateSize(value: unknown, field: string): StateSize {
-  const row = asObject(value);
-  return {
-    handles: asNumber(row.handles, `${field}.handles`),
-    links: asNumber(row.links, `${field}.links`),
-    boundaries: asNumber(row.boundaries, `${field}.boundaries`),
-    rules: asNumber(row.rules, `${field}.rules`),
-    cont: asNumber(row.cont, `${field}.cont`),
-    aliasEdges: asNumber(row.aliasEdges, `${field}.aliasEdges`)
-  };
-}
-
-function parseSummaryVerseRow(value: unknown, index: number): SummaryVerseRow {
-  const row = asObject(value);
-  const cleanup = asObject(row.cleanup);
-  return {
-    sequence: asNumber(row.sequence ?? index + 1, `verses[${index}].sequence`),
-    ref_key: asString(row.ref_key, `verses[${index}].ref_key`),
-    outputPath: asString(row.outputPath ?? "", `verses[${index}].outputPath`),
-    carryIn: parseCarryIds(row.carryIn ?? {}, `verses[${index}].carryIn`),
-    carryOut: parseCarryIds(row.carryOut ?? {}, `verses[${index}].carryOut`),
-    stateSize: parseStateSize(row.stateSize ?? {}, `verses[${index}].stateSize`),
-    cleanup: {
-      keptCount: asNullableNumber(cleanup.keptCount, `verses[${index}].cleanup.keptCount`),
-      droppedCount: asNullableNumber(cleanup.droppedCount, `verses[${index}].cleanup.droppedCount`)
-    },
-    runtimeError: asNullableString(row.runtimeError, `verses[${index}].runtimeError`)
-  };
-}
-
-function parseSummaryContinuity(value: unknown): SummaryContinuity {
-  const row = asObject(value);
-  const mismatches = asObject(row.mismatches);
-  return {
-    expectedTransitions: asNumber(row.expectedTransitions ?? 0, "continuity.expectedTransitions"),
-    omegaMatches: asNumber(row.omegaMatches ?? 0, "continuity.omegaMatches"),
-    focusMatches: asNumber(row.focusMatches ?? 0, "continuity.focusMatches"),
-    domainMatches: asNumber(row.domainMatches ?? 0, "continuity.domainMatches"),
-    mismatches: {
-      omega: asStringArray(mismatches.omega ?? [], "continuity.mismatches.omega"),
-      focus: asStringArray(mismatches.focus ?? [], "continuity.mismatches.focus"),
-      domain: asStringArray(mismatches.domain ?? [], "continuity.mismatches.domain")
-    }
-  };
-}
-
-function parseSummarySanity(value: unknown): SummarySanity {
-  const row = asObject(value);
-  const handleCounts = Array.isArray(row.handleCounts)
-    ? row.handleCounts.map((entry, index) => asNumber(entry, `sanity.handleCounts[${index}]`))
-    : [];
-  return {
-    handleCounts,
-    nonIncreasingHandleCount: asBoolean(
-      row.nonIncreasingHandleCount ?? false,
-      "sanity.nonIncreasingHandleCount"
-    )
-  };
-}
-
-function parseSummaryObject(value: unknown): ContinualRunSummary {
-  const root = asObject(value);
-  if (!Array.isArray(root.verses)) {
-    throw new Error("expected 'verses' array");
-  }
-  return {
-    mode: asString(root.mode ?? "", "mode"),
-    from: asString(root.from ?? "", "from"),
-    to: asString(root.to ?? "", "to"),
-    input: asString(root.input ?? "", "input"),
-    outDir: asString(root.outDir ?? "", "outDir"),
-    versesSelected: asNumber(root.versesSelected ?? root.verses.length, "versesSelected"),
-    runtimeErrors: asNumber(root.runtimeErrors ?? 0, "runtimeErrors"),
-    continuity: parseSummaryContinuity(root.continuity ?? {}),
-    sanity: parseSummarySanity(root.sanity ?? {}),
-    verses: root.verses.map((row, index) => parseSummaryVerseRow(row, index))
-  };
-}
-
 function toAbsoluteMaybe(value: string, baseDir: string): string {
   if (path.isAbsolute(value)) {
     return value;
@@ -327,12 +124,10 @@ function parseTopN(rawValue: string): number {
 function compareTop(
   left: ResolvedTopVerse,
   right: ResolvedTopVerse,
-  metric: keyof ResolvedTopVerse
+  metric: "handles" | "droppedCount" | "pinnedCount"
 ): number {
-  const leftMetric = Number(left[metric] ?? 0);
-  const rightMetric = Number(right[metric] ?? 0);
-  if (leftMetric !== rightMetric) {
-    return rightMetric - leftMetric;
+  if (left[metric] !== right[metric]) {
+    return right[metric] - left[metric];
   }
   if (left.sequence !== right.sequence) {
     return left.sequence - right.sequence;
@@ -340,7 +135,7 @@ function compareTop(
   return left.ref_key.localeCompare(right.ref_key, "en");
 }
 
-function summarizeVerseRow(row: SummaryVerseRow, workspaceRoot: string): ResolvedTopVerse {
+function summarizeVerseRow(row: VerseRow, workspaceRoot: string): ResolvedTopVerse {
   const resolvedOutputPath = toAbsoluteMaybe(row.outputPath, workspaceRoot);
   return {
     sequence: row.sequence,
@@ -452,36 +247,12 @@ export function parseArgs(argv: string[]): SummaryInsightsOptions {
   return opts;
 }
 
-export async function loadSummary(summaryPath: string): Promise<ContinualRunSummary> {
-  const resolved = path.resolve(summaryPath);
-  let raw: string;
-  try {
-    raw = await fs.readFile(resolved, "utf8");
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
-      throw new Error(`Missing summary file: ${resolved}`);
-    }
-    throw error;
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Invalid summary JSON at ${resolved}: ${message}`);
-  }
-
-  try {
-    return parseSummaryObject(parsed);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Invalid summary.json at ${resolved}: ${message}`);
-  }
+export async function loadSummary(summaryPath: string): Promise<Summary> {
+  return loadSummaryModel(summaryPath);
 }
 
 export function buildInsightsReport(args: {
-  summary: ContinualRunSummary;
+  summary: Summary;
   summaryPath: string;
   format: InsightsFormat;
   topN: number;
@@ -615,7 +386,7 @@ export async function runSummaryInsights(opts: SummaryInsightsOptions): Promise<
 }> {
   const summaryPath = path.resolve(opts.summary);
   const outDir = path.resolve(opts.outDir);
-  const summary = await loadSummary(summaryPath);
+  const summary = loadSummaryModel(summaryPath);
   const insights = buildInsightsReport({
     summary,
     summaryPath,
