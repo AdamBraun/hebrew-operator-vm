@@ -575,15 +575,15 @@ function buildCompareReport(args: { summaryPaths: string[]; rows: RunRow[] }): C
       mismatchRate: row.continuity.mismatchRate,
       mismatchRateDelta: deltaNumber(row.continuity.mismatchRate, baseline.continuity.mismatchRate),
       omegaMismatchRate:
-        row.continuity.transitionCount > 0
+        row.continuity.transitionCount > 0 && row.continuity.omegaMismatchRate !== null
           ? row.continuity.omegaMismatchRate / row.continuity.transitionCount
           : null,
       focusMismatchRate:
-        row.continuity.transitionCount > 0
+        row.continuity.transitionCount > 0 && row.continuity.focusMismatchRate !== null
           ? row.continuity.focusMismatchRate / row.continuity.transitionCount
           : null,
       domainMismatchRate:
-        row.continuity.transitionCount > 0
+        row.continuity.transitionCount > 0 && row.continuity.domainMismatchRate !== null
           ? row.continuity.domainMismatchRate / row.continuity.transitionCount
           : null
     }))
