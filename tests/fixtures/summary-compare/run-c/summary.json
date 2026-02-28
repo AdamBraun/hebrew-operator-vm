@@ -1,0 +1,107 @@
+{
+  "mode": "carry_omega_focus_domain",
+  "from": "Genesis/1/1",
+  "to": "Genesis/1/3",
+  "input": "data/torah.json",
+  "outDir": "outputs/continual-run/run-c",
+  "versesSelected": 3,
+  "runtimeErrors": 2,
+  "continuity": {
+    "expectedTransitions": 2,
+    "omegaMatches": 2,
+    "focusMatches": 1,
+    "domainMatches": 1,
+    "mismatches": {
+      "omega": [],
+      "focus": ["Genesis/1/2 -> Genesis/1/3: expected focus:run-c:2, got focus:run-c:diff"],
+      "domain": ["Genesis/1/2 -> Genesis/1/3: expected domain:run-c:2, got domain:run-c:diff"]
+    }
+  },
+  "sanity": {
+    "handleCounts": [6, 5, 7],
+    "nonIncreasingHandleCount": false
+  },
+  "verses": [
+    {
+      "sequence": 1,
+      "ref_key": "Genesis/1/1",
+      "outputPath": "outputs/continual-run/run-c/verses/001-Genesis_1_1.json",
+      "carryIn": { "omega": null, "focus": null, "domain": null, "pinned": [], "pinnedCount": 0 },
+      "carryOut": {
+        "omega": "omega:run-c:1",
+        "focus": "focus:run-c:1",
+        "domain": "domain:run-c:1",
+        "pinned": [],
+        "pinnedCount": 0
+      },
+      "stateSize": {
+        "handles": 6,
+        "links": 3,
+        "boundaries": 1,
+        "rules": 0,
+        "cont": 0,
+        "aliasEdges": 0
+      },
+      "cleanup": { "keptCount": 6, "droppedCount": 6 },
+      "runtimeError": "resolution failed 1001"
+    },
+    {
+      "sequence": 2,
+      "ref_key": "Genesis/1/2",
+      "outputPath": "outputs/continual-run/run-c/verses/002-Genesis_1_2.json",
+      "carryIn": {
+        "omega": "omega:run-c:1",
+        "focus": "focus:run-c:1",
+        "domain": "domain:run-c:1",
+        "pinned": [],
+        "pinnedCount": 0
+      },
+      "carryOut": {
+        "omega": "omega:run-c:2",
+        "focus": "focus:run-c:2",
+        "domain": "domain:run-c:2",
+        "pinned": [],
+        "pinnedCount": 0
+      },
+      "stateSize": {
+        "handles": 5,
+        "links": 2,
+        "boundaries": 1,
+        "rules": 0,
+        "cont": 0,
+        "aliasEdges": 0
+      },
+      "cleanup": { "keptCount": 5, "droppedCount": 7 },
+      "runtimeError": "resolution failed 1002"
+    },
+    {
+      "sequence": 3,
+      "ref_key": "Genesis/1/3",
+      "outputPath": "outputs/continual-run/run-c/verses/003-Genesis_1_3.json",
+      "carryIn": {
+        "omega": "omega:run-c:2",
+        "focus": "focus:run-c:diff",
+        "domain": "domain:run-c:diff",
+        "pinned": [],
+        "pinnedCount": 0
+      },
+      "carryOut": {
+        "omega": "omega:run-c:3",
+        "focus": "focus:run-c:3",
+        "domain": "domain:run-c:3",
+        "pinned": [],
+        "pinnedCount": 0
+      },
+      "stateSize": {
+        "handles": 7,
+        "links": 6,
+        "boundaries": 2,
+        "rules": 0,
+        "cont": 0,
+        "aliasEdges": 0
+      },
+      "cleanup": { "keptCount": 7, "droppedCount": 3 },
+      "runtimeError": null
+    }
+  ]
+}
