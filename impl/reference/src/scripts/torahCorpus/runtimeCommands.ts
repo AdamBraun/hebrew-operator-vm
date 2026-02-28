@@ -50,6 +50,7 @@ import {
   resolveSemanticVersion,
   selectModeExecutions
 } from "./execute";
+import { onVerseEnd, onVerseStart, type CarryState } from "../../runtime/carryState";
 import {
   buildCuratedGoldens,
   buildRegressionReport,
@@ -522,6 +523,7 @@ async function runExecute(argv) {
   const versesSanitized = stats.versesSanitized;
   const versesSkipped = stats.versesSkipped;
   const wordsTotal = stats.wordsTotal;
+  let carryState: CarryState = {};
 
   const isolatedFlowCache = new Map();
   const getIsolatedFlow = (surface) => {
@@ -539,6 +541,9 @@ async function runExecute(argv) {
   };
 
   for (const verseEntry of verses) {
+    const verseState = createInitialState();
+    onVerseStart(verseEntry.ref_key, verseState, opts.runtimeConfig.verseBoundaryMode, carryState);
+
     const {
       wordRowsMeta,
       missingBundles: verseMissingBundles,
@@ -570,9 +575,12 @@ async function runExecute(argv) {
       runWindowWordFlows,
       runProgramWithTrace,
       createInitialState,
+      verseState,
       allowRuntimeErrors: opts.allowRuntimeErrors,
       verseRefKey: verseEntry.ref_key
     });
+
+    carryState = onVerseEnd(verseEntry.ref_key, verseState, opts.runtimeConfig.verseBoundaryMode);
 
     assertModeExecutionLength({
       modeLabel: opts.modeLabel,

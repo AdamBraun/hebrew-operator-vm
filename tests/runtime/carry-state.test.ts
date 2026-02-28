@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { createInitialState } from "@ref/state/state";
 import { OMEGA_ID } from "@ref/state/handles";
-import { applyCarryState, extractCarryState, type CarryState } from "@ref/runtime/carryState";
+import {
+  applyCarryState,
+  extractCarryState,
+  onVerseEnd,
+  onVerseStart,
+  type CarryState
+} from "@ref/runtime/carryState";
 
 describe("runtime carry state", () => {
   it("extracts an empty carry state for reset mode", () => {
@@ -102,5 +108,51 @@ describe("runtime carry state", () => {
     expect(state.vm.F).toBe("focus:unchanged");
     expect(state.vm.D).toBe("domain:unchanged");
     expect(state.vm.wordEntryFocus).toBe("entry:unchanged");
+  });
+
+  it("onVerseEnd delegates to mode-specific carry extraction", () => {
+    const state = createInitialState();
+    state.vm.F = "focus:end";
+    state.vm.D = "domain:end";
+
+    const carry = onVerseEnd("Genesis/1/1", state, "carry_omega_focus_domain");
+    expect(carry).toEqual({
+      omegaHandleId: OMEGA_ID,
+      focusHandleId: "focus:end",
+      domainHandleId: "domain:end"
+    });
+  });
+
+  it("onVerseStart applies incoming carry in non-reset modes", () => {
+    const state = createInitialState();
+    state.vm.F = "focus:old";
+    state.vm.D = "domain:old";
+
+    onVerseStart("Genesis/1/2", state, "carry_omega_focus_domain", {
+      omegaHandleId: "omega:new",
+      focusHandleId: "focus:new",
+      domainHandleId: "domain:new"
+    });
+
+    expect(state.vm.F).toBe("focus:new");
+    expect(state.vm.D).toBe("domain:new");
+    expect(state.vm.wordEntryFocus).toBe("omega:new");
+  });
+
+  it("onVerseStart is a no-op in reset mode", () => {
+    const state = createInitialState();
+    state.vm.F = "focus:kept";
+    state.vm.D = "domain:kept";
+    state.vm.wordEntryFocus = "entry:kept";
+
+    onVerseStart("Genesis/1/3", state, "reset", {
+      omegaHandleId: "omega:ignored",
+      focusHandleId: "focus:ignored",
+      domainHandleId: "domain:ignored"
+    });
+
+    expect(state.vm.F).toBe("focus:kept");
+    expect(state.vm.D).toBe("domain:kept");
+    expect(state.vm.wordEntryFocus).toBe("entry:kept");
   });
 });

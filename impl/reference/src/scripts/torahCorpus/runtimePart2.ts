@@ -74,12 +74,13 @@ function runVerseWordFlows({
   words,
   runProgramWithTrace,
   createInitialState,
+  state,
   allowRuntimeErrors,
   verseRefKey
 }) {
   try {
     const verseText = words.join(" ");
-    const { trace } = runProgramWithTrace(verseText, createInitialState());
+    const { trace } = runProgramWithTrace(verseText, state ?? createInitialState());
     const segments = splitTraceIntoWordSegments(trace);
     if (segments.length !== words.length) {
       throw new Error(

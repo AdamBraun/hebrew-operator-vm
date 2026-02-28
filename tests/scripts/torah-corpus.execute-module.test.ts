@@ -109,6 +109,8 @@ describe("torah corpus execute module helpers", () => {
         windowStart: 1
       }
     ];
+    const verseState = { id: "state" };
+    let observedVerseState: unknown;
     const windowModeResult = [
       {
         flowRaw: ["W"],
@@ -141,14 +143,19 @@ describe("torah corpus execute module helpers", () => {
       words: ["אב"],
       windowSize: 2,
       defaultWindowSize: 4,
-      runVerseWordFlows: () => verseModeResult,
+      runVerseWordFlows: (input) => {
+        observedVerseState = input.state;
+        return verseModeResult;
+      },
       runWindowWordFlows: () => windowModeResult,
       runProgramWithTrace: () => null,
       createInitialState: () => ({}),
+      verseState,
       allowRuntimeErrors: false,
       verseRefKey: "Genesis/1/1"
     });
     expect(verseMode).toBe(verseModeResult);
+    expect(observedVerseState).toBe(verseState);
   });
 
   it("computes safety rail activation from provisional deltas", () => {

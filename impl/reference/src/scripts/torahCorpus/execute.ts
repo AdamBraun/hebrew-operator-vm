@@ -572,6 +572,7 @@ export function selectModeExecutions(args: {
     words: string[];
     runProgramWithTrace: unknown;
     createInitialState: unknown;
+    state?: unknown;
     allowRuntimeErrors: boolean;
     verseRefKey: string;
   }) => ExecutionResult[];
@@ -585,6 +586,7 @@ export function selectModeExecutions(args: {
   }) => ExecutionResult[];
   runProgramWithTrace: unknown;
   createInitialState: unknown;
+  verseState?: unknown;
   allowRuntimeErrors: boolean;
   verseRefKey: string;
 }): ExecutionResult[] {
@@ -602,6 +604,7 @@ export function selectModeExecutions(args: {
       words: args.words,
       runProgramWithTrace: args.runProgramWithTrace,
       createInitialState: args.createInitialState,
+      state: args.verseState,
       allowRuntimeErrors: args.allowRuntimeErrors,
       verseRefKey: args.verseRefKey
     });

@@ -90,3 +90,21 @@ export function applyCarryState(state: State, carry: CarryState): void {
     void pinnedHandleIds;
   }
 }
+
+export function onVerseEnd(ref: string, state: State, mode: VerseBoundaryMode): CarryState {
+  void ref;
+  return extractCarryState(state, mode);
+}
+
+export function onVerseStart(
+  ref: string,
+  state: State,
+  mode: VerseBoundaryMode,
+  carryState: CarryState
+): void {
+  void ref;
+  if (mode === "reset") {
+    return;
+  }
+  applyCarryState(state, carryState);
+}
