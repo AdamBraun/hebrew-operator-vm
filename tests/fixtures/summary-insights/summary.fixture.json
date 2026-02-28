@@ -1,0 +1,189 @@
+{
+  "mode": "carry_omega_focus",
+  "from": "Genesis/1/1",
+  "to": "Genesis/2/2",
+  "input": "data/torah.json",
+  "outDir": "outputs/continual-run/fixture-small",
+  "versesSelected": 5,
+  "runtimeErrors": 1,
+  "continuity": {
+    "expectedTransitions": 4,
+    "omegaMatches": 4,
+    "focusMatches": 3,
+    "domainMatches": 2,
+    "mismatches": {
+      "omega": [],
+      "focus": ["Genesis/1/3 -> Genesis/2/1: expected f2, got fX"],
+      "domain": [
+        "Genesis/1/2 -> Genesis/1/3: expected null, got domain:bad",
+        "Genesis/1/3 -> Genesis/2/1: expected domain:bad2, got null"
+      ]
+    }
+  },
+  "sanity": {
+    "handleCounts": [10, 11, 14, 18, 16],
+    "nonIncreasingHandleCount": false
+  },
+  "verses": [
+    {
+      "sequence": 1,
+      "ref_key": "Genesis/1/1",
+      "outputPath": "tests/fixtures/summary-insights/verses/001-Genesis_1_1.json",
+      "carryIn": {
+        "omega": null,
+        "focus": null,
+        "domain": null,
+        "pinned": [],
+        "pinnedCount": 0
+      },
+      "carryOut": {
+        "omega": "o1",
+        "focus": "f1",
+        "domain": null,
+        "pinned": ["pin:A"],
+        "pinnedCount": 1
+      },
+      "stateSize": {
+        "handles": 10,
+        "links": 10,
+        "boundaries": 1,
+        "rules": 1,
+        "cont": 0,
+        "aliasEdges": 1
+      },
+      "cleanup": {
+        "keptCount": 10,
+        "droppedCount": 5
+      },
+      "runtimeError": null
+    },
+    {
+      "sequence": 2,
+      "ref_key": "Genesis/1/2",
+      "outputPath": "tests/fixtures/summary-insights/verses/002-Genesis_1_2.json",
+      "carryIn": {
+        "omega": "o1",
+        "focus": "f1",
+        "domain": null,
+        "pinned": ["pin:A"],
+        "pinnedCount": 1
+      },
+      "carryOut": {
+        "omega": "o2",
+        "focus": "f1",
+        "domain": null,
+        "pinned": ["pin:B", "pin:A", "pin:B"],
+        "pinnedCount": 2
+      },
+      "stateSize": {
+        "handles": 11,
+        "links": 13,
+        "boundaries": 1,
+        "rules": 1,
+        "cont": 0,
+        "aliasEdges": 1
+      },
+      "cleanup": {
+        "keptCount": 11,
+        "droppedCount": 4
+      },
+      "runtimeError": null
+    },
+    {
+      "sequence": 3,
+      "ref_key": "Genesis/1/3",
+      "outputPath": "tests/fixtures/summary-insights/verses/003-Genesis_1_3.json",
+      "carryIn": {
+        "omega": "o2",
+        "focus": "f1",
+        "domain": "domain:bad",
+        "pinned": ["pin:A", "pin:B"],
+        "pinnedCount": 2
+      },
+      "carryOut": {
+        "omega": "o3",
+        "focus": "f2",
+        "domain": "domain:bad2",
+        "pinned": ["pin:A", "pin:B"],
+        "pinnedCount": 2
+      },
+      "stateSize": {
+        "handles": 14,
+        "links": 20,
+        "boundaries": 2,
+        "rules": 1,
+        "cont": 1,
+        "aliasEdges": 2
+      },
+      "cleanup": {
+        "keptCount": 14,
+        "droppedCount": 8
+      },
+      "runtimeError": "Missing handle H777 in zone 3"
+    },
+    {
+      "sequence": 4,
+      "ref_key": "Genesis/2/1",
+      "outputPath": "tests/fixtures/summary-insights/verses/004-Genesis_2_1.json",
+      "carryIn": {
+        "omega": "o3",
+        "focus": "fX",
+        "domain": null,
+        "pinned": ["pin:A"],
+        "pinnedCount": 1
+      },
+      "carryOut": {
+        "omega": "o4",
+        "focus": "f3",
+        "domain": null,
+        "pinned": ["pin:A", "pin:C"],
+        "pinnedCount": 2
+      },
+      "stateSize": {
+        "handles": 18,
+        "links": 26,
+        "boundaries": 2,
+        "rules": 2,
+        "cont": 1,
+        "aliasEdges": 3
+      },
+      "cleanup": {
+        "keptCount": 18,
+        "droppedCount": 12
+      },
+      "runtimeError": null
+    },
+    {
+      "sequence": 5,
+      "ref_key": "Genesis/2/2",
+      "outputPath": "tests/fixtures/summary-insights/verses/005-Genesis_2_2.json",
+      "carryIn": {
+        "omega": "o4",
+        "focus": "f3",
+        "domain": null,
+        "pinned": ["pin:A", "pin:C"],
+        "pinnedCount": 2
+      },
+      "carryOut": {
+        "omega": "o5",
+        "focus": "f3",
+        "domain": null,
+        "pinned": ["pin:C"],
+        "pinnedCount": 1
+      },
+      "stateSize": {
+        "handles": 16,
+        "links": 20,
+        "boundaries": 2,
+        "rules": 2,
+        "cont": 1,
+        "aliasEdges": 2
+      },
+      "cleanup": {
+        "keptCount": 16,
+        "droppedCount": 2
+      },
+      "runtimeError": null
+    }
+  ]
+}

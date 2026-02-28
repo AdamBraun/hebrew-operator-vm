@@ -1,0 +1,4110 @@
+{
+  "schema_version": 1,
+  "generated_at": "<generated_at>",
+  "source_summary_path": "tests/fixtures/summary-insights/summary.fixture.json",
+  "options": {
+    "format": "json",
+    "top_n": 3,
+    "include_joins": true,
+    "join_limit": 2,
+    "workspace_root": null
+  },
+  "meta": {
+    "mode": "carry_omega_focus",
+    "from": "Genesis/1/1",
+    "to": "Genesis/2/2",
+    "versesSelected": 5,
+    "runtimeErrors": 1,
+    "expectedTransitions": 4
+  },
+  "continuity": {
+    "mode": "carry_omega_focus",
+    "source": {
+      "expectedTransitions": 4,
+      "omegaMatches": 4,
+      "focusMatches": 3,
+      "domainMatches": 2,
+      "mismatches": {
+        "omega": [],
+        "focus": ["Genesis/1/3 -> Genesis/2/1: expected f2, got fX"],
+        "domain": [
+          "Genesis/1/2 -> Genesis/1/3: expected null, got domain:bad",
+          "Genesis/1/3 -> Genesis/2/1: expected domain:bad2, got null"
+        ]
+      }
+    },
+    "transitionCount": 4,
+    "rates": {
+      "omega": {
+        "matches": 4,
+        "mismatches": 0,
+        "rate": 1
+      },
+      "focus": {
+        "matches": 3,
+        "mismatches": 1,
+        "rate": 0.75
+      },
+      "domain": {
+        "matches": 2,
+        "mismatches": 2,
+        "rate": 0.5
+      }
+    },
+    "mismatches": {
+      "omega": [],
+      "focus": [
+        {
+          "field": "focus",
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "refKey": "Genesis/2/1",
+          "expected": "f2",
+          "observed": "fX",
+          "message": "Genesis/1/3 -> Genesis/2/1: expected f2, got fX"
+        }
+      ],
+      "domain": [
+        {
+          "field": "domain",
+          "prevSequence": 2,
+          "sequence": 3,
+          "prevRefKey": "Genesis/1/2",
+          "refKey": "Genesis/1/3",
+          "expected": null,
+          "observed": "domain:bad",
+          "message": "Genesis/1/2 -> Genesis/1/3: expected null, got domain:bad"
+        },
+        {
+          "field": "domain",
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "refKey": "Genesis/2/1",
+          "expected": "domain:bad2",
+          "observed": null,
+          "message": "Genesis/1/3 -> Genesis/2/1: expected domain:bad2, got null"
+        }
+      ],
+      "all": [
+        {
+          "field": "domain",
+          "prevSequence": 2,
+          "sequence": 3,
+          "prevRefKey": "Genesis/1/2",
+          "refKey": "Genesis/1/3",
+          "expected": null,
+          "observed": "domain:bad",
+          "message": "Genesis/1/2 -> Genesis/1/3: expected null, got domain:bad"
+        },
+        {
+          "field": "domain",
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "refKey": "Genesis/2/1",
+          "expected": "domain:bad2",
+          "observed": null,
+          "message": "Genesis/1/3 -> Genesis/2/1: expected domain:bad2, got null"
+        },
+        {
+          "field": "focus",
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "refKey": "Genesis/2/1",
+          "expected": "f2",
+          "observed": "fX",
+          "message": "Genesis/1/3 -> Genesis/2/1: expected f2, got fX"
+        }
+      ],
+      "counts": {
+        "omega": 0,
+        "focus": 1,
+        "domain": 2,
+        "total": 3
+      }
+    },
+    "bursts": {
+      "omega": [],
+      "focus": [
+        {
+          "field": "focus",
+          "startSequence": 4,
+          "endSequence": 4,
+          "startRefKey": "Genesis/2/1",
+          "endRefKey": "Genesis/2/1",
+          "length": 1
+        }
+      ],
+      "domain": [
+        {
+          "field": "domain",
+          "startSequence": 3,
+          "endSequence": 4,
+          "startRefKey": "Genesis/1/3",
+          "endRefKey": "Genesis/2/1",
+          "length": 2
+        }
+      ],
+      "all": [
+        {
+          "field": "domain",
+          "startSequence": 3,
+          "endSequence": 4,
+          "startRefKey": "Genesis/1/3",
+          "endRefKey": "Genesis/2/1",
+          "length": 2
+        },
+        {
+          "field": "focus",
+          "startSequence": 4,
+          "endSequence": 4,
+          "startRefKey": "Genesis/2/1",
+          "endRefKey": "Genesis/2/1",
+          "length": 1
+        }
+      ],
+      "longestByField": {
+        "omega": 0,
+        "focus": 1,
+        "domain": 2
+      }
+    },
+    "nullCarry": {
+      "carryIn": {
+        "omega": 1,
+        "focus": 1,
+        "domain": 4,
+        "pinnedEmpty": 1
+      },
+      "carryOut": {
+        "omega": 0,
+        "focus": 0,
+        "domain": 4,
+        "pinnedEmpty": 0
+      }
+    },
+    "modeCompliance": {
+      "mode": "carry_omega_focus",
+      "unknownMode": false,
+      "expectedNull": {
+        "focus": false,
+        "domain": true
+      },
+      "violations": [
+        {
+          "sequence": 3,
+          "refKey": "Genesis/1/3",
+          "direction": "carryIn",
+          "field": "domain",
+          "expected": null,
+          "observed": "domain:bad"
+        },
+        {
+          "sequence": 3,
+          "refKey": "Genesis/1/3",
+          "direction": "carryOut",
+          "field": "domain",
+          "expected": null,
+          "observed": "domain:bad2"
+        }
+      ],
+      "counts": {
+        "total": 2,
+        "focus": 0,
+        "domain": 2,
+        "byDirection": {
+          "carryIn": 1,
+          "carryOut": 1
+        }
+      },
+      "compliant": false
+    },
+    "clustering": {
+      "byBookChapter": [
+        {
+          "key": "Genesis/1",
+          "book": "Genesis",
+          "chapter": 1,
+          "omega": 0,
+          "focus": 0,
+          "domain": 1,
+          "total": 1
+        },
+        {
+          "key": "Genesis/2",
+          "book": "Genesis",
+          "chapter": 2,
+          "omega": 0,
+          "focus": 1,
+          "domain": 1,
+          "total": 2
+        }
+      ]
+    },
+    "consistency": {
+      "matchesSummary": true,
+      "differences": []
+    }
+  },
+  "pinned": {
+    "verses": 5,
+    "pinnedCount": {
+      "series": [1, 2, 2, 2, 1],
+      "describe": {
+        "count": 5,
+        "min": 1,
+        "max": 2,
+        "mean": 1.6,
+        "median": 2,
+        "p90": 2,
+        "p99": 2,
+        "stdev": 0.4898979485566356
+      },
+      "histogram": {
+        "0": 0,
+        "1": 2,
+        "2-3": 3,
+        "4-7": 0,
+        "8+": 0
+      },
+      "deltas": {
+        "series": [1, 0, 0, -1],
+        "describe": {
+          "count": 4,
+          "min": -1,
+          "max": 1,
+          "mean": 0,
+          "median": 0,
+          "p90": 0.7000000000000002,
+          "p99": 0.9699999999999998,
+          "stdev": 0.7071067811865476
+        },
+        "positive": 1,
+        "negative": 1,
+        "zero": 2,
+        "net": 0,
+        "nonDecreasingTransitions": 3,
+        "nonDecreasingRate": 0.75
+      },
+      "accumulation": {
+        "start": 1,
+        "end": 1,
+        "netGrowth": 0
+      }
+    },
+    "churn": {
+      "transitions": 4,
+      "perTransition": [
+        {
+          "prevSequence": 1,
+          "sequence": 2,
+          "prevRefKey": "Genesis/1/1",
+          "refKey": "Genesis/1/2",
+          "prevCount": 1,
+          "currCount": 1,
+          "added": [],
+          "removed": [],
+          "addedCount": 0,
+          "removedCount": 0,
+          "netCountChange": 0,
+          "jaccard": 1
+        },
+        {
+          "prevSequence": 2,
+          "sequence": 3,
+          "prevRefKey": "Genesis/1/2",
+          "refKey": "Genesis/1/3",
+          "prevCount": 2,
+          "currCount": 2,
+          "added": [],
+          "removed": [],
+          "addedCount": 0,
+          "removedCount": 0,
+          "netCountChange": 0,
+          "jaccard": 1
+        },
+        {
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "refKey": "Genesis/2/1",
+          "prevCount": 2,
+          "currCount": 1,
+          "added": [],
+          "removed": ["pin:B"],
+          "addedCount": 0,
+          "removedCount": 1,
+          "netCountChange": -1,
+          "jaccard": 0.5
+        },
+        {
+          "prevSequence": 4,
+          "sequence": 5,
+          "prevRefKey": "Genesis/2/1",
+          "refKey": "Genesis/2/2",
+          "prevCount": 2,
+          "currCount": 2,
+          "added": [],
+          "removed": [],
+          "addedCount": 0,
+          "removedCount": 0,
+          "netCountChange": 0,
+          "jaccard": 1
+        }
+      ],
+      "totals": {
+        "added": 0,
+        "removed": 1,
+        "zeroChurnTransitions": 3,
+        "jaccardMean": 0.875
+      },
+      "addedDescribe": {
+        "count": 4,
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "median": 0,
+        "p90": 0,
+        "p99": 0,
+        "stdev": 0
+      },
+      "removedDescribe": {
+        "count": 4,
+        "min": 0,
+        "max": 1,
+        "mean": 0.25,
+        "median": 0,
+        "p90": 0.7000000000000002,
+        "p99": 0.9699999999999998,
+        "stdev": 0.4330127018922193
+      },
+      "jaccardDescribe": {
+        "count": 4,
+        "min": 0.5,
+        "max": 1,
+        "mean": 0.875,
+        "median": 1,
+        "p90": 1,
+        "p99": 1,
+        "stdev": 0.21650635094610965
+      },
+      "topAdded": [
+        {
+          "prevSequence": 1,
+          "sequence": 2,
+          "prevRefKey": "Genesis/1/1",
+          "refKey": "Genesis/1/2",
+          "prevCount": 1,
+          "currCount": 1,
+          "added": [],
+          "removed": [],
+          "addedCount": 0,
+          "removedCount": 0,
+          "netCountChange": 0,
+          "jaccard": 1
+        },
+        {
+          "prevSequence": 2,
+          "sequence": 3,
+          "prevRefKey": "Genesis/1/2",
+          "refKey": "Genesis/1/3",
+          "prevCount": 2,
+          "currCount": 2,
+          "added": [],
+          "removed": [],
+          "addedCount": 0,
+          "removedCount": 0,
+          "netCountChange": 0,
+          "jaccard": 1
+        },
+        {
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "refKey": "Genesis/2/1",
+          "prevCount": 2,
+          "currCount": 1,
+          "added": [],
+          "removed": ["pin:B"],
+          "addedCount": 0,
+          "removedCount": 1,
+          "netCountChange": -1,
+          "jaccard": 0.5
+        },
+        {
+          "prevSequence": 4,
+          "sequence": 5,
+          "prevRefKey": "Genesis/2/1",
+          "refKey": "Genesis/2/2",
+          "prevCount": 2,
+          "currCount": 2,
+          "added": [],
+          "removed": [],
+          "addedCount": 0,
+          "removedCount": 0,
+          "netCountChange": 0,
+          "jaccard": 1
+        }
+      ],
+      "topRemoved": [
+        {
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "refKey": "Genesis/2/1",
+          "prevCount": 2,
+          "currCount": 1,
+          "added": [],
+          "removed": ["pin:B"],
+          "addedCount": 0,
+          "removedCount": 1,
+          "netCountChange": -1,
+          "jaccard": 0.5
+        },
+        {
+          "prevSequence": 1,
+          "sequence": 2,
+          "prevRefKey": "Genesis/1/1",
+          "refKey": "Genesis/1/2",
+          "prevCount": 1,
+          "currCount": 1,
+          "added": [],
+          "removed": [],
+          "addedCount": 0,
+          "removedCount": 0,
+          "netCountChange": 0,
+          "jaccard": 1
+        },
+        {
+          "prevSequence": 2,
+          "sequence": 3,
+          "prevRefKey": "Genesis/1/2",
+          "refKey": "Genesis/1/3",
+          "prevCount": 2,
+          "currCount": 2,
+          "added": [],
+          "removed": [],
+          "addedCount": 0,
+          "removedCount": 0,
+          "netCountChange": 0,
+          "jaccard": 1
+        },
+        {
+          "prevSequence": 4,
+          "sequence": 5,
+          "prevRefKey": "Genesis/2/1",
+          "refKey": "Genesis/2/2",
+          "prevCount": 2,
+          "currCount": 2,
+          "added": [],
+          "removed": [],
+          "addedCount": 0,
+          "removedCount": 0,
+          "netCountChange": 0,
+          "jaccard": 1
+        }
+      ]
+    },
+    "longevity": {
+      "handlesTracked": 3,
+      "table": [
+        {
+          "id": "pin:A",
+          "firstSeq": 1,
+          "lastSeq": 4,
+          "lifespan": 4,
+          "presenceCount": 4,
+          "presenceRatio": 1
+        },
+        {
+          "id": "pin:B",
+          "firstSeq": 2,
+          "lastSeq": 3,
+          "lifespan": 2,
+          "presenceCount": 2,
+          "presenceRatio": 1
+        },
+        {
+          "id": "pin:C",
+          "firstSeq": 4,
+          "lastSeq": 5,
+          "lifespan": 2,
+          "presenceCount": 2,
+          "presenceRatio": 1
+        }
+      ],
+      "topByLifespan": [
+        {
+          "id": "pin:A",
+          "firstSeq": 1,
+          "lastSeq": 4,
+          "lifespan": 4,
+          "presenceCount": 4,
+          "presenceRatio": 1
+        },
+        {
+          "id": "pin:B",
+          "firstSeq": 2,
+          "lastSeq": 3,
+          "lifespan": 2,
+          "presenceCount": 2,
+          "presenceRatio": 1
+        },
+        {
+          "id": "pin:C",
+          "firstSeq": 4,
+          "lastSeq": 5,
+          "lifespan": 2,
+          "presenceCount": 2,
+          "presenceRatio": 1
+        }
+      ],
+      "topByPresence": [
+        {
+          "id": "pin:A",
+          "firstSeq": 1,
+          "lastSeq": 4,
+          "lifespan": 4,
+          "presenceCount": 4,
+          "presenceRatio": 1
+        },
+        {
+          "id": "pin:B",
+          "firstSeq": 2,
+          "lastSeq": 3,
+          "lifespan": 2,
+          "presenceCount": 2,
+          "presenceRatio": 1
+        },
+        {
+          "id": "pin:C",
+          "firstSeq": 4,
+          "lastSeq": 5,
+          "lifespan": 2,
+          "presenceCount": 2,
+          "presenceRatio": 1
+        }
+      ],
+      "immortals": {
+        "thresholdPct": 0.6,
+        "minLifespan": 4,
+        "handles": [
+          {
+            "id": "pin:A",
+            "firstSeq": 1,
+            "lastSeq": 4,
+            "lifespan": 4,
+            "presenceCount": 4,
+            "presenceRatio": 1
+          }
+        ]
+      }
+    },
+    "coupling": {
+      "focusRuns": [
+        {
+          "focusId": null,
+          "startSeq": 1,
+          "endSeq": 1,
+          "length": 1,
+          "transitionCount": 0,
+          "stableTransitions": 0,
+          "stabilityRate": null
+        },
+        {
+          "focusId": "f1",
+          "startSeq": 2,
+          "endSeq": 3,
+          "length": 2,
+          "transitionCount": 1,
+          "stableTransitions": 1,
+          "stabilityRate": 1
+        },
+        {
+          "focusId": "fX",
+          "startSeq": 4,
+          "endSeq": 4,
+          "length": 1,
+          "transitionCount": 0,
+          "stableTransitions": 0,
+          "stabilityRate": null
+        },
+        {
+          "focusId": "f3",
+          "startSeq": 5,
+          "endSeq": 5,
+          "length": 1,
+          "transitionCount": 0,
+          "stableTransitions": 0,
+          "stabilityRate": null
+        }
+      ],
+      "runLengthDescribe": {
+        "count": 4,
+        "min": 1,
+        "max": 2,
+        "mean": 1.25,
+        "median": 1,
+        "p90": 1.7000000000000002,
+        "p99": 1.9699999999999998,
+        "stdev": 0.4330127018922193
+      },
+      "stabilityDescribe": {
+        "count": 1,
+        "min": 1,
+        "max": 1,
+        "mean": 1,
+        "median": 1,
+        "p90": 1,
+        "p99": 1,
+        "stdev": 0
+      },
+      "pearsonLike": null,
+      "heuristic": "mixed"
+    },
+    "qualitySignals": {
+      "accumulationRisk": "low",
+      "brittlenessRisk": "low"
+    }
+  },
+  "cleanup": {
+    "verses": 5,
+    "perVerse": [
+      {
+        "sequence": 1,
+        "ref_key": "Genesis/1/1",
+        "cleanupExecuted": true,
+        "keptCount": 10,
+        "droppedCount": 5,
+        "dropRate": 0.3333333333333333,
+        "stateHandles": 10,
+        "keptHandleDelta": 0
+      },
+      {
+        "sequence": 2,
+        "ref_key": "Genesis/1/2",
+        "cleanupExecuted": true,
+        "keptCount": 11,
+        "droppedCount": 4,
+        "dropRate": 0.26666666666666666,
+        "stateHandles": 11,
+        "keptHandleDelta": 0
+      },
+      {
+        "sequence": 3,
+        "ref_key": "Genesis/1/3",
+        "cleanupExecuted": true,
+        "keptCount": 14,
+        "droppedCount": 8,
+        "dropRate": 0.36363636363636365,
+        "stateHandles": 14,
+        "keptHandleDelta": 0
+      },
+      {
+        "sequence": 4,
+        "ref_key": "Genesis/2/1",
+        "cleanupExecuted": true,
+        "keptCount": 18,
+        "droppedCount": 12,
+        "dropRate": 0.4,
+        "stateHandles": 18,
+        "keptHandleDelta": 0
+      },
+      {
+        "sequence": 5,
+        "ref_key": "Genesis/2/2",
+        "cleanupExecuted": true,
+        "keptCount": 16,
+        "droppedCount": 2,
+        "dropRate": 0.1111111111111111,
+        "stateHandles": 16,
+        "keptHandleDelta": 0
+      }
+    ],
+    "cleanupExecution": {
+      "executedCount": 5,
+      "skippedCount": 0,
+      "executedRate": 1
+    },
+    "dropRate": {
+      "series": [
+        0.3333333333333333, 0.26666666666666666, 0.36363636363636365, 0.4, 0.1111111111111111
+      ],
+      "describe": {
+        "count": 5,
+        "min": 0.1111111111111111,
+        "max": 0.4,
+        "mean": 0.2949494949494949,
+        "median": 0.3333333333333333,
+        "p90": 0.3854545454545455,
+        "p99": 0.39854545454545454,
+        "stdev": 0.10180695785498638
+      },
+      "nonZeroDrops": 5,
+      "zeroDrops": 0,
+      "meanWhenExecuted": 0.2949494949494949
+    },
+    "keptCount": {
+      "series": [10, 11, 14, 18, 16],
+      "describe": {
+        "count": 5,
+        "min": 10,
+        "max": 18,
+        "mean": 13.8,
+        "median": 14,
+        "p90": 17.2,
+        "p99": 17.92,
+        "stdev": 2.993325909419153
+      }
+    },
+    "droppedCount": {
+      "series": [5, 4, 8, 12, 2],
+      "describe": {
+        "count": 5,
+        "min": 2,
+        "max": 12,
+        "mean": 6.2,
+        "median": 5,
+        "p90": 10.4,
+        "p99": 11.84,
+        "stdev": 3.4871191548325386
+      }
+    },
+    "trend": {
+      "keptCountWindows": [
+        {
+          "windowSize": 5,
+          "startSequence": 1,
+          "endSequence": 5,
+          "startValue": 10,
+          "endValue": 16,
+          "delta": 6,
+          "monotonicNonDecreasing": false,
+          "monotonicNonIncreasing": false,
+          "plateau": false
+        }
+      ],
+      "stateHandlesWindows": [
+        {
+          "windowSize": 5,
+          "startSequence": 1,
+          "endSequence": 5,
+          "startValue": 10,
+          "endValue": 16,
+          "delta": 6,
+          "monotonicNonDecreasing": false,
+          "monotonicNonIncreasing": false,
+          "plateau": false
+        }
+      ],
+      "dropRateWindows": [
+        {
+          "windowSize": 5,
+          "startSequence": 1,
+          "endSequence": 5,
+          "startValue": 0.3333333333333333,
+          "endValue": 0.1111111111111111,
+          "delta": -0.2222222222222222,
+          "monotonicNonDecreasing": false,
+          "monotonicNonIncreasing": false,
+          "plateau": false
+        }
+      ],
+      "summary": {
+        "keptPlateauRate": 0,
+        "stateHandlesPlateauRate": 0,
+        "dropRatePlateauRate": 0
+      }
+    },
+    "invariants": {
+      "keptVsStateHandles": {
+        "checkedCount": 5,
+        "matchingCount": 5,
+        "mismatchCount": 0,
+        "maxAbsDelta": 0,
+        "mismatches": []
+      }
+    },
+    "outliers": {
+      "topDroppedCount": [
+        {
+          "metric": "droppedCount",
+          "value": 12,
+          "sequence": 4,
+          "ref_key": "Genesis/2/1",
+          "keptCount": 18,
+          "droppedCount": 12,
+          "dropRate": 0.4,
+          "stateHandles": 18,
+          "cleanupExecuted": true
+        },
+        {
+          "metric": "droppedCount",
+          "value": 8,
+          "sequence": 3,
+          "ref_key": "Genesis/1/3",
+          "keptCount": 14,
+          "droppedCount": 8,
+          "dropRate": 0.36363636363636365,
+          "stateHandles": 14,
+          "cleanupExecuted": true
+        },
+        {
+          "metric": "droppedCount",
+          "value": 5,
+          "sequence": 1,
+          "ref_key": "Genesis/1/1",
+          "keptCount": 10,
+          "droppedCount": 5,
+          "dropRate": 0.3333333333333333,
+          "stateHandles": 10,
+          "cleanupExecuted": true
+        },
+        {
+          "metric": "droppedCount",
+          "value": 4,
+          "sequence": 2,
+          "ref_key": "Genesis/1/2",
+          "keptCount": 11,
+          "droppedCount": 4,
+          "dropRate": 0.26666666666666666,
+          "stateHandles": 11,
+          "cleanupExecuted": true
+        },
+        {
+          "metric": "droppedCount",
+          "value": 2,
+          "sequence": 5,
+          "ref_key": "Genesis/2/2",
+          "keptCount": 16,
+          "droppedCount": 2,
+          "dropRate": 0.1111111111111111,
+          "stateHandles": 16,
+          "cleanupExecuted": true
+        }
+      ],
+      "topKeptCount": [
+        {
+          "metric": "keptCount",
+          "value": 18,
+          "sequence": 4,
+          "ref_key": "Genesis/2/1",
+          "keptCount": 18,
+          "droppedCount": 12,
+          "dropRate": 0.4,
+          "stateHandles": 18,
+          "cleanupExecuted": true
+        },
+        {
+          "metric": "keptCount",
+          "value": 16,
+          "sequence": 5,
+          "ref_key": "Genesis/2/2",
+          "keptCount": 16,
+          "droppedCount": 2,
+          "dropRate": 0.1111111111111111,
+          "stateHandles": 16,
+          "cleanupExecuted": true
+        },
+        {
+          "metric": "keptCount",
+          "value": 14,
+          "sequence": 3,
+          "ref_key": "Genesis/1/3",
+          "keptCount": 14,
+          "droppedCount": 8,
+          "dropRate": 0.36363636363636365,
+          "stateHandles": 14,
+          "cleanupExecuted": true
+        },
+        {
+          "metric": "keptCount",
+          "value": 11,
+          "sequence": 2,
+          "ref_key": "Genesis/1/2",
+          "keptCount": 11,
+          "droppedCount": 4,
+          "dropRate": 0.26666666666666666,
+          "stateHandles": 11,
+          "cleanupExecuted": true
+        },
+        {
+          "metric": "keptCount",
+          "value": 10,
+          "sequence": 1,
+          "ref_key": "Genesis/1/1",
+          "keptCount": 10,
+          "droppedCount": 5,
+          "dropRate": 0.3333333333333333,
+          "stateHandles": 10,
+          "cleanupExecuted": true
+        }
+      ],
+      "topDropRate": [
+        {
+          "metric": "dropRate",
+          "value": 0.4,
+          "sequence": 4,
+          "ref_key": "Genesis/2/1",
+          "keptCount": 18,
+          "droppedCount": 12,
+          "dropRate": 0.4,
+          "stateHandles": 18,
+          "cleanupExecuted": true
+        },
+        {
+          "metric": "dropRate",
+          "value": 0.36363636363636365,
+          "sequence": 3,
+          "ref_key": "Genesis/1/3",
+          "keptCount": 14,
+          "droppedCount": 8,
+          "dropRate": 0.36363636363636365,
+          "stateHandles": 14,
+          "cleanupExecuted": true
+        },
+        {
+          "metric": "dropRate",
+          "value": 0.3333333333333333,
+          "sequence": 1,
+          "ref_key": "Genesis/1/1",
+          "keptCount": 10,
+          "droppedCount": 5,
+          "dropRate": 0.3333333333333333,
+          "stateHandles": 10,
+          "cleanupExecuted": true
+        },
+        {
+          "metric": "dropRate",
+          "value": 0.26666666666666666,
+          "sequence": 2,
+          "ref_key": "Genesis/1/2",
+          "keptCount": 11,
+          "droppedCount": 4,
+          "dropRate": 0.26666666666666666,
+          "stateHandles": 11,
+          "cleanupExecuted": true
+        },
+        {
+          "metric": "dropRate",
+          "value": 0.1111111111111111,
+          "sequence": 5,
+          "ref_key": "Genesis/2/2",
+          "keptCount": 16,
+          "droppedCount": 2,
+          "dropRate": 0.1111111111111111,
+          "stateHandles": 16,
+          "cleanupExecuted": true
+        }
+      ]
+    },
+    "qualitySignals": {
+      "cleanupWork": "active",
+      "leakRisk": "low"
+    }
+  },
+  "stateShape": {
+    "verses": 5,
+    "metrics": {
+      "handles": {
+        "series": [10, 11, 14, 18, 16],
+        "describe": {
+          "count": 5,
+          "min": 10,
+          "max": 18,
+          "mean": 13.8,
+          "median": 14,
+          "p90": 17.2,
+          "p99": 17.92,
+          "stdev": 2.993325909419153
+        }
+      },
+      "links": {
+        "series": [10, 13, 20, 26, 20],
+        "describe": {
+          "count": 5,
+          "min": 10,
+          "max": 26,
+          "mean": 17.8,
+          "median": 20,
+          "p90": 23.6,
+          "p99": 25.759999999999998,
+          "stdev": 5.670978751503131
+        }
+      },
+      "boundaries": {
+        "series": [1, 1, 2, 2, 2],
+        "describe": {
+          "count": 5,
+          "min": 1,
+          "max": 2,
+          "mean": 1.6,
+          "median": 2,
+          "p90": 2,
+          "p99": 2,
+          "stdev": 0.4898979485566356
+        }
+      },
+      "rules": {
+        "series": [1, 1, 1, 2, 2],
+        "describe": {
+          "count": 5,
+          "min": 1,
+          "max": 2,
+          "mean": 1.4,
+          "median": 1,
+          "p90": 2,
+          "p99": 2,
+          "stdev": 0.4898979485566356
+        }
+      },
+      "cont": {
+        "series": [0, 0, 1, 1, 1],
+        "describe": {
+          "count": 5,
+          "min": 0,
+          "max": 1,
+          "mean": 0.6,
+          "median": 1,
+          "p90": 1,
+          "p99": 1,
+          "stdev": 0.48989794855663565
+        }
+      },
+      "aliasEdges": {
+        "series": [1, 1, 2, 3, 2],
+        "describe": {
+          "count": 5,
+          "min": 1,
+          "max": 3,
+          "mean": 1.8,
+          "median": 2,
+          "p90": 2.6,
+          "p99": 2.96,
+          "stdev": 0.7483314773547883
+        }
+      }
+    },
+    "ratios": {
+      "perVerse": [
+        {
+          "sequence": 1,
+          "ref_key": "Genesis/1/1",
+          "handles": 10,
+          "linksPerHandle": 1,
+          "boundariesPerHandle": 0.1,
+          "rulesPerHandle": 0.1,
+          "aliasEdgesPerHandle": 0.1,
+          "contPerHandle": 0
+        },
+        {
+          "sequence": 2,
+          "ref_key": "Genesis/1/2",
+          "handles": 11,
+          "linksPerHandle": 1.1818181818181819,
+          "boundariesPerHandle": 0.09090909090909091,
+          "rulesPerHandle": 0.09090909090909091,
+          "aliasEdgesPerHandle": 0.09090909090909091,
+          "contPerHandle": 0
+        },
+        {
+          "sequence": 3,
+          "ref_key": "Genesis/1/3",
+          "handles": 14,
+          "linksPerHandle": 1.4285714285714286,
+          "boundariesPerHandle": 0.14285714285714285,
+          "rulesPerHandle": 0.07142857142857142,
+          "aliasEdgesPerHandle": 0.14285714285714285,
+          "contPerHandle": 0.07142857142857142
+        },
+        {
+          "sequence": 4,
+          "ref_key": "Genesis/2/1",
+          "handles": 18,
+          "linksPerHandle": 1.4444444444444444,
+          "boundariesPerHandle": 0.1111111111111111,
+          "rulesPerHandle": 0.1111111111111111,
+          "aliasEdgesPerHandle": 0.16666666666666666,
+          "contPerHandle": 0.05555555555555555
+        },
+        {
+          "sequence": 5,
+          "ref_key": "Genesis/2/2",
+          "handles": 16,
+          "linksPerHandle": 1.25,
+          "boundariesPerHandle": 0.125,
+          "rulesPerHandle": 0.125,
+          "aliasEdgesPerHandle": 0.125,
+          "contPerHandle": 0.0625
+        }
+      ],
+      "describe": {
+        "linksPerHandle": {
+          "count": 5,
+          "min": 1,
+          "max": 1.4444444444444444,
+          "mean": 1.260966810966811,
+          "median": 1.25,
+          "p90": 1.438095238095238,
+          "p99": 1.4438095238095239,
+          "stdev": 0.16507198592978709
+        },
+        "boundariesPerHandle": {
+          "count": 5,
+          "min": 0.09090909090909091,
+          "max": 0.14285714285714285,
+          "mean": 0.11397546897546898,
+          "median": 0.1111111111111111,
+          "p90": 0.1357142857142857,
+          "p99": 0.14214285714285713,
+          "stdev": 0.018391669019850815
+        },
+        "rulesPerHandle": {
+          "count": 5,
+          "min": 0.07142857142857142,
+          "max": 0.125,
+          "mean": 0.09968975468975469,
+          "median": 0.1,
+          "p90": 0.11944444444444444,
+          "p99": 0.12444444444444444,
+          "stdev": 0.018149086412666778
+        },
+        "aliasEdgesPerHandle": {
+          "count": 5,
+          "min": 0.09090909090909091,
+          "max": 0.16666666666666666,
+          "mean": 0.12508658008658008,
+          "median": 0.125,
+          "p90": 0.15714285714285714,
+          "p99": 0.1657142857142857,
+          "stdev": 0.027720538465979282
+        },
+        "contPerHandle": {
+          "count": 5,
+          "min": 0,
+          "max": 0.07142857142857142,
+          "mean": 0.037896825396825394,
+          "median": 0.05555555555555555,
+          "p90": 0.06785714285714285,
+          "p99": 0.07107142857142856,
+          "stdev": 0.03134920634920635
+        }
+      },
+      "trend": {
+        "linksPerHandleDeltaDescribe": {
+          "count": 4,
+          "min": -0.19444444444444442,
+          "max": 0.24675324675324672,
+          "mean": 0.0625,
+          "median": 0.09884559884559885,
+          "p90": 0.2272727272727273,
+          "p99": 0.24480519480519475,
+          "stdev": 0.1705730126889595
+        },
+        "boundariesPerHandleDeltaDescribe": {
+          "count": 4,
+          "min": -0.031746031746031744,
+          "max": 0.05194805194805194,
+          "mean": 0.006249999999999999,
+          "median": 0.0023989898989899006,
+          "p90": 0.04053030303030303,
+          "p99": 0.050806277056277035,
+          "stdev": 0.030926147899005437
+        },
+        "rulesPerHandleDeltaDescribe": {
+          "count": 4,
+          "min": -0.019480519480519487,
+          "max": 0.03968253968253968,
+          "mean": 0.006249999999999999,
+          "median": 0.0023989898989899006,
+          "p90": 0.03194444444444445,
+          "p99": 0.03890873015873015,
+          "stdev": 0.022767797750080653
+        },
+        "aliasEdgesPerHandleDeltaDescribe": {
+          "count": 4,
+          "min": -0.04166666666666666,
+          "max": 0.05194805194805194,
+          "mean": 0.006249999999999999,
+          "median": 0.007359307359307357,
+          "p90": 0.04350649350649351,
+          "p99": 0.05110389610389608,
+          "stdev": 0.03509985493005658
+        },
+        "contPerHandleDeltaDescribe": {
+          "count": 4,
+          "min": -0.015873015873015872,
+          "max": 0.07142857142857142,
+          "mean": 0.015625,
+          "median": 0.0034722222222222238,
+          "p90": 0.05208333333333334,
+          "p99": 0.0694940476190476,
+          "stdev": 0.03326280301580701
+        },
+        "densitySignal": "denser"
+      }
+    },
+    "deltas": {
+      "perMetric": {
+        "handles": {
+          "series": [1, 3, 4, -2],
+          "describe": {
+            "count": 4,
+            "min": -2,
+            "max": 4,
+            "mean": 1.5,
+            "median": 2,
+            "p90": 3.7,
+            "p99": 3.9699999999999998,
+            "stdev": 2.29128784747792
+          },
+          "absDescribe": {
+            "count": 4,
+            "min": 1,
+            "max": 4,
+            "mean": 2.5,
+            "median": 2.5,
+            "p90": 3.7,
+            "p99": 3.9699999999999998,
+            "stdev": 1.118033988749895
+          },
+          "transitions": [
+            {
+              "metric": "handles",
+              "prevSequence": 1,
+              "sequence": 2,
+              "prevRefKey": "Genesis/1/1",
+              "ref_key": "Genesis/1/2",
+              "prevValue": 10,
+              "value": 11,
+              "delta": 1,
+              "absDelta": 1
+            },
+            {
+              "metric": "handles",
+              "prevSequence": 2,
+              "sequence": 3,
+              "prevRefKey": "Genesis/1/2",
+              "ref_key": "Genesis/1/3",
+              "prevValue": 11,
+              "value": 14,
+              "delta": 3,
+              "absDelta": 3
+            },
+            {
+              "metric": "handles",
+              "prevSequence": 3,
+              "sequence": 4,
+              "prevRefKey": "Genesis/1/3",
+              "ref_key": "Genesis/2/1",
+              "prevValue": 14,
+              "value": 18,
+              "delta": 4,
+              "absDelta": 4
+            },
+            {
+              "metric": "handles",
+              "prevSequence": 4,
+              "sequence": 5,
+              "prevRefKey": "Genesis/2/1",
+              "ref_key": "Genesis/2/2",
+              "prevValue": 18,
+              "value": 16,
+              "delta": -2,
+              "absDelta": 2
+            }
+          ],
+          "topAbsDelta": [
+            {
+              "metric": "handles",
+              "prevSequence": 3,
+              "sequence": 4,
+              "prevRefKey": "Genesis/1/3",
+              "ref_key": "Genesis/2/1",
+              "prevValue": 14,
+              "value": 18,
+              "delta": 4,
+              "absDelta": 4,
+              "refKey": "Genesis/2/1"
+            },
+            {
+              "metric": "handles",
+              "prevSequence": 2,
+              "sequence": 3,
+              "prevRefKey": "Genesis/1/2",
+              "ref_key": "Genesis/1/3",
+              "prevValue": 11,
+              "value": 14,
+              "delta": 3,
+              "absDelta": 3,
+              "refKey": "Genesis/1/3"
+            },
+            {
+              "metric": "handles",
+              "prevSequence": 4,
+              "sequence": 5,
+              "prevRefKey": "Genesis/2/1",
+              "ref_key": "Genesis/2/2",
+              "prevValue": 18,
+              "value": 16,
+              "delta": -2,
+              "absDelta": 2,
+              "refKey": "Genesis/2/2"
+            },
+            {
+              "metric": "handles",
+              "prevSequence": 1,
+              "sequence": 2,
+              "prevRefKey": "Genesis/1/1",
+              "ref_key": "Genesis/1/2",
+              "prevValue": 10,
+              "value": 11,
+              "delta": 1,
+              "absDelta": 1,
+              "refKey": "Genesis/1/2"
+            }
+          ]
+        },
+        "links": {
+          "series": [3, 7, 6, -6],
+          "describe": {
+            "count": 4,
+            "min": -6,
+            "max": 7,
+            "mean": 2.5,
+            "median": 4.5,
+            "p90": 6.7,
+            "p99": 6.97,
+            "stdev": 5.123475382979799
+          },
+          "absDescribe": {
+            "count": 4,
+            "min": 3,
+            "max": 7,
+            "mean": 5.5,
+            "median": 6,
+            "p90": 6.7,
+            "p99": 6.97,
+            "stdev": 1.5
+          },
+          "transitions": [
+            {
+              "metric": "links",
+              "prevSequence": 1,
+              "sequence": 2,
+              "prevRefKey": "Genesis/1/1",
+              "ref_key": "Genesis/1/2",
+              "prevValue": 10,
+              "value": 13,
+              "delta": 3,
+              "absDelta": 3
+            },
+            {
+              "metric": "links",
+              "prevSequence": 2,
+              "sequence": 3,
+              "prevRefKey": "Genesis/1/2",
+              "ref_key": "Genesis/1/3",
+              "prevValue": 13,
+              "value": 20,
+              "delta": 7,
+              "absDelta": 7
+            },
+            {
+              "metric": "links",
+              "prevSequence": 3,
+              "sequence": 4,
+              "prevRefKey": "Genesis/1/3",
+              "ref_key": "Genesis/2/1",
+              "prevValue": 20,
+              "value": 26,
+              "delta": 6,
+              "absDelta": 6
+            },
+            {
+              "metric": "links",
+              "prevSequence": 4,
+              "sequence": 5,
+              "prevRefKey": "Genesis/2/1",
+              "ref_key": "Genesis/2/2",
+              "prevValue": 26,
+              "value": 20,
+              "delta": -6,
+              "absDelta": 6
+            }
+          ],
+          "topAbsDelta": [
+            {
+              "metric": "links",
+              "prevSequence": 2,
+              "sequence": 3,
+              "prevRefKey": "Genesis/1/2",
+              "ref_key": "Genesis/1/3",
+              "prevValue": 13,
+              "value": 20,
+              "delta": 7,
+              "absDelta": 7,
+              "refKey": "Genesis/1/3"
+            },
+            {
+              "metric": "links",
+              "prevSequence": 3,
+              "sequence": 4,
+              "prevRefKey": "Genesis/1/3",
+              "ref_key": "Genesis/2/1",
+              "prevValue": 20,
+              "value": 26,
+              "delta": 6,
+              "absDelta": 6,
+              "refKey": "Genesis/2/1"
+            },
+            {
+              "metric": "links",
+              "prevSequence": 4,
+              "sequence": 5,
+              "prevRefKey": "Genesis/2/1",
+              "ref_key": "Genesis/2/2",
+              "prevValue": 26,
+              "value": 20,
+              "delta": -6,
+              "absDelta": 6,
+              "refKey": "Genesis/2/2"
+            },
+            {
+              "metric": "links",
+              "prevSequence": 1,
+              "sequence": 2,
+              "prevRefKey": "Genesis/1/1",
+              "ref_key": "Genesis/1/2",
+              "prevValue": 10,
+              "value": 13,
+              "delta": 3,
+              "absDelta": 3,
+              "refKey": "Genesis/1/2"
+            }
+          ]
+        },
+        "boundaries": {
+          "series": [0, 1, 0, 0],
+          "describe": {
+            "count": 4,
+            "min": 0,
+            "max": 1,
+            "mean": 0.25,
+            "median": 0,
+            "p90": 0.7000000000000002,
+            "p99": 0.9699999999999998,
+            "stdev": 0.4330127018922193
+          },
+          "absDescribe": {
+            "count": 4,
+            "min": 0,
+            "max": 1,
+            "mean": 0.25,
+            "median": 0,
+            "p90": 0.7000000000000002,
+            "p99": 0.9699999999999998,
+            "stdev": 0.4330127018922193
+          },
+          "transitions": [
+            {
+              "metric": "boundaries",
+              "prevSequence": 1,
+              "sequence": 2,
+              "prevRefKey": "Genesis/1/1",
+              "ref_key": "Genesis/1/2",
+              "prevValue": 1,
+              "value": 1,
+              "delta": 0,
+              "absDelta": 0
+            },
+            {
+              "metric": "boundaries",
+              "prevSequence": 2,
+              "sequence": 3,
+              "prevRefKey": "Genesis/1/2",
+              "ref_key": "Genesis/1/3",
+              "prevValue": 1,
+              "value": 2,
+              "delta": 1,
+              "absDelta": 1
+            },
+            {
+              "metric": "boundaries",
+              "prevSequence": 3,
+              "sequence": 4,
+              "prevRefKey": "Genesis/1/3",
+              "ref_key": "Genesis/2/1",
+              "prevValue": 2,
+              "value": 2,
+              "delta": 0,
+              "absDelta": 0
+            },
+            {
+              "metric": "boundaries",
+              "prevSequence": 4,
+              "sequence": 5,
+              "prevRefKey": "Genesis/2/1",
+              "ref_key": "Genesis/2/2",
+              "prevValue": 2,
+              "value": 2,
+              "delta": 0,
+              "absDelta": 0
+            }
+          ],
+          "topAbsDelta": [
+            {
+              "metric": "boundaries",
+              "prevSequence": 2,
+              "sequence": 3,
+              "prevRefKey": "Genesis/1/2",
+              "ref_key": "Genesis/1/3",
+              "prevValue": 1,
+              "value": 2,
+              "delta": 1,
+              "absDelta": 1,
+              "refKey": "Genesis/1/3"
+            },
+            {
+              "metric": "boundaries",
+              "prevSequence": 1,
+              "sequence": 2,
+              "prevRefKey": "Genesis/1/1",
+              "ref_key": "Genesis/1/2",
+              "prevValue": 1,
+              "value": 1,
+              "delta": 0,
+              "absDelta": 0,
+              "refKey": "Genesis/1/2"
+            },
+            {
+              "metric": "boundaries",
+              "prevSequence": 3,
+              "sequence": 4,
+              "prevRefKey": "Genesis/1/3",
+              "ref_key": "Genesis/2/1",
+              "prevValue": 2,
+              "value": 2,
+              "delta": 0,
+              "absDelta": 0,
+              "refKey": "Genesis/2/1"
+            },
+            {
+              "metric": "boundaries",
+              "prevSequence": 4,
+              "sequence": 5,
+              "prevRefKey": "Genesis/2/1",
+              "ref_key": "Genesis/2/2",
+              "prevValue": 2,
+              "value": 2,
+              "delta": 0,
+              "absDelta": 0,
+              "refKey": "Genesis/2/2"
+            }
+          ]
+        },
+        "rules": {
+          "series": [0, 0, 1, 0],
+          "describe": {
+            "count": 4,
+            "min": 0,
+            "max": 1,
+            "mean": 0.25,
+            "median": 0,
+            "p90": 0.7000000000000002,
+            "p99": 0.9699999999999998,
+            "stdev": 0.4330127018922193
+          },
+          "absDescribe": {
+            "count": 4,
+            "min": 0,
+            "max": 1,
+            "mean": 0.25,
+            "median": 0,
+            "p90": 0.7000000000000002,
+            "p99": 0.9699999999999998,
+            "stdev": 0.4330127018922193
+          },
+          "transitions": [
+            {
+              "metric": "rules",
+              "prevSequence": 1,
+              "sequence": 2,
+              "prevRefKey": "Genesis/1/1",
+              "ref_key": "Genesis/1/2",
+              "prevValue": 1,
+              "value": 1,
+              "delta": 0,
+              "absDelta": 0
+            },
+            {
+              "metric": "rules",
+              "prevSequence": 2,
+              "sequence": 3,
+              "prevRefKey": "Genesis/1/2",
+              "ref_key": "Genesis/1/3",
+              "prevValue": 1,
+              "value": 1,
+              "delta": 0,
+              "absDelta": 0
+            },
+            {
+              "metric": "rules",
+              "prevSequence": 3,
+              "sequence": 4,
+              "prevRefKey": "Genesis/1/3",
+              "ref_key": "Genesis/2/1",
+              "prevValue": 1,
+              "value": 2,
+              "delta": 1,
+              "absDelta": 1
+            },
+            {
+              "metric": "rules",
+              "prevSequence": 4,
+              "sequence": 5,
+              "prevRefKey": "Genesis/2/1",
+              "ref_key": "Genesis/2/2",
+              "prevValue": 2,
+              "value": 2,
+              "delta": 0,
+              "absDelta": 0
+            }
+          ],
+          "topAbsDelta": [
+            {
+              "metric": "rules",
+              "prevSequence": 3,
+              "sequence": 4,
+              "prevRefKey": "Genesis/1/3",
+              "ref_key": "Genesis/2/1",
+              "prevValue": 1,
+              "value": 2,
+              "delta": 1,
+              "absDelta": 1,
+              "refKey": "Genesis/2/1"
+            },
+            {
+              "metric": "rules",
+              "prevSequence": 1,
+              "sequence": 2,
+              "prevRefKey": "Genesis/1/1",
+              "ref_key": "Genesis/1/2",
+              "prevValue": 1,
+              "value": 1,
+              "delta": 0,
+              "absDelta": 0,
+              "refKey": "Genesis/1/2"
+            },
+            {
+              "metric": "rules",
+              "prevSequence": 2,
+              "sequence": 3,
+              "prevRefKey": "Genesis/1/2",
+              "ref_key": "Genesis/1/3",
+              "prevValue": 1,
+              "value": 1,
+              "delta": 0,
+              "absDelta": 0,
+              "refKey": "Genesis/1/3"
+            },
+            {
+              "metric": "rules",
+              "prevSequence": 4,
+              "sequence": 5,
+              "prevRefKey": "Genesis/2/1",
+              "ref_key": "Genesis/2/2",
+              "prevValue": 2,
+              "value": 2,
+              "delta": 0,
+              "absDelta": 0,
+              "refKey": "Genesis/2/2"
+            }
+          ]
+        },
+        "cont": {
+          "series": [0, 1, 0, 0],
+          "describe": {
+            "count": 4,
+            "min": 0,
+            "max": 1,
+            "mean": 0.25,
+            "median": 0,
+            "p90": 0.7000000000000002,
+            "p99": 0.9699999999999998,
+            "stdev": 0.4330127018922193
+          },
+          "absDescribe": {
+            "count": 4,
+            "min": 0,
+            "max": 1,
+            "mean": 0.25,
+            "median": 0,
+            "p90": 0.7000000000000002,
+            "p99": 0.9699999999999998,
+            "stdev": 0.4330127018922193
+          },
+          "transitions": [
+            {
+              "metric": "cont",
+              "prevSequence": 1,
+              "sequence": 2,
+              "prevRefKey": "Genesis/1/1",
+              "ref_key": "Genesis/1/2",
+              "prevValue": 0,
+              "value": 0,
+              "delta": 0,
+              "absDelta": 0
+            },
+            {
+              "metric": "cont",
+              "prevSequence": 2,
+              "sequence": 3,
+              "prevRefKey": "Genesis/1/2",
+              "ref_key": "Genesis/1/3",
+              "prevValue": 0,
+              "value": 1,
+              "delta": 1,
+              "absDelta": 1
+            },
+            {
+              "metric": "cont",
+              "prevSequence": 3,
+              "sequence": 4,
+              "prevRefKey": "Genesis/1/3",
+              "ref_key": "Genesis/2/1",
+              "prevValue": 1,
+              "value": 1,
+              "delta": 0,
+              "absDelta": 0
+            },
+            {
+              "metric": "cont",
+              "prevSequence": 4,
+              "sequence": 5,
+              "prevRefKey": "Genesis/2/1",
+              "ref_key": "Genesis/2/2",
+              "prevValue": 1,
+              "value": 1,
+              "delta": 0,
+              "absDelta": 0
+            }
+          ],
+          "topAbsDelta": [
+            {
+              "metric": "cont",
+              "prevSequence": 2,
+              "sequence": 3,
+              "prevRefKey": "Genesis/1/2",
+              "ref_key": "Genesis/1/3",
+              "prevValue": 0,
+              "value": 1,
+              "delta": 1,
+              "absDelta": 1,
+              "refKey": "Genesis/1/3"
+            },
+            {
+              "metric": "cont",
+              "prevSequence": 1,
+              "sequence": 2,
+              "prevRefKey": "Genesis/1/1",
+              "ref_key": "Genesis/1/2",
+              "prevValue": 0,
+              "value": 0,
+              "delta": 0,
+              "absDelta": 0,
+              "refKey": "Genesis/1/2"
+            },
+            {
+              "metric": "cont",
+              "prevSequence": 3,
+              "sequence": 4,
+              "prevRefKey": "Genesis/1/3",
+              "ref_key": "Genesis/2/1",
+              "prevValue": 1,
+              "value": 1,
+              "delta": 0,
+              "absDelta": 0,
+              "refKey": "Genesis/2/1"
+            },
+            {
+              "metric": "cont",
+              "prevSequence": 4,
+              "sequence": 5,
+              "prevRefKey": "Genesis/2/1",
+              "ref_key": "Genesis/2/2",
+              "prevValue": 1,
+              "value": 1,
+              "delta": 0,
+              "absDelta": 0,
+              "refKey": "Genesis/2/2"
+            }
+          ]
+        },
+        "aliasEdges": {
+          "series": [0, 1, 1, -1],
+          "describe": {
+            "count": 4,
+            "min": -1,
+            "max": 1,
+            "mean": 0.25,
+            "median": 0.5,
+            "p90": 1,
+            "p99": 1,
+            "stdev": 0.82915619758885
+          },
+          "absDescribe": {
+            "count": 4,
+            "min": 0,
+            "max": 1,
+            "mean": 0.75,
+            "median": 1,
+            "p90": 1,
+            "p99": 1,
+            "stdev": 0.4330127018922193
+          },
+          "transitions": [
+            {
+              "metric": "aliasEdges",
+              "prevSequence": 1,
+              "sequence": 2,
+              "prevRefKey": "Genesis/1/1",
+              "ref_key": "Genesis/1/2",
+              "prevValue": 1,
+              "value": 1,
+              "delta": 0,
+              "absDelta": 0
+            },
+            {
+              "metric": "aliasEdges",
+              "prevSequence": 2,
+              "sequence": 3,
+              "prevRefKey": "Genesis/1/2",
+              "ref_key": "Genesis/1/3",
+              "prevValue": 1,
+              "value": 2,
+              "delta": 1,
+              "absDelta": 1
+            },
+            {
+              "metric": "aliasEdges",
+              "prevSequence": 3,
+              "sequence": 4,
+              "prevRefKey": "Genesis/1/3",
+              "ref_key": "Genesis/2/1",
+              "prevValue": 2,
+              "value": 3,
+              "delta": 1,
+              "absDelta": 1
+            },
+            {
+              "metric": "aliasEdges",
+              "prevSequence": 4,
+              "sequence": 5,
+              "prevRefKey": "Genesis/2/1",
+              "ref_key": "Genesis/2/2",
+              "prevValue": 3,
+              "value": 2,
+              "delta": -1,
+              "absDelta": 1
+            }
+          ],
+          "topAbsDelta": [
+            {
+              "metric": "aliasEdges",
+              "prevSequence": 2,
+              "sequence": 3,
+              "prevRefKey": "Genesis/1/2",
+              "ref_key": "Genesis/1/3",
+              "prevValue": 1,
+              "value": 2,
+              "delta": 1,
+              "absDelta": 1,
+              "refKey": "Genesis/1/3"
+            },
+            {
+              "metric": "aliasEdges",
+              "prevSequence": 3,
+              "sequence": 4,
+              "prevRefKey": "Genesis/1/3",
+              "ref_key": "Genesis/2/1",
+              "prevValue": 2,
+              "value": 3,
+              "delta": 1,
+              "absDelta": 1,
+              "refKey": "Genesis/2/1"
+            },
+            {
+              "metric": "aliasEdges",
+              "prevSequence": 4,
+              "sequence": 5,
+              "prevRefKey": "Genesis/2/1",
+              "ref_key": "Genesis/2/2",
+              "prevValue": 3,
+              "value": 2,
+              "delta": -1,
+              "absDelta": 1,
+              "refKey": "Genesis/2/2"
+            },
+            {
+              "metric": "aliasEdges",
+              "prevSequence": 1,
+              "sequence": 2,
+              "prevRefKey": "Genesis/1/1",
+              "ref_key": "Genesis/1/2",
+              "prevValue": 1,
+              "value": 1,
+              "delta": 0,
+              "absDelta": 0,
+              "refKey": "Genesis/1/2"
+            }
+          ]
+        }
+      },
+      "topAcrossMetrics": [
+        {
+          "metric": "links",
+          "prevSequence": 2,
+          "sequence": 3,
+          "prevRefKey": "Genesis/1/2",
+          "ref_key": "Genesis/1/3",
+          "prevValue": 13,
+          "value": 20,
+          "delta": 7,
+          "absDelta": 7,
+          "refKey": "Genesis/1/3"
+        },
+        {
+          "metric": "links",
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "ref_key": "Genesis/2/1",
+          "prevValue": 20,
+          "value": 26,
+          "delta": 6,
+          "absDelta": 6,
+          "refKey": "Genesis/2/1"
+        },
+        {
+          "metric": "links",
+          "prevSequence": 4,
+          "sequence": 5,
+          "prevRefKey": "Genesis/2/1",
+          "ref_key": "Genesis/2/2",
+          "prevValue": 26,
+          "value": 20,
+          "delta": -6,
+          "absDelta": 6,
+          "refKey": "Genesis/2/2"
+        },
+        {
+          "metric": "handles",
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "ref_key": "Genesis/2/1",
+          "prevValue": 14,
+          "value": 18,
+          "delta": 4,
+          "absDelta": 4,
+          "refKey": "Genesis/2/1"
+        },
+        {
+          "metric": "links",
+          "prevSequence": 1,
+          "sequence": 2,
+          "prevRefKey": "Genesis/1/1",
+          "ref_key": "Genesis/1/2",
+          "prevValue": 10,
+          "value": 13,
+          "delta": 3,
+          "absDelta": 3,
+          "refKey": "Genesis/1/2"
+        },
+        {
+          "metric": "handles",
+          "prevSequence": 2,
+          "sequence": 3,
+          "prevRefKey": "Genesis/1/2",
+          "ref_key": "Genesis/1/3",
+          "prevValue": 11,
+          "value": 14,
+          "delta": 3,
+          "absDelta": 3,
+          "refKey": "Genesis/1/3"
+        },
+        {
+          "metric": "handles",
+          "prevSequence": 4,
+          "sequence": 5,
+          "prevRefKey": "Genesis/2/1",
+          "ref_key": "Genesis/2/2",
+          "prevValue": 18,
+          "value": 16,
+          "delta": -2,
+          "absDelta": 2,
+          "refKey": "Genesis/2/2"
+        },
+        {
+          "metric": "handles",
+          "prevSequence": 1,
+          "sequence": 2,
+          "prevRefKey": "Genesis/1/1",
+          "ref_key": "Genesis/1/2",
+          "prevValue": 10,
+          "value": 11,
+          "delta": 1,
+          "absDelta": 1,
+          "refKey": "Genesis/1/2"
+        },
+        {
+          "metric": "boundaries",
+          "prevSequence": 2,
+          "sequence": 3,
+          "prevRefKey": "Genesis/1/2",
+          "ref_key": "Genesis/1/3",
+          "prevValue": 1,
+          "value": 2,
+          "delta": 1,
+          "absDelta": 1,
+          "refKey": "Genesis/1/3"
+        },
+        {
+          "metric": "cont",
+          "prevSequence": 2,
+          "sequence": 3,
+          "prevRefKey": "Genesis/1/2",
+          "ref_key": "Genesis/1/3",
+          "prevValue": 0,
+          "value": 1,
+          "delta": 1,
+          "absDelta": 1,
+          "refKey": "Genesis/1/3"
+        },
+        {
+          "metric": "aliasEdges",
+          "prevSequence": 2,
+          "sequence": 3,
+          "prevRefKey": "Genesis/1/2",
+          "ref_key": "Genesis/1/3",
+          "prevValue": 1,
+          "value": 2,
+          "delta": 1,
+          "absDelta": 1,
+          "refKey": "Genesis/1/3"
+        },
+        {
+          "metric": "rules",
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "ref_key": "Genesis/2/1",
+          "prevValue": 1,
+          "value": 2,
+          "delta": 1,
+          "absDelta": 1,
+          "refKey": "Genesis/2/1"
+        },
+        {
+          "metric": "aliasEdges",
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "ref_key": "Genesis/2/1",
+          "prevValue": 2,
+          "value": 3,
+          "delta": 1,
+          "absDelta": 1,
+          "refKey": "Genesis/2/1"
+        },
+        {
+          "metric": "aliasEdges",
+          "prevSequence": 4,
+          "sequence": 5,
+          "prevRefKey": "Genesis/2/1",
+          "ref_key": "Genesis/2/2",
+          "prevValue": 3,
+          "value": 2,
+          "delta": -1,
+          "absDelta": 1,
+          "refKey": "Genesis/2/2"
+        },
+        {
+          "metric": "boundaries",
+          "prevSequence": 1,
+          "sequence": 2,
+          "prevRefKey": "Genesis/1/1",
+          "ref_key": "Genesis/1/2",
+          "prevValue": 1,
+          "value": 1,
+          "delta": 0,
+          "absDelta": 0,
+          "refKey": "Genesis/1/2"
+        },
+        {
+          "metric": "rules",
+          "prevSequence": 1,
+          "sequence": 2,
+          "prevRefKey": "Genesis/1/1",
+          "ref_key": "Genesis/1/2",
+          "prevValue": 1,
+          "value": 1,
+          "delta": 0,
+          "absDelta": 0,
+          "refKey": "Genesis/1/2"
+        },
+        {
+          "metric": "cont",
+          "prevSequence": 1,
+          "sequence": 2,
+          "prevRefKey": "Genesis/1/1",
+          "ref_key": "Genesis/1/2",
+          "prevValue": 0,
+          "value": 0,
+          "delta": 0,
+          "absDelta": 0,
+          "refKey": "Genesis/1/2"
+        },
+        {
+          "metric": "aliasEdges",
+          "prevSequence": 1,
+          "sequence": 2,
+          "prevRefKey": "Genesis/1/1",
+          "ref_key": "Genesis/1/2",
+          "prevValue": 1,
+          "value": 1,
+          "delta": 0,
+          "absDelta": 0,
+          "refKey": "Genesis/1/2"
+        },
+        {
+          "metric": "rules",
+          "prevSequence": 2,
+          "sequence": 3,
+          "prevRefKey": "Genesis/1/2",
+          "ref_key": "Genesis/1/3",
+          "prevValue": 1,
+          "value": 1,
+          "delta": 0,
+          "absDelta": 0,
+          "refKey": "Genesis/1/3"
+        },
+        {
+          "metric": "boundaries",
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "ref_key": "Genesis/2/1",
+          "prevValue": 2,
+          "value": 2,
+          "delta": 0,
+          "absDelta": 0,
+          "refKey": "Genesis/2/1"
+        },
+        {
+          "metric": "cont",
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "ref_key": "Genesis/2/1",
+          "prevValue": 1,
+          "value": 1,
+          "delta": 0,
+          "absDelta": 0,
+          "refKey": "Genesis/2/1"
+        },
+        {
+          "metric": "boundaries",
+          "prevSequence": 4,
+          "sequence": 5,
+          "prevRefKey": "Genesis/2/1",
+          "ref_key": "Genesis/2/2",
+          "prevValue": 2,
+          "value": 2,
+          "delta": 0,
+          "absDelta": 0,
+          "refKey": "Genesis/2/2"
+        },
+        {
+          "metric": "rules",
+          "prevSequence": 4,
+          "sequence": 5,
+          "prevRefKey": "Genesis/2/1",
+          "ref_key": "Genesis/2/2",
+          "prevValue": 2,
+          "value": 2,
+          "delta": 0,
+          "absDelta": 0,
+          "refKey": "Genesis/2/2"
+        },
+        {
+          "metric": "cont",
+          "prevSequence": 4,
+          "sequence": 5,
+          "prevRefKey": "Genesis/2/1",
+          "ref_key": "Genesis/2/2",
+          "prevValue": 1,
+          "value": 1,
+          "delta": 0,
+          "absDelta": 0,
+          "refKey": "Genesis/2/2"
+        }
+      ]
+    },
+    "regimeChange": {
+      "method": "abs(Δhandles) > p99(abs(Δhandles))",
+      "threshold": 3.9699999999999998,
+      "events": [
+        {
+          "metric": "handles",
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "ref_key": "Genesis/2/1",
+          "prevValue": 14,
+          "value": 18,
+          "delta": 4,
+          "absDelta": 4
+        }
+      ]
+    }
+  },
+  "carrySemantics": {
+    "verses": 5,
+    "runs": {
+      "startOfVerse": {
+        "omega": {
+          "table": [
+            {
+              "id": null,
+              "phase": "carryIn",
+              "field": "omega",
+              "startSeq": 1,
+              "endSeq": 1,
+              "startRefKey": "Genesis/1/1",
+              "endRefKey": "Genesis/1/1",
+              "length": 1,
+              "avgPinnedCount": 0,
+              "avgHandles": 10,
+              "errorCount": 0,
+              "errorRate": 0
+            },
+            {
+              "id": "o1",
+              "phase": "carryIn",
+              "field": "omega",
+              "startSeq": 2,
+              "endSeq": 2,
+              "startRefKey": "Genesis/1/2",
+              "endRefKey": "Genesis/1/2",
+              "length": 1,
+              "avgPinnedCount": 1,
+              "avgHandles": 11,
+              "errorCount": 0,
+              "errorRate": 0
+            },
+            {
+              "id": "o2",
+              "phase": "carryIn",
+              "field": "omega",
+              "startSeq": 3,
+              "endSeq": 3,
+              "startRefKey": "Genesis/1/3",
+              "endRefKey": "Genesis/1/3",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 14,
+              "errorCount": 1,
+              "errorRate": 1
+            },
+            {
+              "id": "o3",
+              "phase": "carryIn",
+              "field": "omega",
+              "startSeq": 4,
+              "endSeq": 4,
+              "startRefKey": "Genesis/2/1",
+              "endRefKey": "Genesis/2/1",
+              "length": 1,
+              "avgPinnedCount": 1,
+              "avgHandles": 18,
+              "errorCount": 0,
+              "errorRate": 0
+            },
+            {
+              "id": "o4",
+              "phase": "carryIn",
+              "field": "omega",
+              "startSeq": 5,
+              "endSeq": 5,
+              "startRefKey": "Genesis/2/2",
+              "endRefKey": "Genesis/2/2",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 16,
+              "errorCount": 0,
+              "errorRate": 0
+            }
+          ],
+          "runLengthDescribe": {
+            "count": 5,
+            "min": 1,
+            "max": 1,
+            "mean": 1,
+            "median": 1,
+            "p90": 1,
+            "p99": 1,
+            "stdev": 0
+          },
+          "longest": [
+            {
+              "id": null,
+              "phase": "carryIn",
+              "field": "omega",
+              "startSeq": 1,
+              "endSeq": 1,
+              "startRefKey": "Genesis/1/1",
+              "endRefKey": "Genesis/1/1",
+              "length": 1,
+              "avgPinnedCount": 0,
+              "avgHandles": 10,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 1,
+              "ref_key": "Genesis/1/1"
+            },
+            {
+              "id": "o1",
+              "phase": "carryIn",
+              "field": "omega",
+              "startSeq": 2,
+              "endSeq": 2,
+              "startRefKey": "Genesis/1/2",
+              "endRefKey": "Genesis/1/2",
+              "length": 1,
+              "avgPinnedCount": 1,
+              "avgHandles": 11,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 2,
+              "ref_key": "Genesis/1/2"
+            },
+            {
+              "id": "o2",
+              "phase": "carryIn",
+              "field": "omega",
+              "startSeq": 3,
+              "endSeq": 3,
+              "startRefKey": "Genesis/1/3",
+              "endRefKey": "Genesis/1/3",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 14,
+              "errorCount": 1,
+              "errorRate": 1,
+              "sequence": 3,
+              "ref_key": "Genesis/1/3"
+            },
+            {
+              "id": "o3",
+              "phase": "carryIn",
+              "field": "omega",
+              "startSeq": 4,
+              "endSeq": 4,
+              "startRefKey": "Genesis/2/1",
+              "endRefKey": "Genesis/2/1",
+              "length": 1,
+              "avgPinnedCount": 1,
+              "avgHandles": 18,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 4,
+              "ref_key": "Genesis/2/1"
+            },
+            {
+              "id": "o4",
+              "phase": "carryIn",
+              "field": "omega",
+              "startSeq": 5,
+              "endSeq": 5,
+              "startRefKey": "Genesis/2/2",
+              "endRefKey": "Genesis/2/2",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 16,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 5,
+              "ref_key": "Genesis/2/2"
+            }
+          ]
+        },
+        "focus": {
+          "table": [
+            {
+              "id": null,
+              "phase": "carryIn",
+              "field": "focus",
+              "startSeq": 1,
+              "endSeq": 1,
+              "startRefKey": "Genesis/1/1",
+              "endRefKey": "Genesis/1/1",
+              "length": 1,
+              "avgPinnedCount": 0,
+              "avgHandles": 10,
+              "errorCount": 0,
+              "errorRate": 0
+            },
+            {
+              "id": "f1",
+              "phase": "carryIn",
+              "field": "focus",
+              "startSeq": 2,
+              "endSeq": 3,
+              "startRefKey": "Genesis/1/2",
+              "endRefKey": "Genesis/1/3",
+              "length": 2,
+              "avgPinnedCount": 1.5,
+              "avgHandles": 12.5,
+              "errorCount": 1,
+              "errorRate": 0.5
+            },
+            {
+              "id": "fX",
+              "phase": "carryIn",
+              "field": "focus",
+              "startSeq": 4,
+              "endSeq": 4,
+              "startRefKey": "Genesis/2/1",
+              "endRefKey": "Genesis/2/1",
+              "length": 1,
+              "avgPinnedCount": 1,
+              "avgHandles": 18,
+              "errorCount": 0,
+              "errorRate": 0
+            },
+            {
+              "id": "f3",
+              "phase": "carryIn",
+              "field": "focus",
+              "startSeq": 5,
+              "endSeq": 5,
+              "startRefKey": "Genesis/2/2",
+              "endRefKey": "Genesis/2/2",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 16,
+              "errorCount": 0,
+              "errorRate": 0
+            }
+          ],
+          "runLengthDescribe": {
+            "count": 4,
+            "min": 1,
+            "max": 2,
+            "mean": 1.25,
+            "median": 1,
+            "p90": 1.7000000000000002,
+            "p99": 1.9699999999999998,
+            "stdev": 0.4330127018922193
+          },
+          "longest": [
+            {
+              "id": "f1",
+              "phase": "carryIn",
+              "field": "focus",
+              "startSeq": 2,
+              "endSeq": 3,
+              "startRefKey": "Genesis/1/2",
+              "endRefKey": "Genesis/1/3",
+              "length": 2,
+              "avgPinnedCount": 1.5,
+              "avgHandles": 12.5,
+              "errorCount": 1,
+              "errorRate": 0.5,
+              "sequence": 2,
+              "ref_key": "Genesis/1/2"
+            },
+            {
+              "id": null,
+              "phase": "carryIn",
+              "field": "focus",
+              "startSeq": 1,
+              "endSeq": 1,
+              "startRefKey": "Genesis/1/1",
+              "endRefKey": "Genesis/1/1",
+              "length": 1,
+              "avgPinnedCount": 0,
+              "avgHandles": 10,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 1,
+              "ref_key": "Genesis/1/1"
+            },
+            {
+              "id": "fX",
+              "phase": "carryIn",
+              "field": "focus",
+              "startSeq": 4,
+              "endSeq": 4,
+              "startRefKey": "Genesis/2/1",
+              "endRefKey": "Genesis/2/1",
+              "length": 1,
+              "avgPinnedCount": 1,
+              "avgHandles": 18,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 4,
+              "ref_key": "Genesis/2/1"
+            },
+            {
+              "id": "f3",
+              "phase": "carryIn",
+              "field": "focus",
+              "startSeq": 5,
+              "endSeq": 5,
+              "startRefKey": "Genesis/2/2",
+              "endRefKey": "Genesis/2/2",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 16,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 5,
+              "ref_key": "Genesis/2/2"
+            }
+          ]
+        },
+        "domain": {
+          "table": [
+            {
+              "id": null,
+              "phase": "carryIn",
+              "field": "domain",
+              "startSeq": 1,
+              "endSeq": 2,
+              "startRefKey": "Genesis/1/1",
+              "endRefKey": "Genesis/1/2",
+              "length": 2,
+              "avgPinnedCount": 0.5,
+              "avgHandles": 10.5,
+              "errorCount": 0,
+              "errorRate": 0
+            },
+            {
+              "id": "domain:bad",
+              "phase": "carryIn",
+              "field": "domain",
+              "startSeq": 3,
+              "endSeq": 3,
+              "startRefKey": "Genesis/1/3",
+              "endRefKey": "Genesis/1/3",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 14,
+              "errorCount": 1,
+              "errorRate": 1
+            },
+            {
+              "id": null,
+              "phase": "carryIn",
+              "field": "domain",
+              "startSeq": 4,
+              "endSeq": 5,
+              "startRefKey": "Genesis/2/1",
+              "endRefKey": "Genesis/2/2",
+              "length": 2,
+              "avgPinnedCount": 1.5,
+              "avgHandles": 17,
+              "errorCount": 0,
+              "errorRate": 0
+            }
+          ],
+          "runLengthDescribe": {
+            "count": 3,
+            "min": 1,
+            "max": 2,
+            "mean": 1.6666666666666667,
+            "median": 2,
+            "p90": 2,
+            "p99": 2,
+            "stdev": 0.4714045207910317
+          },
+          "longest": [
+            {
+              "id": null,
+              "phase": "carryIn",
+              "field": "domain",
+              "startSeq": 1,
+              "endSeq": 2,
+              "startRefKey": "Genesis/1/1",
+              "endRefKey": "Genesis/1/2",
+              "length": 2,
+              "avgPinnedCount": 0.5,
+              "avgHandles": 10.5,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 1,
+              "ref_key": "Genesis/1/1"
+            },
+            {
+              "id": null,
+              "phase": "carryIn",
+              "field": "domain",
+              "startSeq": 4,
+              "endSeq": 5,
+              "startRefKey": "Genesis/2/1",
+              "endRefKey": "Genesis/2/2",
+              "length": 2,
+              "avgPinnedCount": 1.5,
+              "avgHandles": 17,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 4,
+              "ref_key": "Genesis/2/1"
+            },
+            {
+              "id": "domain:bad",
+              "phase": "carryIn",
+              "field": "domain",
+              "startSeq": 3,
+              "endSeq": 3,
+              "startRefKey": "Genesis/1/3",
+              "endRefKey": "Genesis/1/3",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 14,
+              "errorCount": 1,
+              "errorRate": 1,
+              "sequence": 3,
+              "ref_key": "Genesis/1/3"
+            }
+          ]
+        }
+      },
+      "endOfVerse": {
+        "omega": {
+          "table": [
+            {
+              "id": "o1",
+              "phase": "carryOut",
+              "field": "omega",
+              "startSeq": 1,
+              "endSeq": 1,
+              "startRefKey": "Genesis/1/1",
+              "endRefKey": "Genesis/1/1",
+              "length": 1,
+              "avgPinnedCount": 1,
+              "avgHandles": 10,
+              "errorCount": 0,
+              "errorRate": 0
+            },
+            {
+              "id": "o2",
+              "phase": "carryOut",
+              "field": "omega",
+              "startSeq": 2,
+              "endSeq": 2,
+              "startRefKey": "Genesis/1/2",
+              "endRefKey": "Genesis/1/2",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 11,
+              "errorCount": 0,
+              "errorRate": 0
+            },
+            {
+              "id": "o3",
+              "phase": "carryOut",
+              "field": "omega",
+              "startSeq": 3,
+              "endSeq": 3,
+              "startRefKey": "Genesis/1/3",
+              "endRefKey": "Genesis/1/3",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 14,
+              "errorCount": 1,
+              "errorRate": 1
+            },
+            {
+              "id": "o4",
+              "phase": "carryOut",
+              "field": "omega",
+              "startSeq": 4,
+              "endSeq": 4,
+              "startRefKey": "Genesis/2/1",
+              "endRefKey": "Genesis/2/1",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 18,
+              "errorCount": 0,
+              "errorRate": 0
+            },
+            {
+              "id": "o5",
+              "phase": "carryOut",
+              "field": "omega",
+              "startSeq": 5,
+              "endSeq": 5,
+              "startRefKey": "Genesis/2/2",
+              "endRefKey": "Genesis/2/2",
+              "length": 1,
+              "avgPinnedCount": 1,
+              "avgHandles": 16,
+              "errorCount": 0,
+              "errorRate": 0
+            }
+          ],
+          "runLengthDescribe": {
+            "count": 5,
+            "min": 1,
+            "max": 1,
+            "mean": 1,
+            "median": 1,
+            "p90": 1,
+            "p99": 1,
+            "stdev": 0
+          },
+          "longest": [
+            {
+              "id": "o1",
+              "phase": "carryOut",
+              "field": "omega",
+              "startSeq": 1,
+              "endSeq": 1,
+              "startRefKey": "Genesis/1/1",
+              "endRefKey": "Genesis/1/1",
+              "length": 1,
+              "avgPinnedCount": 1,
+              "avgHandles": 10,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 1,
+              "ref_key": "Genesis/1/1"
+            },
+            {
+              "id": "o2",
+              "phase": "carryOut",
+              "field": "omega",
+              "startSeq": 2,
+              "endSeq": 2,
+              "startRefKey": "Genesis/1/2",
+              "endRefKey": "Genesis/1/2",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 11,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 2,
+              "ref_key": "Genesis/1/2"
+            },
+            {
+              "id": "o3",
+              "phase": "carryOut",
+              "field": "omega",
+              "startSeq": 3,
+              "endSeq": 3,
+              "startRefKey": "Genesis/1/3",
+              "endRefKey": "Genesis/1/3",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 14,
+              "errorCount": 1,
+              "errorRate": 1,
+              "sequence": 3,
+              "ref_key": "Genesis/1/3"
+            },
+            {
+              "id": "o4",
+              "phase": "carryOut",
+              "field": "omega",
+              "startSeq": 4,
+              "endSeq": 4,
+              "startRefKey": "Genesis/2/1",
+              "endRefKey": "Genesis/2/1",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 18,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 4,
+              "ref_key": "Genesis/2/1"
+            },
+            {
+              "id": "o5",
+              "phase": "carryOut",
+              "field": "omega",
+              "startSeq": 5,
+              "endSeq": 5,
+              "startRefKey": "Genesis/2/2",
+              "endRefKey": "Genesis/2/2",
+              "length": 1,
+              "avgPinnedCount": 1,
+              "avgHandles": 16,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 5,
+              "ref_key": "Genesis/2/2"
+            }
+          ]
+        },
+        "focus": {
+          "table": [
+            {
+              "id": "f1",
+              "phase": "carryOut",
+              "field": "focus",
+              "startSeq": 1,
+              "endSeq": 2,
+              "startRefKey": "Genesis/1/1",
+              "endRefKey": "Genesis/1/2",
+              "length": 2,
+              "avgPinnedCount": 1.5,
+              "avgHandles": 10.5,
+              "errorCount": 0,
+              "errorRate": 0
+            },
+            {
+              "id": "f2",
+              "phase": "carryOut",
+              "field": "focus",
+              "startSeq": 3,
+              "endSeq": 3,
+              "startRefKey": "Genesis/1/3",
+              "endRefKey": "Genesis/1/3",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 14,
+              "errorCount": 1,
+              "errorRate": 1
+            },
+            {
+              "id": "f3",
+              "phase": "carryOut",
+              "field": "focus",
+              "startSeq": 4,
+              "endSeq": 5,
+              "startRefKey": "Genesis/2/1",
+              "endRefKey": "Genesis/2/2",
+              "length": 2,
+              "avgPinnedCount": 1.5,
+              "avgHandles": 17,
+              "errorCount": 0,
+              "errorRate": 0
+            }
+          ],
+          "runLengthDescribe": {
+            "count": 3,
+            "min": 1,
+            "max": 2,
+            "mean": 1.6666666666666667,
+            "median": 2,
+            "p90": 2,
+            "p99": 2,
+            "stdev": 0.4714045207910317
+          },
+          "longest": [
+            {
+              "id": "f1",
+              "phase": "carryOut",
+              "field": "focus",
+              "startSeq": 1,
+              "endSeq": 2,
+              "startRefKey": "Genesis/1/1",
+              "endRefKey": "Genesis/1/2",
+              "length": 2,
+              "avgPinnedCount": 1.5,
+              "avgHandles": 10.5,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 1,
+              "ref_key": "Genesis/1/1"
+            },
+            {
+              "id": "f3",
+              "phase": "carryOut",
+              "field": "focus",
+              "startSeq": 4,
+              "endSeq": 5,
+              "startRefKey": "Genesis/2/1",
+              "endRefKey": "Genesis/2/2",
+              "length": 2,
+              "avgPinnedCount": 1.5,
+              "avgHandles": 17,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 4,
+              "ref_key": "Genesis/2/1"
+            },
+            {
+              "id": "f2",
+              "phase": "carryOut",
+              "field": "focus",
+              "startSeq": 3,
+              "endSeq": 3,
+              "startRefKey": "Genesis/1/3",
+              "endRefKey": "Genesis/1/3",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 14,
+              "errorCount": 1,
+              "errorRate": 1,
+              "sequence": 3,
+              "ref_key": "Genesis/1/3"
+            }
+          ]
+        },
+        "domain": {
+          "table": [
+            {
+              "id": null,
+              "phase": "carryOut",
+              "field": "domain",
+              "startSeq": 1,
+              "endSeq": 2,
+              "startRefKey": "Genesis/1/1",
+              "endRefKey": "Genesis/1/2",
+              "length": 2,
+              "avgPinnedCount": 1.5,
+              "avgHandles": 10.5,
+              "errorCount": 0,
+              "errorRate": 0
+            },
+            {
+              "id": "domain:bad2",
+              "phase": "carryOut",
+              "field": "domain",
+              "startSeq": 3,
+              "endSeq": 3,
+              "startRefKey": "Genesis/1/3",
+              "endRefKey": "Genesis/1/3",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 14,
+              "errorCount": 1,
+              "errorRate": 1
+            },
+            {
+              "id": null,
+              "phase": "carryOut",
+              "field": "domain",
+              "startSeq": 4,
+              "endSeq": 5,
+              "startRefKey": "Genesis/2/1",
+              "endRefKey": "Genesis/2/2",
+              "length": 2,
+              "avgPinnedCount": 1.5,
+              "avgHandles": 17,
+              "errorCount": 0,
+              "errorRate": 0
+            }
+          ],
+          "runLengthDescribe": {
+            "count": 3,
+            "min": 1,
+            "max": 2,
+            "mean": 1.6666666666666667,
+            "median": 2,
+            "p90": 2,
+            "p99": 2,
+            "stdev": 0.4714045207910317
+          },
+          "longest": [
+            {
+              "id": null,
+              "phase": "carryOut",
+              "field": "domain",
+              "startSeq": 1,
+              "endSeq": 2,
+              "startRefKey": "Genesis/1/1",
+              "endRefKey": "Genesis/1/2",
+              "length": 2,
+              "avgPinnedCount": 1.5,
+              "avgHandles": 10.5,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 1,
+              "ref_key": "Genesis/1/1"
+            },
+            {
+              "id": null,
+              "phase": "carryOut",
+              "field": "domain",
+              "startSeq": 4,
+              "endSeq": 5,
+              "startRefKey": "Genesis/2/1",
+              "endRefKey": "Genesis/2/2",
+              "length": 2,
+              "avgPinnedCount": 1.5,
+              "avgHandles": 17,
+              "errorCount": 0,
+              "errorRate": 0,
+              "sequence": 4,
+              "ref_key": "Genesis/2/1"
+            },
+            {
+              "id": "domain:bad2",
+              "phase": "carryOut",
+              "field": "domain",
+              "startSeq": 3,
+              "endSeq": 3,
+              "startRefKey": "Genesis/1/3",
+              "endRefKey": "Genesis/1/3",
+              "length": 1,
+              "avgPinnedCount": 2,
+              "avgHandles": 14,
+              "errorCount": 1,
+              "errorRate": 1,
+              "sequence": 3,
+              "ref_key": "Genesis/1/3"
+            }
+          ]
+        }
+      }
+    },
+    "stickyFocus": {
+      "thresholdLength": 3,
+      "segments": [],
+      "coupling": {
+        "avgPinnedCountDescribe": {
+          "count": 0,
+          "min": null,
+          "max": null,
+          "mean": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "stdev": null
+        },
+        "avgHandlesDescribe": {
+          "count": 0,
+          "min": null,
+          "max": null,
+          "mean": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "stdev": null
+        },
+        "errorRateDescribe": {
+          "count": 0,
+          "min": null,
+          "max": null,
+          "mean": null,
+          "median": null,
+          "p90": null,
+          "p99": null,
+          "stdev": null
+        }
+      }
+    },
+    "rankings": {
+      "longestFocusRuns": [
+        {
+          "id": "f1",
+          "phase": "carryIn",
+          "field": "focus",
+          "startSeq": 2,
+          "endSeq": 3,
+          "startRefKey": "Genesis/1/2",
+          "endRefKey": "Genesis/1/3",
+          "length": 2,
+          "avgPinnedCount": 1.5,
+          "avgHandles": 12.5,
+          "errorCount": 1,
+          "errorRate": 0.5,
+          "sequence": 2,
+          "ref_key": "Genesis/1/2"
+        },
+        {
+          "id": null,
+          "phase": "carryIn",
+          "field": "focus",
+          "startSeq": 1,
+          "endSeq": 1,
+          "startRefKey": "Genesis/1/1",
+          "endRefKey": "Genesis/1/1",
+          "length": 1,
+          "avgPinnedCount": 0,
+          "avgHandles": 10,
+          "errorCount": 0,
+          "errorRate": 0,
+          "sequence": 1,
+          "ref_key": "Genesis/1/1"
+        },
+        {
+          "id": "fX",
+          "phase": "carryIn",
+          "field": "focus",
+          "startSeq": 4,
+          "endSeq": 4,
+          "startRefKey": "Genesis/2/1",
+          "endRefKey": "Genesis/2/1",
+          "length": 1,
+          "avgPinnedCount": 1,
+          "avgHandles": 18,
+          "errorCount": 0,
+          "errorRate": 0,
+          "sequence": 4,
+          "ref_key": "Genesis/2/1"
+        },
+        {
+          "id": "f3",
+          "phase": "carryIn",
+          "field": "focus",
+          "startSeq": 5,
+          "endSeq": 5,
+          "startRefKey": "Genesis/2/2",
+          "endRefKey": "Genesis/2/2",
+          "length": 1,
+          "avgPinnedCount": 2,
+          "avgHandles": 16,
+          "errorCount": 0,
+          "errorRate": 0,
+          "sequence": 5,
+          "ref_key": "Genesis/2/2"
+        }
+      ],
+      "longestDomainRuns": [
+        {
+          "id": null,
+          "phase": "carryIn",
+          "field": "domain",
+          "startSeq": 1,
+          "endSeq": 2,
+          "startRefKey": "Genesis/1/1",
+          "endRefKey": "Genesis/1/2",
+          "length": 2,
+          "avgPinnedCount": 0.5,
+          "avgHandles": 10.5,
+          "errorCount": 0,
+          "errorRate": 0,
+          "sequence": 1,
+          "ref_key": "Genesis/1/1"
+        },
+        {
+          "id": null,
+          "phase": "carryIn",
+          "field": "domain",
+          "startSeq": 4,
+          "endSeq": 5,
+          "startRefKey": "Genesis/2/1",
+          "endRefKey": "Genesis/2/2",
+          "length": 2,
+          "avgPinnedCount": 1.5,
+          "avgHandles": 17,
+          "errorCount": 0,
+          "errorRate": 0,
+          "sequence": 4,
+          "ref_key": "Genesis/2/1"
+        },
+        {
+          "id": "domain:bad",
+          "phase": "carryIn",
+          "field": "domain",
+          "startSeq": 3,
+          "endSeq": 3,
+          "startRefKey": "Genesis/1/3",
+          "endRefKey": "Genesis/1/3",
+          "length": 1,
+          "avgPinnedCount": 2,
+          "avgHandles": 14,
+          "errorCount": 1,
+          "errorRate": 1,
+          "sequence": 3,
+          "ref_key": "Genesis/1/3"
+        }
+      ]
+    },
+    "errorCorrelation": {
+      "counts": {
+        "errorVerses": 1,
+        "nonErrorVerses": 4
+      },
+      "means": {
+        "handles": {
+          "errorMean": 14,
+          "nonErrorMean": 13.75,
+          "delta": 0.25,
+          "ratio": 1.018181818181818
+        },
+        "aliasEdges": {
+          "errorMean": 2,
+          "nonErrorMean": 1.75,
+          "delta": 0.25,
+          "ratio": 1.1428571428571428
+        },
+        "pinnedCountStart": {
+          "errorMean": 2,
+          "nonErrorMean": 1,
+          "delta": 1,
+          "ratio": 2
+        },
+        "pinnedCountEnd": {
+          "errorMean": 2,
+          "nonErrorMean": 1.5,
+          "delta": 0.5,
+          "ratio": 1.3333333333333333
+        }
+      }
+    }
+  },
+  "errors": {
+    "verses": 5,
+    "errorCount": 1,
+    "errorRate": 0.2,
+    "errorVerses": [
+      {
+        "sequence": 3,
+        "ref_key": "Genesis/1/3",
+        "runtimeError": "Missing handle H777 in zone 3",
+        "normalizedMessage": "missing handle h# in zone #",
+        "messagePrefix": "missing handle h# in zone #"
+      }
+    ],
+    "clustering": {
+      "byMessagePrefix": [
+        {
+          "messagePrefix": "missing handle h# in zone #",
+          "normalizedMessageSample": "missing handle h# in zone #",
+          "count": 1,
+          "sequences": [3],
+          "refs": ["Genesis/1/3"],
+          "sampleMessages": ["Missing handle H777 in zone 3"]
+        }
+      ]
+    },
+    "density": {
+      "byBookChapter": [
+        {
+          "key": "Genesis/1",
+          "book": "Genesis",
+          "chapter": 1,
+          "verseCount": 3,
+          "errorCount": 1,
+          "errorRate": 0.3333333333333333
+        },
+        {
+          "key": "Genesis/2",
+          "book": "Genesis",
+          "chapter": 2,
+          "verseCount": 2,
+          "errorCount": 0,
+          "errorRate": 0
+        }
+      ]
+    },
+    "preErrorSignature": {
+      "metricComparisons": {
+        "handles": {
+          "errorDescribe": {
+            "count": 1,
+            "min": 14,
+            "max": 14,
+            "mean": 14,
+            "median": 14,
+            "p90": 14,
+            "p99": 14,
+            "stdev": 0
+          },
+          "nonErrorDescribe": {
+            "count": 4,
+            "min": 10,
+            "max": 18,
+            "mean": 13.75,
+            "median": 13.5,
+            "p90": 17.4,
+            "p99": 17.939999999999998,
+            "stdev": 3.344772040064913
+          },
+          "meanDelta": 0.25,
+          "meanRatio": 1.018181818181818
+        },
+        "links": {
+          "errorDescribe": {
+            "count": 1,
+            "min": 20,
+            "max": 20,
+            "mean": 20,
+            "median": 20,
+            "p90": 20,
+            "p99": 20,
+            "stdev": 0
+          },
+          "nonErrorDescribe": {
+            "count": 4,
+            "min": 10,
+            "max": 26,
+            "mean": 17.25,
+            "median": 16.5,
+            "p90": 24.200000000000003,
+            "p99": 25.82,
+            "stdev": 6.219927652312364
+          },
+          "meanDelta": 2.75,
+          "meanRatio": 1.1594202898550725
+        },
+        "boundaries": {
+          "errorDescribe": {
+            "count": 1,
+            "min": 2,
+            "max": 2,
+            "mean": 2,
+            "median": 2,
+            "p90": 2,
+            "p99": 2,
+            "stdev": 0
+          },
+          "nonErrorDescribe": {
+            "count": 4,
+            "min": 1,
+            "max": 2,
+            "mean": 1.5,
+            "median": 1.5,
+            "p90": 2,
+            "p99": 2,
+            "stdev": 0.5
+          },
+          "meanDelta": 0.5,
+          "meanRatio": 1.3333333333333333
+        },
+        "rules": {
+          "errorDescribe": {
+            "count": 1,
+            "min": 1,
+            "max": 1,
+            "mean": 1,
+            "median": 1,
+            "p90": 1,
+            "p99": 1,
+            "stdev": 0
+          },
+          "nonErrorDescribe": {
+            "count": 4,
+            "min": 1,
+            "max": 2,
+            "mean": 1.5,
+            "median": 1.5,
+            "p90": 2,
+            "p99": 2,
+            "stdev": 0.5
+          },
+          "meanDelta": -0.5,
+          "meanRatio": 0.6666666666666666
+        },
+        "cont": {
+          "errorDescribe": {
+            "count": 1,
+            "min": 1,
+            "max": 1,
+            "mean": 1,
+            "median": 1,
+            "p90": 1,
+            "p99": 1,
+            "stdev": 0
+          },
+          "nonErrorDescribe": {
+            "count": 4,
+            "min": 0,
+            "max": 1,
+            "mean": 0.5,
+            "median": 0.5,
+            "p90": 1,
+            "p99": 1,
+            "stdev": 0.5
+          },
+          "meanDelta": 0.5,
+          "meanRatio": 2
+        },
+        "aliasEdges": {
+          "errorDescribe": {
+            "count": 1,
+            "min": 2,
+            "max": 2,
+            "mean": 2,
+            "median": 2,
+            "p90": 2,
+            "p99": 2,
+            "stdev": 0
+          },
+          "nonErrorDescribe": {
+            "count": 4,
+            "min": 1,
+            "max": 3,
+            "mean": 1.75,
+            "median": 1.5,
+            "p90": 2.7,
+            "p99": 2.9699999999999998,
+            "stdev": 0.82915619758885
+          },
+          "meanDelta": 0.25,
+          "meanRatio": 1.1428571428571428
+        },
+        "pinnedCountStart": {
+          "errorDescribe": {
+            "count": 1,
+            "min": 2,
+            "max": 2,
+            "mean": 2,
+            "median": 2,
+            "p90": 2,
+            "p99": 2,
+            "stdev": 0
+          },
+          "nonErrorDescribe": {
+            "count": 4,
+            "min": 0,
+            "max": 2,
+            "mean": 1,
+            "median": 1,
+            "p90": 1.7000000000000002,
+            "p99": 1.9699999999999998,
+            "stdev": 0.7071067811865476
+          },
+          "meanDelta": 1,
+          "meanRatio": 2
+        },
+        "pinnedCountEnd": {
+          "errorDescribe": {
+            "count": 1,
+            "min": 2,
+            "max": 2,
+            "mean": 2,
+            "median": 2,
+            "p90": 2,
+            "p99": 2,
+            "stdev": 0
+          },
+          "nonErrorDescribe": {
+            "count": 4,
+            "min": 1,
+            "max": 2,
+            "mean": 1.5,
+            "median": 1.5,
+            "p90": 2,
+            "p99": 2,
+            "stdev": 0.5
+          },
+          "meanDelta": 0.5,
+          "meanRatio": 1.3333333333333333
+        }
+      },
+      "outlierErrorVerses": {
+        "handles": [
+          {
+            "metric": "handles",
+            "sequence": 3,
+            "ref_key": "Genesis/1/3",
+            "value": 14,
+            "nonErrorMean": 13.75,
+            "deltaFromNonErrorMean": 0.25,
+            "zScore": 0.07474350927519359
+          }
+        ],
+        "links": [
+          {
+            "metric": "links",
+            "sequence": 3,
+            "ref_key": "Genesis/1/3",
+            "value": 20,
+            "nonErrorMean": 17.25,
+            "deltaFromNonErrorMean": 2.75,
+            "zScore": 0.44212732908197744
+          }
+        ],
+        "boundaries": [
+          {
+            "metric": "boundaries",
+            "sequence": 3,
+            "ref_key": "Genesis/1/3",
+            "value": 2,
+            "nonErrorMean": 1.5,
+            "deltaFromNonErrorMean": 0.5,
+            "zScore": 1
+          }
+        ],
+        "rules": [
+          {
+            "metric": "rules",
+            "sequence": 3,
+            "ref_key": "Genesis/1/3",
+            "value": 1,
+            "nonErrorMean": 1.5,
+            "deltaFromNonErrorMean": -0.5,
+            "zScore": -1
+          }
+        ],
+        "cont": [
+          {
+            "metric": "cont",
+            "sequence": 3,
+            "ref_key": "Genesis/1/3",
+            "value": 1,
+            "nonErrorMean": 0.5,
+            "deltaFromNonErrorMean": 0.5,
+            "zScore": 1
+          }
+        ],
+        "aliasEdges": [
+          {
+            "metric": "aliasEdges",
+            "sequence": 3,
+            "ref_key": "Genesis/1/3",
+            "value": 2,
+            "nonErrorMean": 1.75,
+            "deltaFromNonErrorMean": 0.25,
+            "zScore": 0.30151134457776363
+          }
+        ],
+        "pinnedCountStart": [
+          {
+            "metric": "pinnedCountStart",
+            "sequence": 3,
+            "ref_key": "Genesis/1/3",
+            "value": 2,
+            "nonErrorMean": 1,
+            "deltaFromNonErrorMean": 1,
+            "zScore": 1.414213562373095
+          }
+        ],
+        "pinnedCountEnd": [
+          {
+            "metric": "pinnedCountEnd",
+            "sequence": 3,
+            "ref_key": "Genesis/1/3",
+            "value": 2,
+            "nonErrorMean": 1.5,
+            "deltaFromNonErrorMean": 0.5,
+            "zScore": 1
+          }
+        ]
+      },
+      "topAcrossMetrics": [
+        {
+          "metric": "pinnedCountStart",
+          "sequence": 3,
+          "ref_key": "Genesis/1/3",
+          "value": 2,
+          "nonErrorMean": 1,
+          "deltaFromNonErrorMean": 1,
+          "zScore": 1.414213562373095
+        },
+        {
+          "metric": "boundaries",
+          "sequence": 3,
+          "ref_key": "Genesis/1/3",
+          "value": 2,
+          "nonErrorMean": 1.5,
+          "deltaFromNonErrorMean": 0.5,
+          "zScore": 1
+        },
+        {
+          "metric": "rules",
+          "sequence": 3,
+          "ref_key": "Genesis/1/3",
+          "value": 1,
+          "nonErrorMean": 1.5,
+          "deltaFromNonErrorMean": -0.5,
+          "zScore": -1
+        },
+        {
+          "metric": "cont",
+          "sequence": 3,
+          "ref_key": "Genesis/1/3",
+          "value": 1,
+          "nonErrorMean": 0.5,
+          "deltaFromNonErrorMean": 0.5,
+          "zScore": 1
+        },
+        {
+          "metric": "pinnedCountEnd",
+          "sequence": 3,
+          "ref_key": "Genesis/1/3",
+          "value": 2,
+          "nonErrorMean": 1.5,
+          "deltaFromNonErrorMean": 0.5,
+          "zScore": 1
+        },
+        {
+          "metric": "links",
+          "sequence": 3,
+          "ref_key": "Genesis/1/3",
+          "value": 20,
+          "nonErrorMean": 17.25,
+          "deltaFromNonErrorMean": 2.75,
+          "zScore": 0.44212732908197744
+        },
+        {
+          "metric": "aliasEdges",
+          "sequence": 3,
+          "ref_key": "Genesis/1/3",
+          "value": 2,
+          "nonErrorMean": 1.75,
+          "deltaFromNonErrorMean": 0.25,
+          "zScore": 0.30151134457776363
+        },
+        {
+          "metric": "handles",
+          "sequence": 3,
+          "ref_key": "Genesis/1/3",
+          "value": 14,
+          "nonErrorMean": 13.75,
+          "deltaFromNonErrorMean": 0.25,
+          "zScore": 0.07474350927519359
+        }
+      ]
+    }
+  },
+  "segmentation": {
+    "verses": 5,
+    "perBook": [
+      {
+        "key": "Genesis",
+        "book": "Genesis",
+        "chapter": null,
+        "verseCount": 5,
+        "transitionCount": 4,
+        "mismatchTransitionCount": 2,
+        "mismatchFieldTotal": 3,
+        "mismatchTransitionRate": 0.5,
+        "mismatchFieldRate": 0.25,
+        "errorCount": 1,
+        "errorRate": 0.2,
+        "handles": {
+          "describe": {
+            "count": 5,
+            "min": 10,
+            "max": 18,
+            "mean": 13.8,
+            "median": 14,
+            "p90": 17.2,
+            "p99": 17.92,
+            "stdev": 2.993325909419153
+          },
+          "start": 10,
+          "end": 16,
+          "growth": 6
+        },
+        "dropRate": {
+          "describe": {
+            "count": 5,
+            "min": 0.1111111111111111,
+            "max": 0.4,
+            "mean": 0.2949494949494949,
+            "median": 0.3333333333333333,
+            "p90": 0.3854545454545455,
+            "p99": 0.39854545454545454,
+            "stdev": 0.10180695785498638
+          },
+          "executedCount": 5,
+          "skippedCount": 0
+        },
+        "pinnedCount": {
+          "describe": {
+            "count": 5,
+            "min": 1,
+            "max": 2,
+            "mean": 1.6,
+            "median": 2,
+            "p90": 2,
+            "p99": 2,
+            "stdev": 0.4898979485566356
+          }
+        },
+        "problematicScore": 4.56
+      }
+    ],
+    "perChapter": [
+      {
+        "key": "Genesis/1",
+        "book": "Genesis",
+        "chapter": 1,
+        "verseCount": 3,
+        "transitionCount": 2,
+        "mismatchTransitionCount": 1,
+        "mismatchFieldTotal": 1,
+        "mismatchTransitionRate": 0.5,
+        "mismatchFieldRate": 0.16666666666666666,
+        "errorCount": 1,
+        "errorRate": 0.3333333333333333,
+        "handles": {
+          "describe": {
+            "count": 3,
+            "min": 10,
+            "max": 14,
+            "mean": 11.666666666666666,
+            "median": 11,
+            "p90": 13.4,
+            "p99": 13.94,
+            "stdev": 1.699673171197595
+          },
+          "start": 10,
+          "end": 14,
+          "growth": 4
+        },
+        "dropRate": {
+          "describe": {
+            "count": 3,
+            "min": 0.26666666666666666,
+            "max": 0.36363636363636365,
+            "mean": 0.3212121212121212,
+            "median": 0.3333333333333333,
+            "p90": 0.3575757575757576,
+            "p99": 0.36303030303030304,
+            "stdev": 0.040504924557097824
+          },
+          "executedCount": 3,
+          "skippedCount": 0
+        },
+        "pinnedCount": {
+          "describe": {
+            "count": 3,
+            "min": 1,
+            "max": 2,
+            "mean": 1.6666666666666667,
+            "median": 2,
+            "p90": 2,
+            "p99": 2,
+            "stdev": 0.4714045207910317
+          }
+        },
+        "problematicScore": 5.873333333333333
+      },
+      {
+        "key": "Genesis/2",
+        "book": "Genesis",
+        "chapter": 2,
+        "verseCount": 2,
+        "transitionCount": 2,
+        "mismatchTransitionCount": 1,
+        "mismatchFieldTotal": 2,
+        "mismatchTransitionRate": 0.5,
+        "mismatchFieldRate": 0.3333333333333333,
+        "errorCount": 0,
+        "errorRate": 0,
+        "handles": {
+          "describe": {
+            "count": 2,
+            "min": 16,
+            "max": 18,
+            "mean": 17,
+            "median": 17,
+            "p90": 17.8,
+            "p99": 17.98,
+            "stdev": 1
+          },
+          "start": 18,
+          "end": 16,
+          "growth": -2
+        },
+        "dropRate": {
+          "describe": {
+            "count": 2,
+            "min": 0.1111111111111111,
+            "max": 0.4,
+            "mean": 0.25555555555555554,
+            "median": 0.25555555555555554,
+            "p90": 0.3711111111111111,
+            "p99": 0.39711111111111114,
+            "stdev": 0.14444444444444446
+          },
+          "executedCount": 2,
+          "skippedCount": 0
+        },
+        "pinnedCount": {
+          "describe": {
+            "count": 2,
+            "min": 1,
+            "max": 2,
+            "mean": 1.5,
+            "median": 1.5,
+            "p90": 1.9,
+            "p99": 1.99,
+            "stdev": 0.5
+          }
+        },
+        "problematicScore": 2.5
+      }
+    ],
+    "chapterTransitionChecks": {
+      "totalTransitions": 4,
+      "boundaryTransitions": 1,
+      "nonBoundaryTransitions": 3,
+      "boundaryMismatchTransitions": 1,
+      "nonBoundaryMismatchTransitions": 1,
+      "boundaryMismatchRate": 1,
+      "nonBoundaryMismatchRate": 0.3333333333333333,
+      "boundaryMismatchFieldMean": 2,
+      "nonBoundaryMismatchFieldMean": 0.3333333333333333,
+      "spikeDetected": true,
+      "topBoundaryTransitions": [
+        {
+          "prevSequence": 3,
+          "sequence": 4,
+          "prevRefKey": "Genesis/1/3",
+          "ref_key": "Genesis/2/1",
+          "from": "Genesis/1",
+          "to": "Genesis/2",
+          "mismatchFields": ["focus", "domain"],
+          "mismatchCount": 2
+        }
+      ]
+    }
+  },
+  "overview": {
+    "mode": "carry_omega_focus",
+    "from": "Genesis/1/1",
+    "to": "Genesis/2/2",
+    "verses_selected": 5,
+    "runtime_errors": 1,
+    "expected_transitions": 4,
+    "mismatch_counts": {
+      "omega": 0,
+      "focus": 1,
+      "domain": 2
+    },
+    "non_increasing_handle_count": false
+  },
+  "top": {
+    "by_handle_count": [
+      {
+        "sequence": 4,
+        "ref_key": "Genesis/2/1",
+        "outputPath": "tests/fixtures/summary-insights/verses/004-Genesis_2_1.json",
+        "resolvedOutputPath": "/Users/adambraun/projects/letters/tests/fixtures/summary-insights/verses/004-Genesis_2_1.json",
+        "handles": 18,
+        "droppedCount": 12,
+        "keptCount": 18,
+        "pinnedCount": 2,
+        "carryOut": {
+          "omega": "o4",
+          "focus": "f3",
+          "domain": null
+        }
+      },
+      {
+        "sequence": 5,
+        "ref_key": "Genesis/2/2",
+        "outputPath": "tests/fixtures/summary-insights/verses/005-Genesis_2_2.json",
+        "resolvedOutputPath": "/Users/adambraun/projects/letters/tests/fixtures/summary-insights/verses/005-Genesis_2_2.json",
+        "handles": 16,
+        "droppedCount": 2,
+        "keptCount": 16,
+        "pinnedCount": 1,
+        "carryOut": {
+          "omega": "o5",
+          "focus": "f3",
+          "domain": null
+        }
+      },
+      {
+        "sequence": 3,
+        "ref_key": "Genesis/1/3",
+        "outputPath": "tests/fixtures/summary-insights/verses/003-Genesis_1_3.json",
+        "resolvedOutputPath": "/Users/adambraun/projects/letters/tests/fixtures/summary-insights/verses/003-Genesis_1_3.json",
+        "handles": 14,
+        "droppedCount": 8,
+        "keptCount": 14,
+        "pinnedCount": 2,
+        "carryOut": {
+          "omega": "o3",
+          "focus": "f2",
+          "domain": "domain:bad2"
+        }
+      }
+    ],
+    "by_dropped_count": [
+      {
+        "sequence": 4,
+        "ref_key": "Genesis/2/1",
+        "outputPath": "tests/fixtures/summary-insights/verses/004-Genesis_2_1.json",
+        "resolvedOutputPath": "/Users/adambraun/projects/letters/tests/fixtures/summary-insights/verses/004-Genesis_2_1.json",
+        "handles": 18,
+        "droppedCount": 12,
+        "keptCount": 18,
+        "pinnedCount": 2,
+        "carryOut": {
+          "omega": "o4",
+          "focus": "f3",
+          "domain": null
+        }
+      },
+      {
+        "sequence": 3,
+        "ref_key": "Genesis/1/3",
+        "outputPath": "tests/fixtures/summary-insights/verses/003-Genesis_1_3.json",
+        "resolvedOutputPath": "/Users/adambraun/projects/letters/tests/fixtures/summary-insights/verses/003-Genesis_1_3.json",
+        "handles": 14,
+        "droppedCount": 8,
+        "keptCount": 14,
+        "pinnedCount": 2,
+        "carryOut": {
+          "omega": "o3",
+          "focus": "f2",
+          "domain": "domain:bad2"
+        }
+      },
+      {
+        "sequence": 1,
+        "ref_key": "Genesis/1/1",
+        "outputPath": "tests/fixtures/summary-insights/verses/001-Genesis_1_1.json",
+        "resolvedOutputPath": "/Users/adambraun/projects/letters/tests/fixtures/summary-insights/verses/001-Genesis_1_1.json",
+        "handles": 10,
+        "droppedCount": 5,
+        "keptCount": 10,
+        "pinnedCount": 1,
+        "carryOut": {
+          "omega": "o1",
+          "focus": "f1",
+          "domain": null
+        }
+      }
+    ],
+    "by_pinned_count": [
+      {
+        "sequence": 2,
+        "ref_key": "Genesis/1/2",
+        "outputPath": "tests/fixtures/summary-insights/verses/002-Genesis_1_2.json",
+        "resolvedOutputPath": "/Users/adambraun/projects/letters/tests/fixtures/summary-insights/verses/002-Genesis_1_2.json",
+        "handles": 11,
+        "droppedCount": 4,
+        "keptCount": 11,
+        "pinnedCount": 2,
+        "carryOut": {
+          "omega": "o2",
+          "focus": "f1",
+          "domain": null
+        }
+      },
+      {
+        "sequence": 3,
+        "ref_key": "Genesis/1/3",
+        "outputPath": "tests/fixtures/summary-insights/verses/003-Genesis_1_3.json",
+        "resolvedOutputPath": "/Users/adambraun/projects/letters/tests/fixtures/summary-insights/verses/003-Genesis_1_3.json",
+        "handles": 14,
+        "droppedCount": 8,
+        "keptCount": 14,
+        "pinnedCount": 2,
+        "carryOut": {
+          "omega": "o3",
+          "focus": "f2",
+          "domain": "domain:bad2"
+        }
+      },
+      {
+        "sequence": 4,
+        "ref_key": "Genesis/2/1",
+        "outputPath": "tests/fixtures/summary-insights/verses/004-Genesis_2_1.json",
+        "resolvedOutputPath": "/Users/adambraun/projects/letters/tests/fixtures/summary-insights/verses/004-Genesis_2_1.json",
+        "handles": 18,
+        "droppedCount": 12,
+        "keptCount": 18,
+        "pinnedCount": 2,
+        "carryOut": {
+          "omega": "o4",
+          "focus": "f3",
+          "domain": null
+        }
+      }
+    ]
+  },
+  "joins": {
+    "requested": true,
+    "available": true,
+    "join_limit": 2,
+    "verses_considered": 2,
+    "verses_loaded": 2,
+    "verses_skipped_due_to_limit": 3,
+    "load_errors": [],
+    "boundary_instrumentation": {
+      "present_count": 2,
+      "missing_count": 0,
+      "coverage_rate": 1,
+      "missing": []
+    },
+    "pinned_provenance": {
+      "provenance_available": true,
+      "pinned_observations": 3,
+      "mapped_observations": 3,
+      "unmapped_observations": 0,
+      "mapped_handles": 2,
+      "top_mapped_handles": [
+        {
+          "handleId": "pin:A",
+          "occurrences": 2,
+          "refKeys": ["Genesis/1/1", "Genesis/1/2"],
+          "origins": ["token:י"]
+        },
+        {
+          "handleId": "pin:B",
+          "occurrences": 1,
+          "refKeys": ["Genesis/1/2"],
+          "origins": ["token:ב"]
+        }
+      ]
+    },
+    "continuity_mismatch_drilldown": {
+      "mismatch_count": 0,
+      "diagnosis_counts": {
+        "missing_previous_boundary": 0,
+        "missing_boundary_start_next_field": 0,
+        "boundary_matches_observed": 0,
+        "boundary_matches_expected_only": 0,
+        "boundary_disagrees": 0
+      },
+      "items": []
+    }
+  },
+  "joinDetails": {
+    "requested": true,
+    "available": true,
+    "join_limit": 2,
+    "verses_considered": 2,
+    "verses_loaded": 2,
+    "verses_skipped_due_to_limit": 3,
+    "load_errors": [],
+    "boundary_instrumentation": {
+      "present_count": 2,
+      "missing_count": 0,
+      "coverage_rate": 1,
+      "missing": []
+    },
+    "pinned_provenance": {
+      "provenance_available": true,
+      "pinned_observations": 3,
+      "mapped_observations": 3,
+      "unmapped_observations": 0,
+      "mapped_handles": 2,
+      "top_mapped_handles": [
+        {
+          "handleId": "pin:A",
+          "occurrences": 2,
+          "refKeys": ["Genesis/1/1", "Genesis/1/2"],
+          "origins": ["token:י"]
+        },
+        {
+          "handleId": "pin:B",
+          "occurrences": 1,
+          "refKeys": ["Genesis/1/2"],
+          "origins": ["token:ב"]
+        }
+      ]
+    },
+    "continuity_mismatch_drilldown": {
+      "mismatch_count": 0,
+      "diagnosis_counts": {
+        "missing_previous_boundary": 0,
+        "missing_boundary_start_next_field": 0,
+        "boundary_matches_observed": 0,
+        "boundary_matches_expected_only": 0,
+        "boundary_disagrees": 0
+      },
+      "items": []
+    }
+  }
+}
