@@ -31,6 +31,7 @@ export type HandleEdgeMode =
 export type Handle = {
   id: string;
   kind: HandleKind;
+  pinned?: boolean;
   policy: HandlePolicy;
   anchor: 0 | 1;
   edge_mode: HandleEdgeMode;
@@ -47,7 +48,7 @@ export function createHandle(
   overrides: Partial<Omit<Handle, "id" | "kind">> = {}
 ): Handle {
   const envelope = overrides.envelope ?? defaultEnvelope(overrides.policy ?? "soft");
-  return {
+  const handle: Handle = {
     id,
     kind,
     policy: overrides.policy ?? envelope.policy,
@@ -56,4 +57,8 @@ export function createHandle(
     envelope: { ...envelope, policy: overrides.policy ?? envelope.policy },
     meta: overrides.meta ?? {}
   };
+  if (overrides.pinned === true) {
+    handle.pinned = true;
+  }
+  return handle;
 }

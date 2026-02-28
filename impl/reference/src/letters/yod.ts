@@ -1,5 +1,6 @@
 import { BOT_ID, createHandle } from "../state/handles";
 import { State } from "../state/state";
+import { pinHandle } from "../state/pinning";
 import { nextId } from "../vm/ids";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
 
@@ -31,6 +32,7 @@ export const yodOp: LetterOp = {
       seedId,
       createHandle(seedId, "entity", { anchor: 1, meta: { seedOf: focus, port: "interface" } })
     );
+    pinHandle(S, seedId);
     return { S, h: seedId, r: BOT_ID };
   }
 };

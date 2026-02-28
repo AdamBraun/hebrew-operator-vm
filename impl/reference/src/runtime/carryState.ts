@@ -1,6 +1,7 @@
 import { BOT_ID, OMEGA_ID, createHandle } from "../state/handles";
 import { State } from "../state/state";
 import { addLink } from "../state/relations";
+import { listPinned, pinHandle } from "../state/pinning";
 
 export const SUPPORTED_VERSE_BOUNDARY_MODES = [
   "reset",
@@ -162,6 +163,10 @@ export function extractCarryState(state: State, mode: VerseBoundaryMode): CarryS
   if (mode === "carry_omega_focus_domain") {
     carry.domainHandleId = state.vm.D;
   }
+  const pinnedHandleIds = listPinned(state);
+  if (pinnedHandleIds.length > 0) {
+    carry.pinnedHandleIds = pinnedHandleIds;
+  }
 
   return carry;
 }
@@ -188,9 +193,11 @@ export function applyCarryState(state: State, carry: CarryState): void {
     state.vm.F = focusHandleId;
   }
 
-  // Reserved for later tasks where pinned handles become carry-participating.
   if (pinnedHandleIds && pinnedHandleIds.length > 0) {
-    void pinnedHandleIds;
+    for (const pinnedHandleId of pinnedHandleIds) {
+      ensureHandleExists(state, pinnedHandleId);
+      pinHandle(state, pinnedHandleId);
+    }
   }
 }
 

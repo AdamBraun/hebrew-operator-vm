@@ -55,6 +55,22 @@ describe("runtime carry state", () => {
     });
   });
 
+  it("extracts pinned handle ids in carry modes", () => {
+    const state = createInitialState();
+    state.handles.set(
+      "pin:z",
+      createHandle("pin:z", "entity", { pinned: true, meta: { pinned: true } })
+    );
+    state.handles.set(
+      "pin:a",
+      createHandle("pin:a", "entity", { pinned: true, meta: { pinned: true } })
+    );
+
+    const carry = extractCarryState(state, "carry_omega");
+    expect(carry.omegaHandleId).toBe(OMEGA_ID);
+    expect(carry.pinnedHandleIds).toEqual(["pin:a", "pin:z"]);
+  });
+
   it("applyCarryState is a no-op for an empty carry", () => {
     const state = createInitialState();
     state.vm.F = "focus:base";
@@ -166,6 +182,19 @@ describe("runtime carry state", () => {
     expect(state.vm.wordEntryFocus).toBe("omega:new");
     expect((state as { Omega?: string }).Omega).toBe("omega:new");
     expect(state.handles.has("omega:new")).toBe(true);
+  });
+
+  it("onVerseStart restores pinned handles from incoming carry", () => {
+    const state = createInitialState();
+    onVerseStart("Genesis/1/2", state, "carry_omega", {
+      omegaHandleId: "omega:new",
+      pinnedHandleIds: ["pin:1", "pin:2"]
+    });
+
+    expect(state.handles.has("pin:1")).toBe(true);
+    expect(state.handles.has("pin:2")).toBe(true);
+    expect(state.handles.get("pin:1")?.pinned).toBe(true);
+    expect(state.handles.get("pin:2")?.pinned).toBe(true);
   });
 
   it("onVerseStart is a no-op in reset mode", () => {
