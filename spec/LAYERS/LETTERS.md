@@ -45,6 +45,15 @@ Letters MUST NOT do any of the following:
 - GC or carry-state/runtime state mutation
 - verse semantics or phrase semantics
 
+## Obligations
+
+Obligations: none (by design).
+
+- Letters extraction emits a pure operator inventory only.
+- It MUST NOT emit an `obligations` field in `LettersIR`.
+- Runtime/semantic obligations are created later by wrapper execution of letter operators, not by this layer.
+- Any hint that requires boundary/cantillation/layout resolution is forbidden in this layer.
+
 ## Invariants
 
 1. One output row per Hebrew-letter grapheme in spine order.

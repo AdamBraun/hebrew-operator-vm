@@ -23,7 +23,8 @@ const FORBIDDEN_KEYS = new Set([
   "gc",
   "carry_state",
   "verse",
-  "glue"
+  "glue",
+  "obligations"
 ]);
 
 function collectKeysDeep(value: unknown, out: Set<string>): void {
@@ -119,6 +120,26 @@ describe("letters layer contract", () => {
       for (const key of Object.keys(row)) {
         expect(allowed.has(key)).toBe(true);
       }
+    }
+  });
+
+  it("does not emit an obligations field in LettersIR rows", async () => {
+    const tmp = fsNode.mkdtempSync(path.join(os.tmpdir(), "letters-contract-"));
+    const spinePath = loadFixtureSpinePath();
+    const emitted = await emitLettersFromSpine({
+      spinePath,
+      outCacheDir: path.join(tmp, "cache", "letters"),
+      spineDigestOverride: SPINE_DIGEST,
+      codeFingerprint: "letters-contract-test",
+      includeWordSegmentation: true
+    });
+
+    const rows: LettersIRRecord[] = parseLettersIRJsonl(
+      fsNode.readFileSync(emitted.lettersIrPath, "utf8")
+    );
+
+    for (const row of rows) {
+      expect(Object.prototype.hasOwnProperty.call(row, "obligations")).toBe(false);
     }
   });
 });
