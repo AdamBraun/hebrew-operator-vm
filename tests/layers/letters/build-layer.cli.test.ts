@@ -111,6 +111,8 @@ describe("build-layer cli (letters)", () => {
     expect(fs.existsSync(first.manifestPath)).toBe(true);
     expect(fs.existsSync(first.aliasPath)).toBe(true);
     expect(first.outputDir).toBe(path.join(outCache, first.digest));
+    const runAliasPath = path.join(outRoot, "runs", first.digest, "manifests", "letters.json");
+    expect(fs.existsSync(runAliasPath)).toBe(true);
 
     const manifest = JSON.parse(fs.readFileSync(first.manifestPath, "utf8")) as {
       layer: string;
@@ -141,6 +143,18 @@ describe("build-layer cli (letters)", () => {
     expect(second.cacheHit).toBe(true);
     expect(second.digest).toBe(first.digest);
     expect(second.outputDir).toBe(first.outputDir);
+
+    const third = await runBuildLayer([
+      "--layer",
+      "letters",
+      "--spine",
+      path.join(path.dirname(spine.spinePath), "manifest.json"),
+      "--out",
+      outCache
+    ]);
+    expect(third.layer).toBe("letters");
+    expect(third.digest).toBe(first.digest);
+    expect(fs.existsSync(third.aliasPath)).toBe(true);
   });
 
   it("changes letters digest when letters config changes", async () => {

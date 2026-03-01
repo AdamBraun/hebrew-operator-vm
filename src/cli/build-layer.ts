@@ -115,10 +115,10 @@ function readOptionValue(
 function printHelp(): void {
   console.log("Usage:");
   console.log(
-    "  node src/cli/build-layer.ts --layer layout --spine <spine.jsonl|spine_dir> --dataset <dataset.json> --out <outputs|outputs/cache/layout>"
+    "  node src/cli/build-layer.ts --layer layout --spine <spine.jsonl|spine_dir|spine_manifest.json> --dataset <dataset.json> --out <outputs|outputs/cache/layout>"
   );
   console.log(
-    "  node src/cli/build-layer.ts --layer letters --spine <spine.jsonl|spine_dir> --out <outputs|outputs/cache/letters>"
+    "  node src/cli/build-layer.ts --layer letters --spine <spine.jsonl|spine_dir|spine_manifest.json> --out <outputs|outputs/cache/letters>"
   );
   console.log("");
   console.log("Options:");
@@ -307,25 +307,62 @@ async function readJsonFile(filePath: string): Promise<unknown> {
   return JSON.parse(raw) as unknown;
 }
 
-async function resolveSpineJsonlPath(inputPath: string): Promise<string> {
+type ResolvedSpineInputPaths = {
+  spineJsonlPath: string;
+  spineManifestPath?: string;
+};
+
+async function resolveSpineInputPaths(inputPath: string): Promise<ResolvedSpineInputPaths> {
   const stat = await fs.stat(inputPath);
   if (stat.isDirectory()) {
     const nested = path.join(inputPath, "spine.jsonl");
     if (!(await pathExists(nested))) {
       throw new Error(`build-layer: expected spine file at ${nested}`);
     }
-    return nested;
+    const manifestPath = path.join(inputPath, "manifest.json");
+    return {
+      spineJsonlPath: nested,
+      spineManifestPath: (await pathExists(manifestPath)) ? manifestPath : undefined
+    };
   }
-  return inputPath;
+
+  if (path.basename(inputPath) === "manifest.json") {
+    const spineDir = path.dirname(inputPath);
+    const spineJsonlPath = path.join(spineDir, "spine.jsonl");
+    if (!(await pathExists(spineJsonlPath))) {
+      throw new Error(`build-layer: expected spine file at ${spineJsonlPath}`);
+    }
+    return {
+      spineJsonlPath,
+      spineManifestPath: inputPath
+    };
+  }
+
+  return { spineJsonlPath: inputPath };
 }
 
-async function resolveSpineDigest(spineJsonlPath: string, override?: string): Promise<string> {
-  if (override) {
-    assertSha256Hex(override, "spineDigest");
-    return override;
+async function resolveSpineDigest(args: {
+  spineJsonlPath: string;
+  spineManifestPath?: string;
+  override?: string;
+}): Promise<string> {
+  if (args.override) {
+    assertSha256Hex(args.override, "spineDigest");
+    return args.override;
   }
 
-  const spineDir = path.dirname(spineJsonlPath);
+  if (args.spineManifestPath && (await pathExists(args.spineManifestPath))) {
+    const parsed = (await readJsonFile(args.spineManifestPath)) as Record<string, unknown>;
+    const digests =
+      parsed && typeof parsed === "object" && "digests" in parsed
+        ? (parsed.digests as Record<string, unknown>)
+        : undefined;
+    const digestValue = digests?.spineDigest;
+    assertSha256Hex(digestValue, "spineDigest");
+    return digestValue;
+  }
+
+  const spineDir = path.dirname(args.spineJsonlPath);
   const manifestPath = path.join(spineDir, "manifest.json");
   if (await pathExists(manifestPath)) {
     const parsed = (await readJsonFile(manifestPath)) as Record<string, unknown>;
@@ -344,7 +381,7 @@ async function resolveSpineDigest(spineJsonlPath: string, override?: string): Pr
   }
 
   throw new Error(
-    `build-layer: unable to resolve spineDigest for ${spineJsonlPath}. ` +
+    `build-layer: unable to resolve spineDigest for ${args.spineJsonlPath}. ` +
       `Provide --spine-digest or point to a spine cache directory with manifest.json.`
   );
 }
@@ -412,10 +449,11 @@ async function writeLettersAliasFile(args: {
   manifestPath: string;
   lettersIrPath: string;
 }): Promise<string> {
-  const aliasPath = path.join(args.outRoot, "runs", "latest", "manifests", "letters.json");
-  await fs.mkdir(path.dirname(aliasPath), { recursive: true });
+  const runAliasPath = path.join(args.outRoot, "runs", args.digest, "manifests", "letters.json");
+  const latestAliasPath = path.join(args.outRoot, "runs", "latest", "manifests", "letters.json");
   const payload = {
     layer: "letters",
+    run: args.digest,
     digest: args.digest,
     cache_hit: args.cacheHit,
     forced: args.forced,
@@ -423,16 +461,24 @@ async function writeLettersAliasFile(args: {
     letters_ir_jsonl_path: args.lettersIrPath,
     updated_at: new Date().toISOString()
   };
-  await fs.writeFile(aliasPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-  return aliasPath;
+  await fs.mkdir(path.dirname(runAliasPath), { recursive: true });
+  await fs.writeFile(runAliasPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  await fs.mkdir(path.dirname(latestAliasPath), { recursive: true });
+  await fs.writeFile(latestAliasPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  return latestAliasPath;
 }
 
 export async function runBuildLayer(
   rawArgv: string[] = process.argv.slice(2)
 ): Promise<BuildLayerCliResult> {
   const parsed = parseArgs(rawArgv);
-  const spineJsonlPath = await resolveSpineJsonlPath(parsed.spinePath);
-  const spineDigest = await resolveSpineDigest(spineJsonlPath, parsed.spineDigestOverride);
+  const resolvedSpine = await resolveSpineInputPaths(parsed.spinePath);
+  const spineJsonlPath = resolvedSpine.spineJsonlPath;
+  const spineDigest = await resolveSpineDigest({
+    spineJsonlPath,
+    spineManifestPath: resolvedSpine.spineManifestPath,
+    override: parsed.spineDigestOverride
+  });
 
   if (parsed.layer === "layout") {
     const datasetBytes = await fs.readFile(parsed.datasetPath);
@@ -508,6 +554,7 @@ export async function runBuildLayer(
   const { outRoot, cacheDir } = resolveOutputRoots(parsed.outArg, "letters");
   const emitted = await emitLettersFromSpine({
     spinePath: spineJsonlPath,
+    spineManifestPath: resolvedSpine.spineManifestPath,
     spineDigestOverride: spineDigest,
     includeWordSegmentation: parsed.includeWordSegmentation,
     strictLetters: parsed.strictLetters,
