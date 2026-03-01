@@ -64,6 +64,7 @@ Layout MUST NOT do any of the following:
 - run verse/chapter logic,
 - interpret cantillation marks, tropes, maqaf, or sof-pasuq,
 - mutate semantic heap/VM state,
+- infer layout boundaries from line/page geometry,
 - perform letter/niqqud semantic interpretation.
 
 ## Obligations
