@@ -14,6 +14,7 @@ This directory defines the normative, domain-agnostic specification of the Hebre
 - `phase-a-verse-cleanup.md`: verse-end (sof-pasuk) snapshot/reset contract and no-leakage baseline requirements.
 - `70-DETERMINISM.md`: canonical ordering and replay guarantees.
 - `80-CONFORMANCE.md`: compliance levels and required tests.
+- `LAYER_CONTRACTS.md`: cross-layer guardrails, including strict Normalization vs Layout separation.
 
 ## Stability policy
 
