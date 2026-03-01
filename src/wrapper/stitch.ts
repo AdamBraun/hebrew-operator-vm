@@ -6,6 +6,7 @@ import {
   type LayoutIRRecord
 } from "../layers/layout/schema";
 import { type GapDescriptor } from "../layers/layout/spine_adapter";
+import { deriveLayoutHygienePlan, type LayoutHygienePlan } from "./layout_hygiene_policy";
 
 export type CantillationGapEvent = {
   gapid: string;
@@ -20,6 +21,7 @@ export type BoundaryFrame = {
   gap_index: number;
   layout_events: LayoutEvent[];
   cantillation_events: CantillationGapEvent[];
+  layout_hygiene_policy?: LayoutHygienePlan;
 };
 
 export type StitchBoundaryFramesArgs = {
@@ -30,6 +32,7 @@ export type StitchBoundaryFramesArgs = {
     | Iterable<CantillationGapEvent>
     | null;
   allowMissingLayoutIR?: boolean;
+  enableLayoutHygienePolicy?: boolean;
 };
 
 type GapTuple = {
@@ -168,6 +171,7 @@ export async function* stitchBoundaryFrames(
   let previousGap: GapDescriptor | null = null;
   let previousLayout: LayoutIRRecord | null = null;
   let previousCantillation: CantillationGapEvent | null = null;
+  const enableLayoutHygienePolicy = args.enableLayoutHygienePolicy === true;
 
   for await (const gap of args.gaps) {
     assertCanonicalGapOrder(previousGap, gap);
@@ -219,13 +223,19 @@ export async function* stitchBoundaryFrames(
       cantillationCursor = await cantillationIterator!.next();
     }
 
-    yield {
+    const frame: BoundaryFrame = {
       gapid: gap.gapid,
       ref_key: gap.ref_key,
       gap_index: gap.gap_index,
       layout_events: layoutEvents,
       cantillation_events: cantillationEvents
     };
+
+    if (enableLayoutHygienePolicy) {
+      frame.layout_hygiene_policy = deriveLayoutHygienePlan(layoutEvents);
+    }
+
+    yield frame;
   }
 
   if (layoutCursor && !layoutCursor.done) {

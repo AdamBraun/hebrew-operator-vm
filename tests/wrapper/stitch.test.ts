@@ -90,6 +90,7 @@ describe("wrapper stitch", () => {
     expect(frames).toHaveLength(3);
     expect(frames[0]?.layout_events).toEqual([]);
     expect(frames[0]?.cantillation_events).toEqual([]);
+    expect(frames[0]?.layout_hygiene_policy).toBeUndefined();
 
     // Gap 1 is whitespace=true in spine, but wrapper only uses provided LayoutIR.
     expect(frames[1]?.layout_events.map((event) => event.type)).toEqual(["SETUMA"]);
@@ -97,6 +98,7 @@ describe("wrapper stitch", () => {
 
     expect(frames[2]?.layout_events.map((event) => event.type)).toEqual(["BOOK_BREAK"]);
     expect(frames[2]?.cantillation_events.map((event) => event.event.type)).toEqual(["SOF_PASUK"]);
+    expect(frames[2]?.layout_hygiene_policy).toBeUndefined();
   });
 
   it("requires LayoutIR by default and allows missing LayoutIR only in explicit debug mode", async () => {
@@ -130,5 +132,37 @@ describe("wrapper stitch", () => {
         layoutRecords
       })
     ).rejects.toThrow(/not present in spine gap stream/);
+  });
+
+  it("can attach optional layout hygiene policy hints without mutating stitched events", async () => {
+    const frames = await collectBoundaryFrames({
+      gaps,
+      layoutRecords: [
+        layoutRecord({
+          gapid: "Genesis/1/1#gap:1",
+          ref_key: "Genesis/1/1",
+          gap_index: 1,
+          type: "SPACE"
+        }),
+        layoutRecord({
+          gapid: "Genesis/1/1#gap:1",
+          ref_key: "Genesis/1/1",
+          gap_index: 1,
+          type: "SETUMA"
+        })
+      ],
+      enableLayoutHygienePolicy: true
+    });
+
+    expect(frames[1]?.layout_events.map((event) => event.type)).toEqual(["SPACE", "SETUMA"]);
+    expect(frames[1]?.layout_hygiene_policy).toEqual({
+      strongest_layout_strength: "mid",
+      policy: {
+        flush_word_workspace: true,
+        flush_phrase_workspace: true,
+        flush_larger_workspace: false,
+        strongest_flush: false
+      }
+    });
   });
 });

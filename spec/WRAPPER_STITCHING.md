@@ -41,6 +41,15 @@ Explicit debug mode may allow missing LayoutIR:
 
 No implicit fallback is allowed.
 
+## Optional Layout Hygiene Placeholder
+
+Wrapper may optionally attach a non-semantic hygiene plan derived from `layout_event.strength`
+for downstream policy wiring.
+
+- This is disabled by default.
+- Enabling it must not mutate semantic state by itself.
+- It remains separate from cut ranks, `tau`, and verse logic.
+
 ## Validation / Safety
 
 Wrapper stitching MUST fail fast when:
