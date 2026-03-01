@@ -1,6 +1,9 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { emitLettersFromSpine } from "../layers/letters/extract";
+import { computeLettersDigest, computeLettersLayerCodeFingerprint } from "../layers/letters/hash";
+import { LETTERS_IR_VERSION } from "../layers/letters/schema";
 import { loadAndResolveLayoutDataset } from "../layers/layout/dataset_loader";
 import { emitLayout } from "../layers/layout/emit";
 import { computeLayoutDatasetDigest, computeLayoutDigest } from "../layers/layout/hash";
@@ -9,7 +12,7 @@ import {
   readSpineGapDescriptorsFromJsonl
 } from "../layers/layout/spine_adapter";
 
-type BuildLayerCliOptions = {
+type BuildLayoutCliOptions = {
   layer: "layout";
   spinePath: string;
   datasetPath: string;
@@ -18,6 +21,18 @@ type BuildLayerCliOptions = {
   spineDigestOverride?: string;
   layoutLayerCodeDigestOverride?: string;
 };
+
+type BuildLettersCliOptions = {
+  layer: "letters";
+  spinePath: string;
+  outArg: string;
+  force: boolean;
+  includeWordSegmentation: boolean;
+  spineDigestOverride?: string;
+  lettersCodeFingerprintOverride?: string;
+};
+
+type BuildLayerCliOptions = BuildLayoutCliOptions | BuildLettersCliOptions;
 
 export type BuildLayoutCliResult = {
   layer: "layout";
@@ -29,6 +44,19 @@ export type BuildLayoutCliResult = {
   layoutIrPath: string;
   aliasPath: string;
 };
+
+export type BuildLettersCliResult = {
+  layer: "letters";
+  digest: string;
+  cacheHit: boolean;
+  forced: boolean;
+  outputDir: string;
+  manifestPath: string;
+  lettersIrPath: string;
+  aliasPath: string;
+};
+
+export type BuildLayerCliResult = BuildLayoutCliResult | BuildLettersCliResult;
 
 const SHA256_HEX = /^[a-f0-9]{64}$/;
 
@@ -88,25 +116,32 @@ function printHelp(): void {
   console.log(
     "  node src/cli/build-layer.ts --layer layout --spine <spine.jsonl|spine_dir> --dataset <dataset.json> --out <outputs|outputs/cache/layout>"
   );
+  console.log(
+    "  node src/cli/build-layer.ts --layer letters --spine <spine.jsonl|spine_dir> --out <outputs|outputs/cache/letters>"
+  );
   console.log("");
   console.log("Options:");
-  console.log("  --layer=layout");
+  console.log("  --layer=layout|letters");
   console.log("  --spine=path");
-  console.log("  --dataset=path");
-  console.log("  --out=path (defaults to outputs/cache/layout)");
+  console.log("  --dataset=path (required for layout)");
+  console.log("  --out=path (defaults to outputs/cache/<layer>)");
   console.log("  --spine-digest=<sha256>");
-  console.log("  --layout-code-digest=<sha256>");
+  console.log("  --layout-code-digest=<sha256> (layout only)");
+  console.log("  --letters-code-fingerprint=<string> (letters only)");
+  console.log("  --include-word-segmentation=true|false (letters only, default true)");
   console.log("  --force");
 }
 
 export function parseArgs(argv: string[]): BuildLayerCliOptions {
-  let layer: "layout" | null = null;
+  let layer: "layout" | "letters" | null = null;
   let spinePath: string | null = null;
   let datasetPath: string | null = null;
-  let outArg = path.resolve(process.cwd(), "outputs", "cache", "layout");
+  let outArg: string | null = null;
   let force = false;
   let spineDigestOverride: string | undefined;
   let layoutLayerCodeDigestOverride: string | undefined;
+  let lettersCodeFingerprintOverride: string | undefined;
+  let includeWordSegmentation = true;
 
   for (let i = 0; i < argv.length; ) {
     const arg = argv[i] ?? "";
@@ -119,13 +154,25 @@ export function parseArgs(argv: string[]): BuildLayerCliOptions {
       i += 1;
       continue;
     }
+    if (arg === "--include-word-segmentation") {
+      includeWordSegmentation = true;
+      i += 1;
+      continue;
+    }
+    if (arg === "--no-word-segmentation") {
+      includeWordSegmentation = false;
+      i += 1;
+      continue;
+    }
 
     const layerOpt = readOptionValue(argv, i, "--layer");
     if (layerOpt) {
-      if (layerOpt.value !== "layout") {
-        throw new Error(`Unsupported layer '${layerOpt.value}'. Currently supported: layout`);
+      if (layerOpt.value !== "layout" && layerOpt.value !== "letters") {
+        throw new Error(
+          `Unsupported layer '${layerOpt.value}'. Currently supported: layout, letters`
+        );
       }
-      layer = "layout";
+      layer = layerOpt.value;
       i = layerOpt.next;
       continue;
     }
@@ -159,6 +206,18 @@ export function parseArgs(argv: string[]): BuildLayerCliOptions {
       i = layoutCodeDigestOpt.next;
       continue;
     }
+    const lettersCodeFingerprintOpt = readOptionValue(argv, i, "--letters-code-fingerprint");
+    if (lettersCodeFingerprintOpt) {
+      lettersCodeFingerprintOverride = lettersCodeFingerprintOpt.value;
+      i = lettersCodeFingerprintOpt.next;
+      continue;
+    }
+    const includeWordOpt = readOptionValue(argv, i, "--include-word-segmentation");
+    if (includeWordOpt) {
+      includeWordSegmentation = asBoolean(includeWordOpt.value, "--include-word-segmentation");
+      i = includeWordOpt.next;
+      continue;
+    }
     const forceOpt = readOptionValue(argv, i, "--force");
     if (forceOpt) {
       force = asBoolean(forceOpt.value, "--force");
@@ -170,30 +229,47 @@ export function parseArgs(argv: string[]): BuildLayerCliOptions {
   }
 
   if (!layer) {
-    throw new Error("Missing required --layer (must be layout)");
+    throw new Error("Missing required --layer (must be layout|letters)");
   }
   if (!spinePath) {
     throw new Error("Missing required --spine");
   }
-  if (!datasetPath) {
-    throw new Error("Missing required --dataset");
-  }
+  const resolvedOutArg = outArg ?? path.resolve(process.cwd(), "outputs", "cache", layer);
 
   if (spineDigestOverride !== undefined) {
     assertSha256Hex(spineDigestOverride, "spineDigest");
   }
-  if (layoutLayerCodeDigestOverride !== undefined) {
-    assertSha256Hex(layoutLayerCodeDigestOverride, "layoutLayerCodeDigest");
+
+  if (layer === "layout") {
+    if (!datasetPath) {
+      throw new Error("Missing required --dataset for layer=layout");
+    }
+    if (layoutLayerCodeDigestOverride !== undefined) {
+      assertSha256Hex(layoutLayerCodeDigestOverride, "layoutLayerCodeDigest");
+    }
+    return {
+      layer,
+      spinePath,
+      datasetPath,
+      outArg: resolvedOutArg,
+      force,
+      spineDigestOverride,
+      layoutLayerCodeDigestOverride
+    };
+  }
+
+  if (lettersCodeFingerprintOverride !== undefined) {
+    assertNonEmptyString(lettersCodeFingerprintOverride, "lettersCodeFingerprint");
   }
 
   return {
     layer,
     spinePath,
-    datasetPath,
-    outArg,
+    outArg: resolvedOutArg,
     force,
+    includeWordSegmentation,
     spineDigestOverride,
-    layoutLayerCodeDigestOverride
+    lettersCodeFingerprintOverride
   };
 }
 
@@ -253,22 +329,23 @@ async function resolveSpineDigest(spineJsonlPath: string, override?: string): Pr
   );
 }
 
-function resolveOutputRoots(outArg: string): { outRoot: string; cacheDir: string } {
+function resolveOutputRoots(
+  outArg: string,
+  layer: "layout" | "letters"
+): { outRoot: string; cacheDir: string } {
   const resolved = path.resolve(outArg);
   const parts = resolved.split(path.sep).filter((segment) => segment.length > 0);
   const parsed = path.parse(resolved);
-  const isCacheLayout =
-    parts.length >= 2 &&
-    parts[parts.length - 2] === "cache" &&
-    parts[parts.length - 1] === "layout";
+  const isCacheLayer =
+    parts.length >= 2 && parts[parts.length - 2] === "cache" && parts[parts.length - 1] === layer;
 
-  if (isCacheLayout) {
+  if (isCacheLayer) {
     const rootParts = parts.slice(0, -2);
     const outRoot =
       rootParts.length > 0 ? path.join(parsed.root, ...rootParts) : parsed.root || resolved;
     return { outRoot, cacheDir: resolved };
   }
-  return { outRoot: resolved, cacheDir: path.join(resolved, "cache", "layout") };
+  return { outRoot: resolved, cacheDir: path.join(resolved, "cache", layer) };
 }
 
 async function computeLayoutLayerCodeDigest(): Promise<string> {
@@ -284,7 +361,7 @@ async function computeLayoutLayerCodeDigest(): Promise<string> {
   return hash.digest("hex");
 }
 
-async function writeAliasFile(args: {
+async function writeLayoutAliasFile(args: {
   outRoot: string;
   digest: string;
   cacheHit: boolean;
@@ -307,66 +384,135 @@ async function writeAliasFile(args: {
   return aliasPath;
 }
 
+async function writeLettersAliasFile(args: {
+  outRoot: string;
+  digest: string;
+  cacheHit: boolean;
+  forced: boolean;
+  manifestPath: string;
+  lettersIrPath: string;
+}): Promise<string> {
+  const aliasPath = path.join(args.outRoot, "runs", "latest", "manifests", "letters.json");
+  await fs.mkdir(path.dirname(aliasPath), { recursive: true });
+  const payload = {
+    layer: "letters",
+    digest: args.digest,
+    cache_hit: args.cacheHit,
+    forced: args.forced,
+    manifest_path: args.manifestPath,
+    letters_ir_jsonl_path: args.lettersIrPath,
+    updated_at: new Date().toISOString()
+  };
+  await fs.writeFile(aliasPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  return aliasPath;
+}
+
 export async function runBuildLayer(
   rawArgv: string[] = process.argv.slice(2)
-): Promise<BuildLayoutCliResult> {
+): Promise<BuildLayerCliResult> {
   const parsed = parseArgs(rawArgv);
   const spineJsonlPath = await resolveSpineJsonlPath(parsed.spinePath);
   const spineDigest = await resolveSpineDigest(spineJsonlPath, parsed.spineDigestOverride);
 
-  const datasetBytes = await fs.readFile(parsed.datasetPath);
-  const layoutDatasetDigest = computeLayoutDatasetDigest(datasetBytes);
-  const layoutLayerCodeDigest =
-    parsed.layoutLayerCodeDigestOverride ?? (await computeLayoutLayerCodeDigest());
+  if (parsed.layer === "layout") {
+    const datasetBytes = await fs.readFile(parsed.datasetPath);
+    const layoutDatasetDigest = computeLayoutDatasetDigest(datasetBytes);
+    const layoutLayerCodeDigest =
+      parsed.layoutLayerCodeDigestOverride ?? (await computeLayoutLayerCodeDigest());
 
-  const layoutConfig = {
-    jsonl_canonical: true,
-    jsonl_trailing_newline: true
+    const layoutConfig = {
+      jsonl_canonical: true,
+      jsonl_trailing_newline: true
+    };
+    const digest = computeLayoutDigest({
+      spineDigest,
+      layoutDatasetDigest,
+      layoutLayerCodeDigest,
+      layoutConfig
+    });
+
+    const projection = await projectSpineGapsFromJsonl(spineJsonlPath);
+    const resolvedDataset = await loadAndResolveLayoutDataset(parsed.datasetPath, projection);
+
+    const { outRoot, cacheDir } = resolveOutputRoots(parsed.outArg, "layout");
+    const emitted = await emitLayout({
+      gaps: readSpineGapDescriptorsFromJsonl(spineJsonlPath),
+      eventsByGapid: resolvedDataset.eventsByGapid,
+      spineDigest,
+      layoutDatasetDigest,
+      layoutLayerCodeDigest,
+      layoutConfig,
+      dataset: {
+        dataset_id: resolvedDataset.dataset.dataset_id,
+        version: resolvedDataset.dataset.version
+      },
+      outCacheDir: cacheDir,
+      digest,
+      force: parsed.force
+    });
+
+    const aliasPath = await writeLayoutAliasFile({
+      outRoot,
+      digest: emitted.digest,
+      cacheHit: emitted.cacheHit,
+      forced: emitted.forced,
+      manifestPath: emitted.manifestPath,
+      layoutIrPath: emitted.layoutIrPath
+    });
+
+    return {
+      layer: "layout",
+      digest: emitted.digest,
+      cacheHit: emitted.cacheHit,
+      forced: emitted.forced,
+      outputDir: emitted.outputDir,
+      manifestPath: emitted.manifestPath,
+      layoutIrPath: emitted.layoutIrPath,
+      aliasPath
+    };
+  }
+
+  const lettersCodeFingerprint =
+    parsed.lettersCodeFingerprintOverride ?? (await computeLettersLayerCodeFingerprint());
+  const lettersConfig = {
+    include_word_segmentation: parsed.includeWordSegmentation
   };
-  const digest = computeLayoutDigest({
+  const digest = computeLettersDigest({
     spineDigest,
-    layoutDatasetDigest,
-    layoutLayerCodeDigest,
-    layoutConfig
+    config: lettersConfig,
+    codeFingerprint: lettersCodeFingerprint,
+    version: LETTERS_IR_VERSION
   });
 
-  const projection = await projectSpineGapsFromJsonl(spineJsonlPath);
-  const resolvedDataset = await loadAndResolveLayoutDataset(parsed.datasetPath, projection);
-
-  const { outRoot, cacheDir } = resolveOutputRoots(parsed.outArg);
-  const emitted = await emitLayout({
-    gaps: readSpineGapDescriptorsFromJsonl(spineJsonlPath),
-    eventsByGapid: resolvedDataset.eventsByGapid,
-    spineDigest,
-    layoutDatasetDigest,
-    layoutLayerCodeDigest,
-    layoutConfig,
-    dataset: {
-      dataset_id: resolvedDataset.dataset.dataset_id,
-      version: resolvedDataset.dataset.version
-    },
+  const { outRoot, cacheDir } = resolveOutputRoots(parsed.outArg, "letters");
+  const emitted = await emitLettersFromSpine({
+    spinePath: spineJsonlPath,
+    spineDigestOverride: spineDigest,
+    includeWordSegmentation: parsed.includeWordSegmentation,
+    codeFingerprint: lettersCodeFingerprint,
+    version: LETTERS_IR_VERSION,
     outCacheDir: cacheDir,
     digest,
     force: parsed.force
   });
 
-  const aliasPath = await writeAliasFile({
+  const aliasPath = await writeLettersAliasFile({
     outRoot,
     digest: emitted.digest,
     cacheHit: emitted.cacheHit,
     forced: emitted.forced,
     manifestPath: emitted.manifestPath,
-    layoutIrPath: emitted.layoutIrPath
+    lettersIrPath: emitted.lettersIrPath
   });
 
   return {
-    layer: "layout",
+    layer: "letters",
     digest: emitted.digest,
     cacheHit: emitted.cacheHit,
     forced: emitted.forced,
     outputDir: emitted.outputDir,
     manifestPath: emitted.manifestPath,
-    layoutIrPath: emitted.layoutIrPath,
+    lettersIrPath: emitted.lettersIrPath,
     aliasPath
   };
 }
@@ -375,7 +521,9 @@ if (require.main === module) {
   runBuildLayer().then(
     (result) => {
       const mode = result.cacheHit ? "cache-hit" : "built";
-      console.log(`${mode}: layer=layout digest=${result.digest} output=${result.outputDir}`);
+      console.log(
+        `${mode}: layer=${result.layer} digest=${result.digest} output=${result.outputDir}`
+      );
     },
     (error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);

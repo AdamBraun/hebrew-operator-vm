@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import fsRaw from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -7,10 +6,15 @@ import { assertSpineRecord, type SpineRecord } from "../../spine/schema";
 import { classifyLetterOperator, isSupportedLetterOperator } from "./opMap";
 import {
   assertLettersIRRecordsAgainstSpine,
-  LETTERS_IR_VERSION,
   serializeLettersIRRecord,
   type LettersIRRecord
 } from "./schema";
+import {
+  computeLettersDigest,
+  computeLettersLayerCodeFingerprint,
+  DEFAULT_LETTERS_DIGEST_VERSION,
+  type LettersDigestConfig
+} from "./hash";
 import { assignWordIds } from "./wordSeg";
 
 export type ExtractLettersIRForRefArgs = {
@@ -55,6 +59,8 @@ export type EmitLettersFromSpineArgs = {
   spineManifestPath?: string;
   spineDigestOverride?: string;
   includeWordSegmentation?: boolean;
+  codeFingerprint?: string;
+  version?: string;
   outCacheDir?: string;
   createdAt?: Date | string;
   force?: boolean;
@@ -107,29 +113,6 @@ function toIsoString(value: Date | string | undefined): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function compareText(left: string, right: string): number {
-  if (left === right) {
-    return 0;
-  }
-  return left < right ? -1 : 1;
-}
-
-function computeLettersDigest(args: {
-  spineDigest: string;
-  config: LettersLayerConfig;
-  version: string;
-}): string {
-  const payload = {
-    layer: "letters",
-    version: args.version,
-    inputs: {
-      spine_digest: args.spineDigest
-    },
-    config: args.config
-  };
-  return crypto.createHash("sha256").update(JSON.stringify(payload)).digest("hex");
 }
 
 async function pathExists(targetPath: string): Promise<boolean> {
@@ -350,16 +333,24 @@ export async function emitLettersFromSpine(
   args: EmitLettersFromSpineArgs
 ): Promise<EmitLettersFromSpineResult> {
   const spinePath = path.resolve(args.spinePath);
-  const config: LettersLayerConfig = {
+  const config: LettersDigestConfig = {
     include_word_segmentation: args.includeWordSegmentation !== false
   };
+  const version = args.version ?? DEFAULT_LETTERS_DIGEST_VERSION;
   const spineDigest = await resolveSpineDigest({
     spinePath,
     spineManifestPath: args.spineManifestPath,
     spineDigestOverride: args.spineDigestOverride
   });
+  const codeFingerprint = args.codeFingerprint ?? (await computeLettersLayerCodeFingerprint());
   const digest =
-    args.digest ?? computeLettersDigest({ spineDigest, config, version: LETTERS_IR_VERSION });
+    args.digest ??
+    computeLettersDigest({
+      spineDigest,
+      config,
+      codeFingerprint,
+      version
+    });
   assertSha256Hex(digest, "digest");
 
   const cacheDir = args.outCacheDir ?? defaultLettersCacheDir();
@@ -439,7 +430,7 @@ export async function emitLettersFromSpine(
 
   const manifest: LettersManifest = {
     layer: "letters",
-    version: LETTERS_IR_VERSION,
+    version,
     created_at: toIsoString(args.createdAt),
     inputs: {
       spine_digest: spineDigest,
