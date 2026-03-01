@@ -27,9 +27,22 @@ Authoritative CLI entrypoint:
 
 Output-affecting options (only these change `Spine.jsonl` content and `spineDigest`):
 
-- `--keep-teamim` (boolean, default: `false`)
-- `--normalize-finals` (boolean, default: `false`)
-- `--unicode-form` (`"NFD"` only in v1; any other value is fatal)
+- canonical options object (`src/spine/options.ts`):
+  - `unicodeForm: "NFC" | "NFKD" | "none"` (default `NFC`)
+  - `normalizeFinals: boolean` (default `false`)
+  - `stripControlChars: boolean` (default `true`)
+  - `preservePunctuation: boolean` (default `true`)
+  - `errorOnUnknownMark: boolean` (default `false`)
+
+CLI contract (`src/cli/build-spine.ts`) MUST map to the same canonical options:
+
+- `--unicode-form=NFC|NFKD|none`
+- `--normalize-finals` / `--no-normalize-finals`
+- `--strip-control-chars` / `--no-strip-control-chars`
+- `--preserve-punctuation` / `--drop-punctuation`
+- `--error-on-unknown-mark` / `--warn-on-unknown-mark`
+
+Unknown options are fatal; silent ignore is forbidden.
 
 Non-output-affecting options (must not change spine rows or `spineDigest`):
 
@@ -159,11 +172,19 @@ Each line is exactly one `g` or `gap` record.
     "options": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["keep_teamim", "normalize_finals", "unicode_form"],
+      "required": [
+        "unicodeForm",
+        "normalizeFinals",
+        "stripControlChars",
+        "preservePunctuation",
+        "errorOnUnknownMark"
+      ],
       "properties": {
-        "keep_teamim": { "type": "boolean" },
-        "normalize_finals": { "type": "boolean" },
-        "unicode_form": { "const": "NFD" }
+        "unicodeForm": { "type": "string", "enum": ["NFC", "NFKD", "none"] },
+        "normalizeFinals": { "type": "boolean" },
+        "stripControlChars": { "type": "boolean" },
+        "preservePunctuation": { "type": "boolean" },
+        "errorOnUnknownMark": { "type": "boolean" }
       }
     },
     "counts": {
@@ -249,8 +270,8 @@ Fatal errors (build fails, no success manifest):
 
 - Input cannot be parsed/read.
 - Unknown CLI option or invalid option value.
-- `--unicode-form` not equal to `NFD`.
-- Unsupported combining mark after Unicode normalization.
+- Unsupported `unicodeForm` value after option normalization.
+- Unknown combining mark when `errorOnUnknownMark = true`.
 - Non-deterministic anchor emission detected (duplicate `gid`/`gapid`, non-contiguous indexes, wrong row order).
 - Schema validation failure for any row or manifest.
 - Idempotence failure (`normalize(normalized_input) != normalized_input`).
@@ -260,6 +281,7 @@ Warnings (build succeeds; warnings recorded in manifest):
 - Non-Hebrew graphemes preserved as `base_letter: null`.
 - Gap has unusual punctuation captured in `raw.other`.
 - Input contains deprecated/rare codepoints that were preserved (not dropped).
+- Unknown combining mark when `errorOnUnknownMark = false` (recorded, not fatal).
 
 Validation rules:
 
@@ -282,9 +304,11 @@ Where `spine_digest_payload` includes exactly:
 - `normalizerCodeDigest`: SHA-256 of normalization-layer implementation snapshot
 - `input.sha256`: source corpus bytes digest
 - `input.ref_order_sha256`: canonical ref-order digest
-- `options.keep_teamim`
-- `options.normalize_finals`
-- `options.unicode_form`
+- `options.unicodeForm`
+- `options.normalizeFinals`
+- `options.stripControlChars`
+- `options.preservePunctuation`
+- `options.errorOnUnknownMark`
 - `artifacts.spine_jsonl.sha256`
 
 `spineDigest` MUST NOT depend on:
