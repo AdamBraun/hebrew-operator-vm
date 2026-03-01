@@ -4,6 +4,7 @@ Authoritative layer contract docs:
 
 - [Normalization Layer Contract](./NORMALIZATION_LAYER.md)
 - [Layout Layer Contract](./LAYOUT_LAYER.md)
+- [Letters Layer Contract](./LAYERS/LETTERS.md)
 - [Layout Obligations](./LAYOUT_OBLIGATIONS.md)
 
 ## Normalization vs Layout (Guardrail)
