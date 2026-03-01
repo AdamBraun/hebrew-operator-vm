@@ -20,6 +20,7 @@ export type EmitSpineArgs = {
     sha256: string;
   };
   options: Partial<NormalizationOptions>;
+  spineDigest?: string;
   outCacheDir?: string;
   createdAt?: Date | string;
   manifestVersion?: string;
@@ -92,6 +93,12 @@ function sha256Hex(value: string | Buffer): string {
   return crypto.createHash("sha256").update(value).digest("hex");
 }
 
+function assertSha256Hex(value: string, label: string): void {
+  if (!/^[a-f0-9]{64}$/.test(value)) {
+    throw new Error(`emitSpine: ${label} must be lowercase sha256 hex`);
+  }
+}
+
 function defaultCacheDir(): string {
   return path.resolve(process.cwd(), "outputs", "cache", "spine");
 }
@@ -139,7 +146,9 @@ export async function emitSpine(args: EmitSpineArgs): Promise<EmitSpineResult> {
   const records = await collectRecords(args.records);
   const jsonl = toJsonl(records);
   const bytesOut = Buffer.byteLength(jsonl, "utf8");
-  const spineDigest = sha256Hex(Buffer.from(jsonl, "utf8"));
+  const computedDigest = sha256Hex(Buffer.from(jsonl, "utf8"));
+  const spineDigest = args.spineDigest ?? computedDigest;
+  assertSha256Hex(spineDigest, "spineDigest");
 
   const cacheDir = args.outCacheDir ?? defaultCacheDir();
   const outputDir = path.join(cacheDir, spineDigest);
