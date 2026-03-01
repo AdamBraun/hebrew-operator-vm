@@ -5,6 +5,7 @@ import { LETTERS_IR_VERSION } from "./schema";
 
 export type LettersDigestConfig = {
   include_word_segmentation: boolean;
+  strict_letters: boolean;
   [key: string]: unknown;
 };
 
@@ -21,6 +22,7 @@ export const DEFAULT_LETTERS_CODE_PATHS: readonly string[] = [
   "src/layers/letters/schema.ts",
   "src/layers/letters/opMap.ts",
   "src/layers/letters/wordSeg.ts",
+  "src/layers/letters/validate.ts",
   "src/layers/letters/extract.ts",
   "src/layers/letters/hash.ts"
 ];
@@ -53,6 +55,9 @@ function assertConfig(value: unknown): asserts value is LettersDigestConfig {
     "boolean"
   ) {
     throw new Error("computeLettersDigest: config.include_word_segmentation must be boolean");
+  }
+  if (typeof (value as { strict_letters?: unknown }).strict_letters !== "boolean") {
+    throw new Error("computeLettersDigest: config.strict_letters must be boolean");
   }
 }
 

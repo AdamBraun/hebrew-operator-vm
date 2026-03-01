@@ -12,7 +12,8 @@ describe("letters digest", () => {
   const baseArgs = {
     spineDigest: "a".repeat(64),
     config: {
-      include_word_segmentation: true
+      include_word_segmentation: true,
+      strict_letters: false
     },
     codeFingerprint: "letters-code@1",
     version: "1.0.0"
@@ -38,7 +39,20 @@ describe("letters digest", () => {
     const changed = computeLettersDigest({
       ...baseArgs,
       config: {
-        include_word_segmentation: false
+        include_word_segmentation: false,
+        strict_letters: false
+      }
+    });
+    expect(changed).not.toBe(baseline);
+  });
+
+  it("changes when strict_letters changes", () => {
+    const baseline = computeLettersDigest(baseArgs);
+    const changed = computeLettersDigest({
+      ...baseArgs,
+      config: {
+        include_word_segmentation: true,
+        strict_letters: true
       }
     });
     expect(changed).not.toBe(baseline);
@@ -85,6 +99,15 @@ describe("letters digest", () => {
         config: {} as { include_word_segmentation: boolean }
       })
     ).toThrow(/include_word_segmentation/);
+    expect(() =>
+      computeLettersDigest({
+        ...baseArgs,
+        config: { include_word_segmentation: true } as {
+          include_word_segmentation: boolean;
+          strict_letters: boolean;
+        }
+      })
+    ).toThrow(/strict_letters/);
   });
 });
 

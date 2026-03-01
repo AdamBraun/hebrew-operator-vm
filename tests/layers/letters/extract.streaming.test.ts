@@ -72,7 +72,7 @@ describe("letters extractor streaming", () => {
       layer: string;
       version: string;
       inputs: { spine_digest: string; spine_path: string };
-      config: { include_word_segmentation: boolean };
+      config: { include_word_segmentation: boolean; strict_letters: boolean };
       outputs: { letters_ir_path: string };
       counts: { letters_emitted: number; refs_seen: number };
     };
@@ -81,6 +81,7 @@ describe("letters extractor streaming", () => {
     expect(manifest.inputs.spine_digest).toBe(SPINE_DIGEST);
     expect(manifest.inputs.spine_path).toBe(spinePath);
     expect(manifest.config.include_word_segmentation).toBe(true);
+    expect(manifest.config.strict_letters).toBe(false);
     expect(manifest.outputs.letters_ir_path).toBe(first.lettersIrPath);
     expect(manifest.counts).toEqual({
       letters_emitted: 3,

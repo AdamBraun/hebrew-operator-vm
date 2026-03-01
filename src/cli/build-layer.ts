@@ -28,6 +28,7 @@ type BuildLettersCliOptions = {
   outArg: string;
   force: boolean;
   includeWordSegmentation: boolean;
+  strictLetters: boolean;
   spineDigestOverride?: string;
   lettersCodeFingerprintOverride?: string;
 };
@@ -129,6 +130,7 @@ function printHelp(): void {
   console.log("  --layout-code-digest=<sha256> (layout only)");
   console.log("  --letters-code-fingerprint=<string> (letters only)");
   console.log("  --include-word-segmentation=true|false (letters only, default true)");
+  console.log("  --strict-letters=true|false (letters only, default false)");
   console.log("  --force");
 }
 
@@ -142,6 +144,7 @@ export function parseArgs(argv: string[]): BuildLayerCliOptions {
   let layoutLayerCodeDigestOverride: string | undefined;
   let lettersCodeFingerprintOverride: string | undefined;
   let includeWordSegmentation = true;
+  let strictLetters = false;
 
   for (let i = 0; i < argv.length; ) {
     const arg = argv[i] ?? "";
@@ -161,6 +164,16 @@ export function parseArgs(argv: string[]): BuildLayerCliOptions {
     }
     if (arg === "--no-word-segmentation") {
       includeWordSegmentation = false;
+      i += 1;
+      continue;
+    }
+    if (arg === "--strict-letters") {
+      strictLetters = true;
+      i += 1;
+      continue;
+    }
+    if (arg === "--no-strict-letters") {
+      strictLetters = false;
       i += 1;
       continue;
     }
@@ -218,6 +231,12 @@ export function parseArgs(argv: string[]): BuildLayerCliOptions {
       i = includeWordOpt.next;
       continue;
     }
+    const strictLettersOpt = readOptionValue(argv, i, "--strict-letters");
+    if (strictLettersOpt) {
+      strictLetters = asBoolean(strictLettersOpt.value, "--strict-letters");
+      i = strictLettersOpt.next;
+      continue;
+    }
     const forceOpt = readOptionValue(argv, i, "--force");
     if (forceOpt) {
       force = asBoolean(forceOpt.value, "--force");
@@ -268,6 +287,7 @@ export function parseArgs(argv: string[]): BuildLayerCliOptions {
     outArg: resolvedOutArg,
     force,
     includeWordSegmentation,
+    strictLetters,
     spineDigestOverride,
     lettersCodeFingerprintOverride
   };
@@ -475,7 +495,8 @@ export async function runBuildLayer(
   const lettersCodeFingerprint =
     parsed.lettersCodeFingerprintOverride ?? (await computeLettersLayerCodeFingerprint());
   const lettersConfig = {
-    include_word_segmentation: parsed.includeWordSegmentation
+    include_word_segmentation: parsed.includeWordSegmentation,
+    strict_letters: parsed.strictLetters
   };
   const digest = computeLettersDigest({
     spineDigest,
@@ -489,6 +510,7 @@ export async function runBuildLayer(
     spinePath: spineJsonlPath,
     spineDigestOverride: spineDigest,
     includeWordSegmentation: parsed.includeWordSegmentation,
+    strictLetters: parsed.strictLetters,
     codeFingerprint: lettersCodeFingerprint,
     version: LETTERS_IR_VERSION,
     outCacheDir: cacheDir,

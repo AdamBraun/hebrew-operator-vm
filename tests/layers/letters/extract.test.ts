@@ -74,4 +74,60 @@ describe("letters extraction", () => {
     expect(rows[0]?.word).toBeUndefined();
     expect(rows[1]?.word).toBeUndefined();
   });
+
+  it("skips unsupported base letters in non-strict mode", () => {
+    const ref = "Genesis/1/1";
+    const spineRows: SpineRecord[] = [
+      gap(ref, 0, false),
+      g(ref, 0, "א", "א"),
+      gap(ref, 1, false),
+      g(ref, 1, "@", "@"),
+      gap(ref, 2, false),
+      g(ref, 2, null, ","),
+      gap(ref, 3, false)
+    ];
+
+    const rows = extractLettersIRRecordsForRef({
+      spineRecordsForRef: spineRows,
+      spineDigest: SPINE_DIGEST,
+      strictLetters: false
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.letter).toBe("א");
+  });
+
+  it("throws in strict mode for unsupported base letters with local context", () => {
+    const ref = "Genesis/1/1";
+    const offending = g(ref, 1, "@", "@");
+    const spineRows: SpineRecord[] = [
+      gap(ref, 0, false),
+      g(ref, 0, null, ","),
+      gap(ref, 1, false),
+      offending,
+      gap(ref, 2, false)
+    ];
+
+    expect(() =>
+      extractLettersIRRecordsForRef({
+        spineRecordsForRef: spineRows,
+        spineDigest: SPINE_DIGEST,
+        strictLetters: true
+      })
+    ).toThrow(/base_letter="@"/);
+    expect(() =>
+      extractLettersIRRecordsForRef({
+        spineRecordsForRef: spineRows,
+        spineDigest: SPINE_DIGEST,
+        strictLetters: true
+      })
+    ).toThrow(new RegExp(`ref_key='${ref}'`));
+    expect(() =>
+      extractLettersIRRecordsForRef({
+        spineRecordsForRef: spineRows,
+        spineDigest: SPINE_DIGEST,
+        strictLetters: true
+      })
+    ).toThrow(new RegExp(`gid='${offending.gid}'`));
+  });
 });

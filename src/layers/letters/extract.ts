@@ -2,8 +2,8 @@ import fsRaw from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import readline from "node:readline";
-import { assertSpineRecord, type SpineRecord } from "../../spine/schema";
-import { classifyLetterOperator, isSupportedLetterOperator } from "./opMap";
+import { type SpineRecord } from "../../spine/schema";
+import { classifyLetterOperator } from "./opMap";
 import {
   assertLettersIRRecordsAgainstSpine,
   serializeLettersIRRecord,
@@ -16,11 +16,13 @@ import {
   type LettersDigestConfig
 } from "./hash";
 import { assignWordIds } from "./wordSeg";
+import { assertSpineRecordShape, resolveHebrewLetter } from "./validate";
 
 export type ExtractLettersIRForRefArgs = {
   spineRecordsForRef: Iterable<SpineRecord>;
   spineDigest: string;
   includeWordMetadata?: boolean;
+  strictLetters?: boolean;
 };
 
 export type WriteExtractedLettersIRArgs = ExtractLettersIRForRefArgs & {
@@ -34,6 +36,7 @@ export type WriteExtractedLettersIRResult = {
 
 export type LettersLayerConfig = {
   include_word_segmentation: boolean;
+  strict_letters: boolean;
 };
 
 export type LettersManifest = {
@@ -59,6 +62,7 @@ export type EmitLettersFromSpineArgs = {
   spineManifestPath?: string;
   spineDigestOverride?: string;
   includeWordSegmentation?: boolean;
+  strictLetters?: boolean;
   codeFingerprint?: string;
   version?: string;
   outCacheDir?: string;
@@ -177,6 +181,12 @@ async function readLettersManifest(filePath: string): Promise<LettersManifest> {
       "emitLettersFromSpine: manifest.config.include_word_segmentation must be boolean"
     );
   }
+  if (
+    parsed.config.strict_letters !== undefined &&
+    typeof parsed.config.strict_letters !== "boolean"
+  ) {
+    throw new Error("emitLettersFromSpine: manifest.config.strict_letters must be boolean");
+  }
 
   if (!isRecord(parsed.outputs)) {
     throw new Error("emitLettersFromSpine: manifest.outputs must be object");
@@ -206,7 +216,8 @@ async function readLettersManifest(filePath: string): Promise<LettersManifest> {
       spine_path: parsed.inputs.spine_path
     },
     config: {
-      include_word_segmentation: parsed.config.include_word_segmentation
+      include_word_segmentation: parsed.config.include_word_segmentation,
+      strict_letters: parsed.config.strict_letters === true
     },
     outputs: {
       letters_ir_path: parsed.outputs.letters_ir_path
@@ -243,7 +254,7 @@ export async function* readSpineRecordsFromJsonl(
         );
       }
 
-      assertSpineRecord(parsed);
+      assertSpineRecordShape(parsed);
       yield parsed;
     }
   } finally {
@@ -257,6 +268,7 @@ export function extractLettersIRRecordsForRef(args: ExtractLettersIRForRefArgs):
 
   const spineRows = [...args.spineRecordsForRef];
   const includeWord = args.includeWordMetadata !== false;
+  const strictLetters = args.strictLetters === true;
   const wordByGid = includeWord ? assignWordIds(spineRows) : new Map();
   const out: LettersIRRecord[] = [];
 
@@ -264,14 +276,19 @@ export function extractLettersIRRecordsForRef(args: ExtractLettersIRForRefArgs):
     if (row.kind !== "g") {
       continue;
     }
-    if (typeof row.base_letter !== "string") {
-      continue;
-    }
-    if (!isSupportedLetterOperator(row.base_letter)) {
+    const letter = resolveHebrewLetter(
+      row.base_letter,
+      {
+        ref_key: row.ref_key,
+        gid: row.gid
+      },
+      strictLetters
+    );
+    if (!letter) {
       continue;
     }
 
-    const classification = classifyLetterOperator(row.base_letter);
+    const classification = classifyLetterOperator(letter);
     const wordAnchor = wordByGid.get(row.gid);
     if (includeWord && !wordAnchor) {
       throw new Error(
@@ -334,7 +351,8 @@ export async function emitLettersFromSpine(
 ): Promise<EmitLettersFromSpineResult> {
   const spinePath = path.resolve(args.spinePath);
   const config: LettersDigestConfig = {
-    include_word_segmentation: args.includeWordSegmentation !== false
+    include_word_segmentation: args.includeWordSegmentation !== false,
+    strict_letters: args.strictLetters === true
   };
   const version = args.version ?? DEFAULT_LETTERS_DIGEST_VERSION;
   const spineDigest = await resolveSpineDigest({
@@ -391,7 +409,8 @@ export async function emitLettersFromSpine(
     const rows = extractLettersIRRecordsForRef({
       spineRecordsForRef: currentRefRows,
       spineDigest,
-      includeWordMetadata: config.include_word_segmentation
+      includeWordMetadata: config.include_word_segmentation,
+      strictLetters: config.strict_letters
     });
 
     for (const row of rows) {
