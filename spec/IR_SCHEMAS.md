@@ -1,5 +1,19 @@
 # IR Schemas
 
+## NiqqudIR (`niqqud.ir.jsonl`)
+
+Niqqud layer output is JSON Lines where each line is one `NiqqudIRRow` keyed by grapheme `gid`.
+
+Canonical contract:
+
+- [NiqqudIR Schema](./ir/NIQQUD_IR.md)
+
+Implementation hooks:
+
+- validator + invariants: `src/layers/niqqud/schema.ts`
+- writer utility: `writeNiqqudIRJsonl(...)`
+- reader utility: `readNiqqudIRJsonl(...)`
+
 ## LettersIR (`letters.ir.jsonl`)
 
 Letters layer output is JSON Lines where each line is one `LettersIRRecord` keyed by grapheme `gid`.
