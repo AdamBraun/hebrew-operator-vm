@@ -143,30 +143,18 @@ Each line is exactly one `g` or `gap` record.
   "title": "SpineManifest",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schema_version",
-    "layer",
-    "spineDigest",
-    "generated_at",
-    "input",
-    "options",
-    "counts",
-    "artifacts",
-    "warnings"
-  ],
+  "required": ["layer", "version", "created_at", "input", "options", "stats", "digests", "schema"],
   "properties": {
-    "schema_version": { "const": 1 },
-    "layer": { "const": "normalization" },
-    "spineDigest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
-    "generated_at": { "type": "string", "format": "date-time" },
+    "layer": { "const": "spine" },
+    "version": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
     "input": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "sha256", "ref_order_sha256"],
+      "required": ["path", "sha256"],
       "properties": {
         "path": { "type": "string", "minLength": 1 },
-        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
-        "ref_order_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
       }
     },
     "options": {
@@ -187,48 +175,32 @@ Each line is exactly one `g` or `gap` record.
         "errorOnUnknownMark": { "type": "boolean" }
       }
     },
-    "counts": {
+    "stats": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["refs", "g_rows", "gap_rows", "total_rows"],
+      "required": ["refs", "graphemes", "gaps", "bytes_out"],
       "properties": {
         "refs": { "type": "integer", "minimum": 0 },
-        "g_rows": { "type": "integer", "minimum": 0 },
-        "gap_rows": { "type": "integer", "minimum": 0 },
-        "total_rows": { "type": "integer", "minimum": 0 }
+        "graphemes": { "type": "integer", "minimum": 0 },
+        "gaps": { "type": "integer", "minimum": 0 },
+        "bytes_out": { "type": "integer", "minimum": 0 }
       }
     },
-    "artifacts": {
+    "digests": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["spine_jsonl", "manifest_json"],
+      "required": ["spineDigest"],
       "properties": {
-        "spine_jsonl": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["path", "rows", "bytes", "sha256"],
-          "properties": {
-            "path": { "type": "string", "minLength": 1 },
-            "rows": { "type": "integer", "minimum": 0 },
-            "bytes": { "type": "integer", "minimum": 0 },
-            "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
-          }
-        },
-        "manifest_json": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["path", "bytes", "sha256"],
-          "properties": {
-            "path": { "type": "string", "minLength": 1 },
-            "bytes": { "type": "integer", "minimum": 0 },
-            "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
-          }
-        }
+        "spineDigest": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
       }
     },
-    "warnings": {
-      "type": "array",
-      "items": { "type": "string" }
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spine_record_version"],
+      "properties": {
+        "spine_record_version": { "type": "string", "minLength": 1 }
+      }
     }
   }
 }
