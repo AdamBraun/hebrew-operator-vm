@@ -5,6 +5,7 @@ Authoritative layer contract docs:
 - [Normalization Layer Contract](./NORMALIZATION_LAYER.md)
 - [Layout Layer Contract](./LAYOUT_LAYER.md)
 - [Letters Layer Contract](./LAYERS/LETTERS.md)
+- [Niqqud Layer Contract](./LAYERS/NIQQUD_LAYER.md)
 - [Layout Obligations](./LAYOUT_OBLIGATIONS.md)
 
 ## Normalization vs Layout (Guardrail)
