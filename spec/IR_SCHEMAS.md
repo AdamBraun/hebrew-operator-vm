@@ -53,6 +53,9 @@ Output invariants:
 3. If multiple layout events exist at one gap (for example `SPACE` and `SETUMA`), emit separate records.
 4. `gapid` must match the row (`gapid = <ref_key>#gap:<gap_index>`).
 5. Rows must only reference existing spine gaps for the target spine build.
+6. Collision policy for dataset events at one `gapid`:
+   - `SETUMA + PETUCHA` is invalid and must fail extraction.
+   - `BOOK_BREAK` mixed with `SETUMA` or `PETUCHA` is invalid and must fail extraction.
 
 Implementation hooks:
 
