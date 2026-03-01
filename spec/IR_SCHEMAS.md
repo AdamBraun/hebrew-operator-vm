@@ -1,5 +1,63 @@
 # IR Schemas
 
+## LettersIR (`letters.ir.jsonl`)
+
+Letters layer output is JSON Lines where each line is one `LettersIRRecord` keyed by grapheme `gid`.
+
+Record schema:
+
+```json
+{
+  "kind": "letter_ir",
+  "gid": "Genesis/1/1#g:3",
+  "ref_key": "Genesis/1/1",
+  "g_index": 3,
+  "letter": "ך",
+  "op_kind": "כ.final",
+  "features": {
+    "final_form": true
+  },
+  "word": {
+    "id": "Genesis/1/1#w:0",
+    "index_in_word": 3
+  },
+  "flags": {
+    "ignored": false
+  },
+  "source": {
+    "spine_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+}
+```
+
+Field contract:
+
+- `kind: "letter_ir"` (literal tag).
+- `gid: string` (`<ref_key>#g:<g_index>`, stable anchor from spine).
+- `ref_key: string`.
+- `g_index: number` (non-negative integer; must match `gid`).
+- `letter: string` (normalized Hebrew base letter for the grapheme).
+- `op_kind: string` (operator id; may be the letter itself or a normalized family id such as `כ.final`).
+- `features?: object` (letter-local only; derivable without other layers).
+- `word?: { id: string; index_in_word: number }` (derived only from raw whitespace gaps).
+- `flags?: { ignored?: boolean; reason?: string }`.
+- `source.spine_digest: string` (lowercase sha256 hex).
+
+Output invariants:
+
+1. One `LettersIRRecord` per letter grapheme in spine (`kind:"g"` with Hebrew `base_letter`).
+2. File order is exactly spine grapheme order (stable streaming join by `(ref_key, g_index)`).
+3. No dependence on niqqud/ta'amim interpretation or layout datasets.
+4. No boundary semantics (`τ`, cut/glue, GC, or VM state mutation) in this layer.
+5. `gid`, `ref_key`, and `g_index` must agree for every row.
+6. `gid` values are unique within the file.
+
+Implementation hooks:
+
+- validator + invariants: `src/layers/letters/schema.ts`
+- writer utility: `writeLettersIRJsonl(...)`
+- reader utility: `readLettersIRJsonl(...)`
+
 ## LayoutIR (`layout.ir.jsonl`)
 
 Layout layer output is JSON Lines where each line is one `LayoutIRRecord` keyed by `gapid`.
