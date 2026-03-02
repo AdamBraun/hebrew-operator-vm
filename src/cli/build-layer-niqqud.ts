@@ -1,6 +1,10 @@
-import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import {
+  computeNiqqudConfigDigest,
+  computeNiqqudDigest,
+  computeNiqqudLayerCodeFingerprint
+} from "../layers/niqqud/hash";
 import { buildNiqqudMods } from "../layers/niqqud/mods";
 import { normalizeNiqqudMarks } from "../layers/niqqud/normalize_marks";
 import { NIQQUD_IR_VERSION, serializeNiqqudIRRow, type NiqqudIRRow } from "../layers/niqqud/schema";
@@ -13,6 +17,7 @@ import {
 } from "../layers/niqqud/stats";
 
 export const NIQQUD_LAYER_VERSION = "1.0.0";
+const NIQQUD_LAYER_DIGEST_VERSION = 1;
 
 type BuildNiqqudCliOptions = {
   spinePath: string;
@@ -60,16 +65,6 @@ type ResolvedSpineInputPaths = {
 
 const SHA256_HEX = /^[a-f0-9]{64}$/;
 
-const NIQQUD_CODE_PATHS: readonly string[] = [
-  "src/layers/niqqud/classes.ts",
-  "src/layers/niqqud/map.ts",
-  "src/layers/niqqud/mods.ts",
-  "src/layers/niqqud/normalize_marks.ts",
-  "src/layers/niqqud/schema.ts",
-  "src/layers/niqqud/spine_view.ts",
-  "src/layers/niqqud/stats.ts"
-];
-
 function assertNonEmptyString(value: unknown, label: string): asserts value is string {
   if (typeof value !== "string" || value.length === 0) {
     throw new Error(`build-layer-niqqud: ${label} must be non-empty string`);
@@ -110,6 +105,18 @@ function readOptionValue(
     return { value: arg.slice(`${flag}=`.length), next: index + 1 };
   }
   return null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isBoolean(value: unknown): value is boolean {
+  return typeof value === "boolean";
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((entry) => typeof entry === "string");
 }
 
 function toIsoString(value: Date | string | undefined): string {
@@ -348,44 +355,138 @@ function resolveNiqqudCacheDir(outArg: string): string {
   return path.join(resolved, "cache", "niqqud");
 }
 
-function computeConfigDigest(config: {
-  format: "jsonl";
-  emit_stats: boolean;
-  strict: boolean;
-}): string {
-  const basis = JSON.stringify(config);
-  return crypto.createHash("sha256").update(basis, "utf8").digest("hex");
-}
-
-async function computeNiqqudCodeFingerprint(): Promise<string> {
-  const hash = crypto.createHash("sha256");
-  for (const relPath of [...NIQQUD_CODE_PATHS].sort()) {
-    const absPath = path.resolve(process.cwd(), relPath);
-    const content = await fs.readFile(absPath);
-    hash.update(relPath);
-    hash.update("\u0000");
-    hash.update(content);
-    hash.update("\u0000");
+function parseNiqqudManifest(parsed: unknown): NiqqudBuildManifest {
+  if (!isRecord(parsed)) {
+    throw new Error("build-layer-niqqud: manifest must be object");
   }
-  return hash.digest("hex");
+  if (parsed.layer !== "niqqud") {
+    throw new Error("build-layer-niqqud: manifest.layer must be 'niqqud'");
+  }
+  assertNonEmptyString(parsed.layer_version, "manifest.layer_version");
+  if (!Number.isInteger(parsed.ir_version) || parsed.ir_version < 0) {
+    throw new Error("build-layer-niqqud: manifest.ir_version must be non-negative integer");
+  }
+  assertSha256Hex(parsed.digest, "manifest.digest");
+  assertSha256Hex(parsed.spine_digest, "manifest.spine_digest");
+  assertSha256Hex(parsed.config_digest, "manifest.config_digest");
+  assertSha256Hex(parsed.code_fingerprint, "manifest.code_fingerprint");
+
+  if (!isRecord(parsed.config)) {
+    throw new Error("build-layer-niqqud: manifest.config must be object");
+  }
+  if (parsed.config.format !== "jsonl") {
+    throw new Error("build-layer-niqqud: manifest.config.format must be 'jsonl'");
+  }
+  if (!isBoolean(parsed.config.emit_stats)) {
+    throw new Error("build-layer-niqqud: manifest.config.emit_stats must be boolean");
+  }
+  if (!isBoolean(parsed.config.strict)) {
+    throw new Error("build-layer-niqqud: manifest.config.strict must be boolean");
+  }
+
+  if (!isStringArray(parsed.output_files)) {
+    throw new Error("build-layer-niqqud: manifest.output_files must be string[]");
+  }
+  assertNonEmptyString(parsed.created_at, "manifest.created_at");
+
+  return {
+    layer: "niqqud",
+    layer_version: parsed.layer_version,
+    ir_version: parsed.ir_version,
+    digest: parsed.digest,
+    spine_digest: parsed.spine_digest,
+    config_digest: parsed.config_digest,
+    code_fingerprint: parsed.code_fingerprint,
+    config: {
+      format: "jsonl",
+      emit_stats: parsed.config.emit_stats,
+      strict: parsed.config.strict
+    },
+    output_files: parsed.output_files,
+    created_at: parsed.created_at
+  };
 }
 
-function computeNiqqudDigest(args: {
-  layerVersion: string;
-  irVersion: number;
+async function readNiqqudManifestSafe(filePath: string): Promise<NiqqudBuildManifest | null> {
+  try {
+    const parsed = await readJsonFile(filePath);
+    return parseNiqqudManifest(parsed);
+  } catch {
+    return null;
+  }
+}
+
+function requiredOutputFiles(config: NiqqudBuildManifest["config"]): string[] {
+  const out = ["niqqud.ir.jsonl"];
+  if (config.emit_stats) {
+    out.push("niqqud.stats.json", "warnings.jsonl");
+  }
+  out.push("manifest.json");
+  return out;
+}
+
+function isCacheManifestMatch(args: {
+  manifest: NiqqudBuildManifest;
+  digest: string;
   spineDigest: string;
   configDigest: string;
   codeFingerprint: string;
-}): string {
-  const basis = [
-    "niqqud",
-    args.layerVersion,
-    String(args.irVersion),
-    args.spineDigest,
-    args.configDigest,
-    args.codeFingerprint
-  ].join("\n");
-  return crypto.createHash("sha256").update(basis, "utf8").digest("hex");
+  config: NiqqudBuildManifest["config"];
+}): boolean {
+  const { manifest } = args;
+  return (
+    manifest.layer === "niqqud" &&
+    manifest.layer_version === NIQQUD_LAYER_VERSION &&
+    manifest.ir_version === NIQQUD_IR_VERSION &&
+    manifest.digest === args.digest &&
+    manifest.spine_digest === args.spineDigest &&
+    manifest.config_digest === args.configDigest &&
+    manifest.code_fingerprint === args.codeFingerprint &&
+    manifest.config.format === args.config.format &&
+    manifest.config.emit_stats === args.config.emit_stats &&
+    manifest.config.strict === args.config.strict
+  );
+}
+
+async function canReuseCache(args: {
+  outputDir: string;
+  manifestPath: string;
+  digest: string;
+  spineDigest: string;
+  configDigest: string;
+  codeFingerprint: string;
+  config: NiqqudBuildManifest["config"];
+}): Promise<boolean> {
+  if (!(await pathExists(args.manifestPath))) {
+    return false;
+  }
+  const manifest = await readNiqqudManifestSafe(args.manifestPath);
+  if (!manifest) {
+    return false;
+  }
+  if (
+    !isCacheManifestMatch({
+      manifest,
+      digest: args.digest,
+      spineDigest: args.spineDigest,
+      configDigest: args.configDigest,
+      codeFingerprint: args.codeFingerprint,
+      config: args.config
+    })
+  ) {
+    return false;
+  }
+
+  const requiredFiles = requiredOutputFiles(args.config);
+  for (const relFile of requiredFiles) {
+    if (!manifest.output_files.includes(relFile)) {
+      return false;
+    }
+    if (!(await pathExists(path.join(args.outputDir, relFile)))) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function createManifest(args: {
@@ -430,13 +531,13 @@ export async function runBuildLayerNiqqud(
     emit_stats: parsed.emitStats,
     strict: parsed.strict
   } as const;
-  const configDigest = computeConfigDigest(config);
-  const codeFingerprint = parsed.codeFingerprintOverride ?? (await computeNiqqudCodeFingerprint());
+  const configDigest = computeNiqqudConfigDigest(config);
+  const codeFingerprint =
+    parsed.codeFingerprintOverride ?? (await computeNiqqudLayerCodeFingerprint());
   const digest = computeNiqqudDigest({
-    layerVersion: NIQQUD_LAYER_VERSION,
-    irVersion: NIQQUD_IR_VERSION,
+    layerVersion: NIQQUD_LAYER_DIGEST_VERSION,
     spineDigest,
-    configDigest,
+    config,
     codeFingerprint
   });
 
@@ -447,10 +548,15 @@ export async function runBuildLayerNiqqud(
   const statsPath = path.join(outputDir, "niqqud.stats.json");
   const warningsPath = path.join(outputDir, "warnings.jsonl");
 
-  const hasCache =
-    (await pathExists(niqqudIrPath)) &&
-    (await pathExists(manifestPath)) &&
-    (!parsed.emitStats || ((await pathExists(statsPath)) && (await pathExists(warningsPath))));
+  const hasCache = await canReuseCache({
+    outputDir,
+    manifestPath,
+    digest,
+    spineDigest,
+    configDigest,
+    codeFingerprint,
+    config
+  });
   if (hasCache && !parsed.force) {
     return {
       layer: "niqqud",

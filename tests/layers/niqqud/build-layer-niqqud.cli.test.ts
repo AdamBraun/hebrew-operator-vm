@@ -141,6 +141,35 @@ describe("build-layer-niqqud cli", () => {
     expect(second.outputDir).toBe(first.outputDir);
   });
 
+  it("rebuilds when cache manifest exists but does not match expected digest inputs", async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "build-layer-niqqud-cli-"));
+    const inputPath = path.join(tmp, "data", "torah.json");
+    const outRoot = path.join(tmp, "outputs");
+    const outCache = path.join(outRoot, "cache", "niqqud");
+    makeFixtureInput(inputPath);
+
+    const spine = await runBuildSpine(["--input", inputPath, "--out", outRoot]);
+    const first = await runBuildLayerNiqqud(["--spine", spine.spinePath, "--out", outCache]);
+    const firstManifest = JSON.parse(fs.readFileSync(first.manifestPath, "utf8")) as {
+      code_fingerprint: string;
+    };
+
+    const tampered = JSON.parse(fs.readFileSync(first.manifestPath, "utf8")) as {
+      code_fingerprint: string;
+    };
+    tampered.code_fingerprint = "f".repeat(64);
+    fs.writeFileSync(first.manifestPath, `${JSON.stringify(tampered, null, 2)}\n`, "utf8");
+
+    const second = await runBuildLayerNiqqud(["--spine", spine.spinePath, "--out", outCache]);
+    expect(second.cacheHit).toBe(false);
+    expect(second.digest).toBe(first.digest);
+
+    const repairedManifest = JSON.parse(fs.readFileSync(second.manifestPath, "utf8")) as {
+      code_fingerprint: string;
+    };
+    expect(repairedManifest.code_fingerprint).toBe(firstManifest.code_fingerprint);
+  });
+
   it("records malformed/unhandled warnings non-fatally even with --strict", async () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "build-layer-niqqud-cli-"));
     const digest = "e".repeat(64);
