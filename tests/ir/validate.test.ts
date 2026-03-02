@@ -49,7 +49,7 @@ describe("ir schema validator", () => {
     expect(() => assertValidIRRecord("layout_ir", malformedLayout)).toThrow(/layout_ir/);
 
     const missingRequired = {
-      kind: "program_op",
+      kind: "op",
       ref_key: "Genesis/1/1"
     };
     expect(() => assertValidIRRecord("program_ir", missingRequired)).toThrow(/program_ir/);

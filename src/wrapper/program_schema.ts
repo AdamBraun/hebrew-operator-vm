@@ -32,7 +32,6 @@ import {
   compareNiqqudIRRows,
   formatNiqqudIRJsonl,
   parseNiqqudIRJsonl,
-  type NiqqudFlags,
   type NiqqudIRRow,
   type NiqqudMods
 } from "../layers/niqqud/schema";
@@ -42,39 +41,39 @@ export const PROGRAM_LAYER = "program";
 export const PROGRAM_IR_VERSION = 1;
 export const PROGRAM_MANIFEST_VERSION = "1.0.0";
 export const STITCHER_CONTRACT_VERSION = "1.0.0";
+export const STITCHER_VERSION = "1.0.0";
 
 export type ProgramIROutputFormat = "jsonl" | "json";
 
-export type MetadataPlan = Record<string, unknown>;
-
-export type ProgramNiqqudAttachment = {
-  mods: NiqqudMods;
-  unhandled: string[];
-  flags?: NiqqudFlags;
+export type MetadataPlan = Record<string, unknown> & {
+  checkpoints?: Array<{
+    ref_end: string;
+    [key: string]: unknown;
+  }>;
 };
 
 export type ProgramIROpRecord = {
-  kind: "program_op";
+  kind: "op";
   gid: string;
   ref_key: string;
   g_index: number;
-  letter: string;
   op_kind: string;
-  features?: Record<string, unknown>;
-  word?: LettersIRRecord["word"];
-  flags?: LettersIRRecord["flags"];
-  source: LettersIRRecord["source"];
-  niqqud?: ProgramNiqqudAttachment;
-  cantillation_events: CantillationEvent[];
+  mods: NiqqudMods | Record<string, never>;
+  cant_attached?: CantillationEvent[];
 };
 
 export type ProgramIRBoundaryRecord = {
-  kind: "boundary_frame";
+  kind: "boundary";
   gapid: string;
   ref_key: string;
   gap_index: number;
-  layout_events: LayoutEvent[];
-  cantillation_events: CantillationEvent[];
+  layout: LayoutEvent[];
+  cant: CantillationEvent[];
+  raw: {
+    whitespace?: boolean;
+    chars?: string[];
+    [key: string]: unknown;
+  };
 };
 
 export type ProgramIRRecord = ProgramIROpRecord | ProgramIRBoundaryRecord;
@@ -83,8 +82,15 @@ export type ProgramManifest = {
   layer: typeof PROGRAM_LAYER;
   version: typeof PROGRAM_MANIFEST_VERSION;
   contract: `STITCHER_CONTRACT/${typeof STITCHER_CONTRACT_VERSION}`;
+  stitcher: {
+    version: typeof STITCHER_VERSION;
+    config: {
+      output_format: ProgramIROutputFormat;
+      include_letter_cantillation: boolean;
+      include_gap_raw: boolean;
+    };
+  };
   created_at: string;
-  output_format: ProgramIROutputFormat;
   input_digests: {
     spine_sha256: string;
     letters_ir_sha256: string;
@@ -102,10 +108,23 @@ export type ProgramManifest = {
   };
   counts: {
     program_rows: number;
-    op_rows: number;
-    boundary_rows: number;
+    ops: number;
+    boundaries: number;
+    checkpoints: number;
   };
-  output_sha256: string;
+  ref_ranges_by_book?: Record<
+    string,
+    {
+      first_ref: string;
+      last_ref: string;
+      ops: number;
+      boundaries: number;
+    }
+  >;
+  output: {
+    format: ProgramIROutputFormat;
+    sha256: string;
+  };
 };
 
 export type StitchProgramIRInputs = {
@@ -583,21 +602,13 @@ function normalizeInputs(args: StitchProgramIRInputs): StitchProgramIRInputs {
   };
 }
 
-function cloneNiqqudAttachment(row: NiqqudIRRow): ProgramNiqqudAttachment {
-  return {
-    mods: deepClone(row.mods),
-    unhandled: [...row.unhandled],
-    ...(row.flags ? { flags: deepClone(row.flags) } : {})
-  };
-}
-
-function indexNiqqud(rows: readonly NiqqudIRRow[]): Map<string, ProgramNiqqudAttachment> {
-  const out = new Map<string, ProgramNiqqudAttachment>();
+function indexNiqqud(rows: readonly NiqqudIRRow[]): Map<string, NiqqudMods> {
+  const out = new Map<string, NiqqudMods>();
   for (const row of rows) {
     if (out.has(row.gid)) {
       throw new Error(`stitcher: duplicate NiqqudIR gid '${row.gid}'`);
     }
-    out.set(row.gid, cloneNiqqudAttachment(row));
+    out.set(row.gid, deepClone(row.mods));
   }
   return out;
 }
@@ -649,7 +660,7 @@ function indexLayout(records: readonly LayoutIRRecord[]): Map<string, LayoutEven
 }
 
 function makeProgramAnchorKey(record: ProgramIRRecord): ProgramAnchorKey {
-  if (record.kind === "boundary_frame") {
+  if (record.kind === "boundary") {
     return {
       ref_key: record.ref_key,
       index: record.gap_index,
@@ -681,13 +692,11 @@ export function compareProgramIRRecords(left: ProgramIRRecord, right: ProgramIRR
   return compareText(leftKey.id, rightKey.id);
 }
 
-function assertProgramNiqqudAttachment(
-  value: unknown,
-  path: string,
-  scope: string
-): asserts value is ProgramNiqqudAttachment {
+function assertProgramMods(value: unknown, path: string, scope: string): void {
   assertRecord(value, path, scope);
-  assertNoUnknownKeys(value, ["mods", "unhandled", "flags"], path, scope);
+  if (Object.keys(value).length === 0) {
+    return;
+  }
 
   const rowLike: NiqqudIRRow = {
     kind: "niqqud",
@@ -696,9 +705,8 @@ function assertProgramNiqqudAttachment(
     ref_key: "dummy/0/0",
     g_index: 0,
     raw: { niqqud: [] },
-    mods: assertHas(value, "mods", path, scope) as NiqqudMods,
-    unhandled: assertHas(value, "unhandled", path, scope) as string[],
-    ...(hasOwn(value, "flags") && value.flags !== undefined ? { flags: value.flags } : {})
+    mods: value as NiqqudMods,
+    unhandled: []
   };
   assertNiqqudIRRow(rowLike, path, scope);
 }
@@ -739,23 +747,10 @@ export function assertProgramIRRecord(
   assertRecord(value, path, scope);
   const kind = assertHas(value, "kind", path, scope);
 
-  if (kind === "program_op") {
+  if (kind === "op") {
     assertNoUnknownKeys(
       value,
-      [
-        "kind",
-        "gid",
-        "ref_key",
-        "g_index",
-        "letter",
-        "op_kind",
-        "features",
-        "word",
-        "flags",
-        "source",
-        "niqqud",
-        "cantillation_events"
-      ],
+      ["kind", "gid", "ref_key", "g_index", "op_kind", "mods", "cant_attached"],
       path,
       scope
     );
@@ -781,39 +776,26 @@ export function assertProgramIRRecord(
       );
     }
 
-    assertNonEmptyString(assertHas(value, "letter", path, scope), `${path}.letter`, scope);
     assertNonEmptyString(assertHas(value, "op_kind", path, scope), `${path}.op_kind`, scope);
+    assertProgramMods(assertHas(value, "mods", path, scope), `${path}.mods`, scope);
 
-    const source = assertHas(value, "source", path, scope);
-    assertRecord(source, `${path}.source`, scope);
-    assertNoUnknownKeys(source, ["spine_digest"], `${path}.source`, scope);
-    if (!isSha256Hex(source.spine_digest)) {
-      fail(scope, `${path}.source.spine_digest`, "expected lowercase sha256 hex");
-    }
-
-    if (hasOwn(value, "niqqud") && value.niqqud !== undefined) {
-      assertProgramNiqqudAttachment(value.niqqud, `${path}.niqqud`, scope);
-    }
-
-    const cantillationEvents = assertHas(value, "cantillation_events", path, scope);
-    if (!Array.isArray(cantillationEvents)) {
-      fail(
-        scope,
-        `${path}.cantillation_events`,
-        `expected array, got ${describe(cantillationEvents)}`
-      );
-    }
-    for (let i = 0; i < cantillationEvents.length; i += 1) {
-      assertCantillationEvent(cantillationEvents[i], `${path}.cantillation_events[${i}]`, scope);
+    const cantAttached = hasOwn(value, "cant_attached") ? value.cant_attached : [];
+    if (cantAttached !== undefined) {
+      if (!Array.isArray(cantAttached)) {
+        fail(scope, `${path}.cant_attached`, `expected array, got ${describe(cantAttached)}`);
+      }
+      for (let i = 0; i < cantAttached.length; i += 1) {
+        assertCantillationEvent(cantAttached[i], `${path}.cant_attached[${i}]`, scope);
+      }
     }
 
     return;
   }
 
-  if (kind === "boundary_frame") {
+  if (kind === "boundary") {
     assertNoUnknownKeys(
       value,
-      ["kind", "gapid", "ref_key", "gap_index", "layout_events", "cantillation_events"],
+      ["kind", "gapid", "ref_key", "gap_index", "layout", "cant", "raw"],
       path,
       scope
     );
@@ -839,35 +821,34 @@ export function assertProgramIRRecord(
       );
     }
 
-    const layoutEvents = assertHas(value, "layout_events", path, scope);
-    if (!Array.isArray(layoutEvents)) {
-      fail(scope, `${path}.layout_events`, `expected array, got ${describe(layoutEvents)}`);
+    const layout = assertHas(value, "layout", path, scope);
+    if (!Array.isArray(layout)) {
+      fail(scope, `${path}.layout`, `expected array, got ${describe(layout)}`);
     }
-    for (let i = 0; i < layoutEvents.length; i += 1) {
+    for (let i = 0; i < layout.length; i += 1) {
       const layoutRecordLike: LayoutIRRecord = {
         gapid,
         ref_key,
         gap_index,
-        layout_event: layoutEvents[i] as LayoutEvent
+        layout_event: layout[i] as LayoutEvent
       };
-      assertLayoutIRRecord(layoutRecordLike, `${path}.layout_events[${i}]`, scope);
+      assertLayoutIRRecord(layoutRecordLike, `${path}.layout[${i}]`, scope);
     }
 
-    const cantillationEvents = assertHas(value, "cantillation_events", path, scope);
-    if (!Array.isArray(cantillationEvents)) {
-      fail(
-        scope,
-        `${path}.cantillation_events`,
-        `expected array, got ${describe(cantillationEvents)}`
-      );
+    const cant = assertHas(value, "cant", path, scope);
+    if (!Array.isArray(cant)) {
+      fail(scope, `${path}.cant`, `expected array, got ${describe(cant)}`);
     }
-    for (let i = 0; i < cantillationEvents.length; i += 1) {
-      assertCantillationEvent(cantillationEvents[i], `${path}.cantillation_events[${i}]`, scope);
+    for (let i = 0; i < cant.length; i += 1) {
+      assertCantillationEvent(cant[i], `${path}.cant[${i}]`, scope);
     }
+
+    const raw = assertHas(value, "raw", path, scope);
+    assertRecord(raw, `${path}.raw`, scope);
     return;
   }
 
-  fail(scope, `${path}.kind`, `expected 'program_op' | 'boundary_frame', got ${describe(kind)}`);
+  fail(scope, `${path}.kind`, `expected 'op' | 'boundary', got ${describe(kind)}`);
 }
 
 export function assertProgramIRRecords(
@@ -882,8 +863,7 @@ export function assertProgramIRRecords(
     const row = records[i];
     assertProgramIRRecord(row, `${path}[${i}]`, scope);
 
-    const key =
-      row.kind === "program_op" ? `${row.kind}\u0000${row.gid}` : `${row.kind}\u0000${row.gapid}`;
+    const key = row.kind === "op" ? `${row.kind}\u0000${row.gid}` : `${row.kind}\u0000${row.gapid}`;
     if (seen.has(key)) {
       fail(scope, `${path}[${i}]`, `duplicate program anchor '${key}'`);
     }
@@ -960,12 +940,13 @@ export function assertProgramManifest(
       "layer",
       "version",
       "contract",
+      "stitcher",
       "created_at",
-      "output_format",
       "input_digests",
       "input_row_counts",
       "counts",
-      "output_sha256"
+      "ref_ranges_by_book",
+      "output"
     ],
     path,
     scope
@@ -991,14 +972,44 @@ export function assertProgramManifest(
     fail(scope, `${path}.contract`, `expected '${expectedContract}', got ${describe(contract)}`);
   }
 
+  const stitcher = assertHas(value, "stitcher", path, scope);
+  assertRecord(stitcher, `${path}.stitcher`, scope);
+  assertNoUnknownKeys(stitcher, ["version", "config"], `${path}.stitcher`, scope);
+  const stitcherVersion = assertHas(stitcher, "version", `${path}.stitcher`, scope);
+  if (stitcherVersion !== STITCHER_VERSION) {
+    fail(
+      scope,
+      `${path}.stitcher.version`,
+      `expected '${STITCHER_VERSION}', got ${describe(stitcherVersion)}`
+    );
+  }
+  const stitcherConfig = assertHas(stitcher, "config", `${path}.stitcher`, scope);
+  assertRecord(stitcherConfig, `${path}.stitcher.config`, scope);
+  assertNoUnknownKeys(
+    stitcherConfig,
+    ["output_format", "include_letter_cantillation", "include_gap_raw"],
+    `${path}.stitcher.config`,
+    scope
+  );
+  const stitcherOutputFormat = assertHas(
+    stitcherConfig,
+    "output_format",
+    `${path}.stitcher.config`,
+    scope
+  );
+  if (stitcherOutputFormat !== "jsonl" && stitcherOutputFormat !== "json") {
+    fail(scope, `${path}.stitcher.config.output_format`, "expected 'jsonl' | 'json'");
+  }
+  if (typeof stitcherConfig.include_letter_cantillation !== "boolean") {
+    fail(scope, `${path}.stitcher.config.include_letter_cantillation`, "expected boolean");
+  }
+  if (typeof stitcherConfig.include_gap_raw !== "boolean") {
+    fail(scope, `${path}.stitcher.config.include_gap_raw`, "expected boolean");
+  }
+
   assertNonEmptyString(assertHas(value, "created_at", path, scope), `${path}.created_at`, scope);
   if (Number.isNaN(Date.parse(String(value.created_at)))) {
     fail(scope, `${path}.created_at`, "expected valid ISO date-time");
-  }
-
-  const outputFormat = assertHas(value, "output_format", path, scope);
-  if (outputFormat !== "jsonl" && outputFormat !== "json") {
-    fail(scope, `${path}.output_format`, "expected 'jsonl' | 'json'");
   }
 
   const digests = assertHas(value, "input_digests", path, scope);
@@ -1038,17 +1049,46 @@ export function assertProgramManifest(
   assertRecord(counts, `${path}.counts`, scope);
   assertNoUnknownKeys(
     counts,
-    ["program_rows", "op_rows", "boundary_rows"],
+    ["program_rows", "ops", "boundaries", "checkpoints"],
     `${path}.counts`,
     scope
   );
   assertNonNegativeInteger(counts.program_rows, `${path}.counts.program_rows`, scope);
-  assertNonNegativeInteger(counts.op_rows, `${path}.counts.op_rows`, scope);
-  assertNonNegativeInteger(counts.boundary_rows, `${path}.counts.boundary_rows`, scope);
+  assertNonNegativeInteger(counts.ops, `${path}.counts.ops`, scope);
+  assertNonNegativeInteger(counts.boundaries, `${path}.counts.boundaries`, scope);
+  assertNonNegativeInteger(counts.checkpoints, `${path}.counts.checkpoints`, scope);
 
-  const outputSha = assertHas(value, "output_sha256", path, scope);
-  if (!isSha256Hex(outputSha)) {
-    fail(scope, `${path}.output_sha256`, "expected lowercase sha256 hex");
+  if (hasOwn(value, "ref_ranges_by_book") && value.ref_ranges_by_book !== undefined) {
+    const ranges = value.ref_ranges_by_book;
+    assertRecord(ranges, `${path}.ref_ranges_by_book`, scope);
+    for (const book of Object.keys(ranges)) {
+      const entry = ranges[book];
+      assertRecord(entry, `${path}.ref_ranges_by_book.${book}`, scope);
+      assertNoUnknownKeys(
+        entry,
+        ["first_ref", "last_ref", "ops", "boundaries"],
+        `${path}.ref_ranges_by_book.${book}`,
+        scope
+      );
+      assertNonEmptyString(entry.first_ref, `${path}.ref_ranges_by_book.${book}.first_ref`, scope);
+      assertNonEmptyString(entry.last_ref, `${path}.ref_ranges_by_book.${book}.last_ref`, scope);
+      assertNonNegativeInteger(entry.ops, `${path}.ref_ranges_by_book.${book}.ops`, scope);
+      assertNonNegativeInteger(
+        entry.boundaries,
+        `${path}.ref_ranges_by_book.${book}.boundaries`,
+        scope
+      );
+    }
+  }
+
+  const output = assertHas(value, "output", path, scope);
+  assertRecord(output, `${path}.output`, scope);
+  assertNoUnknownKeys(output, ["format", "sha256"], `${path}.output`, scope);
+  if (output.format !== "jsonl" && output.format !== "json") {
+    fail(scope, `${path}.output.format`, "expected 'jsonl' | 'json'");
+  }
+  if (!isSha256Hex(output.sha256)) {
+    fail(scope, `${path}.output.sha256`, "expected lowercase sha256 hex");
   }
 }
 
@@ -1075,12 +1115,13 @@ function buildProgramRows(inputs: StitchProgramIRInputs): ProgramIRRecord[] {
   for (const spineRow of inputs.spineRecords) {
     if (spineRow.kind === "gap") {
       out.push({
-        kind: "boundary_frame",
+        kind: "boundary",
         gapid: spineRow.gapid,
         ref_key: spineRow.ref_key,
         gap_index: spineRow.gap_index,
-        layout_events: deepClone(layoutByGapid.get(spineRow.gapid) ?? []),
-        cantillation_events: deepClone(cantillationIndex.byGapid.get(spineRow.gapid) ?? [])
+        layout: deepClone(layoutByGapid.get(spineRow.gapid) ?? []),
+        cant: deepClone(cantillationIndex.byGapid.get(spineRow.gapid) ?? []),
+        raw: deepClone(spineRow.raw)
       });
       continue;
     }
@@ -1091,19 +1132,15 @@ function buildProgramRows(inputs: StitchProgramIRInputs): ProgramIRRecord[] {
     }
 
     const niqqud = niqqudByGid.get(spineRow.gid);
+    const cantAttached = deepClone(cantillationIndex.byGid.get(spineRow.gid) ?? []);
     const opRecord: ProgramIROpRecord = {
-      kind: "program_op",
+      kind: "op",
       gid: letter.gid,
       ref_key: letter.ref_key,
       g_index: letter.g_index,
-      letter: letter.letter,
       op_kind: letter.op_kind,
-      ...(letter.features ? { features: deepClone(letter.features) } : {}),
-      ...(letter.word ? { word: deepClone(letter.word) } : {}),
-      ...(letter.flags ? { flags: deepClone(letter.flags) } : {}),
-      source: deepClone(letter.source),
-      ...(niqqud ? { niqqud: deepClone(niqqud) } : {}),
-      cantillation_events: deepClone(cantillationIndex.byGid.get(spineRow.gid) ?? [])
+      mods: niqqud ? deepClone(niqqud) : {},
+      ...(cantAttached.length > 0 ? { cant_attached: cantAttached } : {})
     };
     out.push(opRecord);
     lettersByGid.delete(spineRow.gid);
@@ -1119,6 +1156,49 @@ function buildProgramRows(inputs: StitchProgramIRInputs): ProgramIRRecord[] {
   return normalized;
 }
 
+function buildRefRangesByBook(rows: readonly ProgramIRRecord[]): Record<
+  string,
+  {
+    first_ref: string;
+    last_ref: string;
+    ops: number;
+    boundaries: number;
+  }
+> {
+  const out: Record<
+    string,
+    {
+      first_ref: string;
+      last_ref: string;
+      ops: number;
+      boundaries: number;
+    }
+  > = {};
+
+  for (const row of rows) {
+    const ref = row.ref_key;
+    const book = ref.split("/")[0] ?? ref;
+    const existing = out[book];
+    if (!existing) {
+      out[book] = {
+        first_ref: ref,
+        last_ref: ref,
+        ops: row.kind === "op" ? 1 : 0,
+        boundaries: row.kind === "boundary" ? 1 : 0
+      };
+      continue;
+    }
+    existing.last_ref = ref;
+    if (row.kind === "op") {
+      existing.ops += 1;
+    } else {
+      existing.boundaries += 1;
+    }
+  }
+
+  return out;
+}
+
 function createProgramManifest(args: {
   outputFormat: ProgramIROutputFormat;
   createdAt: string;
@@ -1126,8 +1206,11 @@ function createProgramManifest(args: {
   rows: readonly ProgramIRRecord[];
   inputs: StitchProgramIRInputs;
 }): ProgramManifest {
-  const opRows = args.rows.filter((row) => row.kind === "program_op").length;
+  const opRows = args.rows.filter((row) => row.kind === "op").length;
   const boundaryRows = args.rows.length - opRows;
+  const checkpoints = Array.isArray(args.inputs.metadataPlan.checkpoints)
+    ? args.inputs.metadataPlan.checkpoints.length
+    : 0;
 
   const spineJsonl = formatSpineJsonl(args.inputs.spineRecords);
   const lettersJsonl = formatLettersIRJsonl(args.inputs.lettersRecords);
@@ -1140,8 +1223,15 @@ function createProgramManifest(args: {
     layer: PROGRAM_LAYER,
     version: PROGRAM_MANIFEST_VERSION,
     contract: `STITCHER_CONTRACT/${STITCHER_CONTRACT_VERSION}`,
+    stitcher: {
+      version: STITCHER_VERSION,
+      config: {
+        output_format: args.outputFormat,
+        include_letter_cantillation: true,
+        include_gap_raw: true
+      }
+    },
     created_at: args.createdAt,
-    output_format: args.outputFormat,
     input_digests: {
       spine_sha256: sha256Hex(spineJsonl),
       letters_ir_sha256: sha256Hex(lettersJsonl),
@@ -1159,10 +1249,15 @@ function createProgramManifest(args: {
     },
     counts: {
       program_rows: args.rows.length,
-      op_rows: opRows,
-      boundary_rows: boundaryRows
+      ops: opRows,
+      boundaries: boundaryRows,
+      checkpoints
     },
-    output_sha256: args.outputSha256
+    ref_ranges_by_book: buildRefRangesByBook(args.rows),
+    output: {
+      format: args.outputFormat,
+      sha256: args.outputSha256
+    }
   };
 }
 

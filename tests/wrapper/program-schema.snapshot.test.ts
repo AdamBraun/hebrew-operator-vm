@@ -36,9 +36,12 @@ describe("program schema stitcher snapshot fixture", () => {
     expect(runA.manifest.created_at).toBe(CREATED_AT);
     expect(runA.manifest.counts).toEqual({
       program_rows: 5,
-      op_rows: 2,
-      boundary_rows: 3
+      ops: 2,
+      boundaries: 3,
+      checkpoints: 1
     });
-    expect(runA.manifest.output_sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(runA.manifest.output.sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(runA.rows[0]?.kind).toBe("boundary");
+    expect(runA.rows[1]?.kind).toBe("op");
   });
 });
