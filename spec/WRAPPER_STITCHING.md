@@ -8,7 +8,7 @@ Wrapper stitching consumes:
 
 - Spine gap stream (`gapid`, `ref_key`, `gap_index` order authority)
 - LayoutIR stream (authoritative layout signal product)
-- Cantillation gap-event stream (optional, orthogonal boundary signal)
+- CantillationIR stream (optional, orthogonal boundary signal)
 
 Layout production details are out of scope for wrapper stitching.
 
@@ -22,6 +22,28 @@ For each spine gap in canonical order, wrapper emits one boundary frame containi
 - `zero or more` cantillation events (cantillation rows for the same `gapid`)
 
 Wrapper must not mutate or reinterpret layout event strength/type while stitching.
+
+## Cantillation Join
+
+Wrapper consumes CantillationIR in a layer-orthogonal way, indexed by anchor:
+
+1. Build deterministic event indexes:
+   - `eventsByGid: Map<gid, CantEvent[]>`
+   - `eventsByGap: Map<gapid, CantEvent[]>`
+2. For ProgramIR assembly:
+   - attach `eventsByGid.get(op.gid)` to each op record,
+   - attach `eventsByGap.get(frame.gapid)` to each boundary frame.
+3. Apply wrapper cantillation policy:
+   - normalize explicit sof-pasuk boundary signal to `BOUNDARY CUT(rank=3)` when not already encoded that way,
+   - optionally derive boundary placements from grapheme disjunctive trope marks when wrapper policy owns placement.
+4. Maintain deterministic collisions:
+   - when multiple events share the same anchor, order events with stable cantillation event ordering before attach.
+
+Notes:
+
+- Wrapper may keep disjunctive `TROPE_MARK` as grapheme-local metadata only.
+- If wrapper enables trope-to-boundary placement, placement policy must be deterministic and Spine-based.
+- Synthetic end-of-ref placement targets (for example `#ref_end_gap`) are wrapper-policy artifacts, not layer anchors.
 
 ## Layout Authority Rule
 
