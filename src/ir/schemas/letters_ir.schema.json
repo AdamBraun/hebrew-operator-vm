@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "src/ir/schemas/letters_ir.schema.json",
+  "title": "LettersIRRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "gid", "ref_key", "g_index", "letter", "op_kind", "source"],
+  "properties": {
+    "kind": { "const": "letter_ir" },
+    "gid": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^.+#g:[0-9]+$"
+    },
+    "ref_key": { "type": "string", "minLength": 1 },
+    "g_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "letter": {
+      "type": "string",
+      "pattern": "^[\\u05D0-\\u05EA]$"
+    },
+    "op_kind": {
+      "type": "string",
+      "minLength": 1
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "word": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "index_in_word"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index_in_word": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "flags": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ignored": { "type": "boolean" },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spine_digest"],
+      "properties": {
+        "spine_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

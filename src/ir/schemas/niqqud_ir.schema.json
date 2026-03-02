@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "src/ir/schemas/niqqud_ir.schema.json",
+  "title": "NiqqudIRRow",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "version", "gid", "ref_key", "g_index", "raw", "mods", "unhandled"],
+  "properties": {
+    "kind": { "const": "niqqud" },
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "gid": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^.+#g:[0-9]+$"
+    },
+    "ref_key": { "type": "string", "minLength": 1 },
+    "g_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "raw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["niqqud"],
+      "properties": {
+        "niqqud": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "mods": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classes", "features"],
+      "properties": {
+        "classes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "features": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }]
+          }
+        },
+        "tierHints": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "rosh": { "type": "boolean" },
+            "toch": { "type": "boolean" },
+            "sof": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "unhandled": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "flags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["empty", "ambiguous"],
+      "properties": {
+        "empty": { "type": "boolean" },
+        "ambiguous": { "type": "boolean" },
+        "normalized_from": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

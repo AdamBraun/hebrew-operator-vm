@@ -1,0 +1,290 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "src/ir/schemas/program_ir.schema.json",
+  "title": "ProgramIRRecord",
+  "definitions": {
+    "cantillation_event": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "mark", "class", "rank"],
+          "properties": {
+            "type": { "const": "TROPE_MARK" },
+            "mark": { "type": "string", "minLength": 1 },
+            "class": {
+              "type": "string",
+              "enum": ["DISJ", "CONJ"]
+            },
+            "rank": {
+              "oneOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "codepoint", "rank"],
+          "properties": {
+            "type": { "const": "UNKNOWN_MARK" },
+            "codepoint": {
+              "type": "string",
+              "pattern": "^U\\+[0-9A-F]{4,6}$"
+            },
+            "rank": { "type": "null" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "op", "rank", "reason"],
+          "properties": {
+            "type": { "const": "BOUNDARY" },
+            "op": {
+              "type": "string",
+              "enum": ["CUT", "CONJ"]
+            },
+            "rank": { "type": "integer", "minimum": 0 },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "layout_event": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "strength", "source"],
+          "properties": {
+            "type": { "const": "SPACE" },
+            "strength": { "const": "weak" },
+            "source": { "const": "spine_whitespace" },
+            "meta": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "strength", "source"],
+          "properties": {
+            "type": { "const": "SETUMA" },
+            "strength": { "const": "mid" },
+            "source": { "const": "dataset" },
+            "meta": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "strength", "source"],
+          "properties": {
+            "type": { "const": "PETUCHA" },
+            "strength": { "const": "strong" },
+            "source": { "const": "dataset" },
+            "meta": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "strength", "source"],
+          "properties": {
+            "type": { "const": "BOOK_BREAK" },
+            "strength": { "const": "max" },
+            "source": { "const": "dataset" },
+            "meta": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "niqqud_attachment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mods", "unhandled"],
+      "properties": {
+        "mods": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["classes", "features"],
+          "properties": {
+            "classes": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "features": {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }]
+              }
+            },
+            "tierHints": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "rosh": { "type": "boolean" },
+                "toch": { "type": "boolean" },
+                "sof": { "type": "boolean" }
+              }
+            }
+          }
+        },
+        "unhandled": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "flags": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["empty", "ambiguous"],
+          "properties": {
+            "empty": { "type": "boolean" },
+            "ambiguous": { "type": "boolean" },
+            "normalized_from": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "gid",
+        "ref_key",
+        "g_index",
+        "letter",
+        "op_kind",
+        "source",
+        "cantillation_events"
+      ],
+      "properties": {
+        "kind": { "const": "program_op" },
+        "gid": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^.+#g:[0-9]+$"
+        },
+        "ref_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "g_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "letter": {
+          "type": "string",
+          "pattern": "^[\\u05D0-\\u05EA]$"
+        },
+        "op_kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "features": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "word": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "index_in_word"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "index_in_word": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "flags": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ignored": { "type": "boolean" },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["spine_digest"],
+          "properties": {
+            "spine_digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "niqqud": {
+          "$ref": "#/definitions/niqqud_attachment"
+        },
+        "cantillation_events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cantillation_event"
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "gapid", "ref_key", "gap_index", "layout_events", "cantillation_events"],
+      "properties": {
+        "kind": { "const": "boundary_frame" },
+        "gapid": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^.+#gap:[0-9]+$"
+        },
+        "ref_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "gap_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "layout_events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/layout_event"
+          }
+        },
+        "cantillation_events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cantillation_event"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "src/ir/schemas/cantillation_ir.schema.json",
+  "title": "CantillationIRRecord",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "anchor", "ref_key", "event", "raw"],
+      "properties": {
+        "kind": { "const": "cant_event" },
+        "anchor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id"],
+          "properties": {
+            "kind": { "const": "gid" },
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^.+#g:[0-9]+$"
+            }
+          }
+        },
+        "ref_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "event": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "mark", "class", "rank"],
+              "properties": {
+                "type": { "const": "TROPE_MARK" },
+                "mark": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "class": {
+                  "type": "string",
+                  "enum": ["DISJ", "CONJ"]
+                },
+                "rank": {
+                  "oneOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "codepoint", "rank"],
+              "properties": {
+                "type": { "const": "UNKNOWN_MARK" },
+                "codepoint": {
+                  "type": "string",
+                  "pattern": "^U\\+[0-9A-F]{4,6}$"
+                },
+                "rank": { "type": "null" }
+              }
+            }
+          ]
+        },
+        "raw": {
+          "type": "object",
+          "required": ["teamim"],
+          "properties": {
+            "teamim": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "anchor", "ref_key", "event", "raw"],
+      "properties": {
+        "kind": { "const": "cant_event" },
+        "anchor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id"],
+          "properties": {
+            "kind": { "const": "gap" },
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^.+#gap:[0-9]+$"
+            }
+          }
+        },
+        "ref_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "event": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "op", "rank", "reason"],
+          "properties": {
+            "type": { "const": "BOUNDARY" },
+            "op": {
+              "type": "string",
+              "enum": ["CUT", "CONJ"]
+            },
+            "rank": { "type": "integer", "minimum": 0 },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "raw": {
+          "type": "object",
+          "required": ["source"],
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": true
+        }
+      }
+    }
+  ]
+}
