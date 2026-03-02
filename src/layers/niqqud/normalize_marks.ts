@@ -1,47 +1,12 @@
+import { NIQQUD_CLASS_ORDER, type NiqqudClass } from "./classes";
+import { RAW_NIQQUD_TO_CLASS } from "./map";
+
 export type NiqqudNormalizationResult = {
-  normalized: string[];
+  normalized: NiqqudClass[];
   unhandled: string[];
 };
 
-export const RAW_NIQQUD_MARK_TO_CLASS: Readonly<Record<string, string>> = {
-  "\u05B0": "SHVA",
-  "\u05B1": "HATAF_SEGOL",
-  "\u05B2": "HATAF_PATAH",
-  "\u05B3": "HATAF_QAMATS",
-  "\u05B4": "HIRIQ",
-  "\u05B5": "TSERE",
-  "\u05B6": "SEGOL",
-  "\u05B7": "PATAH",
-  "\u05B8": "QAMATS",
-  "\u05B9": "HOLAM",
-  "\u05BA": "HOLAM",
-  "\u05BB": "QUBUTS",
-  "\u05BC": "DAGESH_OR_MAPIQ",
-  "\u05BF": "RAFE",
-  "\u05C1": "SHIN_DOT_RIGHT",
-  "\u05C2": "SHIN_DOT_LEFT",
-  "\u05C7": "QAMATS"
-};
-
-export const NIQQUD_CLASS_ORDER: readonly string[] = [
-  "SHVA",
-  "HATAF_SEGOL",
-  "HATAF_PATAH",
-  "HATAF_QAMATS",
-  "HIRIQ",
-  "TSERE",
-  "SEGOL",
-  "PATAH",
-  "QAMATS",
-  "HOLAM",
-  "QUBUTS",
-  "DAGESH_OR_MAPIQ",
-  "RAFE",
-  "SHIN_DOT_RIGHT",
-  "SHIN_DOT_LEFT"
-] as const;
-
-const CLASS_ORDER_INDEX = new Map<string, number>(
+const CLASS_ORDER_INDEX = new Map<NiqqudClass, number>(
   NIQQUD_CLASS_ORDER.map((entry, index) => [entry, index])
 );
 
@@ -88,7 +53,7 @@ function compareByCodePoint(left: string, right: string): number {
   return compareText(left, right);
 }
 
-function compareClass(left: string, right: string): number {
+function compareClass(left: NiqqudClass, right: NiqqudClass): number {
   const l = CLASS_ORDER_INDEX.get(left);
   const r = CLASS_ORDER_INDEX.get(right);
 
@@ -105,7 +70,7 @@ function compareClass(left: string, right: string): number {
 }
 
 export function normalizeNiqqudMarks(raw: string[]): NiqqudNormalizationResult {
-  const normalizedSet = new Set<string>();
+  const normalizedSet = new Set<NiqqudClass>();
   const unhandledSet = new Set<string>();
 
   for (const mark of raw) {
@@ -116,7 +81,7 @@ export function normalizeNiqqudMarks(raw: string[]): NiqqudNormalizationResult {
       continue;
     }
 
-    const mapped = RAW_NIQQUD_MARK_TO_CLASS[mark];
+    const mapped = RAW_NIQQUD_TO_CLASS[mark];
     if (mapped) {
       normalizedSet.add(mapped);
       continue;

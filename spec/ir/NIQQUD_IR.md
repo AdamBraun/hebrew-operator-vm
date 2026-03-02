@@ -52,6 +52,7 @@ Each JSONL line is one `NiqqudIRRow` keyed by grapheme anchor `gid`.
 
 ## `NiqqudMods` Contract
 
+- Class vocabulary and raw mark mapping are defined in [NIQQUD_CLASSES.md](./NIQQUD_CLASSES.md).
 - `classes: string[]` stable mark classes (implementation vocabulary).
 - `features: Record<string, number | boolean | string>` low-level stable features.
 - `tierHints?: { rosh?: boolean; toch?: boolean; sof?: boolean }` optional tier hints.
