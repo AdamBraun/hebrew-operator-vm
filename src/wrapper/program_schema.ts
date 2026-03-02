@@ -2,7 +2,6 @@ import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import {
   assertCantillationIRRecords,
-  compareCantillationEvents,
   compareCantillationIRRecords,
   formatCantillationIRJsonl,
   parseCantillationIRJsonl,
@@ -36,6 +35,7 @@ import {
   type NiqqudMods
 } from "../layers/niqqud/schema";
 import { assertSpineRecord, type SpineRecord } from "../spine/schema";
+import { stitchProgramRowsFromFiles } from "./stitch/stitch";
 
 export const PROGRAM_LAYER = "program";
 export const PROGRAM_IR_VERSION = 1;
@@ -192,6 +192,12 @@ const LAYOUT_EVENT_TYPE_ORDER: Readonly<Record<LayoutEvent["type"], number>> = {
   SETUMA: 1,
   PETUCHA: 2,
   BOOK_BREAK: 3
+};
+
+const CANT_EVENT_TYPE_ORDER: Readonly<Record<CantillationEvent["type"], number>> = {
+  TROPE_MARK: 0,
+  UNKNOWN_MARK: 1,
+  BOUNDARY: 2
 };
 
 function compareText(left: string, right: string): number {
@@ -628,13 +634,66 @@ function indexCantillation(records: readonly CantillationIRRecord[]): {
   }
 
   for (const [key, events] of byGid.entries()) {
-    byGid.set(key, [...events].sort(compareCantillationEvents));
+    byGid.set(key, [...events].sort(compareCantillationEventsForJoin));
   }
   for (const [key, events] of byGapid.entries()) {
-    byGapid.set(key, [...events].sort(compareCantillationEvents));
+    byGapid.set(key, [...events].sort(compareCantillationEventsForJoin));
   }
 
   return { byGid, byGapid };
+}
+
+function rankValue(value: unknown): number | null | undefined {
+  if (!isRecord(value) || !hasOwn(value, "rank")) {
+    return undefined;
+  }
+  const rank = value.rank;
+  if (rank === null) {
+    return null;
+  }
+  if (typeof rank === "number" && Number.isFinite(rank)) {
+    return rank;
+  }
+  return undefined;
+}
+
+function compareOptionalRank(
+  left: number | null | undefined,
+  right: number | null | undefined
+): number {
+  if (left === right) {
+    return 0;
+  }
+  if (left === undefined) {
+    return 1;
+  }
+  if (right === undefined) {
+    return -1;
+  }
+  if (left === null) {
+    return -1;
+  }
+  if (right === null) {
+    return 1;
+  }
+  return left - right;
+}
+
+function compareCantillationEventsForJoin(
+  left: CantillationEvent,
+  right: CantillationEvent
+): number {
+  const leftTypeRank = CANT_EVENT_TYPE_ORDER[left.type];
+  const rightTypeRank = CANT_EVENT_TYPE_ORDER[right.type];
+  if (leftTypeRank !== rightTypeRank) {
+    return leftTypeRank - rightTypeRank;
+  }
+
+  const rankCmp = compareOptionalRank(rankValue(left), rankValue(right));
+  if (rankCmp !== 0) {
+    return rankCmp;
+  }
+  return compareText(canonicalStringify(left), canonicalStringify(right));
 }
 
 function compareLayoutEvents(left: LayoutEvent, right: LayoutEvent): number {
@@ -643,7 +702,12 @@ function compareLayoutEvents(left: LayoutEvent, right: LayoutEvent): number {
   if (leftRank !== rightRank) {
     return leftRank - rightRank;
   }
-  return compareText(canonicalStringify(left.meta), canonicalStringify(right.meta));
+
+  const rankCmp = compareOptionalRank(rankValue(left), rankValue(right));
+  if (rankCmp !== 0) {
+    return rankCmp;
+  }
+  return compareText(canonicalStringify(left), canonicalStringify(right));
 }
 
 function indexLayout(records: readonly LayoutIRRecord[]): Map<string, LayoutEvent[]> {
@@ -1128,7 +1192,7 @@ function buildProgramRows(inputs: StitchProgramIRInputs): ProgramIRRecord[] {
 
     const letter = lettersByGid.get(spineRow.gid);
     if (!letter) {
-      continue;
+      throw new Error(`stitcher: missing LettersIR record for gid '${spineRow.gid}'`);
     }
 
     const niqqud = niqqudByGid.get(spineRow.gid);
@@ -1292,15 +1356,32 @@ export function stitchProgramIR(args: StitchProgramIRArgs): StitchProgramIRResul
 export async function stitchProgramIRFromFiles(
   args: StitchProgramIRFromFilesArgs
 ): Promise<StitchProgramIRResult> {
-  const [spineText, lettersText, niqqudText, cantillationText, layoutText, metadataPlanText] =
-    await Promise.all([
-      fs.readFile(args.spinePath, "utf8"),
-      fs.readFile(args.lettersIrPath, "utf8"),
-      fs.readFile(args.niqqudIrPath, "utf8"),
-      fs.readFile(args.cantillationIrPath, "utf8"),
-      fs.readFile(args.layoutIrPath, "utf8"),
-      fs.readFile(args.metadataPlanPath, "utf8")
-    ]);
+  const outputFormat = args.outputFormat ?? "jsonl";
+  const createdAt = normalizeCreatedAt(args.createdAt);
+  const [
+    stitched,
+    spineText,
+    lettersText,
+    niqqudText,
+    cantillationText,
+    layoutText,
+    metadataPlanText
+  ] = await Promise.all([
+    stitchProgramRowsFromFiles({
+      spinePath: args.spinePath,
+      lettersIrPath: args.lettersIrPath,
+      niqqudIrPath: args.niqqudIrPath,
+      cantillationIrPath: args.cantillationIrPath,
+      layoutIrPath: args.layoutIrPath,
+      metadataPlanPath: args.metadataPlanPath
+    }),
+    fs.readFile(args.spinePath, "utf8"),
+    fs.readFile(args.lettersIrPath, "utf8"),
+    fs.readFile(args.niqqudIrPath, "utf8"),
+    fs.readFile(args.cantillationIrPath, "utf8"),
+    fs.readFile(args.layoutIrPath, "utf8"),
+    fs.readFile(args.metadataPlanPath, "utf8")
+  ]);
 
   const spineRecords = parseSpineJsonl(spineText);
   const lettersRecords = parseLettersIRJsonl(lettersText);
@@ -1308,17 +1389,39 @@ export async function stitchProgramIRFromFiles(
   const cantillationRecords = parseCantillationIRJsonl(cantillationText);
   const layoutRecords = parseLayoutIRJsonl(layoutText);
   const metadataPlan = parseMetadataPlanJson(metadataPlanText);
-
-  return stitchProgramIR({
+  const normalizedInputs = normalizeInputs({
     spineRecords,
     lettersRecords,
     niqqudRows,
     cantillationRecords,
     layoutRecords,
-    metadataPlan,
-    ...(args.outputFormat ? { outputFormat: args.outputFormat } : {}),
-    ...(args.createdAt ? { createdAt: args.createdAt } : {})
+    metadataPlan
   });
+
+  const rows = [...stitched.rows];
+  assertProgramIRRecords(rows);
+
+  const programIrJsonl = formatProgramIRJsonl(rows);
+  const programIrJson = formatProgramIRJson(rows);
+  const programIrText = outputFormat === "json" ? programIrJson : programIrJsonl;
+
+  const manifest = createProgramManifest({
+    outputFormat,
+    createdAt,
+    outputSha256: sha256Hex(programIrText),
+    rows,
+    inputs: normalizedInputs
+  });
+  const manifestText = formatProgramManifest(manifest);
+
+  return {
+    rows,
+    programIrJsonl,
+    programIrJson,
+    programIrText,
+    manifest,
+    manifestText
+  };
 }
 
 export async function writeProgramIRJsonl(
