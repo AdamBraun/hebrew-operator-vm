@@ -48,6 +48,20 @@ describe("cantillation ir schema", () => {
       }
     };
 
+    const unknownRow: CantillationIRRecord = {
+      kind: "cant_event",
+      anchor: { kind: "gid", id: "Genesis/1/1#g:4" },
+      ref_key: "Genesis/1/1",
+      event: {
+        type: "UNKNOWN_MARK",
+        codepoint: "U+05AD",
+        rank: null
+      },
+      raw: {
+        teamim: ["\u05AD"]
+      }
+    };
+
     const gapRow: CantillationIRRecord = {
       kind: "cant_event",
       anchor: { kind: "gap", id: "Genesis/1/1#gap:4" },
@@ -64,6 +78,7 @@ describe("cantillation ir schema", () => {
     };
 
     expect(() => assertCantillationIRRecord(gidRow)).not.toThrow();
+    expect(() => assertCantillationIRRecord(unknownRow)).not.toThrow();
     expect(() => assertCantillationIRRecord(gapRow)).not.toThrow();
   });
 
@@ -76,7 +91,7 @@ describe("cantillation ir schema", () => {
         type: "TROPE_MARK",
         mark: "MERKHA",
         class: "CONJ",
-        rank: 1
+        rank: null
       },
       raw: {
         teamim: ["\u05A5"]
@@ -95,7 +110,7 @@ describe("cantillation ir schema", () => {
         type: "TROPE_MARK",
         mark: "MERKHA",
         class: "CONJ",
-        rank: 1
+        rank: null
       },
       raw: {
         teamim: ["\u05A5", "\u0595"]
@@ -129,7 +144,7 @@ describe("cantillation ir schema", () => {
           type: "TROPE_MARK",
           mark: "MERKHA",
           class: "CONJ",
-          rank: 1
+          rank: null
         },
         raw: {
           teamim: ["\u05A5", "\u0595"]
@@ -141,9 +156,9 @@ describe("cantillation ir schema", () => {
     const parsed = parseCantillationIRJsonl(jsonl);
 
     expect(parsed).toHaveLength(2);
-    expect(parsed[0]?.anchor.kind).toBe("gid");
-    expect(parsed[0]?.raw.teamim).toEqual(["\u0595", "\u05A5"]);
-    expect(parsed[1]?.anchor.kind).toBe("gap");
+    expect(parsed[0]?.anchor.kind).toBe("gap");
+    expect(parsed[1]?.anchor.kind).toBe("gid");
+    expect(parsed[1]?.raw.teamim).toEqual(["\u0595", "\u05A5"]);
 
     const permuted = formatCantillationIRJsonl([...rows].reverse());
     expect(permuted).toBe(jsonl);
@@ -160,7 +175,7 @@ describe("cantillation ir schema", () => {
           type: "TROPE_MARK",
           mark: "MUNACH",
           class: "CONJ",
-          rank: 1
+          rank: null
         },
         raw: {
           teamim: []
@@ -220,7 +235,7 @@ describe("cantillation ir schema", () => {
           type: "TROPE_MARK",
           mark: "MUNACH",
           class: "CONJ",
-          rank: 1
+          rank: null
         },
         raw: {
           teamim: ["\u0595"]

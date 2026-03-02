@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { computeCantillationCodeHash, extractCantillationIR } from "../layers/cantillation/extract";
 import { emitLettersFromSpine } from "../layers/letters/extract";
 import { computeLettersDigest, computeLettersLayerCodeFingerprint } from "../layers/letters/hash";
 import { LETTERS_IR_VERSION } from "../layers/letters/schema";
@@ -33,7 +34,23 @@ type BuildLettersCliOptions = {
   lettersCodeFingerprintOverride?: string;
 };
 
-type BuildLayerCliOptions = BuildLayoutCliOptions | BuildLettersCliOptions;
+type BuildCantillationCliOptions = {
+  layer: "cantillation";
+  spinePath: string;
+  outArg: string;
+  force: boolean;
+  strict: boolean;
+  emitUnknown: boolean;
+  sofPasukRank: number;
+  dumpStats: boolean;
+  spineDigestOverride?: string;
+  cantillationCodeHashOverride?: string;
+};
+
+type BuildLayerCliOptions =
+  | BuildLayoutCliOptions
+  | BuildLettersCliOptions
+  | BuildCantillationCliOptions;
 
 export type BuildLayoutCliResult = {
   layer: "layout";
@@ -57,7 +74,22 @@ export type BuildLettersCliResult = {
   aliasPath: string;
 };
 
-export type BuildLayerCliResult = BuildLayoutCliResult | BuildLettersCliResult;
+export type BuildCantillationCliResult = {
+  layer: "cantillation";
+  digest: string;
+  cacheHit: boolean;
+  forced: boolean;
+  outputDir: string;
+  manifestPath: string;
+  cantillationIrPath: string;
+  statsPath?: string;
+  aliasPath: string;
+};
+
+export type BuildLayerCliResult =
+  | BuildLayoutCliResult
+  | BuildLettersCliResult
+  | BuildCantillationCliResult;
 
 const SHA256_HEX = /^[a-f0-9]{64}$/;
 
@@ -120,22 +152,30 @@ function printHelp(): void {
   console.log(
     "  node src/cli/build-layer.ts --layer letters --spine <spine.jsonl|spine_dir|spine_manifest.json> --out <outputs|outputs/cache/letters>"
   );
+  console.log(
+    "  node src/cli/build-layer.ts --layer cantillation --spine <spine.jsonl|spine_dir|spine_manifest.json> --out <outputs|outputs/cache/cantillation>"
+  );
   console.log("");
   console.log("Options:");
-  console.log("  --layer=layout|letters");
+  console.log("  --layer=layout|letters|cantillation");
   console.log("  --spine=path");
   console.log("  --dataset=path (required for layout)");
   console.log("  --out=path (defaults to outputs/cache/<layer>)");
   console.log("  --spine-digest=<sha256>");
   console.log("  --layout-code-digest=<sha256> (layout only)");
   console.log("  --letters-code-fingerprint=<string> (letters only)");
+  console.log("  --cantillation-code-hash=<sha256> (cantillation only)");
   console.log("  --include-word-segmentation=true|false (letters only, default true)");
   console.log("  --strict-letters=true|false (letters only, default false)");
+  console.log("  --strict=true|false (cantillation only, default false)");
+  console.log("  --emit-unknown=true|false (cantillation only, default false)");
+  console.log("  --sof-pasuk-rank=<int> (cantillation only, default 3)");
+  console.log("  --dump-stats=true|false (cantillation only, default false)");
   console.log("  --force");
 }
 
 export function parseArgs(argv: string[]): BuildLayerCliOptions {
-  let layer: "layout" | "letters" | null = null;
+  let layer: "layout" | "letters" | "cantillation" | null = null;
   let spinePath: string | null = null;
   let datasetPath: string | null = null;
   let outArg: string | null = null;
@@ -143,8 +183,13 @@ export function parseArgs(argv: string[]): BuildLayerCliOptions {
   let spineDigestOverride: string | undefined;
   let layoutLayerCodeDigestOverride: string | undefined;
   let lettersCodeFingerprintOverride: string | undefined;
+  let cantillationCodeHashOverride: string | undefined;
   let includeWordSegmentation = true;
   let strictLetters = false;
+  let strict = false;
+  let emitUnknown = false;
+  let sofPasukRank = 3;
+  let dumpStats = false;
 
   for (let i = 0; i < argv.length; ) {
     const arg = argv[i] ?? "";
@@ -177,12 +222,46 @@ export function parseArgs(argv: string[]): BuildLayerCliOptions {
       i += 1;
       continue;
     }
+    if (arg === "--strict") {
+      strict = true;
+      i += 1;
+      continue;
+    }
+    if (arg === "--no-strict") {
+      strict = false;
+      i += 1;
+      continue;
+    }
+    if (arg === "--emit-unknown") {
+      emitUnknown = true;
+      i += 1;
+      continue;
+    }
+    if (arg === "--no-emit-unknown") {
+      emitUnknown = false;
+      i += 1;
+      continue;
+    }
+    if (arg === "--dump-stats") {
+      dumpStats = true;
+      i += 1;
+      continue;
+    }
+    if (arg === "--no-dump-stats") {
+      dumpStats = false;
+      i += 1;
+      continue;
+    }
 
     const layerOpt = readOptionValue(argv, i, "--layer");
     if (layerOpt) {
-      if (layerOpt.value !== "layout" && layerOpt.value !== "letters") {
+      if (
+        layerOpt.value !== "layout" &&
+        layerOpt.value !== "letters" &&
+        layerOpt.value !== "cantillation"
+      ) {
         throw new Error(
-          `Unsupported layer '${layerOpt.value}'. Currently supported: layout, letters`
+          `Unsupported layer '${layerOpt.value}'. Currently supported: layout, letters, cantillation`
         );
       }
       layer = layerOpt.value;
@@ -225,6 +304,12 @@ export function parseArgs(argv: string[]): BuildLayerCliOptions {
       i = lettersCodeFingerprintOpt.next;
       continue;
     }
+    const cantillationCodeHashOpt = readOptionValue(argv, i, "--cantillation-code-hash");
+    if (cantillationCodeHashOpt) {
+      cantillationCodeHashOverride = cantillationCodeHashOpt.value;
+      i = cantillationCodeHashOpt.next;
+      continue;
+    }
     const includeWordOpt = readOptionValue(argv, i, "--include-word-segmentation");
     if (includeWordOpt) {
       includeWordSegmentation = asBoolean(includeWordOpt.value, "--include-word-segmentation");
@@ -235,6 +320,33 @@ export function parseArgs(argv: string[]): BuildLayerCliOptions {
     if (strictLettersOpt) {
       strictLetters = asBoolean(strictLettersOpt.value, "--strict-letters");
       i = strictLettersOpt.next;
+      continue;
+    }
+    const strictOpt = readOptionValue(argv, i, "--strict");
+    if (strictOpt) {
+      strict = asBoolean(strictOpt.value, "--strict");
+      i = strictOpt.next;
+      continue;
+    }
+    const emitUnknownOpt = readOptionValue(argv, i, "--emit-unknown");
+    if (emitUnknownOpt) {
+      emitUnknown = asBoolean(emitUnknownOpt.value, "--emit-unknown");
+      i = emitUnknownOpt.next;
+      continue;
+    }
+    const sofPasukRankOpt = readOptionValue(argv, i, "--sof-pasuk-rank");
+    if (sofPasukRankOpt) {
+      sofPasukRank = Number(sofPasukRankOpt.value);
+      if (!Number.isInteger(sofPasukRank) || sofPasukRank < 1) {
+        throw new Error("build-layer: --sof-pasuk-rank must be integer >= 1");
+      }
+      i = sofPasukRankOpt.next;
+      continue;
+    }
+    const dumpStatsOpt = readOptionValue(argv, i, "--dump-stats");
+    if (dumpStatsOpt) {
+      dumpStats = asBoolean(dumpStatsOpt.value, "--dump-stats");
+      i = dumpStatsOpt.next;
       continue;
     }
     const forceOpt = readOptionValue(argv, i, "--force");
@@ -248,7 +360,7 @@ export function parseArgs(argv: string[]): BuildLayerCliOptions {
   }
 
   if (!layer) {
-    throw new Error("Missing required --layer (must be layout|letters)");
+    throw new Error("Missing required --layer (must be layout|letters|cantillation)");
   }
   if (!spinePath) {
     throw new Error("Missing required --spine");
@@ -277,19 +389,38 @@ export function parseArgs(argv: string[]): BuildLayerCliOptions {
     };
   }
 
-  if (lettersCodeFingerprintOverride !== undefined) {
-    assertNonEmptyString(lettersCodeFingerprintOverride, "lettersCodeFingerprint");
+  if (layer === "letters") {
+    if (lettersCodeFingerprintOverride !== undefined) {
+      assertNonEmptyString(lettersCodeFingerprintOverride, "lettersCodeFingerprint");
+    }
+
+    return {
+      layer,
+      spinePath,
+      outArg: resolvedOutArg,
+      force,
+      includeWordSegmentation,
+      strictLetters,
+      spineDigestOverride,
+      lettersCodeFingerprintOverride
+    };
+  }
+
+  if (cantillationCodeHashOverride !== undefined) {
+    assertSha256Hex(cantillationCodeHashOverride, "cantillationCodeHash");
   }
 
   return {
-    layer,
+    layer: "cantillation",
     spinePath,
     outArg: resolvedOutArg,
     force,
-    includeWordSegmentation,
-    strictLetters,
+    strict,
+    emitUnknown,
+    sofPasukRank,
+    dumpStats,
     spineDigestOverride,
-    lettersCodeFingerprintOverride
+    cantillationCodeHashOverride
   };
 }
 
@@ -388,7 +519,7 @@ async function resolveSpineDigest(args: {
 
 function resolveOutputRoots(
   outArg: string,
-  layer: "layout" | "letters"
+  layer: "layout" | "letters" | "cantillation"
 ): { outRoot: string; cacheDir: string } {
   const resolved = path.resolve(outArg);
   const parts = resolved.split(path.sep).filter((segment) => segment.length > 0);
@@ -468,6 +599,47 @@ async function writeLettersAliasFile(args: {
   return latestAliasPath;
 }
 
+async function writeCantillationAliasFile(args: {
+  outRoot: string;
+  digest: string;
+  cacheHit: boolean;
+  forced: boolean;
+  manifestPath: string;
+  cantillationIrPath: string;
+  statsPath?: string;
+}): Promise<string> {
+  const runAliasPath = path.join(
+    args.outRoot,
+    "runs",
+    args.digest,
+    "manifests",
+    "cantillation.json"
+  );
+  const latestAliasPath = path.join(
+    args.outRoot,
+    "runs",
+    "latest",
+    "manifests",
+    "cantillation.json"
+  );
+  const payload = {
+    layer: "cantillation",
+    run: args.digest,
+    digest: args.digest,
+    cache_hit: args.cacheHit,
+    forced: args.forced,
+    manifest_path: args.manifestPath,
+    cantillation_ir_jsonl_path: args.cantillationIrPath,
+    ...(args.statsPath ? { stats_path: args.statsPath } : {}),
+    updated_at: new Date().toISOString()
+  };
+  await fs.mkdir(path.dirname(runAliasPath), { recursive: true });
+  await fs.writeFile(runAliasPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  await fs.mkdir(path.dirname(latestAliasPath), { recursive: true });
+  await fs.writeFile(latestAliasPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  return latestAliasPath;
+}
+
 export async function runBuildLayer(
   rawArgv: string[] = process.argv.slice(2)
 ): Promise<BuildLayerCliResult> {
@@ -534,6 +706,43 @@ export async function runBuildLayer(
       outputDir: emitted.outputDir,
       manifestPath: emitted.manifestPath,
       layoutIrPath: emitted.layoutIrPath,
+      aliasPath
+    };
+  }
+
+  if (parsed.layer === "cantillation") {
+    const codeHash = parsed.cantillationCodeHashOverride ?? (await computeCantillationCodeHash());
+    const { outRoot, cacheDir } = resolveOutputRoots(parsed.outArg, "cantillation");
+    const emitted = await extractCantillationIR(spineJsonlPath, cacheDir, {
+      strict: parsed.strict,
+      emitUnknown: parsed.emitUnknown,
+      sofPasukRank: parsed.sofPasukRank,
+      dumpStats: parsed.dumpStats,
+      force: parsed.force,
+      spineManifestPath: resolvedSpine.spineManifestPath,
+      spineDigestOverride: spineDigest,
+      codeHashOverride: codeHash
+    });
+
+    const aliasPath = await writeCantillationAliasFile({
+      outRoot,
+      digest: emitted.digest,
+      cacheHit: emitted.cacheHit,
+      forced: emitted.forced,
+      manifestPath: emitted.manifestPath,
+      cantillationIrPath: emitted.cantillationIrPath,
+      ...(emitted.statsPath ? { statsPath: emitted.statsPath } : {})
+    });
+
+    return {
+      layer: "cantillation",
+      digest: emitted.digest,
+      cacheHit: emitted.cacheHit,
+      forced: emitted.forced,
+      outputDir: emitted.outputDir,
+      manifestPath: emitted.manifestPath,
+      cantillationIrPath: emitted.cantillationIrPath,
+      ...(emitted.statsPath ? { statsPath: emitted.statsPath } : {}),
       aliasPath
     };
   }

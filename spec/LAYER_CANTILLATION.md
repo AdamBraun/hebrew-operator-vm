@@ -81,7 +81,7 @@ Given identical Spine bytes, config, and code hash, emitted `cantillation.ir.jso
 
 Row ordering MUST be deterministic and canonical:
 
-- `(ref_key, anchor.kind, anchor.index, event.sortKey)`
+- `(ref_key, anchor.index, anchor.kind, event.sortKey)`
 
 Where:
 

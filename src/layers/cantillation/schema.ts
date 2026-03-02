@@ -21,7 +21,13 @@ export type CantillationTropeMarkEvent = {
   type: "TROPE_MARK";
   mark: string;
   class: string;
-  rank: number;
+  rank: number | null;
+};
+
+export type CantillationUnknownMarkEvent = {
+  type: "UNKNOWN_MARK";
+  codepoint: string;
+  rank: null;
 };
 
 export type CantillationBoundaryEvent = {
@@ -31,7 +37,10 @@ export type CantillationBoundaryEvent = {
   reason: string;
 };
 
-export type CantillationEvent = CantillationTropeMarkEvent | CantillationBoundaryEvent;
+export type CantillationEvent =
+  | CantillationTropeMarkEvent
+  | CantillationUnknownMarkEvent
+  | CantillationBoundaryEvent;
 
 export type CantillationRaw = {
   teamim?: string[];
@@ -49,7 +58,7 @@ export type CantillationIRRecord = {
 
 export type CantillationGidEventRecord = CantillationIRRecord & {
   anchor: CantillationGidAnchor;
-  event: CantillationTropeMarkEvent;
+  event: CantillationTropeMarkEvent | CantillationUnknownMarkEvent;
 };
 
 export type CantillationGapEventRecord = CantillationIRRecord & {
@@ -93,15 +102,34 @@ export const CANTILLATION_IR_RECORD_JSON_SCHEMA = {
           minLength: 1
         },
         event: {
-          type: "object",
-          additionalProperties: false,
-          required: ["type", "mark", "class", "rank"],
-          properties: {
-            type: { const: "TROPE_MARK" },
-            mark: { type: "string", minLength: 1 },
-            class: { type: "string", minLength: 1 },
-            rank: { type: "integer", minimum: 0 }
-          }
+          oneOf: [
+            {
+              type: "object",
+              additionalProperties: false,
+              required: ["type", "mark", "class", "rank"],
+              properties: {
+                type: { const: "TROPE_MARK" },
+                mark: { type: "string", minLength: 1 },
+                class: { type: "string", minLength: 1 },
+                rank: {
+                  oneOf: [{ type: "integer", minimum: 0 }, { type: "null" }]
+                }
+              }
+            },
+            {
+              type: "object",
+              additionalProperties: false,
+              required: ["type", "codepoint", "rank"],
+              properties: {
+                type: { const: "UNKNOWN_MARK" },
+                codepoint: {
+                  type: "string",
+                  pattern: "^U\\+[0-9A-F]{4,6}$"
+                },
+                rank: { type: "null" }
+              }
+            }
+          ]
         },
         raw: {
           type: "object",
@@ -181,13 +209,14 @@ const GID_PATTERN = /^([^#]+)#g:([0-9]+)$/;
 const GAPID_PATTERN = /^([^#]+)#gap:([0-9]+)$/;
 
 const ANCHOR_KIND_ORDER: Readonly<Record<CantillationAnchorKind, number>> = {
-  gid: 0,
-  gap: 1
+  gap: 0,
+  gid: 1
 };
 
 const EVENT_TYPE_ORDER: Readonly<Record<CantillationEvent["type"], number>> = {
   TROPE_MARK: 0,
-  BOUNDARY: 1
+  UNKNOWN_MARK: 1,
+  BOUNDARY: 2
 };
 
 function hasOwn(record: UnknownRecord, key: string): boolean {
@@ -215,6 +244,19 @@ function compareText(left: string, right: string): number {
     return 0;
   }
   return left < right ? -1 : 1;
+}
+
+function compareNullableRank(left: number | null, right: number | null): number {
+  if (left === right) {
+    return 0;
+  }
+  if (left === null) {
+    return -1;
+  }
+  if (right === null) {
+    return 1;
+  }
+  return left - right;
 }
 
 function normalizeRefSegment(
@@ -315,6 +357,9 @@ export function cantillationEventSortKey(event: CantillationEvent): string {
   if (event.type === "TROPE_MARK") {
     return `${event.type}\u0000${event.class}\u0000${String(event.rank)}\u0000${event.mark}`;
   }
+  if (event.type === "UNKNOWN_MARK") {
+    return `${event.type}\u0000${event.codepoint}`;
+  }
   return `${event.type}\u0000${event.op}\u0000${String(event.rank)}\u0000${event.reason}`;
 }
 
@@ -331,10 +376,15 @@ export function compareCantillationEvents(
     if (classCmp !== 0) {
       return classCmp;
     }
-    if (left.rank !== right.rank) {
-      return left.rank - right.rank;
+    const rankCmp = compareNullableRank(left.rank, right.rank);
+    if (rankCmp !== 0) {
+      return rankCmp;
     }
     return compareText(left.mark, right.mark);
+  }
+
+  if (left.type === "UNKNOWN_MARK" && right.type === "UNKNOWN_MARK") {
+    return compareText(left.codepoint, right.codepoint);
   }
 
   const l = left as CantillationBoundaryEvent;
@@ -358,10 +408,6 @@ export function compareCantillationIRRecords(
     return refCmp;
   }
 
-  if (left.anchor.kind !== right.anchor.kind) {
-    return ANCHOR_KIND_ORDER[left.anchor.kind] - ANCHOR_KIND_ORDER[right.anchor.kind];
-  }
-
   const leftAnchor = resolveCantillationAnchor(left.anchor);
   const rightAnchor = resolveCantillationAnchor(right.anchor);
   if (!leftAnchor || !rightAnchor) {
@@ -370,6 +416,10 @@ export function compareCantillationIRRecords(
 
   if (leftAnchor.index !== rightAnchor.index) {
     return leftAnchor.index - rightAnchor.index;
+  }
+
+  if (left.anchor.kind !== right.anchor.kind) {
+    return ANCHOR_KIND_ORDER[left.anchor.kind] - ANCHOR_KIND_ORDER[right.anchor.kind];
   }
 
   const eventCmp = compareCantillationEvents(left.event, right.event);
@@ -406,7 +456,19 @@ function isCantillationTropeMarkEvent(value: unknown): value is CantillationTrop
     value.type === "TROPE_MARK" &&
     isNonEmptyString(value.mark) &&
     isNonEmptyString(value.class) &&
-    isNonNegativeInteger(value.rank)
+    (value.rank === null || isNonNegativeInteger(value.rank))
+  );
+}
+
+function isCantillationUnknownMarkEvent(value: unknown): value is CantillationUnknownMarkEvent {
+  if (!isRecord(value)) {
+    return false;
+  }
+  return (
+    value.type === "UNKNOWN_MARK" &&
+    value.rank === null &&
+    isNonEmptyString(value.codepoint) &&
+    /^U\+[0-9A-F]{4,6}$/.test(value.codepoint)
   );
 }
 
@@ -423,7 +485,11 @@ function isCantillationBoundaryEvent(value: unknown): value is CantillationBound
 }
 
 function isCantillationEvent(value: unknown): value is CantillationEvent {
-  return isCantillationTropeMarkEvent(value) || isCantillationBoundaryEvent(value);
+  return (
+    isCantillationTropeMarkEvent(value) ||
+    isCantillationUnknownMarkEvent(value) ||
+    isCantillationBoundaryEvent(value)
+  );
 }
 
 export function isCantillationIRRecord(value: unknown): value is CantillationIRRecord {
@@ -452,7 +518,7 @@ export function isCantillationIRRecord(value: unknown): value is CantillationIRR
   }
 
   if (value.anchor.kind === "gid") {
-    if (value.event.type !== "TROPE_MARK") {
+    if (value.event.type !== "TROPE_MARK" && value.event.type !== "UNKNOWN_MARK") {
       return false;
     }
     if (!isStringArray(value.raw.teamim)) {
@@ -592,7 +658,27 @@ function assertCantillationEvent(
     assertNoUnknownKeys(value, ["type", "mark", "class", "rank"], path, scope);
     assertNonEmptyString(assertHas(value, "mark", path, scope), `${path}.mark`, scope);
     assertNonEmptyString(assertHas(value, "class", path, scope), `${path}.class`, scope);
-    assertNonNegativeInteger(assertHas(value, "rank", path, scope), `${path}.rank`, scope);
+    const rank = assertHas(value, "rank", path, scope);
+    if (rank !== null) {
+      assertNonNegativeInteger(rank, `${path}.rank`, scope);
+    }
+    return;
+  }
+
+  if (type === "UNKNOWN_MARK") {
+    assertNoUnknownKeys(value, ["type", "codepoint", "rank"], path, scope);
+    assertNonEmptyString(assertHas(value, "codepoint", path, scope), `${path}.codepoint`, scope);
+    if (!/^U\+[0-9A-F]{4,6}$/.test(String(value.codepoint))) {
+      fail(
+        scope,
+        `${path}.codepoint`,
+        `expected 'U+XXXX' codepoint, got ${describe(value.codepoint)}`
+      );
+    }
+    const rank = assertHas(value, "rank", path, scope);
+    if (rank !== null) {
+      fail(scope, `${path}.rank`, `expected null, got ${describe(rank)}`);
+    }
     return;
   }
 
@@ -604,7 +690,11 @@ function assertCantillationEvent(
     return;
   }
 
-  fail(scope, `${path}.type`, `expected 'TROPE_MARK' | 'BOUNDARY', got ${describe(type)}`);
+  fail(
+    scope,
+    `${path}.type`,
+    `expected 'TROPE_MARK' | 'UNKNOWN_MARK' | 'BOUNDARY', got ${describe(type)}`
+  );
 }
 
 function assertCantillationRaw(
@@ -615,7 +705,7 @@ function assertCantillationRaw(
 ): asserts value is CantillationRaw {
   assertRecord(value, path, scope);
 
-  if (event.type === "TROPE_MARK") {
+  if (event.type === "TROPE_MARK" || event.type === "UNKNOWN_MARK") {
     const teamim = assertHas(value, "teamim", path, scope);
     assertStringArray(teamim, `${path}.teamim`, scope);
     if (!hasCanonicalTeamimOrder(teamim)) {
@@ -653,8 +743,8 @@ function assertAnchorMatchesRecord(
     fail(scope, `${path}.anchor.id`, `anchor '${anchor.id}' must match ref_key='${ref_key}'`);
   }
 
-  if (anchor.kind === "gid" && event.type !== "TROPE_MARK") {
-    fail(scope, `${path}.event.type`, "gid anchors require TROPE_MARK events");
+  if (anchor.kind === "gid" && event.type !== "TROPE_MARK" && event.type !== "UNKNOWN_MARK") {
+    fail(scope, `${path}.event.type`, "gid anchors require TROPE_MARK|UNKNOWN_MARK events");
   }
   if (anchor.kind === "gap" && event.type !== "BOUNDARY") {
     fail(scope, `${path}.event.type`, "gap anchors require BOUNDARY events");
@@ -715,7 +805,7 @@ export function assertCantillationIRRecords(
       fail(
         scope,
         `${path}[${i}]`,
-        "records must be sorted by (ref_key, anchor.kind, anchor.index, event.sortKey)"
+        "records must be sorted by (ref_key, anchor.index, anchor.kind, event.sortKey)"
       );
     }
     prev = row;

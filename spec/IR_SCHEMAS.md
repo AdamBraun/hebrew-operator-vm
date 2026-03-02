@@ -122,6 +122,7 @@ Field contract:
 - `ref_key: string` (must match the `anchor.id` prefix).
 - `event` is one of:
   - `TROPE_MARK` with `{ mark, class, rank }` (grapheme-attached).
+  - `UNKNOWN_MARK` with `{ codepoint, rank:null }` (optional grapheme-attached fallback).
   - `BOUNDARY` with `{ op, rank, reason }` (gap-attached).
 - `raw: object` preserves extraction evidence (`teamim[]` or boundary `source`).
 
@@ -130,8 +131,8 @@ Output invariants:
 1. Cantillation output depends only on Spine input; no Letters/Niqqud/Layout layer dependency is allowed.
 2. Every `anchor.id` must exist in the target Spine output.
 3. Grapheme events normalize `raw.teamim` ordering within each row for stability.
-4. Deterministic ordering is required by `(ref_key, anchor.kind, anchor.index, event.sortKey)`.
-5. `anchor.kind=gid` rows must carry `TROPE_MARK` events; `anchor.kind=gap` rows must carry `BOUNDARY` events.
+4. Deterministic ordering is required by `(ref_key, anchor.index, anchor.kind, event.sortKey)`.
+5. `anchor.kind=gid` rows must carry `TROPE_MARK | UNKNOWN_MARK` events; `anchor.kind=gap` rows must carry `BOUNDARY` events.
 
 Wrapper stitchability:
 
