@@ -38,7 +38,7 @@ Checkpoint record fields:
 - `parasha_id`: normalized slug
 - `aliyah_index`: `1..7` for `ALIYAH_END`, `null` for `PARASHA_END`
 - `ref_key_end`: canonical `RefKey`
-- `ordinal`: non-negative integer, strictly increasing in corpus order
+- `ordinal`: zero-based corpus index (`ref_order[ordinal] == ref_key_end`)
 
 Deterministic ID rule:
 
@@ -60,9 +60,20 @@ For strict reproducibility mode, `generated_at` must be supplied deterministical
 
 ## Ordering Rules
 
-- `checkpoints` are sorted by corpus order (`ref_key_end`, then kind-specific tie-break policy).
-- `ordinal` is monotone increasing with checkpoint array order.
+- `checkpoints` are sorted by corpus order (`ordinal` ascending).
+- Primary tie-break (same `ordinal`): `ALIYAH_END` before `PARASHA_END`.
+- Duplicate ordinal is allowed only for end-of-parasha coincidence:
+  - `ALIYAH_END` with `aliyah_index = 7`
+  - immediately followed by matching `PARASHA_END`
+  - same `parasha_id` and same `ref_key_end`
+- Any other duplicate-ordinal pattern is a contract violation.
 - Any ordering instability is a contract violation.
+
+## Coverage/Partition Guarantees
+
+- Every checkpoint `ref_key_end` must exist in the corpus ref order source.
+- Parasha ranges must cover the full corpus ref order with no overlaps and no gaps.
+- Within each parasha, aliyah ranges must form a full non-overlapping partition of the parasha range.
 
 ## Dependencies and Non-Goals
 
