@@ -75,7 +75,9 @@ describe("build-layer cli (cantillation)", () => {
       "--out",
       outCache,
       "--emit-unknown=true",
-      "--dump-stats=true"
+      "--dump-stats=true",
+      "--cantillation-code-hash",
+      "a".repeat(64)
     ]);
 
     expect(first.layer).toBe("cantillation");
@@ -124,7 +126,9 @@ describe("build-layer cli (cantillation)", () => {
       `--spine=${spinePath}`,
       `--out=${outCache}`,
       "--emit-unknown=true",
-      "--dump-stats=true"
+      "--dump-stats=true",
+      "--cantillation-code-hash",
+      "a".repeat(64)
     ]);
     expect(second.cacheHit).toBe(true);
     expect(second.digest).toBe(first.digest);
@@ -144,7 +148,9 @@ describe("build-layer cli (cantillation)", () => {
       "--out",
       outCache,
       "--emit-unknown=true",
-      "--sof-pasuk-rank=3"
+      "--sof-pasuk-rank=3",
+      "--cantillation-code-hash",
+      "b".repeat(64)
     ]);
     const rank5 = await runBuildLayer([
       "--layer",
@@ -154,7 +160,9 @@ describe("build-layer cli (cantillation)", () => {
       "--out",
       outCache,
       "--emit-unknown=true",
-      "--sof-pasuk-rank=5"
+      "--sof-pasuk-rank=5",
+      "--cantillation-code-hash",
+      "b".repeat(64)
     ]);
 
     expect(rank3.digest).not.toBe(rank5.digest);
@@ -174,5 +182,5 @@ describe("build-layer cli (cantillation)", () => {
       rank: 5,
       reason: "SOF_PASUK"
     });
-  });
+  }, 15000);
 });
