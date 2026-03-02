@@ -75,5 +75,17 @@ describe("ir schema validator", () => {
       notes: "missing required version"
     };
     expect(() => assertValidIRRecord("metadata_plan", invalidMetadata)).toThrow(/metadata_plan/);
+
+    const invalidMetadataBoundary = {
+      version: 1,
+      checkpoints: [
+        {
+          ref_end: "Genesis/1/1#g:0"
+        }
+      ]
+    };
+    expect(() => assertValidIRRecord("metadata_plan", invalidMetadataBoundary)).toThrow(
+      /metadata_plan/
+    );
   });
 });

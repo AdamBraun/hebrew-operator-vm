@@ -18,6 +18,7 @@ import {
   type LayoutEvent,
   type LayoutIRRecord
 } from "../layers/layout/schema";
+import { assertRefKey, type RefKey } from "../ir/refkey";
 import {
   assertLettersIRRecords,
   compareLettersIRRecords,
@@ -54,7 +55,7 @@ export type ProgramIROutputFormat = "jsonl" | "json";
 
 export type MetadataPlan = Record<string, unknown> & {
   checkpoints?: Array<{
-    ref_end: string;
+    ref_end: RefKey;
     [key: string]: unknown;
   }>;
 };
@@ -507,6 +508,87 @@ export function assertMetadataPlan(
   scope = "MetadataPlan"
 ): asserts value is MetadataPlan {
   assertRecord(value, path, scope);
+  assertNoUnknownKeys(value, ["version", "notes", "labels", "options", "checkpoints"], path, scope);
+
+  const version = assertHas(value, "version", path, scope);
+  if (
+    typeof version !== "number" ||
+    !Number.isInteger(version) ||
+    !Number.isSafeInteger(version) ||
+    version < 1
+  ) {
+    fail(scope, `${path}.version`, `expected integer >= 1, got ${describe(version)}`);
+  }
+
+  if (hasOwn(value, "notes") && value.notes !== undefined && typeof value.notes !== "string") {
+    fail(scope, `${path}.notes`, `expected string, got ${describe(value.notes)}`);
+  }
+
+  if (hasOwn(value, "labels")) {
+    const labels = value.labels;
+    if (labels !== undefined) {
+      if (!Array.isArray(labels)) {
+        fail(scope, `${path}.labels`, `expected string[], got ${describe(labels)}`);
+      }
+      for (let i = 0; i < labels.length; i += 1) {
+        if (typeof labels[i] !== "string") {
+          fail(scope, `${path}.labels[${i}]`, `expected string, got ${describe(labels[i])}`);
+        }
+      }
+    }
+  }
+
+  if (hasOwn(value, "options")) {
+    const options = value.options;
+    if (options !== undefined) {
+      assertRecord(options, `${path}.options`, scope);
+      for (const key of Object.keys(options)) {
+        const optionValue = options[key];
+        const validScalar =
+          optionValue === null ||
+          typeof optionValue === "string" ||
+          typeof optionValue === "number" ||
+          typeof optionValue === "boolean";
+        if (!validScalar) {
+          fail(
+            scope,
+            `${path}.options.${key}`,
+            `expected string|number|boolean|null, got ${describe(optionValue)}`
+          );
+        }
+      }
+    }
+  }
+
+  if (hasOwn(value, "checkpoints")) {
+    const checkpoints = value.checkpoints;
+    if (checkpoints !== undefined) {
+      if (!Array.isArray(checkpoints)) {
+        fail(scope, `${path}.checkpoints`, `expected array, got ${describe(checkpoints)}`);
+      }
+      for (let i = 0; i < checkpoints.length; i += 1) {
+        const checkpointPath = `${path}.checkpoints[${i}]`;
+        const checkpoint = checkpoints[i];
+        assertRecord(checkpoint, checkpointPath, scope);
+        const refEnd = assertHas(checkpoint, "ref_end", checkpointPath, scope);
+        try {
+          assertRefKey(refEnd, checkpointPath.concat(".ref_end"));
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          fail(scope, `${checkpointPath}.ref_end`, message);
+        }
+        if (hasOwn(checkpoint, "label") && checkpoint.label !== undefined) {
+          if (typeof checkpoint.label !== "string") {
+            fail(
+              scope,
+              `${checkpointPath}.label`,
+              `expected string, got ${describe(checkpoint.label)}`
+            );
+          }
+        }
+      }
+    }
+  }
 }
 
 export function parseMetadataPlanJson(text: string): MetadataPlan {

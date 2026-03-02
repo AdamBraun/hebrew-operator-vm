@@ -34,7 +34,12 @@ Minimum supported shape:
 
 - `version: integer >= 1`
 - optional metadata fields (for example `notes`, `labels`, `options`)
-- optional `checkpoints[]` entries keyed by `ref_end`
+- optional `checkpoints[]` entries keyed by `ref_end` where `ref_end` is canonical `RefKey` (`Book/Chapter/Verse`)
+
+Boundary key rule:
+
+- metadata checkpoints use `RefKey` only,
+- metadata checkpoints MUST NOT use `gid`/`gapid`.
 
 Output records are descriptive only. They are not VM instructions and do not encode semantic boundaries.
 

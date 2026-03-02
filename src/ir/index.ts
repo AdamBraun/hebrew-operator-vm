@@ -5,4 +5,5 @@ export * from "./letters_ir";
 export * from "./metadata_plan";
 export * from "./niqqud_ir";
 export * from "./program_ir";
+export * from "./refkey";
 export * from "./spine";

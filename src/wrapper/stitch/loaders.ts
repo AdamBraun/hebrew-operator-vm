@@ -13,12 +13,13 @@ import {
 } from "../../layers/layout/schema";
 import { assertLettersIRRecord, type LettersIRRecord } from "../../layers/letters/schema";
 import { assertNiqqudIRRow, type NiqqudMods } from "../../layers/niqqud/schema";
+import { assertRefKey, type RefKey } from "../../ir/refkey";
 
 export type LettersOp = Omit<LettersIRRecord, "kind">;
 export type CantEvent = CantillationEvent;
 
 export type Checkpoint = {
-  ref_end: string;
+  ref_end: RefKey;
   [key: string]: unknown;
 };
 
@@ -33,7 +34,7 @@ export type StitchAnchorIndexes = {
   cantByGap: Map<string, CantEvent[]>;
   layoutByGap: Map<string, LayoutEvent[]>;
   metadataPlan: MetadataPlanDocument;
-  checkpointByRefEnd: Map<string, Checkpoint[]>;
+  checkpointByRefEnd: Map<RefKey, Checkpoint[]>;
 };
 
 export type LoadStitchAnchorIndexesArgs = {
@@ -303,16 +304,17 @@ function assertCheckpoint(
   if (!isRecord(value)) {
     throw new Error(`stitch loaders: ${filePath} checkpoints[${String(index)}] must be an object`);
   }
-  if (typeof value.ref_end !== "string" || value.ref_end.length === 0) {
-    throw new Error(
-      `stitch loaders: ${filePath} checkpoints[${String(index)}].ref_end must be non-empty string`
-    );
+  try {
+    assertRefKey(value.ref_end, `${filePath} checkpoints[${String(index)}].ref_end`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`stitch loaders: ${message}`);
   }
 }
 
 export async function loadMetadataPlan(filePath: string): Promise<{
   metadataPlan: MetadataPlanDocument;
-  checkpointByRefEnd: Map<string, Checkpoint[]>;
+  checkpointByRefEnd: Map<RefKey, Checkpoint[]>;
 }> {
   const text = await fs.promises.readFile(filePath, "utf8");
   let parsed: unknown;
@@ -325,7 +327,7 @@ export async function loadMetadataPlan(filePath: string): Promise<{
 
   assertMetadataPlanDocument(parsed, filePath);
   const metadataPlan = clone(parsed);
-  const checkpointByRefEnd = new Map<string, Checkpoint[]>();
+  const checkpointByRefEnd = new Map<RefKey, Checkpoint[]>();
   const checkpoints = Array.isArray(metadataPlan.checkpoints) ? metadataPlan.checkpoints : [];
 
   for (let i = 0; i < checkpoints.length; i += 1) {

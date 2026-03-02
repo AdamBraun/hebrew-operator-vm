@@ -475,4 +475,20 @@ describe("stitch loaders", () => {
       }
     ]);
   });
+
+  it("rejects metadata checkpoints that are not canonical RefKey values", async () => {
+    const tmp = makeTmpDir("stitch-loaders-metadata-invalid-refkey-");
+    const metadataPath = path.join(tmp, "metadata.plan.json");
+    writeJson(metadataPath, {
+      version: 1,
+      checkpoints: [
+        {
+          ref_end: "Genesis/1/1#g:0",
+          label: "invalid-anchor-key"
+        }
+      ]
+    });
+
+    await expect(loadMetadataPlan(metadataPath)).rejects.toThrow(/Invalid RefKey/);
+  });
 });
