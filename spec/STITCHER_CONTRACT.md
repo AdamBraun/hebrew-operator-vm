@@ -30,6 +30,7 @@ The stitcher emits:
 
 1. `ProgramIR.jsonl` (or `ProgramIR.json`)
 2. `program.manifest.json`
+3. `program.meta.json` (cache/interface metadata for orchestration)
 
 ### ProgramIR Row Kinds
 
@@ -114,3 +115,30 @@ Stitcher does not:
 - infer layout from whitespace when `LayoutIR` already carries layout signal,
 - invent missing layer rows,
 - mutate or execute runtime state.
+
+## CLI Entrypoint
+
+Primary stitch CLI:
+
+`node src/cli/stitch-program.ts --spine <dir|file> --letters <dir|file> --niqqud <dir|file> --cant <dir|file> --layout <dir|file> --metadata <dir|file> --out <dir>`
+
+The CLI:
+
+- resolves input artifacts from file paths or layer directories,
+- validates all inputs through stitch-time validation/contract checks,
+- emits deterministic `ProgramIR.jsonl`,
+- writes `program.manifest.json`,
+- writes `program.meta.json` with cache digests/hooks.
+
+### `program.meta.json` Minimum Fields
+
+- `spineDigest`
+- `lettersDigest`
+- `niqqudDigest`
+- `cantDigest`
+- `layoutDigest`
+- `metadataDigest`
+- `stitcherVersion`
+- `stitchConfig`
+- `counts: { ops, boundaries, checkpoints }`
+- optional `refStats`
