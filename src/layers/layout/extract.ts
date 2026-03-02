@@ -2,7 +2,6 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { type ResolvedLayoutDatasetEvent } from "./dataset_loader";
 import {
-  compareRefKeysStable,
   expectedLayoutSource,
   expectedLayoutStrength,
   serializeLayoutIRRecord,
@@ -63,14 +62,28 @@ function compareDatasetEventsAtGap(
   return compareText(leftNote, rightNote);
 }
 
-function assertCanonicalGapOrdering(previous: GapDescriptor | null, current: GapDescriptor): void {
+function assertCanonicalGapOrdering(
+  previous: GapDescriptor | null,
+  current: GapDescriptor,
+  seenRefs: Set<string>
+): void {
   if (!previous) {
+    seenRefs.add(current.ref_key);
     return;
   }
 
-  const refCmp = compareRefKeysStable(previous.ref_key, current.ref_key);
-  const isOutOfOrder = refCmp > 0 || (refCmp === 0 && current.gap_index <= previous.gap_index);
-  if (!isOutOfOrder) {
+  if (current.ref_key === previous.ref_key) {
+    if (current.gap_index > previous.gap_index) {
+      return;
+    }
+    throw new Error(
+      `layout extractor: input gaps must be in canonical ascending order; ` +
+        `saw ${current.gapid} after ${previous.gapid}`
+    );
+  }
+
+  if (!seenRefs.has(current.ref_key)) {
+    seenRefs.add(current.ref_key);
     return;
   }
 
@@ -175,9 +188,10 @@ export async function* extractLayoutIRRecords(
 ): AsyncGenerator<LayoutIRRecord> {
   const pendingGapids = new Set<string>(args.eventsByGapid.keys());
   let previousGap: GapDescriptor | null = null;
+  const seenRefs = new Set<string>();
 
   for await (const gap of args.gaps) {
-    assertCanonicalGapOrdering(previousGap, gap);
+    assertCanonicalGapOrdering(previousGap, gap, seenRefs);
     previousGap = gap;
     pendingGapids.delete(gap.gapid);
 
