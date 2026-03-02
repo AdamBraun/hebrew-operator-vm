@@ -2,6 +2,7 @@ import { makeGapId, makeGid } from "./anchors";
 import { type NormalizationOptions, normalizeOptions } from "./options";
 import { type SpineRecord } from "./schema";
 import { normalizeText, splitIntoGraphemes, splitMarks } from "./unicode";
+import { sanitizeVerseText } from "../../impl/reference/src/scripts/normalizeTorah/runtime";
 
 const CONTROL_CHAR = /[\p{Cc}\p{Cf}]/gu;
 const WHITESPACE = /\s/u;
@@ -90,7 +91,8 @@ export async function* buildSpineForRef(args: BuildSpineArgs): AsyncGenerator<Sp
   assertTextInput(args.text);
   const opts = normalizeOptions(args.opts);
 
-  let normalized = normalizeText(args.text, opts.unicodeForm);
+  const sanitizedText = sanitizeVerseText(args.text);
+  let normalized = normalizeText(sanitizedText, opts.unicodeForm);
   if (opts.stripControlChars) {
     normalized = stripControlCharacters(normalized);
   }

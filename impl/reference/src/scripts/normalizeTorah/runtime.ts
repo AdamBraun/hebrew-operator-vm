@@ -486,6 +486,12 @@ function stripMarkupAndEntities(text: string): {
   };
 }
 
+export function sanitizeVerseText(text: string): string {
+  const lineStable = normalizeLineBreaks(text);
+  const stripped = stripMarkupAndEntities(lineStable.normalized);
+  return stripped.normalized;
+}
+
 function throwUnsupportedCombiningMark(
   ref: string,
   chars: string[],

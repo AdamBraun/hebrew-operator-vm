@@ -81,6 +81,18 @@ describe("spine build", () => {
     expect(gapRows[1]?.raw.chars).toEqual([]);
   });
 
+  it("strips injected markup metadata before building gaps", async () => {
+    const rows = await collectRows("Genesis/1/1", "<big>בְּ</big>רֵאשִׁית");
+    const gapRows = rows.filter(
+      (row): row is Extract<SpineRecord, { kind: "gap" }> => row.kind === "gap"
+    );
+    const allGapChars = gapRows.flatMap((gap) => gap.raw.chars);
+
+    expect(allGapChars).not.toContain("<");
+    expect(allGapChars).not.toContain(">");
+    expect(allGapChars).not.toContain("/");
+  });
+
   it("throws on unknown marks when errorOnUnknownMark is true", async () => {
     const run = async (): Promise<SpineRecord[]> =>
       collectRows("Genesis/5/1", "א\u0301", {

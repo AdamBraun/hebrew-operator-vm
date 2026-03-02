@@ -130,6 +130,26 @@ function normalizeRefSegment(
   return { kind: "text", value: segment };
 }
 
+const TORAH_BOOK_ORDER: Readonly<Record<string, number>> = {
+  Genesis: 0,
+  Exodus: 1,
+  Leviticus: 2,
+  Numbers: 3,
+  Deuteronomy: 4
+};
+
+function compareTorahBookSegment(left: string, right: string): number | null {
+  const leftOrder = TORAH_BOOK_ORDER[left];
+  const rightOrder = TORAH_BOOK_ORDER[right];
+  if (leftOrder === undefined || rightOrder === undefined) {
+    return null;
+  }
+  if (leftOrder === rightOrder) {
+    return 0;
+  }
+  return leftOrder - rightOrder;
+}
+
 function toCanonicalJsonValue(value: unknown): CanonicalJsonValue | undefined {
   if (value === undefined) {
     return undefined;
@@ -198,6 +218,16 @@ export function compareRefKeysStable(left: string, right: string): number {
     }
     if (l === r) {
       continue;
+    }
+
+    if (i === 0) {
+      const bookCmp = compareTorahBookSegment(l, r);
+      if (bookCmp !== null) {
+        if (bookCmp !== 0) {
+          return bookCmp;
+        }
+        continue;
+      }
     }
 
     const ln = normalizeRefSegment(l);
