@@ -1,4 +1,10 @@
 import {
+  readNiqqudIRJsonl,
+  type NiqqudFlags,
+  type NiqqudIRRow,
+  type NiqqudMods
+} from "../layers/niqqud/schema";
+import {
   assertLayoutIRRecord,
   compareLayoutIRRecords,
   compareRefKeysStable,
@@ -35,6 +41,18 @@ export type StitchBoundaryFramesArgs = {
   enableLayoutHygienePolicy?: boolean;
 };
 
+export type ExecutableOp = {
+  gid: string;
+  modifiers?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
+export type AttachedNiqqudPayload = {
+  mods: NiqqudMods;
+  unhandled: string[];
+  flags: Pick<NiqqudFlags, "empty" | "ambiguous">;
+};
+
 type GapTuple = {
   gapid: string;
   ref_key: string;
@@ -42,6 +60,20 @@ type GapTuple = {
 };
 
 const GAPID_PATTERN = /^([^#]+)#gap:([0-9]+)$/;
+
+const EMPTY_NIQQUD_MODS: NiqqudMods = {
+  classes: [],
+  features: {
+    hasDagesh: false,
+    hasShva: false,
+    vowelCount: 0
+  }
+};
+
+const EMPTY_NIQQUD_FLAGS: Pick<NiqqudFlags, "empty" | "ambiguous"> = {
+  empty: true,
+  ambiguous: false
+};
 
 function toAsyncIterator<T>(
   source: AsyncIterable<T> | Iterable<T>
@@ -73,6 +105,79 @@ function compareGapTuple(left: GapTuple, right: GapTuple): number {
     return left.gap_index - right.gap_index;
   }
   return compareText(left.gapid, right.gapid);
+}
+
+function cloneNiqqudMods(mods: NiqqudMods): NiqqudMods {
+  return {
+    classes: [...mods.classes],
+    features: { ...mods.features },
+    ...(mods.tierHints
+      ? {
+          tierHints: { ...mods.tierHints }
+        }
+      : {})
+  };
+}
+
+function pickNiqqudFlags(flags: NiqqudFlags | undefined): Pick<NiqqudFlags, "empty" | "ambiguous"> {
+  if (!flags) {
+    return { ...EMPTY_NIQQUD_FLAGS };
+  }
+  return {
+    empty: flags.empty,
+    ambiguous: flags.ambiguous
+  };
+}
+
+function cloneAttachedNiqqudFromRow(row: NiqqudIRRow): AttachedNiqqudPayload {
+  return {
+    mods: cloneNiqqudMods(row.mods),
+    unhandled: [...row.unhandled],
+    flags: pickNiqqudFlags(row.flags)
+  };
+}
+
+function emptyAttachedNiqqud(): AttachedNiqqudPayload {
+  return {
+    mods: cloneNiqqudMods(EMPTY_NIQQUD_MODS),
+    unhandled: [],
+    flags: { ...EMPTY_NIQQUD_FLAGS }
+  };
+}
+
+export async function loadNiqqudIndex(filePath: string): Promise<Map<string, NiqqudIRRow>> {
+  const rows = await readNiqqudIRJsonl(filePath);
+  const byGid = new Map<string, NiqqudIRRow>();
+  for (const row of rows) {
+    if (byGid.has(row.gid)) {
+      throw new Error(`wrapper stitch: duplicate NiqqudIR gid '${row.gid}'`);
+    }
+    byGid.set(row.gid, row);
+  }
+  return byGid;
+}
+
+export function attachNiqqud(op: ExecutableOp, niqqudRow?: NiqqudIRRow): ExecutableOp {
+  if (niqqudRow && niqqudRow.gid !== op.gid) {
+    throw new Error(
+      `wrapper stitch: niqqud row gid '${niqqudRow.gid}' does not match op gid '${op.gid}'`
+    );
+  }
+
+  const existingModifiers =
+    op.modifiers && typeof op.modifiers === "object" && !Array.isArray(op.modifiers)
+      ? op.modifiers
+      : {};
+
+  const payload = niqqudRow ? cloneAttachedNiqqudFromRow(niqqudRow) : emptyAttachedNiqqud();
+
+  return {
+    ...op,
+    modifiers: {
+      ...existingModifiers,
+      niqqud: payload
+    }
+  };
 }
 
 function parseGapId(gapid: string): { ref_key: string; gap_index: number } | null {
