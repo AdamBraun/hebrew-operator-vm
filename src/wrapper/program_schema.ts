@@ -35,6 +35,13 @@ import {
   type NiqqudMods
 } from "../layers/niqqud/schema";
 import { assertSpineRecord, type SpineRecord } from "../spine/schema";
+import {
+  assertCantillationIRNoBleed,
+  assertLayoutIRNoBleed,
+  assertLettersIRNoBleed,
+  assertNiqqudIRNoBleed,
+  assertProgramIRNoRuntimeState
+} from "./stitch/contractChecks";
 import { stitchProgramRowsFromFiles } from "./stitch/stitch";
 
 export const PROGRAM_LAYER = "program";
@@ -597,6 +604,19 @@ function normalizeInputs(args: StitchProgramIRInputs): StitchProgramIRInputs {
     cantillationRecords,
     layoutRecords
   });
+
+  for (let i = 0; i < lettersRecords.length; i += 1) {
+    assertLettersIRNoBleed(lettersRecords[i], `LettersIR[${String(i)}]`);
+  }
+  for (let i = 0; i < niqqudRows.length; i += 1) {
+    assertNiqqudIRNoBleed(niqqudRows[i], `NiqqudIR[${String(i)}]`);
+  }
+  for (let i = 0; i < cantillationRecords.length; i += 1) {
+    assertCantillationIRNoBleed(cantillationRecords[i], `CantillationIR[${String(i)}]`);
+  }
+  for (let i = 0; i < layoutRecords.length; i += 1) {
+    assertLayoutIRNoBleed(layoutRecords[i], `LayoutIR[${String(i)}]`);
+  }
 
   return {
     spineRecords,
@@ -1178,7 +1198,7 @@ function buildProgramRows(inputs: StitchProgramIRInputs): ProgramIRRecord[] {
 
   for (const spineRow of inputs.spineRecords) {
     if (spineRow.kind === "gap") {
-      out.push({
+      const boundaryRow: ProgramIRRecord = {
         kind: "boundary",
         gapid: spineRow.gapid,
         ref_key: spineRow.ref_key,
@@ -1186,7 +1206,9 @@ function buildProgramRows(inputs: StitchProgramIRInputs): ProgramIRRecord[] {
         layout: deepClone(layoutByGapid.get(spineRow.gapid) ?? []),
         cant: deepClone(cantillationIndex.byGapid.get(spineRow.gapid) ?? []),
         raw: deepClone(spineRow.raw)
-      });
+      };
+      assertProgramIRNoRuntimeState(boundaryRow, `ProgramIR[${String(out.length)}]`);
+      out.push(boundaryRow);
       continue;
     }
 
@@ -1206,6 +1228,7 @@ function buildProgramRows(inputs: StitchProgramIRInputs): ProgramIRRecord[] {
       mods: niqqud ? deepClone(niqqud) : {},
       ...(cantAttached.length > 0 ? { cant_attached: cantAttached } : {})
     };
+    assertProgramIRNoRuntimeState(opRecord, `ProgramIR[${String(out.length)}]`);
     out.push(opRecord);
     lettersByGid.delete(spineRow.gid);
   }

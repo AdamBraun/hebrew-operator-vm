@@ -14,6 +14,13 @@ import {
   type LoadStitchAnchorIndexesArgs,
   type StitchAnchorIndexes
 } from "./loaders";
+import {
+  assertCantillationIRNoBleed,
+  assertLayoutIRNoBleed,
+  assertLettersIRNoBleed,
+  assertNiqqudIRNoBleed,
+  assertProgramIRNoRuntimeState
+} from "./contractChecks";
 import { readSpineTraversalPlanFromJsonl, type SpineTraversalPlan } from "./spinePlan";
 
 type UnknownRecord = Record<string, unknown>;
@@ -192,19 +199,17 @@ async function validateLettersAnchors(
   knownGids: ReadonlySet<string>
 ): Promise<void> {
   for await (const { value, lineNumber } of readJsonlValues(filePath)) {
+    const location = `${filePath}:${String(lineNumber)}`;
     try {
       assertLettersIRRecord(value);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      throw new Error(
-        `stitch: ${filePath}:${String(lineNumber)} invalid LettersIR record (${message})`
-      );
+      throw new Error(`stitch: ${location} invalid LettersIR record (${message})`);
     }
+    assertLettersIRNoBleed(value, location);
 
     if (!knownGids.has(value.gid)) {
-      throw new Error(
-        `stitch: ${filePath}:${String(lineNumber)} LettersIR gid '${value.gid}' missing from Spine`
-      );
+      throw new Error(`stitch: ${location} LettersIR gid '${value.gid}' missing from Spine`);
     }
   }
 }
@@ -214,19 +219,17 @@ async function validateNiqqudAnchors(
   knownGids: ReadonlySet<string>
 ): Promise<void> {
   for await (const { value, lineNumber } of readJsonlValues(filePath)) {
+    const location = `${filePath}:${String(lineNumber)}`;
     try {
       assertNiqqudIRRow(value);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      throw new Error(
-        `stitch: ${filePath}:${String(lineNumber)} invalid NiqqudIR record (${message})`
-      );
+      throw new Error(`stitch: ${location} invalid NiqqudIR record (${message})`);
     }
+    assertNiqqudIRNoBleed(value, location);
 
     if (!knownGids.has(value.gid)) {
-      throw new Error(
-        `stitch: ${filePath}:${String(lineNumber)} NiqqudIR gid '${value.gid}' missing from Spine`
-      );
+      throw new Error(`stitch: ${location} NiqqudIR gid '${value.gid}' missing from Spine`);
     }
   }
 }
@@ -236,19 +239,17 @@ async function validateLayoutAnchors(
   knownGapids: ReadonlySet<string>
 ): Promise<void> {
   for await (const { value, lineNumber } of readJsonlValues(filePath)) {
+    const location = `${filePath}:${String(lineNumber)}`;
     try {
       assertLayoutIRRecord(value);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      throw new Error(
-        `stitch: ${filePath}:${String(lineNumber)} invalid LayoutIR record (${message})`
-      );
+      throw new Error(`stitch: ${location} invalid LayoutIR record (${message})`);
     }
+    assertLayoutIRNoBleed(value, location);
 
     if (!knownGapids.has(value.gapid)) {
-      throw new Error(
-        `stitch: ${filePath}:${String(lineNumber)} LayoutIR gapid '${value.gapid}' missing from Spine`
-      );
+      throw new Error(`stitch: ${location} LayoutIR gapid '${value.gapid}' missing from Spine`);
     }
   }
 }
@@ -259,21 +260,21 @@ async function validateCantillationAnchors(
   knownGapids: ReadonlySet<string>
 ): Promise<void> {
   for await (const { value, lineNumber } of readJsonlValues(filePath)) {
+    const location = `${filePath}:${String(lineNumber)}`;
     let row: CantillationIRRecord;
     try {
       assertCantillationIRRecord(value);
       row = value;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      throw new Error(
-        `stitch: ${filePath}:${String(lineNumber)} invalid CantillationIR record (${message})`
-      );
+      throw new Error(`stitch: ${location} invalid CantillationIR record (${message})`);
     }
+    assertCantillationIRNoBleed(value, location);
 
     if (row.anchor.kind === "gid") {
       if (!knownGids.has(row.anchor.id)) {
         throw new Error(
-          `stitch: ${filePath}:${String(lineNumber)} CantillationIR gid '${row.anchor.id}' missing from Spine`
+          `stitch: ${location} CantillationIR gid '${row.anchor.id}' missing from Spine`
         );
       }
       continue;
@@ -281,7 +282,7 @@ async function validateCantillationAnchors(
 
     if (!knownGapids.has(row.anchor.id)) {
       throw new Error(
-        `stitch: ${filePath}:${String(lineNumber)} CantillationIR gapid '${row.anchor.id}' missing from Spine`
+        `stitch: ${location} CantillationIR gapid '${row.anchor.id}' missing from Spine`
       );
     }
   }
@@ -332,7 +333,7 @@ function stitchProgramRowsFromPlan(args: {
       }
 
       const cantAttached = normalizeCantEvents(args.indexes.cantByGid.get(step.gid) ?? []);
-      rows.push({
+      const opRow: ProgramIRRecord = {
         kind: "op",
         gid: letter.gid,
         ref_key: letter.ref_key,
@@ -340,7 +341,9 @@ function stitchProgramRowsFromPlan(args: {
         op_kind: letter.op_kind,
         mods: deepClone(args.indexes.niqqudByGid.get(step.gid) ?? {}),
         ...(cantAttached.length > 0 ? { cant_attached: cantAttached } : {})
-      });
+      };
+      assertProgramIRNoRuntimeState(opRow, `ProgramIR[${String(rows.length)}]`);
+      rows.push(opRow);
       continue;
     }
 
@@ -349,7 +352,7 @@ function stitchProgramRowsFromPlan(args: {
       throw new Error(`stitch: internal spine plan error: unknown gapid '${step.gapid}'`);
     }
 
-    rows.push({
+    const boundaryRow: ProgramIRRecord = {
       kind: "boundary",
       gapid: gap.gapid,
       ref_key: gap.ref_key,
@@ -357,7 +360,9 @@ function stitchProgramRowsFromPlan(args: {
       layout: normalizeLayoutEvents(args.indexes.layoutByGap.get(step.gapid) ?? []),
       cant: normalizeCantEvents(args.indexes.cantByGap.get(step.gapid) ?? []),
       raw: deepClone(gap.raw)
-    });
+    };
+    assertProgramIRNoRuntimeState(boundaryRow, `ProgramIR[${String(rows.length)}]`);
+    rows.push(boundaryRow);
   }
 
   return rows;
