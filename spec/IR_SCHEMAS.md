@@ -72,6 +72,85 @@ Implementation hooks:
 - writer utility: `writeLettersIRJsonl(...)`
 - reader utility: `readLettersIRJsonl(...)`
 
+## CantillationIR (`cantillation.ir.jsonl`)
+
+Cantillation layer output is JSON Lines where each line is one `CantillationIRRecord` anchored to either a grapheme (`gid`) or a gap (`gapid`) from Spine.
+
+Canonical cache location:
+
+- `outputs/cache/cantillation/<digest>/cantillation.ir.jsonl`
+
+Record schema (grapheme-attached trope event):
+
+```json
+{
+  "kind": "cant_event",
+  "anchor": { "kind": "gid", "id": "Genesis/1/1#g:42" },
+  "ref_key": "Genesis/1/1",
+  "event": {
+    "type": "TROPE_MARK",
+    "mark": "ZAKEF_KATON",
+    "class": "DISJ",
+    "rank": 2
+  },
+  "raw": { "teamim": ["\u0595"] }
+}
+```
+
+Record schema (gap-attached boundary event):
+
+```json
+{
+  "kind": "cant_event",
+  "anchor": { "kind": "gap", "id": "Genesis/1/1#gap:41" },
+  "ref_key": "Genesis/1/1",
+  "event": {
+    "type": "BOUNDARY",
+    "op": "CUT",
+    "rank": 3,
+    "reason": "SOF_PASUK"
+  },
+  "raw": { "source": "sof_pasuk_char" }
+}
+```
+
+Field contract:
+
+- `kind: "cant_event"` (literal tag).
+- `anchor.kind: "gid" | "gap"`.
+- `anchor.id: string` (`<ref_key>#g:<g_index>` or `<ref_key>#gap:<gap_index>`).
+- `ref_key: string` (must match the `anchor.id` prefix).
+- `event` is one of:
+  - `TROPE_MARK` with `{ mark, class, rank }` (grapheme-attached).
+  - `BOUNDARY` with `{ op, rank, reason }` (gap-attached).
+- `raw: object` preserves extraction evidence (`teamim[]` or boundary `source`).
+
+Output invariants:
+
+1. Cantillation output depends only on Spine input; no Letters/Niqqud/Layout layer dependency is allowed.
+2. Every `anchor.id` must exist in the target Spine output.
+3. Grapheme events normalize `raw.teamim` ordering within each row for stability.
+4. Deterministic ordering is required by `(ref_key, anchor.kind, anchor.index, event.sortKey)`.
+5. `anchor.kind=gid` rows must carry `TROPE_MARK` events; `anchor.kind=gap` rows must carry `BOUNDARY` events.
+
+Wrapper stitchability:
+
+- Wrapper consumes only the gap projection (`anchor.kind="gap"`), mapped as:
+  - `gapid = anchor.id`
+  - `ref_key` unchanged
+  - `gap_index` parsed from `anchor.id`
+  - `event` unchanged
+
+Optional debug-only grouped view:
+
+- `cantillation.frames.jsonl` MAY exist for diagnostics, but is non-authoritative.
+- Wrapper must not depend on `cantillation.frames.jsonl`.
+
+Implementation hooks:
+
+- validator + invariants: `src/layers/cantillation/schema.ts`
+- manifest contract: `src/layers/cantillation/manifest.ts`
+
 ## LayoutIR (`layout.ir.jsonl`)
 
 Layout layer output is JSON Lines where each line is one `LayoutIRRecord` keyed by `gapid`.
