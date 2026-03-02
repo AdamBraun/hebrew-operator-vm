@@ -29,6 +29,7 @@ import {
   type CantillationEvent,
   type CantillationIRRecord
 } from "./schema";
+import { CantillationAnchorValidator } from "./validate";
 
 export type CantillationLayerConfig = {
   strict: boolean;
@@ -174,6 +175,7 @@ export const DEFAULT_CANTILLATION_CODE_PATHS: readonly string[] = [
   "src/layers/cantillation/schema.ts",
   "src/layers/cantillation/marks.ts",
   "src/layers/cantillation/manifest.ts",
+  "src/layers/cantillation/validate.ts",
   "src/layers/cantillation/extract.ts"
 ];
 
@@ -771,6 +773,7 @@ async function extractToArtifacts(args: {
   const coverage = createCantillationMarkCoverage();
   const refTallies = new Map<string, RefTally>();
   const markTallies = new Map<string, MarkTally>();
+  const anchorValidator = args.config.strict ? new CantillationAnchorValidator() : null;
 
   const stream = fsRaw.createReadStream(args.spinePath, { encoding: "utf8" });
   const lines = readline.createInterface({ input: stream, crlfDelay: Infinity });
@@ -795,6 +798,21 @@ async function extractToArtifacts(args: {
       }
 
       const row = parseSpineRecord(parsed, args.spinePath, lineNumber);
+      if (anchorValidator) {
+        if (row.kind === "g") {
+          anchorValidator.registerSpineAnchor({
+            kind: "g",
+            gid: row.gid,
+            ref_key: row.ref_key
+          });
+        } else {
+          anchorValidator.registerSpineAnchor({
+            kind: "gap",
+            gapid: row.gapid,
+            ref_key: row.ref_key
+          });
+        }
+      }
       const refTally = getRefTally(refTallies, row.ref_key);
 
       if (row.kind === "g") {
@@ -868,6 +886,7 @@ async function extractToArtifacts(args: {
 
         gidRecords.sort((left, right) => compareCantillationEvents(left.event, right.event));
         for (const record of gidRecords) {
+          anchorValidator?.assertEventAnchorExists(record);
           await handle.write(`${serializeCantillationIRRecord(record)}\n`);
           stats.totals.events_emitted += 1;
           stats.totals.gid_events += 1;
@@ -888,6 +907,7 @@ async function extractToArtifacts(args: {
             source
           }
         };
+        anchorValidator?.assertEventAnchorExists(record);
         await handle.write(`${serializeCantillationIRRecord(record)}\n`);
         stats.totals.events_emitted += 1;
         stats.totals.gap_events += 1;
