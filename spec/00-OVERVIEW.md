@@ -16,6 +16,7 @@ This directory defines the normative, domain-agnostic specification of the Hebre
 - `80-CONFORMANCE.md`: compliance levels and required tests.
 - `LAYER_CONTRACTS.md`: cross-layer guardrails, including strict Normalization vs Layout separation.
 - `METADATA_LAYER.md`: metadata-only layer contract (packaging/checkpoints/navigation).
+- `METADATA_PLAN_IR.md`: metadata-layer output IR contract (`MetadataPlan.json`).
 - `REFKEY.md`: canonical Torah reference key identity (`Book/Chapter/Verse`).
 - `WRAPPER_STITCHING.md`: wrapper join contract for layer outputs keyed by stable anchors.
 
