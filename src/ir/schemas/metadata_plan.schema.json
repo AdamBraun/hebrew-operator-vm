@@ -22,6 +22,23 @@
       "additionalProperties": {
         "type": ["string", "number", "boolean", "null"]
       }
+    },
+    "checkpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ref_end"],
+        "properties": {
+          "ref_end": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
     }
   }
 }
