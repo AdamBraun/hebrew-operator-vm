@@ -4,15 +4,16 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import readline from "node:readline";
 import {
+  CANTILLATION_ANCHORING_RULES,
   anchorPunctuationBoundaryToGap,
   anchorTropeMarkToGid,
   emitsDerivedBoundariesFromTropeMarks
 } from "./anchoring";
+import { CANTILLATION_PLACEMENT_POLICY_VERSION } from "./placement";
 import {
   CANTILLATION_LAYER_VERSION,
   assertCantillationManifest,
   createCantillationManifest,
-  stringifyCantillationManifestDigestInputs,
   type CantillationManifest,
   type CantillationManifestOutputFile
 } from "./manifest";
@@ -29,15 +30,16 @@ import {
   type CantillationEvent,
   type CantillationIRRecord
 } from "./schema";
+import {
+  DEFAULT_CANTILLATION_CODE_PATHS,
+  computeCantillationCodeHash,
+  computeCantillationConfigHash,
+  computeCantillationDigest,
+  type CantillationDigestConfig
+} from "./hash";
 import { CantillationAnchorValidator } from "./validate";
 
-export type CantillationLayerConfig = {
-  strict: boolean;
-  emit_unknown: boolean;
-  sof_pasuk_rank: number;
-  dump_stats: boolean;
-  top_marks_limit: number;
-};
+export type CantillationLayerConfig = CantillationDigestConfig;
 
 export type ExtractCantillationIRConfig = {
   strict?: boolean;
@@ -112,14 +114,6 @@ export type ExtractCantillationIRResult = {
 
 type UnknownRecord = Record<string, unknown>;
 
-type CanonicalJsonValue =
-  | null
-  | boolean
-  | number
-  | string
-  | CanonicalJsonValue[]
-  | { [key: string]: CanonicalJsonValue };
-
 type ParsedSpineGraphemeRecord = {
   kind: "g";
   gid: string;
@@ -170,15 +164,6 @@ const MAQAF = "\u05BE";
 const SOF_PASUQ = "\u05C3";
 const DEFAULT_TOP_MARKS_LIMIT = 10;
 
-export const DEFAULT_CANTILLATION_CODE_PATHS: readonly string[] = [
-  "src/layers/cantillation/anchoring.ts",
-  "src/layers/cantillation/schema.ts",
-  "src/layers/cantillation/marks.ts",
-  "src/layers/cantillation/manifest.ts",
-  "src/layers/cantillation/validate.ts",
-  "src/layers/cantillation/extract.ts"
-];
-
 function hasOwn(record: UnknownRecord, key: string): boolean {
   return OWN.call(record, key);
 }
@@ -204,12 +189,6 @@ function compareText(left: string, right: string): number {
     return 0;
   }
   return left < right ? -1 : 1;
-}
-
-function assertNonEmptyString(value: unknown, label: string): asserts value is string {
-  if (!isNonEmptyString(value)) {
-    throw new Error(`cantillation extract: ${label} must be non-empty string`);
-  }
 }
 
 function assertSha256Hex(value: unknown, label: string): asserts value is string {
@@ -262,47 +241,6 @@ function sortMarksDeterministically(marks: readonly string[]): string[] {
   return [...marks].sort((left, right) => compareText(toCodepointKey(left), toCodepointKey(right)));
 }
 
-function toCanonicalJsonValue(value: unknown): CanonicalJsonValue | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
-  }
-  if (typeof value === "boolean" || typeof value === "string") {
-    return value;
-  }
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : null;
-  }
-  if (typeof value === "bigint") {
-    return value.toString(10);
-  }
-  if (Array.isArray(value)) {
-    return value.map((entry) => {
-      const normalized = toCanonicalJsonValue(entry);
-      return normalized === undefined ? null : normalized;
-    });
-  }
-  if (typeof value === "object") {
-    const source = value as Record<string, unknown>;
-    const out: Record<string, CanonicalJsonValue> = {};
-    for (const key of Object.keys(source).sort(compareText)) {
-      const normalized = toCanonicalJsonValue(source[key]);
-      if (normalized !== undefined) {
-        out[key] = normalized;
-      }
-    }
-    return out;
-  }
-  return undefined;
-}
-
-function canonicalStringify(value: unknown): string {
-  const normalized = toCanonicalJsonValue(value);
-  return JSON.stringify(normalized === undefined ? null : normalized);
-}
-
 function defaultCacheDir(): string {
   return path.resolve(process.cwd(), "outputs", "cache", "cantillation");
 }
@@ -333,49 +271,15 @@ function normalizeConfig(config: ExtractCantillationIRConfig | undefined): Canti
     emit_unknown: config?.emitUnknown === true,
     sof_pasuk_rank,
     dump_stats: config?.dumpStats === true,
-    top_marks_limit
+    top_marks_limit,
+    placement_policy: {
+      derived_boundaries_from_trope_marks:
+        CANTILLATION_ANCHORING_RULES.derived_boundaries_from_trope_marks,
+      gid_disj_cut_placement: "next_gap_or_ref_end_gap",
+      anchoring_version: CANTILLATION_ANCHORING_RULES.version,
+      placement_version: CANTILLATION_PLACEMENT_POLICY_VERSION
+    }
   };
-}
-
-function computeConfigHash(config: CantillationLayerConfig): string {
-  return crypto.createHash("sha256").update(canonicalStringify(config), "utf8").digest("hex");
-}
-
-export async function computeCantillationCodeHash(
-  codePaths: readonly string[] = DEFAULT_CANTILLATION_CODE_PATHS,
-  cwd = process.cwd()
-): Promise<string> {
-  if (!Array.isArray(codePaths) || codePaths.length === 0) {
-    throw new Error("cantillation extract: codePaths must be non-empty array");
-  }
-
-  const hash = crypto.createHash("sha256");
-  for (const relPath of [...codePaths].sort(compareText)) {
-    assertNonEmptyString(relPath, "codePath");
-    const absPath = path.resolve(cwd, relPath);
-    const content = await fs.readFile(absPath);
-    hash.update(relPath);
-    hash.update("\u0000");
-    hash.update(content);
-    hash.update("\u0000");
-  }
-  return hash.digest("hex");
-}
-
-function computeCantillationDigest(args: {
-  spine_digest: string;
-  config_hash: string;
-  code_hash: string;
-}): string {
-  const digestInputs = {
-    layer: "cantillation" as const,
-    layer_version: CANTILLATION_LAYER_VERSION,
-    spine_digest: args.spine_digest,
-    config_hash: args.config_hash,
-    code_hash: args.code_hash
-  };
-  const basis = stringifyCantillationManifestDigestInputs(digestInputs);
-  return crypto.createHash("sha256").update(basis, "utf8").digest("hex");
 }
 
 async function resolveSpineDigest(args: {
@@ -955,7 +859,7 @@ export async function extractCantillationIR(
     override: config.spineDigestOverride
   });
 
-  const configHash = computeConfigHash(normalizedConfig);
+  const configHash = computeCantillationConfigHash(normalizedConfig);
   const codeHash =
     config.codeHashOverride ?? (await computeCantillationCodeHash(DEFAULT_CANTILLATION_CODE_PATHS));
   assertSha256Hex(codeHash, "codeHash");

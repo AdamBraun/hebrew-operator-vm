@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { computeCantillationCodeHash, extractCantillationIR } from "../layers/cantillation/extract";
+import { extractCantillationIR } from "../layers/cantillation/extract";
+import { computeCantillationCodeHash } from "../layers/cantillation/hash";
 import { emitLettersFromSpine } from "../layers/letters/extract";
 import { computeLettersDigest, computeLettersLayerCodeFingerprint } from "../layers/letters/hash";
 import { LETTERS_IR_VERSION } from "../layers/letters/schema";
