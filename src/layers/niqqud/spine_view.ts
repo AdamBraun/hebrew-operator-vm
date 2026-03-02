@@ -37,6 +37,10 @@ export type NiqqudSpineRow = {
   niqqud: string[];
 };
 
+export type ReadNiqqudViewOptions = {
+  onWarning?: (warning: NiqqudWarning) => void;
+};
+
 type UnknownRecord = Record<string, unknown>;
 
 const GID_PATTERN = /^([^#]+)#g:([0-9]+)$/;
@@ -100,6 +104,7 @@ function warnInvalidNiqqud(args: {
   ref_key: string;
   g_index: number;
   observed: unknown;
+  onWarning?: (warning: NiqqudWarning) => void;
 }): void {
   const warning: NiqqudWarning = createNiqqudWarning({
     gid: args.gid,
@@ -110,6 +115,7 @@ function warnInvalidNiqqud(args: {
       args.observed
     )}`
   });
+  args.onWarning?.(warning);
   console.warn(warning);
 }
 
@@ -152,7 +158,8 @@ function parseGapRow(parsed: UnknownRecord, sourcePath: string, lineNumber: numb
 function parseGraphemeRow(
   parsed: UnknownRecord,
   sourcePath: string,
-  lineNumber: number
+  lineNumber: number,
+  options: ReadNiqqudViewOptions
 ): GraphemeRow {
   const gid = parsed.gid;
   const ref_key = parsed.ref_key;
@@ -206,7 +213,8 @@ function parseGraphemeRow(
         gid,
         ref_key,
         g_index,
-        observed: marksRaw.niqqud
+        observed: marksRaw.niqqud,
+        onWarning: options.onWarning
       });
     }
 
@@ -220,7 +228,8 @@ function parseGraphemeRow(
       gid,
       ref_key,
       g_index,
-      observed: marksRaw
+      observed: marksRaw,
+      onWarning: options.onWarning
     });
   }
 
@@ -235,7 +244,12 @@ function parseGraphemeRow(
   };
 }
 
-function parseSpineRow(line: string, lineNumber: number, sourcePath: string): SpineRow {
+function parseSpineRow(
+  line: string,
+  lineNumber: number,
+  sourcePath: string,
+  options: ReadNiqqudViewOptions
+): SpineRow {
   let parsed: unknown;
   try {
     parsed = JSON.parse(line) as unknown;
@@ -248,7 +262,7 @@ function parseSpineRow(line: string, lineNumber: number, sourcePath: string): Sp
     fail(sourcePath, lineNumber, "expected JSON object record");
   }
   if (parsed.kind === "g") {
-    return parseGraphemeRow(parsed, sourcePath, lineNumber);
+    return parseGraphemeRow(parsed, sourcePath, lineNumber, options);
   }
   if (parsed.kind === "gap") {
     return parseGapRow(parsed, sourcePath, lineNumber);
@@ -257,7 +271,10 @@ function parseSpineRow(line: string, lineNumber: number, sourcePath: string): Sp
   fail(sourcePath, lineNumber, `unknown kind ${describe(parsed.kind)}`);
 }
 
-export async function* readNiqqudView(spinePath: string): AsyncGenerator<NiqqudSpineRow> {
+export async function* readNiqqudView(
+  spinePath: string,
+  options: ReadNiqqudViewOptions = {}
+): AsyncGenerator<NiqqudSpineRow> {
   if (!isNonEmptyString(spinePath)) {
     throw new Error("niqqud spine_view: spinePath must be non-empty string");
   }
@@ -275,7 +292,7 @@ export async function* readNiqqudView(spinePath: string): AsyncGenerator<NiqqudS
         continue;
       }
 
-      const row = parseSpineRow(line, lineNumber, spinePath);
+      const row = parseSpineRow(line, lineNumber, spinePath, options);
       if (row.kind !== "g") {
         continue;
       }
