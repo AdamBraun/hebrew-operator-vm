@@ -1,11 +1,16 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import {
   STITCHER_VERSION,
   stitchProgramIRFromFiles,
   type ProgramManifest
 } from "../wrapper/program_schema";
+import {
+  formatDisabledMetadataPlanJson,
+  isMetadataDisabledArg
+} from "../wrapper/checkpoints/metadata";
 
 type StitchProgramCliOptions = {
   spineArg: string;
@@ -26,6 +31,12 @@ type StitchInputDigests = {
   cantDigest: string;
   layoutDigest: string;
   metadataDigest: string;
+};
+
+type ResolvedMetadataInput = {
+  metadataPlanPath: string;
+  metadataDigest: string;
+  cleanup?: () => Promise<void>;
 };
 
 type StitchConfig = {
@@ -162,7 +173,7 @@ function canonicalStringify(value: unknown): string {
 function printHelp(): void {
   console.log("Usage:");
   console.log(
-    "  node src/cli/stitch-program.ts --spine <dir|file> --letters <dir|file> --niqqud <dir|file> --cant <dir|file> --layout <dir|file> --metadata <dir|file> --out <dir>"
+    "  node src/cli/stitch-program.ts --spine <dir|file> --letters <dir|file> --niqqud <dir|file> --cant <dir|file> --layout <dir|file> --metadata <dir|file|off> --out <dir>"
   );
   console.log("");
   console.log("Options:");
@@ -171,7 +182,7 @@ function printHelp(): void {
   console.log("  --niqqud=path");
   console.log("  --cant=path");
   console.log("  --layout=path");
-  console.log("  --metadata=path");
+  console.log("  --metadata=path|off");
   console.log("  --out=dir");
   console.log("  --created-at=<ISO date-time> (optional)");
   console.log("  --force=true|false (default false)");
@@ -232,7 +243,9 @@ export function parseArgs(argv: string[]): StitchProgramCliOptions {
     }
     const metadataOpt = readOptionValue(argv, i, "--metadata");
     if (metadataOpt) {
-      metadataArg = path.resolve(metadataOpt.value);
+      metadataArg = isMetadataDisabledArg(metadataOpt.value)
+        ? "off"
+        : path.resolve(metadataOpt.value);
       i = metadataOpt.next;
       continue;
     }
@@ -333,6 +346,32 @@ async function sha256File(filePath: string): Promise<string> {
   return sha256Hex(data);
 }
 
+async function resolveMetadataInput(metadataArg: string): Promise<ResolvedMetadataInput> {
+  if (!isMetadataDisabledArg(metadataArg)) {
+    const metadataPlanPath = await resolveInputFile({
+      label: "metadata",
+      inputArg: metadataArg
+    });
+    return {
+      metadataPlanPath,
+      metadataDigest: await sha256File(metadataPlanPath)
+    };
+  }
+
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "stitch-metadata-off-"));
+  const metadataPlanPath = path.join(tempDir, "MetadataPlan.json");
+  const metadataText = formatDisabledMetadataPlanJson();
+  await fs.writeFile(metadataPlanPath, metadataText, "utf8");
+
+  return {
+    metadataPlanPath,
+    metadataDigest: sha256Hex(metadataText),
+    cleanup: async () => {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    }
+  };
+}
+
 function createStitchConfig(): StitchConfig {
   return {
     outputFormat: "jsonl",
@@ -429,113 +468,113 @@ export async function runStitchProgram(
   rawArgv: string[] = process.argv.slice(2)
 ): Promise<StitchProgramCliResult> {
   const parsed = parseArgs(rawArgv);
-  const [
-    spinePath,
-    lettersIrPath,
-    niqqudIrPath,
-    cantillationIrPath,
-    layoutIrPath,
-    metadataPlanPath
-  ] = await Promise.all([
-    resolveInputFile({ label: "spine", inputArg: parsed.spineArg }),
-    resolveInputFile({ label: "letters", inputArg: parsed.lettersArg }),
-    resolveInputFile({ label: "niqqud", inputArg: parsed.niqqudArg }),
-    resolveInputFile({ label: "cant", inputArg: parsed.cantArg }),
-    resolveInputFile({ label: "layout", inputArg: parsed.layoutArg }),
-    resolveInputFile({ label: "metadata", inputArg: parsed.metadataArg })
-  ]);
-
-  const digests: StitchInputDigests = {
-    spineDigest: await sha256File(spinePath),
-    lettersDigest: await sha256File(lettersIrPath),
-    niqqudDigest: await sha256File(niqqudIrPath),
-    cantDigest: await sha256File(cantillationIrPath),
-    layoutDigest: await sha256File(layoutIrPath),
-    metadataDigest: await sha256File(metadataPlanPath)
-  };
-  const stitchConfig = createStitchConfig();
-  const cacheDigest = buildCacheDigest({
-    digests,
-    stitcherVersion: STITCHER_VERSION,
-    stitchConfig
-  });
-
-  const outputDir = path.resolve(parsed.outDir);
-  const programPath = path.join(outputDir, "ProgramIR.jsonl");
-  const metaPath = path.join(outputDir, "program.meta.json");
-  const manifestPath = path.join(outputDir, "program.manifest.json");
-
-  if (!parsed.force) {
-    const [existingMeta, programExists, manifestExists] = await Promise.all([
-      readMetaSafe(metaPath),
-      pathExists(programPath),
-      pathExists(manifestPath)
+  const [spinePath, lettersIrPath, niqqudIrPath, cantillationIrPath, layoutIrPath] =
+    await Promise.all([
+      resolveInputFile({ label: "spine", inputArg: parsed.spineArg }),
+      resolveInputFile({ label: "letters", inputArg: parsed.lettersArg }),
+      resolveInputFile({ label: "niqqud", inputArg: parsed.niqqudArg }),
+      resolveInputFile({ label: "cant", inputArg: parsed.cantArg }),
+      resolveInputFile({ label: "layout", inputArg: parsed.layoutArg })
     ]);
-    if (programExists && manifestExists && existingMeta?.cacheDigest === cacheDigest) {
-      return {
-        cacheHit: true,
-        forced: false,
-        outputDir,
-        programPath,
-        metaPath,
-        manifestPath,
-        cacheDigest,
-        programDigest: existingMeta.programDigest
-      };
+  const metadataInput = await resolveMetadataInput(parsed.metadataArg);
+
+  try {
+    const digests: StitchInputDigests = {
+      spineDigest: await sha256File(spinePath),
+      lettersDigest: await sha256File(lettersIrPath),
+      niqqudDigest: await sha256File(niqqudIrPath),
+      cantDigest: await sha256File(cantillationIrPath),
+      layoutDigest: await sha256File(layoutIrPath),
+      metadataDigest: metadataInput.metadataDigest
+    };
+    const stitchConfig = createStitchConfig();
+    const cacheDigest = buildCacheDigest({
+      digests,
+      stitcherVersion: STITCHER_VERSION,
+      stitchConfig
+    });
+
+    const outputDir = path.resolve(parsed.outDir);
+    const programPath = path.join(outputDir, "ProgramIR.jsonl");
+    const metaPath = path.join(outputDir, "program.meta.json");
+    const manifestPath = path.join(outputDir, "program.manifest.json");
+
+    if (!parsed.force) {
+      const [existingMeta, programExists, manifestExists] = await Promise.all([
+        readMetaSafe(metaPath),
+        pathExists(programPath),
+        pathExists(manifestPath)
+      ]);
+      if (programExists && manifestExists && existingMeta?.cacheDigest === cacheDigest) {
+        return {
+          cacheHit: true,
+          forced: false,
+          outputDir,
+          programPath,
+          metaPath,
+          manifestPath,
+          cacheDigest,
+          programDigest: existingMeta.programDigest
+        };
+      }
+    }
+
+    const stitched = await stitchProgramIRFromFiles({
+      spinePath,
+      lettersIrPath,
+      niqqudIrPath,
+      cantillationIrPath,
+      layoutIrPath,
+      metadataPlanPath: metadataInput.metadataPlanPath,
+      outputFormat: "jsonl",
+      ...(parsed.createdAt ? { createdAt: parsed.createdAt } : {})
+    });
+
+    await fs.mkdir(outputDir, { recursive: true });
+    await Promise.all([
+      fs.writeFile(programPath, stitched.programIrJsonl, "utf8"),
+      fs.writeFile(manifestPath, stitched.manifestText, "utf8")
+    ]);
+
+    const programDigest = sha256Hex(stitched.programIrJsonl);
+    const manifestDigest = sha256Hex(stitched.manifestText);
+    const createdAt =
+      parsed.createdAt ??
+      (typeof stitched.manifest.created_at === "string"
+        ? stitched.manifest.created_at
+        : new Date().toISOString());
+    const meta = createProgramMeta({
+      digests,
+      stitcherVersion: STITCHER_VERSION,
+      stitchConfig,
+      counts: {
+        ops: stitched.manifest.counts.ops,
+        boundaries: stitched.manifest.counts.boundaries,
+        checkpoints: stitched.manifest.counts.checkpoints
+      },
+      cacheDigest,
+      programDigest,
+      manifestDigest,
+      createdAt,
+      refStats: buildRefStats(stitched.manifest)
+    });
+    await fs.writeFile(metaPath, `${JSON.stringify(meta, null, 2)}\n`, "utf8");
+
+    return {
+      cacheHit: false,
+      forced: parsed.force,
+      outputDir,
+      programPath,
+      metaPath,
+      manifestPath,
+      cacheDigest,
+      programDigest
+    };
+  } finally {
+    if (metadataInput.cleanup) {
+      await metadataInput.cleanup();
     }
   }
-
-  const stitched = await stitchProgramIRFromFiles({
-    spinePath,
-    lettersIrPath,
-    niqqudIrPath,
-    cantillationIrPath,
-    layoutIrPath,
-    metadataPlanPath,
-    outputFormat: "jsonl",
-    ...(parsed.createdAt ? { createdAt: parsed.createdAt } : {})
-  });
-
-  await fs.mkdir(outputDir, { recursive: true });
-  await Promise.all([
-    fs.writeFile(programPath, stitched.programIrJsonl, "utf8"),
-    fs.writeFile(manifestPath, stitched.manifestText, "utf8")
-  ]);
-
-  const programDigest = sha256Hex(stitched.programIrJsonl);
-  const manifestDigest = sha256Hex(stitched.manifestText);
-  const createdAt =
-    parsed.createdAt ??
-    (typeof stitched.manifest.created_at === "string"
-      ? stitched.manifest.created_at
-      : new Date().toISOString());
-  const meta = createProgramMeta({
-    digests,
-    stitcherVersion: STITCHER_VERSION,
-    stitchConfig,
-    counts: {
-      ops: stitched.manifest.counts.ops,
-      boundaries: stitched.manifest.counts.boundaries,
-      checkpoints: stitched.manifest.counts.checkpoints
-    },
-    cacheDigest,
-    programDigest,
-    manifestDigest,
-    createdAt,
-    refStats: buildRefStats(stitched.manifest)
-  });
-  await fs.writeFile(metaPath, `${JSON.stringify(meta, null, 2)}\n`, "utf8");
-
-  return {
-    cacheHit: false,
-    forced: parsed.force,
-    outputDir,
-    programPath,
-    metaPath,
-    manifestPath,
-    cacheDigest,
-    programDigest
-  };
 }
 
 if (require.main === module) {

@@ -166,4 +166,75 @@ describe("stitch-program cli", () => {
     expect(runC.cacheDigest).toBe(runA.cacheDigest);
     expect(fs.readFileSync(runC.programPath, "utf8")).toBe(programA);
   });
+
+  it("supports --metadata off without changing ProgramIR semantics", async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "stitch-program-cli-metadata-off-"));
+    const dirs = makeLayerDirs(tmp);
+    const outWithMetadata = path.join(tmp, "out-with-metadata");
+    const outMetadataOff = path.join(tmp, "out-metadata-off");
+
+    const runWithMetadata = await runStitchProgram([
+      "--spine",
+      dirs.spineDir,
+      "--letters",
+      dirs.lettersDir,
+      "--niqqud",
+      dirs.niqqudDir,
+      "--cant",
+      dirs.cantDir,
+      "--layout",
+      dirs.layoutDir,
+      "--metadata",
+      dirs.metadataDir,
+      "--out",
+      outWithMetadata,
+      "--created-at",
+      CREATED_AT,
+      "--force=true"
+    ]);
+
+    const runMetadataOff = await runStitchProgram([
+      "--spine",
+      dirs.spineDir,
+      "--letters",
+      dirs.lettersDir,
+      "--niqqud",
+      dirs.niqqudDir,
+      "--cant",
+      dirs.cantDir,
+      "--layout",
+      dirs.layoutDir,
+      "--metadata",
+      "off",
+      "--out",
+      outMetadataOff,
+      "--created-at",
+      CREATED_AT,
+      "--force=true"
+    ]);
+
+    const programWithMetadata = fs.readFileSync(runWithMetadata.programPath, "utf8");
+    const programMetadataOff = fs.readFileSync(runMetadataOff.programPath, "utf8");
+    expect(programMetadataOff).toBe(programWithMetadata);
+
+    const metaWithMetadata = JSON.parse(
+      fs.readFileSync(runWithMetadata.metaPath, "utf8")
+    ) as Record<string, unknown>;
+    const metaMetadataOff = JSON.parse(fs.readFileSync(runMetadataOff.metaPath, "utf8")) as Record<
+      string,
+      unknown
+    >;
+
+    expect(metaWithMetadata.counts).toEqual({
+      ops: 2,
+      boundaries: 3,
+      checkpoints: 1
+    });
+    expect(metaMetadataOff.counts).toEqual({
+      ops: 2,
+      boundaries: 3,
+      checkpoints: 0
+    });
+    expect(metaMetadataOff.programDigest).toBe(metaWithMetadata.programDigest);
+  });
 });
