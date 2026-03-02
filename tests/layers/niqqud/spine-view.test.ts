@@ -103,16 +103,20 @@ describe("niqqud spine view", () => {
       expect(rows.map((row) => row.niqqud)).toEqual([[], []]);
       expect(warnSpy).toHaveBeenCalledTimes(2);
       expect(warnSpy.mock.calls[0]?.[0]).toMatchObject({
-        kind: "warning",
-        layer: "niqqud",
-        code: "NIQQUD_SPINE_INVALID_MARKS_RAW_NIQQUD",
-        source_path: spinePath,
-        line: 1,
         gid: "Genesis/1/1#g:0",
         ref_key: "Genesis/1/1",
         g_index: 0,
-        field: "marks_raw.niqqud",
-        action: "default_to_empty_array"
+        type: "MALFORMED_MARKS"
+      });
+      expect(String((warnSpy.mock.calls[0]?.[0] as { detail?: string }).detail ?? "")).toContain(
+        spinePath
+      );
+      expect(String((warnSpy.mock.calls[0]?.[0] as { detail?: string }).detail ?? "")).toContain(
+        "observed="
+      );
+      expect(warnSpy.mock.calls[0]?.[0]).toMatchObject({
+        gid: "Genesis/1/1#g:0",
+        ref_key: "Genesis/1/1"
       });
     } finally {
       warnSpy.mockRestore();

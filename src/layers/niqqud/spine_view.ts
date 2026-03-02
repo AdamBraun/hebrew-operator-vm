@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import readline from "node:readline";
+import { createNiqqudWarning, type NiqqudWarning } from "./stats";
 
 export type GraphemeRow = {
   kind: "g";
@@ -37,20 +38,6 @@ export type NiqqudSpineRow = {
 };
 
 type UnknownRecord = Record<string, unknown>;
-
-type NiqqudSpineWarning = {
-  kind: "warning";
-  layer: "niqqud";
-  code: "NIQQUD_SPINE_INVALID_MARKS_RAW_NIQQUD";
-  source_path: string;
-  line: number;
-  gid: string;
-  ref_key: string;
-  g_index: number;
-  field: "marks_raw.niqqud";
-  action: "default_to_empty_array";
-  observed: string;
-};
 
 const GID_PATTERN = /^([^#]+)#g:([0-9]+)$/;
 
@@ -114,19 +101,15 @@ function warnInvalidNiqqud(args: {
   g_index: number;
   observed: unknown;
 }): void {
-  const warning: NiqqudSpineWarning = {
-    kind: "warning",
-    layer: "niqqud",
-    code: "NIQQUD_SPINE_INVALID_MARKS_RAW_NIQQUD",
-    source_path: args.sourcePath,
-    line: args.lineNumber,
+  const warning: NiqqudWarning = createNiqqudWarning({
     gid: args.gid,
     ref_key: args.ref_key,
     g_index: args.g_index,
-    field: "marks_raw.niqqud",
-    action: "default_to_empty_array",
-    observed: describe(args.observed)
-  };
+    type: "MALFORMED_MARKS",
+    detail: `marks_raw.niqqud invalid at ${args.sourcePath}:${String(args.lineNumber)} observed=${describe(
+      args.observed
+    )}`
+  });
   console.warn(warning);
 }
 

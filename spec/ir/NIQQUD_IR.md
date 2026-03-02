@@ -78,3 +78,22 @@ NiqqudIR MAY:
 
 - carry interpretation-light classification hints via `mods.classes`, `mods.features`, and optional `mods.tierHints`,
 - preserve canonicalization provenance in `flags.normalized_from`.
+
+## Non-Fatal Quality Outputs
+
+Niqqud extraction may emit sidecar quality artifacts in the same output directory:
+
+- `warnings.jsonl` (one warning per line):
+  - `{ "gid", "ref_key", "g_index", "type", "detail" }`
+  - warning `type` values:
+    - `MALFORMED_MARKS`
+    - `UNHANDLED_MARK`
+    - `AMBIGUOUS_COMBO`
+- `niqqud.stats.json`:
+  - `totalGraphemes`
+  - `graphemesWithNiqqud`
+  - `perClassFrequency`
+  - `unhandledFrequency`
+  - `ambiguityCount`
+
+Warnings are non-fatal and must not mutate NiqqudIR row semantics beyond `unhandled[]` and `flags.ambiguous`.
