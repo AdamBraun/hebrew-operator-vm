@@ -4,6 +4,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import readline from "node:readline";
 import {
+  anchorPunctuationBoundaryToGap,
+  anchorTropeMarkToGid,
+  emitsDerivedBoundariesFromTropeMarks
+} from "./anchoring";
+import {
   CANTILLATION_LAYER_VERSION,
   assertCantillationManifest,
   createCantillationManifest,
@@ -165,6 +170,7 @@ const SOF_PASUQ = "\u05C3";
 const DEFAULT_TOP_MARKS_LIMIT = 10;
 
 export const DEFAULT_CANTILLATION_CODE_PATHS: readonly string[] = [
+  "src/layers/cantillation/anchoring.ts",
   "src/layers/cantillation/schema.ts",
   "src/layers/cantillation/marks.ts",
   "src/layers/cantillation/manifest.ts",
@@ -813,10 +819,7 @@ async function extractToArtifacts(args: {
 
             gidRecords.push({
               kind: "cant_event",
-              anchor: {
-                kind: "gid",
-                id: row.gid
-              },
+              anchor: anchorTropeMarkToGid({ gid: row.gid, ref_key: row.ref_key }),
               ref_key: row.ref_key,
               event: {
                 type: "TROPE_MARK",
@@ -849,10 +852,7 @@ async function extractToArtifacts(args: {
           if (args.config.emit_unknown) {
             gidRecords.push({
               kind: "cant_event",
-              anchor: {
-                kind: "gid",
-                id: row.gid
-              },
+              anchor: anchorTropeMarkToGid({ gid: row.gid, ref_key: row.ref_key }),
               ref_key: row.ref_key,
               event: {
                 type: "UNKNOWN_MARK",
@@ -881,10 +881,7 @@ async function extractToArtifacts(args: {
         const source = event.reason === "SOF_PASUK" ? "sof_pasuk_char" : "maqaf_char";
         const record: CantillationIRRecord = {
           kind: "cant_event",
-          anchor: {
-            kind: "gap",
-            id: row.gapid
-          },
+          anchor: anchorPunctuationBoundaryToGap({ gapid: row.gapid, ref_key: row.ref_key }),
           ref_key: row.ref_key,
           event,
           raw: {
@@ -924,6 +921,12 @@ export async function extractCantillationIR(
   outDir: string,
   config: ExtractCantillationIRConfig = {}
 ): Promise<ExtractCantillationIRResult> {
+  if (emitsDerivedBoundariesFromTropeMarks()) {
+    throw new Error(
+      "cantillation extract: derived boundary emission from trope marks is disabled (wrapper-level policy)"
+    );
+  }
+
   const resolvedSpinePath = path.resolve(spinePath);
   const normalizedConfig = normalizeConfig(config);
   const spineDigest = await resolveSpineDigest({

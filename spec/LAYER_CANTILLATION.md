@@ -49,10 +49,31 @@ The cantillation layer MUST:
 4. Classify each relevant cantillation mark into:
    - `class: "CONJ" | "DISJ"`
    - `rank: integer` for `DISJ` marks where rank is applicable.
-5. Emit boundary operations as events:
-   - `CUT(rank)` for disjunctive boundaries and sof-pasuk policy,
-   - `GLUE` (or explicit `CONJ`) for conjunctive attachment when represented,
+5. Emit explicit punctuation boundary operations from Spine gap evidence:
    - `MAQAF_GLUE` for maqaf joins when that evidence exists in Spine encoding.
+   - `CUT(rank)` for explicit sof-pasuk policy when that evidence exists in Spine encoding.
+
+## Anchoring Rules
+
+Anchoring is deterministic and frozen by policy version.
+
+Rule A (default):
+
+- All ta'amim marks from `marks_raw.teamim` are anchored to the grapheme (`gid`) where they appear.
+- The emitted event remains a mark event (`TROPE_MARK` for known mapping, `UNKNOWN_MARK` when surfaced).
+
+Rule B (gap punctuation):
+
+- Punctuation-derived events are anchored to `gapid`.
+- `maqaf` evidence emits `MAQAF_GLUE` on `gapid`.
+- `sof-pasuk` evidence emits `BOUNDARY CUT(rank=<policy>)` on `gapid`.
+
+Derived boundary placement:
+
+- The cantillation layer does not convert grapheme-attached disjunctive marks into concrete boundary placement.
+- Disjunctive information is preserved as `TROPE_MARK(class="DISJ", rank?)` on `gid`.
+- Wrapper-level stitching decides whether and where to place boundaries (for example, at following gaps) from those mark events.
+- If concrete boundary emission from disjunctive marks is introduced in the future, it must use a deterministic placement policy based only on Spine and must be specified/tested as a versioned contract change.
 
 ## Non-Goals / Forbidden Behavior
 
