@@ -101,6 +101,7 @@ describe("cantillation code hash", () => {
     for (const relPath of DEFAULT_CANTILLATION_CODE_PATHS) {
       expect(relPath.startsWith("src/layers/cantillation/")).toBe(true);
     }
+    expect(DEFAULT_CANTILLATION_CODE_PATHS).toContain("src/layers/cantillation/stats.ts");
   });
 
   it("is deterministic for identical file bytes and changes on file edits", async () => {

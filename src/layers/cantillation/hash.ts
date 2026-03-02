@@ -43,6 +43,7 @@ export const DEFAULT_CANTILLATION_CODE_PATHS: readonly string[] = [
   "src/layers/cantillation/marks.ts",
   "src/layers/cantillation/manifest.ts",
   "src/layers/cantillation/validate.ts",
+  "src/layers/cantillation/stats.ts",
   "src/layers/cantillation/extract.ts",
   "src/layers/cantillation/hash.ts"
 ];

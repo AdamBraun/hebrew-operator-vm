@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 import { extractCantillationIR } from "../../src/layers/cantillation/extract";
 import { parseCantillationIRJsonl } from "../../src/layers/cantillation/schema";
 
+const CODE_HASH = "0".repeat(64);
+
 function writeInvalidAnchorFixture(tmpRoot: string): {
   spinePath: string;
   spineManifestPath: string;
@@ -117,7 +119,8 @@ describe("cantillation extractor anchor validation", () => {
     await expect(
       extractCantillationIR(spinePath, outCache, {
         spineManifestPath,
-        strict: true
+        strict: true,
+        codeHashOverride: CODE_HASH
       })
     ).rejects.toThrow(/gid 'Genesis\/1\/1#g:9' must match ref_key='Genesis\/1\/1' and g_index=0/);
   });
@@ -129,7 +132,8 @@ describe("cantillation extractor anchor validation", () => {
 
     const run = await extractCantillationIR(spinePath, outCache, {
       spineManifestPath,
-      strict: true
+      strict: true,
+      codeHashOverride: CODE_HASH
     });
 
     const emitted = parseCantillationIRJsonl(fs.readFileSync(run.cantillationIrPath, "utf8"));

@@ -120,6 +120,35 @@ describe("build-layer cli (cantillation)", () => {
       rank: 3,
       reason: "SOF_PASUK"
     });
+    const stats = JSON.parse(fs.readFileSync(first.statsPath ?? "", "utf8")) as {
+      marks_total: number;
+      marks_mapped: number;
+      marks_unknown: number;
+      unknown_marks: Record<string, number>;
+      mapped_marks: Record<string, number>;
+      events_total: number;
+      events_by_type: { TROPE_MARK: number; UNKNOWN_MARK: number; BOUNDARY: number };
+      refs_with_sof_pasuk: number;
+      top_refs_by_event_count: Array<{ ref_key: string; event_count: number }>;
+    };
+    expect(stats.marks_total).toBe(2);
+    expect(stats.marks_mapped).toBe(1);
+    expect(stats.marks_unknown).toBe(1);
+    expect(stats.unknown_marks).toEqual({ "U+05AD": 1 });
+    expect(stats.mapped_marks).toEqual({ TIPCHA: 1 });
+    expect(stats.events_total).toBe(3);
+    expect(stats.events_by_type).toEqual({
+      TROPE_MARK: 1,
+      UNKNOWN_MARK: 1,
+      BOUNDARY: 1
+    });
+    expect(stats.refs_with_sof_pasuk).toBe(1);
+    expect(stats.top_refs_by_event_count).toEqual([
+      {
+        ref_key: "Genesis/1/1",
+        event_count: 3
+      }
+    ]);
 
     const second = await runBuildLayer([
       "--layer=cantillation",

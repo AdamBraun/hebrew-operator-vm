@@ -17,15 +17,9 @@ import {
   type CantillationManifest,
   type CantillationManifestOutputFile
 } from "./manifest";
-import {
-  createCantillationMarkCoverage,
-  resolveCantillationMarkWithCoverage,
-  type CantillationMarkCoverage,
-  type TropeClass
-} from "./marks";
+import { createCantillationMarkCoverage, resolveCantillationMarkWithCoverage } from "./marks";
 import {
   compareCantillationEvents,
-  compareRefKeysStable,
   serializeCantillationIRRecord,
   type CantillationEvent,
   type CantillationIRRecord
@@ -37,7 +31,19 @@ import {
   computeCantillationDigest,
   type CantillationDigestConfig
 } from "./hash";
+import {
+  createCantillationEventTypeCounts,
+  finalizeCantillationStats,
+  incrementCantillationEventType,
+  initializeCantillationStats,
+  type CantillationStatsConfigSnapshot,
+  type CantillationStats,
+  type CantillationStatsMarkTally,
+  type CantillationStatsRefTally
+} from "./stats";
 import { CantillationAnchorValidator } from "./validate";
+
+export type { CantillationStats } from "./stats";
 
 export type CantillationLayerConfig = CantillationDigestConfig;
 
@@ -52,52 +58,6 @@ export type ExtractCantillationIRConfig = {
   codeHashOverride?: string;
   digestOverride?: string;
   force?: boolean;
-};
-
-export type CantillationTopMark = {
-  mark: string;
-  codepoint: string;
-  count: number;
-  mapped: boolean;
-  name: string;
-  class: TropeClass | "UNKNOWN";
-};
-
-export type CantillationRefCoverage = {
-  ref_key: string;
-  graphemes: number;
-  marks_seen: number;
-  marks_mapped: number;
-  marks_unknown: number;
-  gap_events: number;
-  events_emitted: number;
-};
-
-export type CantillationStats = {
-  layer: "cantillation";
-  totals: {
-    graphemes: number;
-    marks_seen: number;
-    marks_mapped: number;
-    marks_unknown: number;
-    gap_events: number;
-    events_emitted: number;
-    gid_events: number;
-  };
-  top_marks: CantillationTopMark[];
-  ref_key_coverage: {
-    refs_seen: number;
-    refs_with_marks: number;
-    refs_with_gap_events: number;
-    refs: CantillationRefCoverage[];
-  };
-  config: {
-    strict: boolean;
-    emit_unknown: boolean;
-    sof_pasuk_rank: number;
-    dump_stats: boolean;
-    top_marks_limit: number;
-  };
 };
 
 export type ExtractCantillationIRResult = {
@@ -138,24 +98,6 @@ type ParsedSpineGapRecord = {
 
 type ParsedSpineRecord = ParsedSpineGraphemeRecord | ParsedSpineGapRecord;
 
-type MarkTally = {
-  mark: string;
-  codepoint: string;
-  count: number;
-  mapped: boolean;
-  name: string;
-  class: TropeClass | "UNKNOWN";
-};
-
-type RefTally = {
-  graphemes: number;
-  marks_seen: number;
-  marks_mapped: number;
-  marks_unknown: number;
-  gap_events: number;
-  events_emitted: number;
-};
-
 const OWN = Object.prototype.hasOwnProperty;
 const SHA256_HEX = /^[a-f0-9]{64}$/;
 const GID_PATTERN = /^([^#]+)#g:([0-9]+)$/;
@@ -163,6 +105,7 @@ const GAPID_PATTERN = /^([^#]+)#gap:([0-9]+)$/;
 const MAQAF = "\u05BE";
 const SOF_PASUQ = "\u05C3";
 const DEFAULT_TOP_MARKS_LIMIT = 10;
+const DEFAULT_TOP_REFS_LIMIT = 10;
 
 function hasOwn(record: UnknownRecord, key: string): boolean {
   return OWN.call(record, key);
@@ -512,61 +455,41 @@ async function canReuseCache(args: {
   return true;
 }
 
-function initializeStats(config: CantillationLayerConfig): CantillationStats {
+function toStatsConfigSnapshot(config: CantillationLayerConfig): CantillationStatsConfigSnapshot {
   return {
-    layer: "cantillation",
-    totals: {
-      graphemes: 0,
-      marks_seen: 0,
-      marks_mapped: 0,
-      marks_unknown: 0,
-      gap_events: 0,
-      events_emitted: 0,
-      gid_events: 0
-    },
-    top_marks: [],
-    ref_key_coverage: {
-      refs_seen: 0,
-      refs_with_marks: 0,
-      refs_with_gap_events: 0,
-      refs: []
-    },
-    config: {
-      strict: config.strict,
-      emit_unknown: config.emit_unknown,
-      sof_pasuk_rank: config.sof_pasuk_rank,
-      dump_stats: config.dump_stats,
-      top_marks_limit: config.top_marks_limit
-    }
+    strict: config.strict,
+    emit_unknown: config.emit_unknown,
+    sof_pasuk_rank: config.sof_pasuk_rank,
+    dump_stats: config.dump_stats,
+    top_marks_limit: config.top_marks_limit,
+    top_refs_limit: DEFAULT_TOP_REFS_LIMIT
   };
 }
 
-function getRefTally(map: Map<string, RefTally>, refKey: string): RefTally {
+function getRefTally(
+  map: Map<string, CantillationStatsRefTally>,
+  refKey: string
+): CantillationStatsRefTally {
   const existing = map.get(refKey);
   if (existing) {
     return existing;
   }
-  const created: RefTally = {
+  const created: CantillationStatsRefTally = {
     graphemes: 0,
     marks_seen: 0,
     marks_mapped: 0,
     marks_unknown: 0,
     gap_events: 0,
-    events_emitted: 0
+    events_emitted: 0,
+    sof_pasuk_events: 0
   };
   map.set(refKey, created);
   return created;
 }
 
 function recordTopMark(
-  tallies: Map<string, MarkTally>,
-  args: {
-    mark: string;
-    codepoint: string;
-    mapped: boolean;
-    name: string;
-    class: TropeClass | "UNKNOWN";
-  }
+  tallies: Map<string, CantillationStatsMarkTally>,
+  args: Omit<CantillationStatsMarkTally, "count">
 ): void {
   const existing = tallies.get(args.codepoint);
   if (existing) {
@@ -582,56 +505,6 @@ function recordTopMark(
     name: args.name,
     class: args.class
   });
-}
-
-function finalizeStats(args: {
-  stats: CantillationStats;
-  coverage: CantillationMarkCoverage;
-  markTallies: Map<string, MarkTally>;
-  refTallies: Map<string, RefTally>;
-  config: CantillationLayerConfig;
-}): CantillationStats {
-  const refs: CantillationRefCoverage[] = [...args.refTallies.entries()]
-    .sort((left, right) => compareRefKeysStable(left[0], right[0]))
-    .map(([ref_key, tally]) => ({
-      ref_key,
-      graphemes: tally.graphemes,
-      marks_seen: tally.marks_seen,
-      marks_mapped: tally.marks_mapped,
-      marks_unknown: tally.marks_unknown,
-      gap_events: tally.gap_events,
-      events_emitted: tally.events_emitted
-    }));
-
-  const refs_with_marks = refs.filter((entry) => entry.marks_seen > 0).length;
-  const refs_with_gap_events = refs.filter((entry) => entry.gap_events > 0).length;
-
-  const topMarks = [...args.markTallies.values()]
-    .sort((left, right) => {
-      if (left.count !== right.count) {
-        return right.count - left.count;
-      }
-      return compareText(left.codepoint, right.codepoint);
-    })
-    .slice(0, args.config.top_marks_limit)
-    .map((entry) => ({ ...entry }));
-
-  return {
-    ...args.stats,
-    totals: {
-      ...args.stats.totals,
-      marks_seen: args.coverage.marks_seen,
-      marks_mapped: args.coverage.marks_mapped,
-      marks_unknown: args.coverage.marks_unknown
-    },
-    top_marks: topMarks,
-    ref_key_coverage: {
-      refs_seen: refs.length,
-      refs_with_marks,
-      refs_with_gap_events,
-      refs
-    }
-  };
 }
 
 async function writeStatsFile(filePath: string, stats: CantillationStats): Promise<void> {
@@ -669,19 +542,19 @@ function readGapEvents(row: ParsedSpineGapRecord, sofPasukRank: number): Cantill
 async function extractToArtifacts(args: {
   spinePath: string;
   config: CantillationLayerConfig;
-  outputDir: string;
   cantillationIrPath: string;
   statsPath?: string;
 }): Promise<CantillationStats> {
-  const stats = initializeStats(args.config);
+  const stats = initializeCantillationStats(toStatsConfigSnapshot(args.config));
   const coverage = createCantillationMarkCoverage();
-  const refTallies = new Map<string, RefTally>();
-  const markTallies = new Map<string, MarkTally>();
+  const refTallies = new Map<string, CantillationStatsRefTally>();
+  const markTallies = new Map<string, CantillationStatsMarkTally>();
+  const eventTypeCounts = createCantillationEventTypeCounts();
   const anchorValidator = args.config.strict ? new CantillationAnchorValidator() : null;
 
+  const handle = await fs.open(args.cantillationIrPath, "w");
   const stream = fsRaw.createReadStream(args.spinePath, { encoding: "utf8" });
   const lines = readline.createInterface({ input: stream, crlfDelay: Infinity });
-  const handle = await fs.open(args.cantillationIrPath, "w");
 
   let lineNumber = 0;
 
@@ -720,7 +593,6 @@ async function extractToArtifacts(args: {
       const refTally = getRefTally(refTallies, row.ref_key);
 
       if (row.kind === "g") {
-        stats.totals.graphemes += 1;
         refTally.graphemes += 1;
 
         const orderedMarks = sortMarksDeterministically(row.marks_raw.teamim);
@@ -792,8 +664,7 @@ async function extractToArtifacts(args: {
         for (const record of gidRecords) {
           anchorValidator?.assertEventAnchorExists(record);
           await handle.write(`${serializeCantillationIRRecord(record)}\n`);
-          stats.totals.events_emitted += 1;
-          stats.totals.gid_events += 1;
+          incrementCantillationEventType(eventTypeCounts, record.event.type);
           refTally.events_emitted += 1;
         }
         continue;
@@ -813,10 +684,12 @@ async function extractToArtifacts(args: {
         };
         anchorValidator?.assertEventAnchorExists(record);
         await handle.write(`${serializeCantillationIRRecord(record)}\n`);
-        stats.totals.events_emitted += 1;
-        stats.totals.gap_events += 1;
+        incrementCantillationEventType(eventTypeCounts, record.event.type);
         refTally.gap_events += 1;
         refTally.events_emitted += 1;
+        if (event.reason === "SOF_PASUK") {
+          refTally.sof_pasuk_events += 1;
+        }
       }
     }
   } finally {
@@ -825,12 +698,12 @@ async function extractToArtifacts(args: {
     stream.close();
   }
 
-  const finalized = finalizeStats({
+  const finalized = finalizeCantillationStats({
     stats,
     coverage,
     markTallies,
     refTallies,
-    config: args.config
+    eventTypeCounts
   });
 
   if (args.statsPath) {
@@ -897,7 +770,7 @@ export async function extractCantillationIR(
     const stats =
       statsPath && (await pathExists(statsPath))
         ? ((await readJsonFile(statsPath)) as CantillationStats)
-        : initializeStats(normalizedConfig);
+        : initializeCantillationStats(toStatsConfigSnapshot(normalizedConfig));
 
     return {
       digest,
@@ -917,7 +790,6 @@ export async function extractCantillationIR(
   const stats = await extractToArtifacts({
     spinePath: resolvedSpinePath,
     config: normalizedConfig,
-    outputDir,
     cantillationIrPath,
     ...(statsPath ? { statsPath } : {})
   });

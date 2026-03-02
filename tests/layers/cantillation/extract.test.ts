@@ -6,6 +6,7 @@ import { extractCantillationIR } from "../../../src/layers/cantillation/extract"
 import { parseCantillationIRJsonl } from "../../../src/layers/cantillation/schema";
 
 const SPINE_DIGEST = "c".repeat(64);
+const CODE_HASH = "0".repeat(64);
 
 function writeSpineFixture(baseDir: string): { spinePath: string; spineManifestPath: string } {
   const spineDir = path.join(baseDir, "outputs", "cache", "spine", SPINE_DIGEST);
@@ -88,7 +89,8 @@ describe("cantillation extractor", () => {
     const first = await extractCantillationIR(spinePath, outCacheDir, {
       emitUnknown: true,
       dumpStats: true,
-      spineManifestPath
+      spineManifestPath,
+      codeHashOverride: CODE_HASH
     });
 
     expect(first.cacheHit).toBe(false);
@@ -145,6 +147,29 @@ describe("cantillation extractor", () => {
       events_emitted: 5,
       gid_events: 3
     });
+    expect(first.stats.marks_total).toBe(3);
+    expect(first.stats.marks_mapped).toBe(2);
+    expect(first.stats.marks_unknown).toBe(1);
+    expect(first.stats.mapped_marks).toEqual({
+      MERKHA: 1,
+      ZAQEF_GADOL: 1
+    });
+    expect(first.stats.unknown_marks).toEqual({
+      "U+05AD": 1
+    });
+    expect(first.stats.events_total).toBe(5);
+    expect(first.stats.events_by_type).toEqual({
+      TROPE_MARK: 2,
+      UNKNOWN_MARK: 1,
+      BOUNDARY: 2
+    });
+    expect(first.stats.refs_with_sof_pasuk).toBe(1);
+    expect(first.stats.top_refs_by_event_count).toEqual([
+      {
+        ref_key: "Genesis/1/1",
+        event_count: 5
+      }
+    ]);
     expect(first.stats.ref_key_coverage.refs).toEqual([
       {
         ref_key: "Genesis/1/1",
@@ -160,7 +185,8 @@ describe("cantillation extractor", () => {
     const second = await extractCantillationIR(spinePath, outCacheDir, {
       emitUnknown: true,
       dumpStats: true,
-      spineManifestPath
+      spineManifestPath,
+      codeHashOverride: CODE_HASH
     });
     expect(second.cacheHit).toBe(true);
     expect(second.digest).toBe(first.digest);
@@ -170,7 +196,8 @@ describe("cantillation extractor", () => {
       emitUnknown: true,
       dumpStats: true,
       force: true,
-      spineManifestPath
+      spineManifestPath,
+      codeHashOverride: CODE_HASH
     });
     expect(forced.cacheHit).toBe(false);
     expect(forced.digest).toBe(first.digest);
@@ -188,7 +215,8 @@ describe("cantillation extractor", () => {
       extractCantillationIR(spinePath, outCacheDir, {
         strict: true,
         emitUnknown: false,
-        spineManifestPath
+        spineManifestPath,
+        codeHashOverride: CODE_HASH
       })
     ).rejects.toThrow(/unknown teamim mark.*gid='Genesis\/1\/1#g:1'.*ref_key='Genesis\/1\/1'/);
   });

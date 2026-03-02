@@ -7,6 +7,7 @@ import { parseCantillationIRJsonl } from "../../src/layers/cantillation/schema";
 
 const SPINE_DIGEST = "c".repeat(64);
 const SPINE_FIXTURE = path.resolve(process.cwd(), "tests", "fixtures", "spine.small.jsonl");
+const CODE_HASH = "0".repeat(64);
 
 function setupFixture(tmpRoot: string): {
   spinePath: string;
@@ -45,11 +46,15 @@ describe("cantillation extractor unknown marks", () => {
     const run = await extractCantillationIR(spinePath, outCache, {
       spineManifestPath,
       strict: false,
-      emitUnknown: false
+      emitUnknown: false,
+      codeHashOverride: CODE_HASH
     });
     const rows = parseCantillationIRJsonl(fs.readFileSync(run.cantillationIrPath, "utf8"));
 
     expect(run.stats.totals.marks_unknown).toBe(1);
+    expect(run.stats.marks_unknown).toBe(1);
+    expect(run.stats.unknown_marks).toEqual({ "U+05AD": 1 });
+    expect(run.stats.events_by_type.UNKNOWN_MARK).toBe(0);
     expect(rows.some((row) => row.event.type === "UNKNOWN_MARK")).toBe(false);
   });
 
@@ -61,12 +66,15 @@ describe("cantillation extractor unknown marks", () => {
     const run = await extractCantillationIR(spinePath, outCache, {
       spineManifestPath,
       strict: false,
-      emitUnknown: true
+      emitUnknown: true,
+      codeHashOverride: CODE_HASH
     });
     const rows = parseCantillationIRJsonl(fs.readFileSync(run.cantillationIrPath, "utf8"));
     const unknown = rows.filter((row) => row.event.type === "UNKNOWN_MARK");
 
     expect(run.stats.totals.marks_unknown).toBe(1);
+    expect(run.stats.marks_unknown).toBe(1);
+    expect(run.stats.events_by_type.UNKNOWN_MARK).toBe(1);
     expect(unknown).toHaveLength(1);
     expect(unknown[0]?.anchor.id).toBe("Genesis/1/1#g:2");
   });
@@ -80,14 +88,16 @@ describe("cantillation extractor unknown marks", () => {
       extractCantillationIR(spinePath, outCache, {
         spineManifestPath,
         strict: true,
-        emitUnknown: true
+        emitUnknown: true,
+        codeHashOverride: CODE_HASH
       })
     ).rejects.toThrow(/unknown teamim mark/);
     await expect(
       extractCantillationIR(spinePath, outCache, {
         spineManifestPath,
         strict: true,
-        emitUnknown: true
+        emitUnknown: true,
+        codeHashOverride: CODE_HASH
       })
     ).rejects.toThrow(/gid='Genesis\/1\/1#g:2'/);
   });

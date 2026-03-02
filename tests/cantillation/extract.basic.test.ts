@@ -6,6 +6,7 @@ import { extractCantillationIR } from "../../src/layers/cantillation/extract";
 import { parseCantillationIRJsonl } from "../../src/layers/cantillation/schema";
 
 const SPINE_DIGEST = "f".repeat(64);
+const CODE_HASH = "0".repeat(64);
 const SPINE_FIXTURE = path.resolve(process.cwd(), "tests", "fixtures", "spine.small.jsonl");
 const EXPECTED_FIXTURE = path.resolve(
   process.cwd(),
@@ -51,7 +52,8 @@ describe("cantillation extractor basic fixture", () => {
     const run = await extractCantillationIR(spinePath, outCache, {
       spineManifestPath,
       strict: false,
-      emitUnknown: false
+      emitUnknown: false,
+      codeHashOverride: CODE_HASH
     });
 
     const actual = parseCantillationIRJsonl(fs.readFileSync(run.cantillationIrPath, "utf8"));
@@ -96,12 +98,16 @@ describe("cantillation extractor basic fixture", () => {
     const runA = await extractCantillationIR(path.resolve(spinePath), path.join(tmp, "cache-a"), {
       spineManifestPath,
       strict: false,
-      emitUnknown: false
+      emitUnknown: false,
+      force: true,
+      codeHashOverride: CODE_HASH
     });
     const runB = await extractCantillationIR(path.resolve(spinePath), path.join(tmp, "cache-b"), {
       spineManifestPath,
       strict: false,
-      emitUnknown: false
+      emitUnknown: false,
+      force: true,
+      codeHashOverride: CODE_HASH
     });
 
     const bytesA = fs.readFileSync(runA.cantillationIrPath, "utf8");
