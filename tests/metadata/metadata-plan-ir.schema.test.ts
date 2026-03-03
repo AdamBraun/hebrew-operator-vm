@@ -92,6 +92,14 @@ function makeValidPlan(): Record<string, unknown> {
     ref_to_segment_index: {
       "Genesis/2/3": 0,
       "Genesis/6/8": 1
+    },
+    ref_to_parasha: {
+      "Genesis/2/3": "bereshit",
+      "Genesis/6/8": "bereshit"
+    },
+    ref_to_aliyah: {
+      "Genesis/2/3": 1,
+      "Genesis/6/8": 7
     }
   };
 }
@@ -124,6 +132,10 @@ describe("metadata plan IR schema", () => {
     const invalid = makeValidPlan();
     (invalid.ref_to_segment_index as Record<string, number>)["Genesis/01/1"] = 2;
     expect(validate(invalid)).toBe(false);
+
+    const invalidParashaLookup = makeValidPlan();
+    (invalidParashaLookup.ref_to_parasha as Record<string, string>)["Joshua/1/1"] = "x";
+    expect(validate(invalidParashaLookup)).toBe(false);
   });
 
   it("formats deterministic checkpoint ids per contract", () => {

@@ -92,6 +92,8 @@ export type MetadataPlanIR = {
   parashot?: MetadataPlanParashaSummary[];
   ranges?: MetadataPlanRangeSegment[];
   ref_to_segment_index?: Record<string, number>;
+  ref_to_parasha?: Record<string, string>;
+  ref_to_aliyah?: Record<string, MetadataPlanAliyahIndex>;
 };
 
 export function formatMetadataCheckpointId(args: {
