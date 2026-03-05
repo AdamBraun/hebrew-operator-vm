@@ -11,6 +11,7 @@ import {
 
 const CWD = process.cwd();
 const GIT_OUTPUT_MAX_BUFFER = 64 * 1024 * 1024;
+const PUSH_DIFF_FILTER = "ACMRT";
 
 function toPosixPath(value) {
   return String(value).replace(/\\/g, "/");
@@ -52,23 +53,31 @@ function resolvePushDiffFiles() {
   }).trim();
   if (upstreamRef.length > 0) {
     return parseNewlineOutput(
-      runGit(["diff", "--name-only", "--diff-filter=ACMR", `${upstreamRef}...HEAD`], {
-        allowFailure: true
-      })
+      runGit(
+        ["diff", "--name-only", `--diff-filter=${PUSH_DIFF_FILTER}`, `${upstreamRef}...HEAD`],
+        {
+          allowFailure: true
+        }
+      )
     );
   }
 
   const fallback = parseNewlineOutput(
-    runGit(["diff", "--name-only", "--diff-filter=ACMR", "HEAD~1..HEAD"], { allowFailure: true })
+    runGit(["diff", "--name-only", `--diff-filter=${PUSH_DIFF_FILTER}`, "HEAD~1..HEAD"], {
+      allowFailure: true
+    })
   );
   if (fallback.length > 0) {
     return fallback;
   }
 
   return parseNewlineOutput(
-    runGit(["show", "--pretty=format:", "--name-only", "--diff-filter=ACMR", "HEAD"], {
-      allowFailure: true
-    })
+    runGit(
+      ["show", "--pretty=format:", "--name-only", `--diff-filter=${PUSH_DIFF_FILTER}`, "HEAD"],
+      {
+        allowFailure: true
+      }
+    )
   );
 }
 
