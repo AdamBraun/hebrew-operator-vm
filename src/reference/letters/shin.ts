@@ -31,29 +31,7 @@ export const shinOp: LetterOp = {
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { parentId, focusId, spineId, leftId, rightId, activeId, direction } =
-      cons.meta as ForkHandle;
-    if (direction === "external") {
-      S.links.push({ from: parentId, to: spineId, label: "branch" });
-      S.links.push({ from: parentId, to: leftId, label: "branch" });
-      S.links.push({ from: parentId, to: rightId, label: "branch" });
-    }
-    S.vm.H.push({
-      type: "shin",
-      tau: S.vm.tau,
-      data: {
-        id: parentId,
-        focus: focusId,
-        spine: spineId,
-        left: leftId,
-        right: rightId,
-        active: activeId,
-        direction
-      }
-    });
-    if (direction === "external") {
-      return { S, h: parentId, r: BOT_ID, export_handle: activeId };
-    }
-    return { S, h: parentId, r: BOT_ID };
+    const { parentId, exportHandle } = cons.meta as ForkHandle;
+    return { S, h: parentId, r: BOT_ID, export_handle: exportHandle };
   }
 };

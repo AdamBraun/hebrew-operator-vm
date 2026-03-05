@@ -16,6 +16,7 @@ export type ForkHandle = {
   spineId: string;
   leftId: string;
   rightId: string;
+  exportHandle: string;
 };
 
 function cloneEnvelopeSnapshot(envelope: Envelope): Envelope {
@@ -86,6 +87,22 @@ export function fork(
     addCont(state, focusId, spineId);
     addCont(state, focusId, leftId);
     addCont(state, focusId, rightId);
+    state.links.push({ from: parentId, to: spineId, label: "branch" });
+    state.links.push({ from: parentId, to: leftId, label: "branch" });
+    state.links.push({ from: parentId, to: rightId, label: "branch" });
+    state.vm.H.push({
+      type: "shin",
+      tau: state.vm.tau,
+      data: {
+        id: parentId,
+        focus: focusId,
+        spine: spineId,
+        left: leftId,
+        right: rightId,
+        active: activeId,
+        direction
+      }
+    });
     return {
       parentId,
       focusId,
@@ -94,7 +111,8 @@ export function fork(
       activeId,
       spineId,
       leftId,
-      rightId
+      rightId,
+      exportHandle: activeId
     };
   }
 
@@ -133,6 +151,19 @@ export function fork(
       active_child: activeId
     };
   }
+  state.vm.H.push({
+    type: "shin",
+    tau: state.vm.tau,
+    data: {
+      id: focusId,
+      focus: focusId,
+      spine: spineId,
+      left: leftId,
+      right: rightId,
+      active: activeId,
+      direction
+    }
+  });
 
   return {
     parentId: focusId,
@@ -142,6 +173,7 @@ export function fork(
     activeId,
     spineId,
     leftId,
-    rightId
+    rightId,
+    exportHandle: focusId
   };
 }
