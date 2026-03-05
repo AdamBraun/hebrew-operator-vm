@@ -540,24 +540,32 @@ Unary. Orthogonal resolver: closes the nearest unresolved carry-thread.
 
 - **Bound (parameterized by direction):**
 
-Allocate three nodes from `F`. These are three independent attachment points — not copies of `F`, not branches from `F`, but three distinct surfaces through which subsequent letters can connect to `F`.
+Allocate three nodes from `F`.
 
-- **External** (`שׁ`, default/undotted): the three nodes face outward. They sit on the cont-chain as forward-facing ports. Subsequent letters that continue from `F` encounter three parallel connection surfaces.
+- **External / Tripod** (`שׁ`, default/undotted):
+  - Add `cont(F, p1)`, `cont(F, p2)`, `cont(F, p3)`.
+  - No edges between `p1`, `p2`, `p3`.
+  - Three open rays on the cont-chain, radiating outward.
+  - Handle kind: `structured`.
 
-- **Internal** (`שׂ`): the three nodes face inward. They sit inside `F` as compartments, connected by `sub` edges (not `cont`). Subsequent letters that attach to `F`'s interior find three internal surfaces to anchor against.
+- **Internal / Triangle** (`שׂ`):
+  - Add `sub(F, c1)`, `sub(F, c2)`, `sub(F, c3)`.
+  - Add `sub(c1, c2)`, `sub(c2, c3)`, `sub(c3, c1)`.
+  - Closed loop inside `F`. Three compartments that hold each other in place.
+  - Handle kind: `compartment`.
 
-- **Seal:** focus remains `F`. Thread forwards `F`. The next letter selects from `F` and finds three attachment points — outward or inward depending on direction. All three are live. Shin does not choose which one matters.
+- **Seal:** focus remains `F`. Thread forwards `F`. All three points are live. Shin does not choose among them.
 
 - **Dot selection:**
-- Right dot -> external
-- Left dot -> internal
+- Right dot -> external (tripod)
+- Left dot -> internal (triangle)
 - Undotted -> external (default)
 
-- **Milui:** שי״ן = three-point attachment (ש) -> pin to one committed point (י) -> straighten into locked continuation (ן). The name describes the resolution path: after tripling the attachment surface, commit and continue.
+- **Milui:** שי״ן = three-point attachment (ש) -> pin to one committed point (י) -> straighten into locked continuation (ן). After tripling the attachment surface, commit and continue.
 
-- **Note on truth and standing:** the midrashic claim that ש is "a letter of truth" (אות של אמת) and that "falsehood has no legs" (שקר אין לו רגלים) are architectural observations: truth stands because its letters have wide bases; falsehood borrows ש's three-point attachment to persist. ר (unanchored head, a=0) is the structural inverse of ד (anchored head, a=1). External ש provides ר with the equivalent of ד's missing anchor through topology rather than native structure.
+- **Architectural note:** the midrashic claim that ש is "a letter of truth" and that "falsehood has no legs" are observations about topology. Truth stands because its letters have wide bases. Falsehood borrows ש's three-point attachment to persist. ר (unanchored head, `a=0`) is the structural inverse of ד (anchored head, `a=1`). External ש provides ר with the functional equivalent of ד's missing anchor. Internal ש (`שׂר`) provides governance: a closed internal loop of mutual constraint without external anchor.
 
-- **שׁ vs שׂ — not composite, not branch selection:** the old `COMPOSITE(read=ס, shape=ש)` declaration is retired. Sin does not invoke samekh. Internal three-point attachment produces structural coherence as an emergent topological property — the interior is braced from three sides, which is mechanically distinct from samekh's carry closure but can produce similar downstream resilience. The relationship is empirical, not definitional.
+- **שׁ vs שׂ:** The old `COMPOSITE(read=ס, shape=ש)` is retired. The relationship to ס is empirical: a closed internal loop (triangle) produces structural rigidity through topology, which is mechanically distinct from samekh's carry closure but may produce similar downstream resilience.
 
 ---
 
