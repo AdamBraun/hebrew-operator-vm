@@ -116,6 +116,9 @@ export function assertStateInvariants(state: State): void {
     const [from, to] = edge.split("->");
     ensure(from);
     ensure(to);
+    if (!state.cont.has(edge)) {
+      throw new Error(`Carry edge ${edge} must have matching cont edge`);
+    }
   }
   for (const edge of state.supp) {
     const [from, to] = edge.split("->");
