@@ -7,7 +7,8 @@ describe("metamorphic properties", () => {
     const noSpace = runProgram("נס", createInitialState());
     const withSpace = runProgram("נ ס", createInitialState());
     expect(noSpace.vm.H.find((event) => event.type === "fall")).toBeUndefined();
-    expect(withSpace.vm.H.find((event) => event.type === "fall")).toBeDefined();
+    expect(withSpace.vm.H.find((event) => event.type === "fall")).toBeUndefined();
+    expect(withSpace.vm.tau).toBeGreaterThan(noSpace.vm.tau);
   });
 
   it("multiple spaces collapse to one", () => {
@@ -21,9 +22,7 @@ describe("metamorphic properties", () => {
     const spaced = runProgram("  נ  ", createInitialState());
     const plainFalls = plain.vm.H.filter((event) => event.type === "fall");
     const spacedFalls = spaced.vm.H.filter((event) => event.type === "fall");
-    expect(plainFalls.length).toBe(1);
-    expect(spacedFalls.length).toBe(1);
-    expect(plainFalls[0].data.parent).toBe("Ω");
-    expect(spacedFalls[0].data.parent).toBe("Ω");
+    expect(plainFalls.length).toBe(0);
+    expect(spacedFalls.length).toBe(0);
   });
 });

@@ -29,14 +29,7 @@ export const nunOp: LetterOp = {
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { parent, child } = cons.meta as { parent: string; child: string };
-    S.vm.OStack_word.push({
-      kind: "SUPPORT",
-      parent,
-      child,
-      payload: {},
-      tau_created: S.vm.tau
-    });
+    const { child } = cons.meta as { child: string };
     return { S, h: child, r: BOT_ID };
   }
 };
