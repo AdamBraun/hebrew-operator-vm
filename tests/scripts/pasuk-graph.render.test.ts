@@ -347,7 +347,14 @@ describe("pasuk graph renderer", () => {
           { from: "כ:1:1", to: "ב:1:1", label: "boundary" }
         ],
         boundaries: [{ id: "ב:1:1", inside: "כ:1:1", outside: "Ω", members: ["כ:1:1"] }],
-        sub: ["ב:1:1->ש:1:1", "ב:1:1->ש:1:2", "ב:1:1->ש:1:3"]
+        sub: [
+          "ב:1:1->ש:1:1",
+          "ב:1:1->ש:1:2",
+          "ב:1:1->ש:1:3",
+          "ש:1:1->ש:1:2",
+          "ש:1:2->ש:1:3",
+          "ש:1:3->ש:1:1"
+        ]
       }
     };
 
@@ -397,6 +404,9 @@ describe("pasuk graph renderer", () => {
     expect(sinDot).toContain('"ב:1:1" -> "ש:1:1" [xlabel="sub", style="dashed", color="#6A8E4E"]');
     expect(sinDot).toContain('"ב:1:1" -> "ש:1:2" [xlabel="sub", style="dashed", color="#6A8E4E"]');
     expect(sinDot).toContain('"ב:1:1" -> "ש:1:3" [xlabel="sub", style="dashed", color="#6A8E4E"]');
+    expect(sinDot).toContain('"ש:1:1" -> "ש:1:2" [xlabel="loop", style="dotted", color="#8FB07A"]');
+    expect(sinDot).toContain('"ש:1:2" -> "ש:1:3" [xlabel="loop", style="dotted", color="#8FB07A"]');
+    expect(sinDot).toContain('"ש:1:3" -> "ש:1:1" [xlabel="loop", style="dotted", color="#8FB07A"]');
 
     const boundaryCluster = findBoundaryCluster(sinDot, "ב:1:1");
     expect(boundaryCluster).toBeTruthy();
@@ -406,5 +416,66 @@ describe("pasuk graph renderer", () => {
     expect(boundaryCluster).toContain('"ש:1:3";');
 
     expect(shinDot).not.toContain('xlabel="sub"');
+  });
+
+  it("renders fan-in and branch edge styles and promotes compartments into the parent's boundary cluster", async () => {
+    const { renderDotFromTraceJson } = await import("../../scripts/render/pasukGraph.mjs");
+
+    const payload = {
+      ref_key: "manual",
+      cleaned_text: "fanin",
+      vm: {
+        tau: 3,
+        D: "Ω",
+        F: "Ω",
+        handles: [
+          { id: "Ω", kind: "scope", meta: {} },
+          { id: "⊥", kind: "empty", meta: {} },
+          { id: "ב:2:1", kind: "boundary", meta: {} },
+          { id: "כ:2:1", kind: "scope", meta: {} },
+          { id: "נ:2:1", kind: "scope", meta: {} },
+          { id: "ש:2:1", kind: "compartment", meta: { parent: "כ:2:1" } },
+          { id: "ש:2:2", kind: "compartment", meta: { parent: "כ:2:1" } },
+          { id: "ש:2:3", kind: "compartment", meta: { parent: "כ:2:1" } },
+          { id: "פ:2:1", kind: "structured", meta: { parent: "כ:2:1", role: "p1" } }
+        ],
+        links: [
+          { from: "כ:2:1", to: "ב:2:1", label: "boundary" },
+          { from: "ב:2:1", to: "כ:2:1", label: "boundary" },
+          { from: "ב:2:1", to: "ש:2:1", label: "boundary" }
+        ],
+        boundaries: [{ id: "ב:2:1", inside: "כ:2:1", outside: "Ω", members: ["כ:2:1"] }],
+        cont: ["נ:2:1->כ:2:1", "נ:2:1->ש:2:1", "כ:2:1->פ:2:1"],
+        carry: ["נ:2:1->כ:2:1", "נ:2:1->ש:2:1"],
+        sub: [
+          "כ:2:1->ש:2:1",
+          "כ:2:1->ש:2:2",
+          "כ:2:1->ש:2:3",
+          "ש:2:1->ש:2:2",
+          "ש:2:2->ש:2:3",
+          "ש:2:3->ש:2:1"
+        ]
+      }
+    };
+
+    const dot = renderDotFromTraceJson(payload, {
+      layout: "plain",
+      prune: "none",
+      boundary: "cluster",
+      legend: false,
+      prettyIds: false
+    });
+
+    const boundaryCluster = findBoundaryCluster(dot, "ב:2:1");
+    expect(boundaryCluster).toBeTruthy();
+    expect(boundaryCluster).toContain('"כ:2:1";');
+    expect(boundaryCluster).toContain('"ש:2:1";');
+    expect(boundaryCluster).toContain('"ש:2:2";');
+    expect(boundaryCluster).toContain('"ש:2:3";');
+
+    expect(dot).toContain('"נ:2:1" -> "כ:2:1" [xlabel="carry"]');
+    expect(dot).toContain('"נ:2:1" -> "ש:2:1" [xlabel="carry", style="dashed"]');
+    expect(dot).toContain('"ב:2:1" -> "ש:2:1" [xlabel="boundary", style="dashed"]');
+    expect(dot).toContain('"כ:2:1" -> "פ:2:1" [xlabel="branch"');
   });
 });

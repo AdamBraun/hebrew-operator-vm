@@ -268,12 +268,16 @@ function buildTauToWordSectionMap(sections) {
 function inferBoundaryMembership(boundaries, handles) {
   // returns: Map(boundaryId -> Set(handleId))
   const map = new Map();
+  const boundaryIds = new Set(boundaries.map((boundary) => String(boundary.id)));
 
   // 1) explicit members on boundary
   for (const boundary of boundaries) {
+    const members = new Set();
+    if (boundary.inside) members.add(String(boundary.inside));
     if (boundary.members && boundary.members.length) {
-      map.set(boundary.id, new Set(boundary.members));
+      for (const member of boundary.members) members.add(String(member));
     }
+    map.set(boundary.id, members);
   }
 
   // 2) infer from handle.meta (if present)
@@ -292,8 +296,28 @@ function inferBoundaryMembership(boundaries, handles) {
     }
 
     for (const boundaryId of candidates) {
+      if (!boundaryIds.has(boundaryId)) continue;
       if (!map.has(boundaryId)) map.set(boundaryId, new Set());
-      map.get(boundaryId).add(handle.id);
+      map.get(boundaryId)?.add(handle.id);
+    }
+  }
+
+  // 3) parent propagation: if a parent is in a boundary cluster, its child joins that cluster.
+  // This keeps compartment children inside the same boundary cluster as their parent focus.
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const handle of handles) {
+      const parentId = asStringOrNull(handle?.meta?.parent);
+      if (!parentId) continue;
+      for (const boundaryId of boundaryIds) {
+        const members = map.get(boundaryId);
+        if (!members || !members.has(parentId) || members.has(handle.id)) {
+          continue;
+        }
+        members.add(handle.id);
+        changed = true;
+      }
     }
   }
 
@@ -652,9 +676,30 @@ export function renderVmDot(vm, opts = {}) {
   const resolvedWordBorder = wordBorder ?? t.wordBorder ?? "#6a1b9a";
 
   const handles = normalizeHandles(vm);
+  const handleById = new Map(handles.map((handle) => [handle.id, handle]));
   const links = normalizeLinks(vm);
   const boundaries = normalizeBoundaries(vm);
   const subEdges = normalizeEdgeSet(vm?.sub);
+  const contEdges = normalizeEdgeSet(vm?.cont);
+  const carryEdges = normalizeEdgeSet(vm?.carry);
+  const carryEdgeKeys = new Set(carryEdges.map((edge) => `${edge.from}->${edge.to}`));
+  const directSubChildren = new Map();
+  const addDirectSub = (parent, child) => {
+    if (!directSubChildren.has(parent)) {
+      directSubChildren.set(parent, new Set());
+    }
+    directSubChildren.get(parent).add(child);
+  };
+  for (const edge of subEdges) {
+    addDirectSub(edge.from, edge.to);
+  }
+  const hasDirectSubChildren = (id) => (directSubChildren.get(String(id))?.size ?? 0) > 0;
+  const isCompartmentId = (id) => handleById.get(String(id))?.kind === "compartment";
+  const isStructuredBranchTarget = (from, to) => {
+    const target = handleById.get(String(to));
+    if (!target || target.kind !== "structured") return false;
+    return String(target.meta?.parent ?? "") === String(from);
+  };
   const domainTargetId = asStringOrNull(meta.domain) ?? "Ω";
   const focusTargetId = asStringOrNull(meta.focus) ?? "Ω";
   const forcedPointerIds = new Set(["Ω", domainTargetId, focusTargetId]);
@@ -684,7 +729,7 @@ export function renderVmDot(vm, opts = {}) {
       handles: keptHandles,
       links,
       boundaries,
-      interiorEdges: subEdges,
+      interiorEdges: [...subEdges, ...contEdges, ...carryEdges],
       keepIds: ["Ω", "⊥", ...Array.from(forcedPointerIds), ...requestedKeepIds],
       keepKinds: parseCsvList(pruneKeepKinds),
       countBoundaryEdges: Boolean(pruneCountBoundaryEdges)
@@ -1052,8 +1097,50 @@ export function renderVmDot(vm, opts = {}) {
 
     if (src.id === dst.id && (src.port ?? "") === (dst.port ?? "")) continue;
 
+    const linkLabel = link.label ? String(link.label) : "";
+    const dashedFanInBoundary = linkLabel === "boundary" && isCompartmentId(dst.id);
+
     dot += `  ${edgeFrom} -> ${edgeTo} [${attrs({
-      ...edgeLabelAttrs(link.label ? String(link.label) : "")
+      ...edgeLabelAttrs(linkLabel),
+      style: dashedFanInBoundary ? dotId("dashed") : undefined
+    })}];\n`;
+  }
+
+  // Edges (cont/carry): render branch lines and fan-in targets explicitly.
+  for (const edge of contEdges) {
+    if (carryEdgeKeys.has(`${edge.from}->${edge.to}`)) {
+      continue;
+    }
+    if (!keptIdSet.has(edge.from) || !keptIdSet.has(edge.to)) {
+      continue;
+    }
+
+    const toCompartment = isCompartmentId(edge.to);
+    const toFanInParent = hasDirectSubChildren(edge.to);
+    const branchEdge = isStructuredBranchTarget(edge.from, edge.to);
+    if (!toCompartment && !toFanInParent && !branchEdge) {
+      continue;
+    }
+
+    dot += `  ${edgeRef(edge.from, null)} -> ${edgeRef(edge.to, null)} [${attrs({
+      ...edgeLabelAttrs(branchEdge ? "branch" : "cont"),
+      style: toCompartment ? dotId("dashed") : undefined,
+      color: branchEdge ? dotId(t.structuredBorder) : undefined
+    })}];\n`;
+  }
+
+  for (const edge of carryEdges) {
+    if (!keptIdSet.has(edge.from) || !keptIdSet.has(edge.to)) {
+      continue;
+    }
+    const toCompartment = isCompartmentId(edge.to);
+    const toFanInParent = hasDirectSubChildren(edge.to);
+    if (!toCompartment && !toFanInParent) {
+      continue;
+    }
+    dot += `  ${edgeRef(edge.from, null)} -> ${edgeRef(edge.to, null)} [${attrs({
+      ...edgeLabelAttrs("carry"),
+      style: toCompartment ? dotId("dashed") : undefined
     })}];\n`;
   }
 
@@ -1062,10 +1149,19 @@ export function renderVmDot(vm, opts = {}) {
     if (!keptIdSet.has(edge.from) || !keptIdSet.has(edge.to)) {
       continue;
     }
+    const fromHandle = handleById.get(edge.from);
+    const toHandle = handleById.get(edge.to);
+    const sameCompartmentParent =
+      fromHandle?.kind === "compartment" &&
+      toHandle?.kind === "compartment" &&
+      asStringOrNull(fromHandle?.meta?.parent) &&
+      asStringOrNull(fromHandle?.meta?.parent) === asStringOrNull(toHandle?.meta?.parent);
+    const loopEdge = Boolean(sameCompartmentParent);
+
     dot += `  ${edgeRef(edge.from, null)} -> ${edgeRef(edge.to, null)} [${attrs({
-      ...edgeLabelAttrs("sub"),
-      style: dotId("dashed"),
-      color: dotId("#6A8E4E")
+      ...edgeLabelAttrs(loopEdge ? "loop" : "sub"),
+      style: dotId(loopEdge ? "dotted" : "dashed"),
+      color: dotId(loopEdge ? "#8FB07A" : "#6A8E4E")
     })}];\n`;
   }
 
