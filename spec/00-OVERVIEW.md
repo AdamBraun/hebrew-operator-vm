@@ -14,11 +14,19 @@ This directory defines the normative, domain-agnostic specification of the Hebre
 - `phase-a-verse-cleanup.md`: verse-end (sof-pasuk) snapshot/reset contract and no-leakage baseline requirements.
 - `70-DETERMINISM.md`: canonical ordering and replay guarantees.
 - `80-CONFORMANCE.md`: compliance levels and required tests.
-- `LAYER_CONTRACTS.md`: cross-layer guardrails, including strict Normalization vs Layout separation.
+- `LAYER_CONTRACTS.md`: source-aligned (`src/`) layer topology, dependency guardrails, and architecture decision register.
+- `NORMALIZATION_LAYER.md`: Spine (Normalization) layer contract and anchor authority.
+- `LAYERS/LETTERS.md`: Letters layer contract.
+- `LAYERS/NIQQUD_LAYER.md`: Niqqud layer contract.
+- `LAYER_CANTILLATION.md`: Cantillation layer contract.
+- `LAYOUT_LAYER.md`: Layout layer contract.
+- `LAYOUT_OBLIGATIONS.md`: downstream obligations for LayoutIR consumers.
 - `METADATA_LAYER.md`: metadata-only layer contract (packaging/checkpoints/navigation).
 - `METADATA_PLAN_IR.md`: metadata-layer output IR contract (`MetadataPlan.json`).
+- `IR_SCHEMAS.md`: machine IR record shapes and invariants per layer.
 - `REFKEY.md`: canonical Torah reference key identity (`Book/Chapter/Verse`).
 - `REF_ORDER_SOURCE.md`: canonical corpus ref ordering source contract for metadata planning.
+- `STITCHER_CONTRACT.md`: deterministic join contract for composing orthogonal layer outputs.
 - `WRAPPER_STITCHING.md`: wrapper join contract for layer outputs keyed by stable anchors.
 
 ## Stability policy
