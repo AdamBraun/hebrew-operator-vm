@@ -534,17 +534,30 @@ Unary. Orthogonal resolver: closes the nearest unresolved carry-thread.
 
 ---
 
-# ש — שין (tilted ן spine + two ו attached at the terminal end)
+# ש — שין (three-point attachment)
 
-- **Select:** current focus (F).
-- **Bound:** produce a structured handle with three internal access points:
-  - (F^{\text{spine}}): sealed baseline/continuation spine (the ן)
-  - (F^{L}, F^{R}): two exported access-handles (the two ו)
-    All three inherit the currently-effective constraint bundle of (F).
+- **Select:** current focus (`F`) — the handle forwarded by the preceding letter.
 
-- **Seal:** replace focus by this structured object, with a deterministic default active branch.
-- **שׁ vs שׂ:** `שׁ` executes as regular ש. `שׂ` is **COMPOSITE(read=ס, shape=ש)** with read-first precedence: run ס meaning, then apply ש as routing-only fork metadata.
-- **Key difference:** ש creates multiple internal handles inside one construction, not parallel futures.
+- **Bound (parameterized by direction):**
+
+Allocate three nodes from `F`. These are three independent attachment points — not copies of `F`, not branches from `F`, but three distinct surfaces through which subsequent letters can connect to `F`.
+
+- **External** (`שׁ`, default/undotted): the three nodes face outward. They sit on the cont-chain as forward-facing ports. Subsequent letters that continue from `F` encounter three parallel connection surfaces.
+
+- **Internal** (`שׂ`): the three nodes face inward. They sit inside `F` as compartments, connected by `sub` edges (not `cont`). Subsequent letters that attach to `F`'s interior find three internal surfaces to anchor against.
+
+- **Seal:** focus remains `F`. Thread forwards `F`. The next letter selects from `F` and finds three attachment points — outward or inward depending on direction. All three are live. Shin does not choose which one matters.
+
+- **Dot selection:**
+- Right dot -> external
+- Left dot -> internal
+- Undotted -> external (default)
+
+- **Milui:** שי״ן = three-point attachment (ש) -> pin to one committed point (י) -> straighten into locked continuation (ן). The name describes the resolution path: after tripling the attachment surface, commit and continue.
+
+- **Note on truth and standing:** the midrashic claim that ש is "a letter of truth" (אות של אמת) and that "falsehood has no legs" (שקר אין לו רגלים) are architectural observations: truth stands because its letters have wide bases; falsehood borrows ש's three-point attachment to persist. ר (unanchored head, a=0) is the structural inverse of ד (anchored head, a=1). External ש provides ר with the equivalent of ד's missing anchor through topology rather than native structure.
+
+- **שׁ vs שׂ — not composite, not branch selection:** the old `COMPOSITE(read=ס, shape=ש)` declaration is retired. Sin does not invoke samekh. Internal three-point attachment produces structural coherence as an emergent topological property — the interior is braced from three sides, which is mechanically distinct from samekh's carry closure but can produce similar downstream resilience. The relationship is empirical, not definitional.
 
 ---
 

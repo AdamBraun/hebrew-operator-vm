@@ -103,6 +103,25 @@ function normalizeLinks(vm) {
     }));
 }
 
+function normalizeEdgeSet(rawEdges) {
+  const edges = Array.isArray(rawEdges) ? rawEdges : [];
+  return edges
+    .map((edge) => String(edge ?? ""))
+    .map((edge) => {
+      const pivot = edge.indexOf("->");
+      if (pivot <= 0 || pivot + 2 >= edge.length) {
+        return null;
+      }
+      const from = edge.slice(0, pivot).trim();
+      const to = edge.slice(pivot + 2).trim();
+      if (!from || !to) {
+        return null;
+      }
+      return { from, to };
+    })
+    .filter((edge) => edge !== null);
+}
+
 function normalizeBoundaries(vm) {
   const boundaries = Array.isArray(vm?.boundaries) ? vm.boundaries : [];
   return boundaries
@@ -266,6 +285,7 @@ function inferBoundaryMembership(boundaries, handles) {
     if (meta.boundaryId != null) candidates.push(String(meta.boundaryId));
     if (meta.scopeId != null) candidates.push(String(meta.scopeId));
     if (meta.boundary != null) candidates.push(String(meta.boundary));
+    if (meta.parent != null) candidates.push(String(meta.parent));
 
     if (Array.isArray(meta.scope_path)) {
       for (const scopeItem of meta.scope_path) candidates.push(String(scopeItem));
@@ -542,7 +562,7 @@ function boundaryClusterName(boundaryId, index) {
 }
 
 function computeDegrees(args) {
-  const { handles, links, boundaries, countBoundaryEdges = true } = args;
+  const { handles, links, boundaries, interiorEdges = [], countBoundaryEdges = true } = args;
   const degree = new Map(handles.map((handle) => [handle.id, 0]));
   const bump = (id) => {
     if (!degree.has(id)) return;
@@ -552,6 +572,11 @@ function computeDegrees(args) {
   for (const link of links) {
     bump(link.from);
     bump(link.to);
+  }
+
+  for (const edge of interiorEdges) {
+    bump(edge.from);
+    bump(edge.to);
   }
 
   if (countBoundaryEdges) {
@@ -566,11 +591,19 @@ function computeDegrees(args) {
 }
 
 function pruneOrphanHandles(args) {
-  const { handles, links, boundaries, keepIds, keepKinds, countBoundaryEdges = true } = args;
+  const {
+    handles,
+    links,
+    boundaries,
+    interiorEdges = [],
+    keepIds,
+    keepKinds,
+    countBoundaryEdges = true
+  } = args;
 
   const keepIdSet = new Set((keepIds ?? []).map((id) => String(id)));
   const keepKindSet = new Set((keepKinds ?? []).map((kind) => String(kind)));
-  const degree = computeDegrees({ handles, links, boundaries, countBoundaryEdges });
+  const degree = computeDegrees({ handles, links, boundaries, interiorEdges, countBoundaryEdges });
 
   return handles.filter((handle) => {
     if (keepIdSet.has(handle.id)) return true;
@@ -621,6 +654,7 @@ export function renderVmDot(vm, opts = {}) {
   const handles = normalizeHandles(vm);
   const links = normalizeLinks(vm);
   const boundaries = normalizeBoundaries(vm);
+  const subEdges = normalizeEdgeSet(vm?.sub);
   const domainTargetId = asStringOrNull(meta.domain) ?? "Ω";
   const focusTargetId = asStringOrNull(meta.focus) ?? "Ω";
   const forcedPointerIds = new Set(["Ω", domainTargetId, focusTargetId]);
@@ -650,6 +684,7 @@ export function renderVmDot(vm, opts = {}) {
       handles: keptHandles,
       links,
       boundaries,
+      interiorEdges: subEdges,
       keepIds: ["Ω", "⊥", ...Array.from(forcedPointerIds), ...requestedKeepIds],
       keepKinds: parseCsvList(pruneKeepKinds),
       countBoundaryEdges: Boolean(pruneCountBoundaryEdges)
@@ -1019,6 +1054,18 @@ export function renderVmDot(vm, opts = {}) {
 
     dot += `  ${edgeFrom} -> ${edgeTo} [${attrs({
       ...edgeLabelAttrs(link.label ? String(link.label) : "")
+    })}];\n`;
+  }
+
+  // Edges (interior subdivision)
+  for (const edge of subEdges) {
+    if (!keptIdSet.has(edge.from) || !keptIdSet.has(edge.to)) {
+      continue;
+    }
+    dot += `  ${edgeRef(edge.from, null)} -> ${edgeRef(edge.to, null)} [${attrs({
+      ...edgeLabelAttrs("sub"),
+      style: dotId("dashed"),
+      color: dotId("#6A8E4E")
     })}];\n`;
   }
 

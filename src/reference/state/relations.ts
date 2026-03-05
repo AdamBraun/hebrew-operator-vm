@@ -21,22 +21,6 @@ function validHandleId(id: unknown): id is string {
   return typeof id === "string" && id.length > 0;
 }
 
-function forkPortsFromMeta(state: State, id: string): string[] {
-  const meta = state.handles.get(id)?.meta ?? {};
-  const raw = Array.isArray(meta.fork_ports) ? meta.fork_ports : [];
-  const ports: string[] = [];
-  for (const candidate of raw) {
-    if (typeof candidate !== "string" || candidate.length === 0) {
-      continue;
-    }
-    if (!state.handles.has(candidate) || candidate === id || ports.includes(candidate)) {
-      continue;
-    }
-    ports.push(candidate);
-  }
-  return ports;
-}
-
 function subPorts(state: State, parent: string): string[] {
   const ports: string[] = [];
   for (const edge of state.sub) {
@@ -55,9 +39,7 @@ function subPorts(state: State, parent: string): string[] {
 
 function attachmentSites(state: State, id: string): string[] {
   const sites = [id];
-  const ports = forkPortsFromMeta(state, id);
-  const inferred = ports.length > 0 ? ports : subPorts(state, id);
-  for (const port of inferred) {
+  for (const port of subPorts(state, id)) {
     if (!sites.includes(port)) {
       sites.push(port);
     }

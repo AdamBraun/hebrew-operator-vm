@@ -33,6 +33,50 @@ function enforceDistinct(values: string[], message: string, enabled: boolean): v
   }
 }
 
+function parseEdge(edge: string): [string, string] | null {
+  const pivot = edge.indexOf("->");
+  if (pivot <= 0 || pivot + 2 >= edge.length) {
+    return null;
+  }
+  const source = edge.slice(0, pivot);
+  const target = edge.slice(pivot + 2);
+  if (!source || !target) {
+    return null;
+  }
+  return [source, target];
+}
+
+function subChildren(state: State, parent: string): string[] {
+  const children: string[] = [];
+  for (const edge of state.sub) {
+    const parsed = parseEdge(edge);
+    if (!parsed) {
+      continue;
+    }
+    const [source, child] = parsed;
+    if (source !== parent || !state.handles.has(child) || children.includes(child)) {
+      continue;
+    }
+    children.push(child);
+  }
+  return children;
+}
+
+function selectionTargetsFromFocus(state: State): string[] {
+  return subChildren(state, state.vm.F);
+}
+
+function selectionPrefs(state: State, usedFocus: boolean): Record<string, any> {
+  if (!usedFocus) {
+    return {};
+  }
+  const targets = selectionTargetsFromFocus(state);
+  if (targets.length === 0) {
+    return {};
+  }
+  return { selection_targets: targets };
+}
+
 export function resolveSelectableFocus(state: State): string {
   return state.vm.F;
 }
@@ -45,11 +89,19 @@ function resolveFocusCandidate(state: State, candidate: string): string {
 }
 
 export function selectCurrentFocus(state: State): { S: State; ops: SelectOperands } {
-  return { S: state, ops: { args: [resolveSelectableFocus(state)], prefs: {} } };
+  const focus = resolveSelectableFocus(state);
+  return {
+    S: state,
+    ops: {
+      args: [focus],
+      prefs: selectionPrefs(state, true)
+    }
+  };
 }
 
 export function selectOperands(state: State, meta: LetterMeta): { S: State; ops: SelectOperands } {
   const args: string[] = [];
+  let selectedFocus = false;
   const requiredFromK = takeFromStack(state.vm.K, meta.arity_req).map((value) =>
     resolveFocusCandidate(state, value)
   );
@@ -71,6 +123,7 @@ export function selectOperands(state: State, meta: LetterMeta): { S: State; ops:
   if (args.length < meta.arity_req) {
     args.push(resolveSelectableFocus(state));
     requiredUsedF = true;
+    selectedFocus = true;
   }
 
   let requiredUsedR = false;
@@ -123,6 +176,7 @@ export function selectOperands(state: State, meta: LetterMeta): { S: State; ops:
 
     if (optional.length < meta.arity_opt && !requiredUsedF) {
       optional.push(resolveSelectableFocus(state));
+      selectedFocus = true;
     }
 
     if (optional.length < meta.arity_opt && !requiredUsedR) {
@@ -137,5 +191,9 @@ export function selectOperands(state: State, meta: LetterMeta): { S: State; ops:
     args.push(...optional);
   }
 
-  return { S: state, ops: { args, prefs: {} } };
+  if (args.includes(state.vm.F)) {
+    selectedFocus = true;
+  }
+
+  return { S: state, ops: { args, prefs: selectionPrefs(state, selectedFocus) } };
 }
