@@ -298,15 +298,16 @@ export function isCantillationManifestDigestInputs(
 }
 
 export function isCantillationManifest(value: unknown): value is CantillationManifest {
-  if (!isCantillationManifestDigestInputs(value)) {
+  if (!isRecord(value) || !isCantillationManifestDigestInputs(value)) {
     return false;
   }
-  if (!Array.isArray(value.output_files)) {
+  const outputFiles = (value as UnknownRecord).output_files;
+  if (!Array.isArray(outputFiles)) {
     return false;
   }
 
   const seenPaths = new Set<string>();
-  for (const file of value.output_files) {
+  for (const file of outputFiles) {
     if (!isOutputFile(file)) {
       return false;
     }

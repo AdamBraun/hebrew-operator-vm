@@ -2,6 +2,7 @@ import { type SpineRecord } from "../spine/schema";
 import {
   compareCantillationEvents,
   readCantillationIRJsonl,
+  type CantillationAnchor,
   type CantillationBoundaryEvent,
   type CantillationEvent,
   type CantillationIRRecord,
@@ -120,8 +121,13 @@ function maybePlaceDisjunctiveBoundaries(args: {
     );
   }
 
+  type DisjTropeMarkRecord = CantillationIRRecord & {
+    anchor: Extract<CantillationAnchor, { kind: "gid" }>;
+    event: CantillationTropeMarkEvent & { rank: number };
+  };
+
   const inputs = args.records
-    .filter((row): row is CantillationIRRecord & { event: CantillationTropeMarkEvent } => {
+    .filter((row): row is DisjTropeMarkRecord => {
       return (
         row.anchor.kind === "gid" &&
         row.event.type === "TROPE_MARK" &&

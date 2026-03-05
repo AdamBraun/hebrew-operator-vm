@@ -54,7 +54,7 @@ const SCHEMA_NAMES: readonly IRSchemaName[] = [
   "program_ir"
 ];
 
-const ajv = new Ajv({ allErrors: true, strict: false });
+const ajv = new Ajv({ allErrors: true });
 
 function loadSchema(name: IRSchemaName): JsonSchema {
   const filePath = path.join(SCHEMA_DIR, SCHEMA_FILE_BY_NAME[name]);
@@ -62,11 +62,11 @@ function loadSchema(name: IRSchemaName): JsonSchema {
   return JSON.parse(text) as JsonSchema;
 }
 
-function compileValidators(): { [K in IRSchemaName]: ValidateFunction<IRRecordBySchema[K]> } {
-  const out = {} as { [K in IRSchemaName]: ValidateFunction<IRRecordBySchema[K]> };
+function compileValidators(): { [K in IRSchemaName]: ValidateFunction } {
+  const out = {} as { [K in IRSchemaName]: ValidateFunction };
   for (const schemaName of SCHEMA_NAMES) {
     const schema = loadSchema(schemaName);
-    out[schemaName] = ajv.compile(schema) as ValidateFunction<IRRecordBySchema[typeof schemaName]>;
+    out[schemaName] = ajv.compile(schema);
   }
   return out;
 }

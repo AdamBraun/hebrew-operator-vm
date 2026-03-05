@@ -1,8 +1,8 @@
 import { makeGapId, makeGid } from "./anchors";
 import { type NormalizationOptions, normalizeOptions } from "./options";
+import { sanitizeVerseText } from "./sanitize";
 import { type SpineRecord } from "./schema";
 import { normalizeText, splitIntoGraphemes, splitMarks } from "./unicode";
-import { sanitizeVerseText } from "../../impl/reference/src/scripts/normalizeTorah/runtime";
 
 const CONTROL_CHAR = /[\p{Cc}\p{Cf}]/gu;
 const WHITESPACE = /\s/u;

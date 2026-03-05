@@ -123,7 +123,7 @@ function parseGapDescriptorFromJsonLine(
 
   const gapid = parsed.gapid;
   const ref_key = parsed.ref_key;
-  const gap_index = parsed.gap_index;
+  const gapIndexValue = parsed.gap_index;
   const raw = parsed.raw;
 
   if (typeof gapid !== "string" || gapid.length === 0) {
@@ -132,9 +132,10 @@ function parseGapDescriptorFromJsonLine(
   if (typeof ref_key !== "string" || ref_key.length === 0) {
     fail(sourcePath, lineNumber, `invalid ref_key ${describe(ref_key)}`);
   }
-  if (!Number.isInteger(gap_index) || gap_index < 0) {
-    fail(sourcePath, lineNumber, `invalid gap_index ${describe(gap_index)}`);
+  if (typeof gapIndexValue !== "number" || !Number.isInteger(gapIndexValue) || gapIndexValue < 0) {
+    fail(sourcePath, lineNumber, `invalid gap_index ${describe(gapIndexValue)}`);
   }
+  const gap_index = gapIndexValue;
 
   if (!isRecord(raw)) {
     fail(sourcePath, lineNumber, `invalid raw field ${describe(raw)}`);

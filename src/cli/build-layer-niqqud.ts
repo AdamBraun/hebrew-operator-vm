@@ -363,7 +363,8 @@ function parseNiqqudManifest(parsed: unknown): NiqqudBuildManifest {
     throw new Error("build-layer-niqqud: manifest.layer must be 'niqqud'");
   }
   assertNonEmptyString(parsed.layer_version, "manifest.layer_version");
-  if (!Number.isInteger(parsed.ir_version) || parsed.ir_version < 0) {
+  const irVersion = parsed.ir_version;
+  if (typeof irVersion !== "number" || !Number.isInteger(irVersion) || irVersion < 0) {
     throw new Error("build-layer-niqqud: manifest.ir_version must be non-negative integer");
   }
   assertSha256Hex(parsed.digest, "manifest.digest");
@@ -392,7 +393,7 @@ function parseNiqqudManifest(parsed: unknown): NiqqudBuildManifest {
   return {
     layer: "niqqud",
     layer_version: parsed.layer_version,
-    ir_version: parsed.ir_version,
+    ir_version: irVersion,
     digest: parsed.digest,
     spine_digest: parsed.spine_digest,
     config_digest: parsed.config_digest,

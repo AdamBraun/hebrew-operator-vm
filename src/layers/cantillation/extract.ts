@@ -21,6 +21,7 @@ import { createCantillationMarkCoverage, resolveCantillationMarkWithCoverage } f
 import {
   compareCantillationEvents,
   serializeCantillationIRRecord,
+  type CantillationBoundaryEvent,
   type CantillationEvent,
   type CantillationIRRecord
 } from "./schema";
@@ -511,12 +512,12 @@ async function writeStatsFile(filePath: string, stats: CantillationStats): Promi
   await fs.writeFile(filePath, `${JSON.stringify(stats, null, 2)}\n`, "utf8");
 }
 
-function eventSubOrder(events: CantillationEvent[]): CantillationEvent[] {
+function eventSubOrder<T extends CantillationEvent>(events: T[]): T[] {
   return [...events].sort(compareCantillationEvents);
 }
 
-function readGapEvents(row: ParsedSpineGapRecord, sofPasukRank: number): CantillationEvent[] {
-  const events: CantillationEvent[] = [];
+function readGapEvents(row: ParsedSpineGapRecord, sofPasukRank: number): CantillationBoundaryEvent[] {
+  const events: CantillationBoundaryEvent[] = [];
 
   if (row.raw.maqaf_char) {
     events.push({
