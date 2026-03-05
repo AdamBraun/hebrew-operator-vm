@@ -55,7 +55,8 @@ export type ProgramIROutputFormat = "jsonl" | "json";
 
 export type MetadataPlan = Record<string, unknown> & {
   checkpoints?: Array<{
-    ref_end: RefKey;
+    ref_end?: RefKey;
+    ref_key_end?: RefKey;
     [key: string]: unknown;
   }>;
 };
@@ -508,16 +509,18 @@ export function assertMetadataPlan(
   scope = "MetadataPlan"
 ): asserts value is MetadataPlan {
   assertRecord(value, path, scope);
-  assertNoUnknownKeys(value, ["version", "notes", "labels", "options", "checkpoints"], path, scope);
 
-  const version = assertHas(value, "version", path, scope);
-  if (
-    typeof version !== "number" ||
-    !Number.isInteger(version) ||
-    !Number.isSafeInteger(version) ||
-    version < 1
-  ) {
-    fail(scope, `${path}.version`, `expected integer >= 1, got ${describe(version)}`);
+  if (hasOwn(value, "version")) {
+    const version = value.version;
+    if (
+      version !== undefined &&
+      (typeof version !== "number" ||
+        !Number.isInteger(version) ||
+        !Number.isSafeInteger(version) ||
+        version < 1)
+    ) {
+      fail(scope, `${path}.version`, `expected integer >= 1, got ${describe(version)}`);
+    }
   }
 
   if (hasOwn(value, "notes") && value.notes !== undefined && typeof value.notes !== "string") {
@@ -570,7 +573,19 @@ export function assertMetadataPlan(
         const checkpointPath = `${path}.checkpoints[${i}]`;
         const checkpoint = checkpoints[i];
         assertRecord(checkpoint, checkpointPath, scope);
-        const refEnd = assertHas(checkpoint, "ref_end", checkpointPath, scope);
+        const refEnd =
+          typeof checkpoint.ref_end === "string"
+            ? checkpoint.ref_end
+            : typeof checkpoint.ref_key_end === "string"
+              ? checkpoint.ref_key_end
+              : null;
+        if (!refEnd) {
+          fail(
+            scope,
+            checkpointPath,
+            "expected checkpoint.ref_end or checkpoint.ref_key_end as canonical RefKey"
+          );
+        }
         try {
           assertRefKey(refEnd, checkpointPath.concat(".ref_end"));
         } catch (error) {

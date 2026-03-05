@@ -11,6 +11,13 @@ import {
   formatDisabledMetadataPlanJson,
   isMetadataDisabledArg
 } from "../wrapper/checkpoints/metadata";
+import {
+  attachMetadataCheckpoints,
+  type AttachedMetadataCheckpoint,
+  type AttachedMetadataCheckpointIndex
+} from "../wrapper/stitch/metadataAttach";
+import { loadMetadataPlan } from "../wrapper/stitch/loaders";
+import { readSpineTraversalPlanFromJsonl } from "../wrapper/stitch/spinePlan";
 
 type StitchProgramCliOptions = {
   spineArg: string;
@@ -53,6 +60,9 @@ type RefStat = {
 };
 
 export type ProgramMeta = {
+  checkpoints: AttachedMetadataCheckpoint[];
+  checkpointsByRefEnd: Record<string, AttachedMetadataCheckpoint[]>;
+  checkpointsByIndex: Record<string, AttachedMetadataCheckpoint[]>;
   spineDigest: string;
   lettersDigest: string;
   niqqudDigest: string;
@@ -415,6 +425,7 @@ function createProgramMeta(args: {
   stitcherVersion: string;
   stitchConfig: StitchConfig;
   counts: { ops: number; boundaries: number; checkpoints: number };
+  metadataCheckpointIndex: AttachedMetadataCheckpointIndex;
   cacheDigest: string;
   programDigest: string;
   manifestDigest: string;
@@ -422,6 +433,9 @@ function createProgramMeta(args: {
   refStats?: Record<string, RefStat>;
 }): ProgramMeta {
   return {
+    checkpoints: args.metadataCheckpointIndex.checkpoints,
+    checkpointsByRefEnd: args.metadataCheckpointIndex.checkpointsByRefEnd,
+    checkpointsByIndex: args.metadataCheckpointIndex.checkpointsByIndex,
     spineDigest: args.digests.spineDigest,
     lettersDigest: args.digests.lettersDigest,
     niqqudDigest: args.digests.niqqudDigest,
@@ -529,6 +543,14 @@ export async function runStitchProgram(
       outputFormat: "jsonl",
       ...(parsed.createdAt ? { createdAt: parsed.createdAt } : {})
     });
+    const [spinePlan, metadataLoaded] = await Promise.all([
+      readSpineTraversalPlanFromJsonl(spinePath),
+      loadMetadataPlan(metadataInput.metadataPlanPath)
+    ]);
+    const metadataCheckpointIndex = attachMetadataCheckpoints({
+      spinePlan,
+      metadataPlan: metadataLoaded.metadataPlan
+    });
 
     await fs.mkdir(outputDir, { recursive: true });
     await Promise.all([
@@ -550,8 +572,9 @@ export async function runStitchProgram(
       counts: {
         ops: stitched.manifest.counts.ops,
         boundaries: stitched.manifest.counts.boundaries,
-        checkpoints: stitched.manifest.counts.checkpoints
+        checkpoints: metadataCheckpointIndex.checkpoints.length
       },
+      metadataCheckpointIndex,
       cacheDigest,
       programDigest,
       manifestDigest,

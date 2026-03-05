@@ -123,6 +123,37 @@ describe("stitch-program cli", () => {
       boundaries: 3,
       checkpoints: 1
     });
+    expect(meta.checkpoints).toEqual([
+      {
+        kind: "CHECKPOINT",
+        parasha_id: null,
+        aliyah_index: null,
+        plan_index_end: 4,
+        ref_key_end: "Genesis/1/1"
+      }
+    ]);
+    expect(meta.checkpointsByRefEnd).toEqual({
+      "Genesis/1/1": [
+        {
+          kind: "CHECKPOINT",
+          parasha_id: null,
+          aliyah_index: null,
+          plan_index_end: 4,
+          ref_key_end: "Genesis/1/1"
+        }
+      ]
+    });
+    expect(meta.checkpointsByIndex).toEqual({
+      "4": [
+        {
+          kind: "CHECKPOINT",
+          parasha_id: null,
+          aliyah_index: null,
+          plan_index_end: 4,
+          ref_key_end: "Genesis/1/1"
+        }
+      ]
+    });
   });
 
   it("is deterministic across forced rebuilds and cache-hits when unchanged", async () => {
@@ -235,6 +266,9 @@ describe("stitch-program cli", () => {
       boundaries: 3,
       checkpoints: 0
     });
+    expect(metaMetadataOff.checkpoints).toEqual([]);
+    expect(metaMetadataOff.checkpointsByRefEnd).toEqual({});
+    expect(metaMetadataOff.checkpointsByIndex).toEqual({});
     expect(metaMetadataOff.programDigest).toBe(metaWithMetadata.programDigest);
   });
 });

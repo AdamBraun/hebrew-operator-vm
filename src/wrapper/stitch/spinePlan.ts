@@ -16,12 +16,18 @@ export type PlannedGap = Pick<SpineGapRecord, "gapid" | "ref_key" | "gap_index" 
 
 export type SpineTraversalStep = { kind: "g"; gid: string } | { kind: "gap"; gapid: string };
 
+export type RefPlanIndexRange = {
+  startPlanIndex: number;
+  endPlanIndex: number;
+};
+
 export type SpineTraversalPlan = {
   graphemes: PlannedGrapheme[];
   gaps: PlannedGap[];
   plan: SpineTraversalStep[];
   gidSet: Set<string>;
   gapidSet: Set<string>;
+  refIndexByRef: Map<string, RefPlanIndexRange>;
 };
 
 function toAsyncIterator<T>(
@@ -91,6 +97,23 @@ function assertStrictGIndexAscending(
   lastGIndexByRef.set(refKey, gIndex);
 }
 
+function updateRefPlanIndex(
+  refIndexByRef: Map<string, RefPlanIndexRange>,
+  refKey: string,
+  planIndex: number
+): void {
+  const existing = refIndexByRef.get(refKey);
+  if (!existing) {
+    refIndexByRef.set(refKey, {
+      startPlanIndex: planIndex,
+      endPlanIndex: planIndex
+    });
+    return;
+  }
+
+  existing.endPlanIndex = planIndex;
+}
+
 export async function buildSpineTraversalPlan(
   records: AsyncIterable<SpineRecord> | Iterable<SpineRecord>
 ): Promise<SpineTraversalPlan> {
@@ -100,6 +123,7 @@ export async function buildSpineTraversalPlan(
   const gidSet = new Set<string>();
   const gapidSet = new Set<string>();
   const lastGIndexByRef = new Map<string, number>();
+  const refIndexByRef = new Map<string, RefPlanIndexRange>();
 
   const iterator = toAsyncIterator(records);
   for (let cursor = await iterator.next(); !cursor.done; cursor = await iterator.next()) {
@@ -109,12 +133,14 @@ export async function buildSpineTraversalPlan(
     if (row.kind === "g") {
       assertUniqueGid(gidSet, row.gid);
       assertStrictGIndexAscending(lastGIndexByRef, row.ref_key, row.g_index);
+      updateRefPlanIndex(refIndexByRef, row.ref_key, plan.length);
       graphemes.push(toPlannedGrapheme(row));
       plan.push({ kind: "g", gid: row.gid });
       continue;
     }
 
     assertUniqueGapid(gapidSet, row.gapid);
+    updateRefPlanIndex(refIndexByRef, row.ref_key, plan.length);
     gaps.push(toPlannedGap(row));
     plan.push({ kind: "gap", gapid: row.gapid });
   }
@@ -124,7 +150,8 @@ export async function buildSpineTraversalPlan(
     gaps,
     plan,
     gidSet,
-    gapidSet
+    gapidSet,
+    refIndexByRef
   };
 }
 

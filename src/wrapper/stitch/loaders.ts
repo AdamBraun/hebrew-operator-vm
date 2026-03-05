@@ -19,7 +19,8 @@ export type LettersOp = Omit<LettersIRRecord, "kind">;
 export type CantEvent = CantillationEvent;
 
 export type Checkpoint = {
-  ref_end: RefKey;
+  ref_end?: RefKey;
+  ref_key_end?: RefKey;
   [key: string]: unknown;
 };
 
@@ -304,8 +305,19 @@ function assertCheckpoint(
   if (!isRecord(value)) {
     throw new Error(`stitch loaders: ${filePath} checkpoints[${String(index)}] must be an object`);
   }
+  const refEnd =
+    typeof value.ref_end === "string"
+      ? value.ref_end
+      : typeof value.ref_key_end === "string"
+        ? value.ref_key_end
+        : null;
+  if (!refEnd) {
+    throw new Error(
+      `stitch loaders: ${filePath} checkpoints[${String(index)}] requires ref_end or ref_key_end`
+    );
+  }
   try {
-    assertRefKey(value.ref_end, `${filePath} checkpoints[${String(index)}].ref_end`);
+    assertRefKey(refEnd, `${filePath} checkpoints[${String(index)}].ref_end`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`stitch loaders: ${message}`);
@@ -333,9 +345,13 @@ export async function loadMetadataPlan(filePath: string): Promise<{
   for (let i = 0; i < checkpoints.length; i += 1) {
     const checkpoint = checkpoints[i];
     assertCheckpoint(checkpoint, i, filePath);
-    const existing = checkpointByRefEnd.get(checkpoint.ref_end) ?? [];
+    const refEnd =
+      typeof checkpoint.ref_end === "string"
+        ? checkpoint.ref_end
+        : (checkpoint.ref_key_end as RefKey);
+    const existing = checkpointByRefEnd.get(refEnd) ?? [];
     existing.push(clone(checkpoint));
-    checkpointByRefEnd.set(checkpoint.ref_end, existing);
+    checkpointByRefEnd.set(refEnd, existing);
   }
 
   return {

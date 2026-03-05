@@ -72,6 +72,14 @@ describe("spine traversal plan", () => {
 
     expect(plan.gidSet.has("Genesis/1/2#g:3")).toBe(true);
     expect(plan.gapidSet.has("Genesis/1/2#gap:4")).toBe(true);
+    expect(plan.refIndexByRef.get("Genesis/1/1")).toEqual({
+      startPlanIndex: 0,
+      endPlanIndex: lastRef1Index
+    });
+    expect(plan.refIndexByRef.get("Genesis/1/2")).toEqual({
+      startPlanIndex: lastRef1Index + 1,
+      endPlanIndex: 17
+    });
   });
 
   it("rejects duplicate gid and duplicate gapid", async () => {
