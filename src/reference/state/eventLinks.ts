@@ -24,6 +24,35 @@ function bi(state: State, left: unknown, right: unknown, label: string): void {
   link(state, right, left, label);
 }
 
+function parseEdge(edge: string): [string, string] | null {
+  const pivot = String(edge).indexOf("->");
+  if (pivot <= 0 || pivot + 2 >= String(edge).length) {
+    return null;
+  }
+  const from = String(edge).slice(0, pivot);
+  const to = String(edge).slice(pivot + 2);
+  if (!from || !to) {
+    return null;
+  }
+  return [from, to];
+}
+
+function directSubChildren(state: State, parent: string): string[] {
+  const children: string[] = [];
+  for (const edge of state.sub) {
+    const parsed = parseEdge(edge);
+    if (!parsed) {
+      continue;
+    }
+    const [from, to] = parsed;
+    if (from !== parent || children.includes(to)) {
+      continue;
+    }
+    children.push(to);
+  }
+  return children;
+}
+
 export function applyEventLinks(state: State, events: readonly VMEvent[]): void {
   for (const event of events) {
     const type = String(event?.type ?? "");
@@ -53,10 +82,16 @@ export function applyEventLinks(state: State, events: readonly VMEvent[]): void 
       case "boundary_open":
       case "boundary_close":
       case "boundary_auto_close":
-      case "boundary_cut_close":
+      case "boundary_cut_close": {
         link(state, data.inside, data.id, "boundary");
         link(state, data.id, data.outside, "boundary");
+        // Boundary sits on the inside target; fan this edge into direct compartments.
+        link(state, data.id, data.inside, "boundary");
+        for (const child of directSubChildren(state, String(data.inside ?? ""))) {
+          link(state, data.id, child, "boundary");
+        }
         break;
+      }
       case "finalize":
         link(state, data.target, data.id, "finalize");
         link(state, data.id, data.residueId, "residue");
