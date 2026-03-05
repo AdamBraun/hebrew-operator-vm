@@ -17,15 +17,11 @@ export const shinOp: LetterOp = {
   meta,
   select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops) => {
-    const focus = ops.args[0];
+    const focus = ops.args[0] ?? S.vm.F;
     const direction: AttachThreeDirection =
       ops.prefs?.shin_direction === "internal" ? "internal" : "external";
-    const attachThreeResult = attachThree(focus, direction, S);
-    const cons: Construction = {
-      base: focus,
-      envelope: defaultEnvelope(),
-      meta: attachThreeResult
-    };
+    attachThree(focus, direction, S);
+    const cons: Construction = { base: focus, envelope: defaultEnvelope(), meta: {} };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => ({ S, h: cons.base, r: BOT_ID })
