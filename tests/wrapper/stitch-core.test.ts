@@ -2,10 +2,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { type CantillationIRRecord } from "../../src/layers/cantillation/schema";
 import { type LayoutIRRecord } from "../../src/layers/layout/schema";
 import { type LettersIRRecord } from "../../src/layers/letters/schema";
-import { type NiqqudIRRow } from "../../src/layers/niqqud/schema";
 import { formatProgramIRJsonl } from "../../src/wrapper/program_schema";
 import { stitchProgramRowsFromFiles } from "../../src/wrapper/stitch/stitch";
 
@@ -92,82 +90,58 @@ describe("wrapper stitch core join", () => {
     );
   });
 
-  it("emits deterministic ProgramIR across shuffled input rows", async () => {
-    const tmpA = makeTmpDir("stitch-core-deterministic-a-");
-    const tmpB = makeTmpDir("stitch-core-deterministic-b-");
-    const inputA = buildInputPaths(tmpA);
-    const inputB = buildInputPaths(tmpB);
-
-    const letters = readJsonlRows<LettersIRRecord>(fixturePath("LettersIR.jsonl"));
-    const niqqud = readJsonlRows<NiqqudIRRow>(fixturePath("NiqqudIR.jsonl"));
-    const cant = readJsonlRows<CantillationIRRecord>(fixturePath("CantillationIR.jsonl"));
-    const layout = readJsonlRows<LayoutIRRecord>(fixturePath("LayoutIR.jsonl"));
-
-    const extraCantGapEvents: CantillationIRRecord[] = [
-      {
-        kind: "cant_event",
-        anchor: { kind: "gap", id: "Genesis/1/1#gap:1" },
-        ref_key: "Genesis/1/1",
-        event: {
-          type: "BOUNDARY",
-          op: "ALPHA",
-          rank: 9,
-          reason: "TEST_HIGH"
-        },
-        raw: { source: "test-high" }
-      },
-      {
-        kind: "cant_event",
-        anchor: { kind: "gap", id: "Genesis/1/1#gap:1" },
-        ref_key: "Genesis/1/1",
-        event: {
-          type: "BOUNDARY",
-          op: "OMEGA",
-          rank: 1,
-          reason: "TEST_LOW"
-        },
-        raw: { source: "test-low" }
+  it("errors on conflicting duplicate niqqud gid with precise locations", async () => {
+    const tmp = makeTmpDir("stitch-core-conflict-niqqud-");
+    const paths = buildInputPaths(tmp);
+    const niqqudRows = readJsonlRows<Record<string, unknown>>(paths.niqqudIrPath);
+    const first = niqqudRows[0];
+    if (!first) {
+      throw new Error("expected niqqud fixture row");
+    }
+    const duplicate = JSON.parse(JSON.stringify(first)) as Record<string, unknown>;
+    duplicate.mods = {
+      classes: ["TEST"],
+      features: {
+        hasDagesh: true,
+        hasShva: false,
+        vowelCount: 1
       }
-    ];
-    const extraLayoutEvents: LayoutIRRecord[] = [
-      {
-        gapid: "Genesis/1/1#gap:1",
-        ref_key: "Genesis/1/1",
-        gap_index: 1,
-        layout_event: {
-          type: "SETUMA",
-          strength: "mid",
-          source: "dataset"
-        }
-      }
-    ];
+    };
+    writeJsonl(paths.niqqudIrPath, [first, duplicate, ...niqqudRows.slice(1)]);
 
-    writeJsonl(inputA.lettersIrPath, [...letters]);
-    writeJsonl(inputA.niqqudIrPath, [...niqqud]);
-    writeJsonl(inputA.cantillationIrPath, [...cant, ...extraCantGapEvents]);
-    writeJsonl(inputA.layoutIrPath, [...layout, ...extraLayoutEvents]);
+    await expect(stitchProgramRowsFromFiles(paths)).rejects.toThrow(
+      /conflicting duplicate NiqqudIR gid 'Genesis\/1\/1#g:0'/
+    );
+    await expect(stitchProgramRowsFromFiles(paths)).rejects.toThrow(/NiqqudIR\.jsonl:2/);
+  });
 
-    writeJsonl(inputB.lettersIrPath, [...letters].reverse());
-    writeJsonl(inputB.niqqudIrPath, [...niqqud].reverse());
-    writeJsonl(inputB.cantillationIrPath, [...extraCantGapEvents, ...cant].reverse());
-    writeJsonl(inputB.layoutIrPath, [...extraLayoutEvents, ...layout].reverse());
+  it("rejects non-canonical input ordering before stitch", async () => {
+    const tmp = makeTmpDir("stitch-core-ordering-");
+    const paths = buildInputPaths(tmp);
+    const letters = readJsonlRows<LettersIRRecord>(paths.lettersIrPath);
+    writeJsonl(paths.lettersIrPath, [...letters].reverse());
 
-    const runA = await stitchProgramRowsFromFiles(inputA);
-    const runB = await stitchProgramRowsFromFiles(inputB);
-    const jsonlA = formatProgramIRJsonl(runA.rows);
-    const jsonlB = formatProgramIRJsonl(runB.rows);
+    await expect(stitchProgramRowsFromFiles(paths)).rejects.toThrow(
+      /LettersIR stream must be in strict deterministic order/
+    );
+    await expect(stitchProgramRowsFromFiles(paths)).rejects.toThrow(
+      /saw gid 'Genesis\/1\/1#g:0' after 'Genesis\/1\/1#g:1'/
+    );
+  });
 
-    expect(jsonlA).toBe(jsonlB);
+  it("emits stable ProgramIR rows for canonical tiny fixture", async () => {
+    const tmp = makeTmpDir("stitch-core-stable-canonical-");
+    const paths = buildInputPaths(tmp);
+    const run = await stitchProgramRowsFromFiles(paths);
+    const programJsonl = formatProgramIRJsonl(run.rows);
+    expect(programJsonl.length).toBeGreaterThan(0);
 
-    const boundaryGap1 = runA.rows.find(
+    const boundaryGap1 = run.rows.find(
       (row) => row.kind === "boundary" && row.gapid === "Genesis/1/1#gap:1"
     );
     if (!boundaryGap1 || boundaryGap1.kind !== "boundary") {
       throw new Error("expected boundary row for Genesis/1/1#gap:1");
     }
-    expect(boundaryGap1.layout.map((event) => event.type)).toEqual(["SPACE", "SETUMA"]);
-    expect(
-      boundaryGap1.cant.map((event) => (event as { rank?: number | null }).rank ?? null)
-    ).toEqual([1, 9]);
+    expect(boundaryGap1.layout.map((event) => event.type)).toEqual(["SPACE"]);
   });
 });

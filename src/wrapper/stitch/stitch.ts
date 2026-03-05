@@ -2,12 +2,28 @@ import fs from "node:fs";
 import readline from "node:readline";
 import {
   assertCantillationIRRecord,
+  cantillationEventSortKey,
+  compareCantillationIRRecords,
   type CantillationEvent,
   type CantillationIRRecord
 } from "../../layers/cantillation/schema";
-import { assertLayoutIRRecord, type LayoutEvent } from "../../layers/layout/schema";
-import { assertLettersIRRecord } from "../../layers/letters/schema";
-import { assertNiqqudIRRow, type NiqqudMods } from "../../layers/niqqud/schema";
+import {
+  assertLayoutIRRecord,
+  compareLayoutIRRecords,
+  type LayoutEvent,
+  type LayoutIRRecord
+} from "../../layers/layout/schema";
+import {
+  assertLettersIRRecord,
+  compareLettersIRRecords,
+  type LettersIRRecord
+} from "../../layers/letters/schema";
+import {
+  assertNiqqudIRRow,
+  compareNiqqudIRRows,
+  type NiqqudIRRow,
+  type NiqqudMods
+} from "../../layers/niqqud/schema";
 import type { ProgramIRRecord, ProgramMods } from "../program_schema";
 import {
   loadStitchAnchorIndexes,
@@ -91,9 +107,15 @@ function deepClone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
+function formatLocation(filePath: string, lineNumber: number): string {
+  return `${filePath}:${String(lineNumber)}`;
+}
+
 function normalizeProgramMods(rawMods: NiqqudMods | undefined): ProgramMods {
   const classesSource =
-    rawMods && Array.isArray(rawMods.classes) ? rawMods.classes.filter((entry) => typeof entry === "string") : [];
+    rawMods && Array.isArray(rawMods.classes)
+      ? rawMods.classes.filter((entry) => typeof entry === "string")
+      : [];
   const classes = [...new Set(classesSource)].sort(compareText);
 
   const featuresSource = rawMods && isRecord(rawMods.features) ? rawMods.features : {};
@@ -236,18 +258,46 @@ async function validateLettersAnchors(
   filePath: string,
   knownGids: ReadonlySet<string>
 ): Promise<void> {
+  const seenByGid = new Map<string, { lineNumber: number; signature: string }>();
+  let previous: { row: LettersIRRecord; lineNumber: number } | null = null;
+
   for await (const { value, lineNumber } of readJsonlValues(filePath)) {
-    const location = `${filePath}:${String(lineNumber)}`;
+    const location = formatLocation(filePath, lineNumber);
+    let row: LettersIRRecord;
     try {
       assertLettersIRRecord(value);
+      row = value;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(`stitch: ${location} invalid LettersIR record (${message})`);
     }
-    assertLettersIRNoBleed(value, location);
+    assertLettersIRNoBleed(row, location);
 
-    if (!knownGids.has(value.gid)) {
-      throw new Error(`stitch: ${location} LettersIR gid '${value.gid}' missing from Spine`);
+    const signature = canonicalStringify(row);
+    const existing = seenByGid.get(row.gid);
+    if (existing) {
+      const duplicateLocation = formatLocation(filePath, existing.lineNumber);
+      if (existing.signature !== signature) {
+        throw new Error(
+          `stitch: ${location} conflicting duplicate LettersIR gid '${row.gid}' (previous at ${duplicateLocation})`
+        );
+      }
+      throw new Error(
+        `stitch: ${location} duplicate LettersIR gid '${row.gid}' (previous at ${duplicateLocation})`
+      );
+    }
+    seenByGid.set(row.gid, { lineNumber, signature });
+
+    if (previous && compareLettersIRRecords(previous.row, row) >= 0) {
+      throw new Error(
+        `stitch: ${location} LettersIR stream must be in strict deterministic order; ` +
+          `saw gid '${row.gid}' after '${previous.row.gid}' at ${formatLocation(filePath, previous.lineNumber)}`
+      );
+    }
+    previous = { row, lineNumber };
+
+    if (!knownGids.has(row.gid)) {
+      throw new Error(`stitch: ${location} LettersIR gid '${row.gid}' missing from Spine`);
     }
   }
 }
@@ -256,18 +306,46 @@ async function validateNiqqudAnchors(
   filePath: string,
   knownGids: ReadonlySet<string>
 ): Promise<void> {
+  const seenByGid = new Map<string, { lineNumber: number; signature: string }>();
+  let previous: { row: NiqqudIRRow; lineNumber: number } | null = null;
+
   for await (const { value, lineNumber } of readJsonlValues(filePath)) {
-    const location = `${filePath}:${String(lineNumber)}`;
+    const location = formatLocation(filePath, lineNumber);
+    let row: NiqqudIRRow;
     try {
       assertNiqqudIRRow(value);
+      row = value;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(`stitch: ${location} invalid NiqqudIR record (${message})`);
     }
-    assertNiqqudIRNoBleed(value, location);
+    assertNiqqudIRNoBleed(row, location);
 
-    if (!knownGids.has(value.gid)) {
-      throw new Error(`stitch: ${location} NiqqudIR gid '${value.gid}' missing from Spine`);
+    const signature = canonicalStringify(row);
+    const existing = seenByGid.get(row.gid);
+    if (existing) {
+      const duplicateLocation = formatLocation(filePath, existing.lineNumber);
+      if (existing.signature !== signature) {
+        throw new Error(
+          `stitch: ${location} conflicting duplicate NiqqudIR gid '${row.gid}' (previous at ${duplicateLocation})`
+        );
+      }
+      throw new Error(
+        `stitch: ${location} duplicate NiqqudIR gid '${row.gid}' (previous at ${duplicateLocation})`
+      );
+    }
+    seenByGid.set(row.gid, { lineNumber, signature });
+
+    if (previous && compareNiqqudIRRows(previous.row, row) > 0) {
+      throw new Error(
+        `stitch: ${location} NiqqudIR stream must be in deterministic ascending order; ` +
+          `saw gid '${row.gid}' after '${previous.row.gid}' at ${formatLocation(filePath, previous.lineNumber)}`
+      );
+    }
+    previous = { row, lineNumber };
+
+    if (!knownGids.has(row.gid)) {
+      throw new Error(`stitch: ${location} NiqqudIR gid '${row.gid}' missing from Spine`);
     }
   }
 }
@@ -276,18 +354,41 @@ async function validateLayoutAnchors(
   filePath: string,
   knownGapids: ReadonlySet<string>
 ): Promise<void> {
+  const seenGapType = new Map<string, number>();
+  let previous: { row: LayoutIRRecord; lineNumber: number } | null = null;
+
   for await (const { value, lineNumber } of readJsonlValues(filePath)) {
-    const location = `${filePath}:${String(lineNumber)}`;
+    const location = formatLocation(filePath, lineNumber);
+    let row: LayoutIRRecord;
     try {
       assertLayoutIRRecord(value);
+      row = value;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(`stitch: ${location} invalid LayoutIR record (${message})`);
     }
-    assertLayoutIRNoBleed(value, location);
+    assertLayoutIRNoBleed(row, location);
 
-    if (!knownGapids.has(value.gapid)) {
-      throw new Error(`stitch: ${location} LayoutIR gapid '${value.gapid}' missing from Spine`);
+    const duplicateKey = `${row.gapid}\u0000${row.layout_event.type}`;
+    const existingLine = seenGapType.get(duplicateKey);
+    if (existingLine !== undefined) {
+      throw new Error(
+        `stitch: ${location} duplicate LayoutIR (gapid,type) pair '${row.gapid}', '${row.layout_event.type}' ` +
+          `(previous at ${formatLocation(filePath, existingLine)})`
+      );
+    }
+    seenGapType.set(duplicateKey, lineNumber);
+
+    if (previous && compareLayoutIRRecords(previous.row, row) > 0) {
+      throw new Error(
+        `stitch: ${location} LayoutIR stream must be in deterministic ascending order; ` +
+          `saw gapid '${row.gapid}' after '${previous.row.gapid}' at ${formatLocation(filePath, previous.lineNumber)}`
+      );
+    }
+    previous = { row, lineNumber };
+
+    if (!knownGapids.has(row.gapid)) {
+      throw new Error(`stitch: ${location} LayoutIR gapid '${row.gapid}' missing from Spine`);
     }
   }
 }
@@ -297,8 +398,11 @@ async function validateCantillationAnchors(
   knownGids: ReadonlySet<string>,
   knownGapids: ReadonlySet<string>
 ): Promise<void> {
+  const seenAnchorEvents = new Map<string, number>();
+  let previous: { row: CantillationIRRecord; lineNumber: number } | null = null;
+
   for await (const { value, lineNumber } of readJsonlValues(filePath)) {
-    const location = `${filePath}:${String(lineNumber)}`;
+    const location = formatLocation(filePath, lineNumber);
     let row: CantillationIRRecord;
     try {
       assertCantillationIRRecord(value);
@@ -307,7 +411,27 @@ async function validateCantillationAnchors(
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(`stitch: ${location} invalid CantillationIR record (${message})`);
     }
-    assertCantillationIRNoBleed(value, location);
+    assertCantillationIRNoBleed(row, location);
+
+    const duplicateKey = `${row.anchor.kind}\u0000${row.anchor.id}\u0000${cantillationEventSortKey(row.event)}`;
+    const existingLine = seenAnchorEvents.get(duplicateKey);
+    if (existingLine !== undefined) {
+      throw new Error(
+        `stitch: ${location} duplicate CantillationIR event for anchor '${row.anchor.id}' with sort key '${cantillationEventSortKey(row.event)}' ` +
+          `(previous at ${formatLocation(filePath, existingLine)})`
+      );
+    }
+    seenAnchorEvents.set(duplicateKey, lineNumber);
+
+    if (previous && compareCantillationIRRecords(previous.row, row) > 0) {
+      const previousAnchor = `${previous.row.anchor.kind}:${previous.row.anchor.id}`;
+      const currentAnchor = `${row.anchor.kind}:${row.anchor.id}`;
+      throw new Error(
+        `stitch: ${location} CantillationIR stream must be sorted by (ref_key, anchor.index, anchor.kind, event.sortKey); ` +
+          `saw '${currentAnchor}' after '${previousAnchor}' at ${formatLocation(filePath, previous.lineNumber)}`
+      );
+    }
+    previous = { row, lineNumber };
 
     if (row.anchor.kind === "gid") {
       if (!knownGids.has(row.anchor.id)) {

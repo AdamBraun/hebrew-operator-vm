@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import readline from "node:readline";
+import { compareRefKeysStable } from "../../layers/layout/schema";
 import {
   assertSpineRecord,
   type SpineGapRecord,
@@ -97,6 +98,42 @@ function assertStrictGIndexAscending(
   lastGIndexByRef.set(refKey, gIndex);
 }
 
+function compareText(left: string, right: string): number {
+  if (left === right) {
+    return 0;
+  }
+  return left < right ? -1 : 1;
+}
+
+function compareSpineRecordsForPlan(left: SpineRecord, right: SpineRecord): number {
+  const refCmp = compareRefKeysStable(left.ref_key, right.ref_key);
+  if (refCmp !== 0) {
+    return refCmp;
+  }
+
+  const leftIndex = left.kind === "gap" ? left.gap_index : left.g_index;
+  const rightIndex = right.kind === "gap" ? right.gap_index : right.g_index;
+  if (leftIndex !== rightIndex) {
+    return leftIndex - rightIndex;
+  }
+
+  if (left.kind !== right.kind) {
+    return left.kind === "gap" ? -1 : 1;
+  }
+
+  if (left.kind === "gap" && right.kind === "gap") {
+    return compareText(left.gapid, right.gapid);
+  }
+  if (left.kind === "g" && right.kind === "g") {
+    return compareText(left.gid, right.gid);
+  }
+  return 0;
+}
+
+function describeSpineAnchor(row: SpineRecord): string {
+  return row.kind === "g" ? row.gid : row.gapid;
+}
+
 function updateRefPlanIndex(
   refIndexByRef: Map<string, RefPlanIndexRange>,
   refKey: string,
@@ -161,6 +198,7 @@ export async function* readSpineRecordsFromJsonl(
   const stream = fs.createReadStream(spineJsonlPath, { encoding: "utf8" });
   const lines = readline.createInterface({ input: stream, crlfDelay: Infinity });
   let lineNumber = 0;
+  let previous: { row: SpineRecord; lineNumber: number } | null = null;
 
   try {
     for await (const rawLine of lines) {
@@ -188,6 +226,14 @@ export async function* readSpineRecordsFromJsonl(
           `spine plan: ${spineJsonlPath}:${String(lineNumber)} invalid Spine record (${message})`
         );
       }
+
+      if (previous && compareSpineRecordsForPlan(previous.row, parsed) > 0) {
+        throw new Error(
+          `spine plan: ${spineJsonlPath}:${String(lineNumber)} spine stream must be in deterministic order by (ref_key, index, kind); ` +
+            `saw '${describeSpineAnchor(parsed)}' after '${describeSpineAnchor(previous.row)}' at line ${String(previous.lineNumber)}`
+        );
+      }
+      previous = { row: parsed, lineNumber };
 
       yield parsed;
     }
