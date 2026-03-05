@@ -1,6 +1,7 @@
 import { SpaceBoundaryMode, Trope } from "../compile/types";
+import { isCarryUnresolved } from "../state/eff";
 import { BOT_ID, createHandle } from "../state/handles";
-import { addBoundary, closeMemZoneSilently } from "../state/relations";
+import { addBoundary, addSupp, closeMemZoneSilently } from "../state/relations";
 import { PhraseChunk, State } from "../state/state";
 import { collectGarbage } from "./gc";
 import { BoundaryTransitionArgs, applyBoundaryTransition } from "./domainTransition";
@@ -19,11 +20,141 @@ type MemZoneFlushRecord = {
   handleIds: Set<string>;
 };
 
+type CarryEdge = {
+  source: string;
+  target: string;
+};
+
 function sortIdsStable(a: string, b: string): number {
   if (a === b) {
     return 0;
   }
   return a < b ? -1 : 1;
+}
+
+function edgeKeyParts(edge: string): [string, string] | null {
+  const pivot = edge.indexOf("->");
+  if (pivot <= 0 || pivot + 2 >= edge.length) {
+    return null;
+  }
+  const source = edge.slice(0, pivot);
+  const target = edge.slice(pivot + 2);
+  if (!source || !target) {
+    return null;
+  }
+  return [source, target];
+}
+
+function buildContPredecessorIndex(state: State): Map<string, string[]> {
+  const out = new Map<string, string[]>();
+  for (const edge of state.cont) {
+    const parsed = edgeKeyParts(edge);
+    if (!parsed) {
+      continue;
+    }
+    const [source, target] = parsed;
+    const predecessors = out.get(target) ?? [];
+    predecessors.push(source);
+    out.set(target, predecessors);
+  }
+  return out;
+}
+
+function buildIncomingCarryIndex(state: State): Map<string, CarryEdge[]> {
+  const out = new Map<string, CarryEdge[]>();
+  for (const edge of state.carry) {
+    const parsed = edgeKeyParts(edge);
+    if (!parsed) {
+      continue;
+    }
+    const [source, target] = parsed;
+    const incoming = out.get(target) ?? [];
+    incoming.push({ source, target });
+    out.set(target, incoming);
+  }
+  return out;
+}
+
+function isChunkCommitBoundaryNode(state: State, nodeId: string): boolean {
+  const meta = state.handles.get(nodeId)?.meta ?? {};
+  return (
+    meta.chunk_commit_boundary === 1 ||
+    meta.chunk_commit_boundary === true ||
+    meta.chunkCommitBoundary === 1 ||
+    meta.chunkCommitBoundary === true
+  );
+}
+
+function collectCurrentChunkLineage(state: State, terminalNodeId: string): string[] {
+  const predecessors = buildContPredecessorIndex(state);
+  const visited = new Set<string>([terminalNodeId]);
+  const queue: string[] = [terminalNodeId];
+  const lineage: string[] = [];
+
+  while (queue.length > 0) {
+    const current = queue.shift() ?? "";
+    const isBoundary = isChunkCommitBoundaryNode(state, current);
+    if (current !== terminalNodeId && isBoundary) {
+      continue;
+    }
+
+    lineage.push(current);
+    if (isBoundary) {
+      continue;
+    }
+
+    for (const previous of predecessors.get(current) ?? []) {
+      if (visited.has(previous)) {
+        continue;
+      }
+      visited.add(previous);
+      queue.push(previous);
+    }
+  }
+
+  return lineage;
+}
+
+function closeOpenCarriesAtHardBoundary(state: State, terminalNodeId: string): void {
+  const lineage = collectCurrentChunkLineage(state, terminalNodeId);
+  if (lineage.length === 0) {
+    return;
+  }
+
+  const lineageSet = new Set<string>(lineage);
+  const incomingCarryByTarget = buildIncomingCarryIndex(state);
+  const sourcesToClose = new Set<string>();
+
+  for (const target of lineage) {
+    const incoming = incomingCarryByTarget.get(target) ?? [];
+    for (const carry of incoming) {
+      if (!lineageSet.has(carry.source)) {
+        continue;
+      }
+      if (carry.source === terminalNodeId) {
+        continue;
+      }
+      if (
+        isCarryUnresolved(state, carry.source, carry.target, {
+          focusNodeId: terminalNodeId
+        })
+      ) {
+        sourcesToClose.add(carry.source);
+      }
+    }
+  }
+
+  for (const source of sourcesToClose) {
+    addSupp(state, terminalNodeId, source);
+  }
+}
+
+function markChunkCommitBoundary(state: State, terminalNodeId: string): void {
+  const terminal = state.handles.get(terminalNodeId);
+  if (!terminal) {
+    return;
+  }
+  terminal.meta = { ...(terminal.meta ?? {}), chunk_commit_boundary: 1 };
 }
 
 function asHandleId(value: unknown): string | null {
@@ -500,7 +631,10 @@ function settleWordBoundaryState(state: State): void {
 }
 
 function applyHard(state: State, transition: BoundaryTransitionArgs): void {
+  const terminalFocus = state.vm.F;
   state.vm.tau += 1;
+  closeOpenCarriesAtHardBoundary(state, terminalFocus);
+  markChunkCommitBoundary(state, terminalFocus);
 
   resolveObligationsByDefault(state);
   const wordValue = sealWord(state);
