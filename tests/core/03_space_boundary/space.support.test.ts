@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { isCarryResolved } from "@ref/state/eff";
+import { isCarryResolved, isCarryUnresolved } from "@ref/state/eff";
 import { OMEGA_ID, createHandle } from "@ref/state/handles";
+import { samekhOp } from "@ref/letters/samekh";
 import { addCarry } from "@ref/state/relations";
 import { createInitialState } from "@ref/state/state";
 import { applySpace } from "@ref/vm/space";
@@ -42,5 +43,52 @@ describe("space boundary SUPPORT resolution", () => {
     expect(isCarryResolved(state, root, mid, { focusNodeId: terminal })).toBe(true);
     expect(isCarryResolved(state, mid, terminal, { focusNodeId: terminal })).toBe(true);
     expect(state.handles.get(terminal)?.meta?.chunk_commit_boundary).toBe(1);
+  });
+
+  it.each([
+    ["glue", "conj"],
+    ["glue_maqqef", "maqqef"]
+  ] as const)(
+    "boundary mode %s keeps open carries unresolved and unmarked",
+    (mode, joinStrength) => {
+      const state = createInitialState();
+      const root = OMEGA_ID;
+      const terminal = "terminal";
+      state.handles.set(terminal, createHandle(terminal, "scope", { meta: { succOf: root } }));
+      addCarry(state, root, terminal);
+      state.vm.F = terminal;
+      state.vm.wordHasContent = true;
+
+      applySpace(state, { mode });
+
+      expect(state.supp.size).toBe(0);
+      expect(isCarryUnresolved(state, root, terminal, { focusNodeId: terminal })).toBe(true);
+      expect(state.handles.get(terminal)?.meta?.chunk_commit_boundary).not.toBe(1);
+      expect(state.vm.PendingJoin?.left_span_handle).toBe(terminal);
+      expect(state.vm.PendingJoin?.join_strength).toBe(joinStrength);
+    }
+  );
+
+  it("samekh in word 2 can close an unresolved carry across glue", () => {
+    const state = createInitialState();
+    const root = OMEGA_ID;
+    const terminal = "terminal";
+    state.handles.set(terminal, createHandle(terminal, "scope", { meta: { succOf: root } }));
+    addCarry(state, root, terminal);
+    state.vm.F = terminal;
+    state.vm.wordHasContent = true;
+
+    expect(state.carry.has(`${root}->${terminal}`)).toBe(true);
+    expect(isCarryUnresolved(state, root, terminal, { focusNodeId: terminal })).toBe(true);
+
+    applySpace(state, { mode: "glue" });
+    expect(state.supp.size).toBe(0);
+
+    const { S, ops } = samekhOp.select(state);
+    const { cons } = samekhOp.bound(S, ops);
+    samekhOp.seal(state, cons);
+
+    expect(state.supp.has(`${terminal}->${root}`)).toBe(true);
+    expect(isCarryResolved(state, root, terminal, { focusNodeId: terminal })).toBe(true);
   });
 });

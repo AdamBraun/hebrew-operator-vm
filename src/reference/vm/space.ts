@@ -667,6 +667,7 @@ function applyGlue(
   mode: "glue" | "glue_maqqef",
   transition: BoundaryTransitionArgs
 ): void {
+  // Glue boundaries are pure continuation: no carry closure and no chunk-boundary marking.
   state.vm.tau += 1;
 
   const wordValue = sealWord(state);
