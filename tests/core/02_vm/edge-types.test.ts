@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addCarry, addSupp } from "@ref/state/relations";
+import { addCarry, addSub, addSupp } from "@ref/state/relations";
 import { createInitialState } from "@ref/state/state";
 
 describe("edge types", () => {
@@ -19,5 +19,15 @@ describe("edge types", () => {
     expect(state.supp.has("closer->origin")).toBe(true);
     expect(state.cont.size).toBe(0);
     expect(state.carry.size).toBe(0);
+  });
+
+  it("addSub inserts an interior subdivision edge sub(parent,child)", () => {
+    const state = createInitialState();
+    addSub(state, "parent", "child");
+
+    expect(state.sub.has("parent->child")).toBe(true);
+    expect(state.cont.size).toBe(0);
+    expect(state.carry.size).toBe(0);
+    expect(state.supp.size).toBe(0);
   });
 });

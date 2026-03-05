@@ -1,6 +1,7 @@
 import { BOT_ID, createHandle } from "../state/handles";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
+import { selectCurrentFocus } from "../vm/select";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
@@ -14,7 +15,7 @@ const meta: LetterMeta = {
 
 export const yodOp: LetterOp = {
   meta,
-  select: (S: State) => ({ S, ops: { args: [S.vm.F], prefs: {} } }),
+  select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops) => {
     const focus = ops.args[0];
     const cons: Construction = {

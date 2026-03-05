@@ -43,7 +43,9 @@ export function applyEventLinks(state: State, events: readonly VMEvent[]): void 
         bi(state, data.declaration, data.referent, "transport");
         break;
       case "shin":
-        link(state, data.focus, data.id, "construct");
+        if (data.focus !== data.id) {
+          link(state, data.focus, data.id, "construct");
+        }
         break;
       case "endpoint":
         link(state, data.endpoint, data.id, "endpoint");

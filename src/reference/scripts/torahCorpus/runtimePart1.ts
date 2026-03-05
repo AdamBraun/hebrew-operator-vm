@@ -674,7 +674,8 @@ function mapRawEventToFlow(event, traceEntry) {
           spine: asHandleId(data.spine),
           left: asHandleId(data.left),
           right: asHandleId(data.right),
-          active: asHandleId(data.active)
+          active: asHandleId(data.active),
+          direction: data.direction === "internal" ? "internal" : "external"
         }
       };
     default:

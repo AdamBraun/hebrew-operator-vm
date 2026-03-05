@@ -150,6 +150,7 @@ function buildStateDump(state: State): Record<string, any> {
   dump.cont.sort((left: string, right: string) => compareText(String(left), String(right)));
   dump.carry.sort((left: string, right: string) => compareText(String(left), String(right)));
   dump.supp.sort((left: string, right: string) => compareText(String(left), String(right)));
+  dump.sub.sort((left: string, right: string) => compareText(String(left), String(right)));
   sortLinks(dump.links);
   sortBoundaries(dump.boundaries);
   sortRules(dump.rules);
@@ -237,6 +238,7 @@ function resetRuntimeState(state: State, opts: FinalizeVerseOptions): void {
   state.cont = new Set();
   state.carry = new Set();
   state.supp = new Set();
+  state.sub = new Set();
   resetHandles(state, keepSystemHandles);
 }
 

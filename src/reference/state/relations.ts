@@ -39,6 +39,13 @@ export function addSupp(state: State, closer: string, origin: string): void {
   state.supp.add(edgeKey(closer, origin));
 }
 
+export function addSub(state: State, parent: string, child: string): void {
+  if (!parent || !child) {
+    return;
+  }
+  state.sub.add(edgeKey(parent, child));
+}
+
 export function contReachable(state: State, start: string, target: string): boolean {
   if (start === target) {
     return true;

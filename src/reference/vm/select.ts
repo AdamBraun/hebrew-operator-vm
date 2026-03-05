@@ -33,16 +33,57 @@ function enforceDistinct(values: string[], message: string, enabled: boolean): v
   }
 }
 
+export function resolveSelectableFocus(state: State): string {
+  const focus = state.vm.F;
+  const focusMeta = state.handles.get(focus)?.meta ?? {};
+
+  if (focusMeta.fork_direction === "external") {
+    const topOfStack = state.vm.K[state.vm.K.length - 1];
+    const children = new Set([focusMeta.spine, focusMeta.left, focusMeta.right]);
+    if (
+      typeof topOfStack === "string" &&
+      children.has(topOfStack) &&
+      state.handles.has(topOfStack)
+    ) {
+      return topOfStack;
+    }
+  }
+
+  const activeChild = focusMeta.active_child;
+  if (typeof activeChild !== "string" || activeChild.length === 0) {
+    return focus;
+  }
+  if (!state.handles.has(activeChild)) {
+    return focus;
+  }
+  return activeChild;
+}
+
+function resolveFocusCandidate(state: State, candidate: string): string {
+  if (candidate !== state.vm.F) {
+    return candidate;
+  }
+  return resolveSelectableFocus(state);
+}
+
+export function selectCurrentFocus(state: State): { S: State; ops: SelectOperands } {
+  return { S: state, ops: { args: [resolveSelectableFocus(state)], prefs: {} } };
+}
+
 export function selectOperands(state: State, meta: LetterMeta): { S: State; ops: SelectOperands } {
   const args: string[] = [];
-  const requiredFromK = takeFromStack(state.vm.K, meta.arity_req);
+  const requiredFromK = takeFromStack(state.vm.K, meta.arity_req).map((value) =>
+    resolveFocusCandidate(state, value)
+  );
   enforceDistinct(requiredFromK, "Distinctness requirement not met (K)", meta.distinct_required);
   args.push(...requiredFromK);
 
   let usedFromW = 0;
   if (args.length < meta.arity_req && state.vm.W.length > 0) {
     const remaining = meta.arity_req - args.length;
-    const requiredFromW = takeFromWatchlist(state.vm.W, remaining, 0);
+    const requiredFromW = takeFromWatchlist(state.vm.W, remaining, 0).map((value) =>
+      resolveFocusCandidate(state, value)
+    );
     usedFromW = requiredFromW.length;
     enforceDistinct(requiredFromW, "Distinctness requirement not met (W)", meta.distinct_required);
     args.push(...requiredFromW);
@@ -50,7 +91,7 @@ export function selectOperands(state: State, meta: LetterMeta): { S: State; ops:
 
   let requiredUsedF = false;
   if (args.length < meta.arity_req) {
-    args.push(state.vm.F);
+    args.push(resolveSelectableFocus(state));
     requiredUsedF = true;
   }
 
@@ -78,7 +119,9 @@ export function selectOperands(state: State, meta: LetterMeta): { S: State; ops:
     const optional: string[] = [];
 
     if (state.vm.K.length > 0) {
-      const optFromK = takeFromStack(state.vm.K, meta.arity_opt - optional.length);
+      const optFromK = takeFromStack(state.vm.K, meta.arity_opt - optional.length).map((value) =>
+        resolveFocusCandidate(state, value)
+      );
       enforceDistinct(
         optFromK,
         "Distinctness requirement not met (K optional)",
@@ -89,7 +132,9 @@ export function selectOperands(state: State, meta: LetterMeta): { S: State; ops:
 
     if (optional.length < meta.arity_opt && state.vm.W.length > 0) {
       const remaining = meta.arity_opt - optional.length;
-      const optFromW = takeFromWatchlist(state.vm.W, remaining, usedFromW);
+      const optFromW = takeFromWatchlist(state.vm.W, remaining, usedFromW).map((value) =>
+        resolveFocusCandidate(state, value)
+      );
       enforceDistinct(
         optFromW,
         "Distinctness requirement not met (W optional)",
@@ -99,7 +144,7 @@ export function selectOperands(state: State, meta: LetterMeta): { S: State; ops:
     }
 
     if (optional.length < meta.arity_opt && !requiredUsedF) {
-      optional.push(state.vm.F);
+      optional.push(resolveSelectableFocus(state));
     }
 
     if (optional.length < meta.arity_opt && !requiredUsedR) {

@@ -270,6 +270,7 @@ export type ShinEvent = TraceEventBase<
     left: HandleId;
     right: HandleId;
     active: HandleId;
+    direction?: "external" | "internal";
   }
 >;
 
