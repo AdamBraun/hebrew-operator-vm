@@ -16,6 +16,7 @@ import {
   LAYERS,
   expandImpactedLayers,
   forceLayerRebuild,
+  requiredTrackedArtifactsForLayers,
   selectDirectLayers
 } from "./config.mjs";
 
@@ -295,6 +296,23 @@ async function stageArtifacts(pathsToStage) {
   return relPaths.length;
 }
 
+async function assertRequiredArtifactsPresent(requiredArtifactPaths) {
+  const missing = [];
+  for (const relPath of requiredArtifactPaths) {
+    if (!(await pathExists(toAbs(relPath)))) {
+      missing.push(relPath);
+    }
+  }
+  if (missing.length > 0) {
+    throw new Error(
+      [
+        "Missing required tracked artifacts after recompute:",
+        ...missing.map((filePath) => `- ${filePath}`)
+      ].join("\n")
+    );
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const knownFlags = new Set(["--changed-only", "--full", "--staged", "--verbose", "--no-stage"]);
@@ -322,6 +340,7 @@ async function main() {
   }
 
   const impactedLayers = expandImpactedLayers(directLayers);
+  const requiredTrackedArtifacts = requiredTrackedArtifactsForLayers(impactedLayers);
   console.log(
     `src-artifacts:recompute impacted_layers=${[...impactedLayers]
       .sort((left, right) => left.localeCompare(right, "en"))
@@ -534,6 +553,11 @@ async function main() {
     }
   }
 
+  for (const relPath of requiredTrackedArtifacts) {
+    addStagePath(outputsToStage, relPath);
+  }
+  await assertRequiredArtifactsPresent(requiredTrackedArtifacts);
+
   let stagedCount = 0;
   if (stageOutputs) {
     stagedCount = await stageArtifacts(outputsToStage);
@@ -543,6 +567,7 @@ async function main() {
     [
       "src-artifacts:recompute ok",
       `layers=${[...impactedLayers].sort((left, right) => left.localeCompare(right, "en")).join(",")}`,
+      `required_artifacts=${requiredTrackedArtifacts.length}`,
       `staged=${stagedCount}`
     ].join(" ")
   );

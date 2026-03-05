@@ -85,6 +85,15 @@ function includesPath(paths, expectedPath) {
   return paths.includes(expectedPath);
 }
 
+function pathExistsInRef(ref, filePath) {
+  try {
+    runGit(["cat-file", "-e", `${ref}:${filePath}`]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function assertCleanWorkingTree() {
   const relevantPaths = [...SOURCE_RELEVANT_PATHS, ...TRACKED_ARTIFACT_SCOPES];
   const dirty = listWorkingTreeChanges(relevantPaths);
@@ -124,9 +133,20 @@ function main() {
 
   const impactedLayers = expandImpactedLayers(directLayers);
   const requiredArtifacts = requiredTrackedArtifactsForLayers(impactedLayers);
-  const missingArtifacts = requiredArtifacts.filter(
-    (filePath) => !includesPath(pushDiffFiles, filePath)
-  );
+  const updatedArtifacts = [];
+  const unchangedArtifacts = [];
+  const missingArtifacts = [];
+  for (const filePath of requiredArtifacts) {
+    if (includesPath(pushDiffFiles, filePath)) {
+      updatedArtifacts.push(filePath);
+      continue;
+    }
+    if (pathExistsInRef("HEAD", filePath)) {
+      unchangedArtifacts.push(filePath);
+      continue;
+    }
+    missingArtifacts.push(filePath);
+  }
 
   if (verbose) {
     console.log(`src-artifacts:verify:push push_files=${pushDiffFiles.length}`);
@@ -135,11 +155,13 @@ function main() {
         .sort((left, right) => left.localeCompare(right, "en"))
         .join(",")}`
     );
+    console.log(`src-artifacts:verify:push required_updated=${updatedArtifacts.length}`);
+    console.log(`src-artifacts:verify:push required_unchanged=${unchangedArtifacts.length}`);
   }
 
   if (missingArtifacts.length > 0) {
     console.error("src-artifacts:verify:push failed");
-    console.error("Missing required tracked artifact updates for impacted layers:");
+    console.error("Missing required tracked artifacts for impacted layers:");
     for (const filePath of missingArtifacts) {
       console.error(`- ${filePath}`);
     }
@@ -153,7 +175,9 @@ function main() {
     [
       "src-artifacts:verify:push ok",
       `impacted_layers=${[...impactedLayers].sort((left, right) => left.localeCompare(right, "en")).join(",")}`,
-      `required_artifacts=${requiredArtifacts.length}`
+      `required_artifacts=${requiredArtifacts.length}`,
+      `updated=${updatedArtifacts.length}`,
+      `unchanged=${unchangedArtifacts.length}`
     ].join(" ")
   );
 }
