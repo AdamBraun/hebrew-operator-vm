@@ -664,18 +664,22 @@ function mapRawEventToFlow(event, traceEntry) {
         }
       };
     case "shin":
+      const shinPayload = {
+        id: asHandleId(data.id),
+        focus: asHandleId(data.focus),
+        spine: asHandleId(data.spine),
+        left: asHandleId(data.left),
+        right: asHandleId(data.right),
+        direction: data.direction === "internal" ? "internal" : "external"
+      };
+      if (data.active !== undefined) {
+        shinPayload.active = asHandleId(data.active);
+      }
       return {
         op_family: "SHIN.FORK",
         params_summary: summarizeEvent(event.type, event, traceEntry),
         trace_source: "vm_event",
-        payload: {
-          id: asHandleId(data.id),
-          focus: asHandleId(data.focus),
-          spine: asHandleId(data.spine),
-          left: asHandleId(data.left),
-          right: asHandleId(data.right),
-          active: asHandleId(data.active)
-        }
+        payload: shinPayload
       };
     default:
       return null;

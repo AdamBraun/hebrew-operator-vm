@@ -113,6 +113,14 @@ function buildAdjacency(state: State): HandleAdjacency {
     connect(adjacency, parsed[0], parsed[1]);
   }
 
+  for (const edge of state.sub) {
+    const parsed = parseDirectedEdge(edge);
+    if (!parsed) {
+      continue;
+    }
+    connect(adjacency, parsed[0], parsed[1]);
+  }
+
   for (const boundary of state.boundaries) {
     connect(adjacency, boundary.id, boundary.inside);
     connect(adjacency, boundary.id, boundary.outside);
@@ -235,6 +243,15 @@ export function collectGarbage(state: State): void {
       return !removed.has(parsed[0]) && !removed.has(parsed[1]);
     })
   );
+  state.sub = new Set(
+    Array.from(state.sub).filter((edge) => {
+      const parsed = parseDirectedEdge(edge);
+      if (!parsed) {
+        return true;
+      }
+      return !removed.has(parsed[0]) && !removed.has(parsed[1]);
+    })
+  );
 
   state.boundaries = state.boundaries.filter(
     (boundary) =>
@@ -281,6 +298,22 @@ export function collectGarbage(state: State): void {
   for (const frame of state.vm.E) {
     frame.F = removed.has(frame.F) ? state.vm.D : frame.F;
     frame.D_frame = removed.has(frame.D_frame) ? state.vm.D : frame.D_frame;
+  }
+
+  for (const handle of state.handles.values()) {
+    const forkPorts = Array.isArray(handle.meta?.fork_ports) ? handle.meta.fork_ports : null;
+    if (!forkPorts) {
+      continue;
+    }
+    const retained = forkPorts.filter((id) => typeof id === "string" && !removed.has(id));
+    const nextMeta = { ...(handle.meta ?? {}) };
+    if (retained.length > 0) {
+      nextMeta.fork_ports = retained;
+    } else {
+      delete nextMeta.fork_ports;
+      delete nextMeta.fork_direction;
+    }
+    handle.meta = nextMeta;
   }
 
   state.vm.OStack_word = state.vm.OStack_word.filter(

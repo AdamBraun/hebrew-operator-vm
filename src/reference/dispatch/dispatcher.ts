@@ -45,10 +45,16 @@ function resolveLetterMode(
 
 function applyRosh(runtime: CompiledTokenRuntime, ops: SelectOperands): SelectOperands {
   if (runtime.rosh_branch === "right") {
-    return { ...ops, prefs: { ...ops.prefs, shin_branch: "right" } };
+    return {
+      ...ops,
+      prefs: { ...ops.prefs, shin_direction: "external" }
+    };
   }
   if (runtime.rosh_branch === "left") {
-    return { ...ops, prefs: { ...ops.prefs, shin_branch: "left" } };
+    return {
+      ...ops,
+      prefs: { ...ops.prefs, shin_direction: "internal" }
+    };
   }
   return ops;
 }

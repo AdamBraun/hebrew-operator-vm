@@ -37,8 +37,9 @@ Diacritics are small marks on a letter. They never stand alone; they **modify** 
   - Sets `H(mode)=pinned` (HY milui): execute ה normally AND export a pinned handle.
   - Prevents the word-final “breath/mater” degradation.
 - **Shin/Sin dots**: on ש only:
-  - **שׁ** (right dot) tokenizes as explicit shin and runs ש semantics (right-branch default in the reference VM).
-  - **שׂ** (left dot) tokenizes as explicit sin and runs as a composite: **read rail = ס**, **shape rail = ש** (routing/fork modifier only).
+  - **שׁ** (right dot) selects external three-point attachment (tripod).
+  - **שׂ** (left dot) selects internal three-point attachment (triangle).
+  - Undotted **ש** defaults to external tripod.
 
 ### Sof vowels (below the letter)
 
@@ -534,17 +535,38 @@ Unary. Orthogonal resolver: closes the nearest unresolved carry-thread.
 
 ---
 
-# ש — שין (tilted ן spine + two ו attached at the terminal end)
+# ש — שין (three-point attachment)
 
-- **Select:** current focus (F).
-- **Bound:** produce a structured handle with three internal access points:
-  - (F^{\text{spine}}): sealed baseline/continuation spine (the ן)
-  - (F^{L}, F^{R}): two exported access-handles (the two ו)
-    All three inherit the currently-effective constraint bundle of (F).
+- **Select:** current focus (`F`) — the handle forwarded by the preceding letter.
 
-- **Seal:** replace focus by this structured object, with a deterministic default active branch.
-- **שׁ vs שׂ:** `שׁ` executes as regular ש. `שׂ` is **COMPOSITE(read=ס, shape=ש)** with read-first precedence: run ס meaning, then apply ש as routing-only fork metadata.
-- **Key difference:** ש creates multiple internal handles inside one construction, not parallel futures.
+- **Bound (parameterized by direction):**
+
+Allocate three nodes from `F`.
+
+- **External / Tripod** (`שׁ`, default/undotted):
+  - Add `cont(F, p1)`, `cont(F, p2)`, `cont(F, p3)`.
+  - No edges between `p1`, `p2`, `p3`.
+  - Three open rays on the cont-chain, radiating outward.
+  - Handle kind: `structured`.
+
+- **Internal / Triangle** (`שׂ`):
+  - Add `sub(F, c1)`, `sub(F, c2)`, `sub(F, c3)`.
+  - Add `sub(c1, c2)`, `sub(c2, c3)`, `sub(c3, c1)`.
+  - Closed loop inside `F`. Three compartments that hold each other in place.
+  - Handle kind: `compartment`.
+
+- **Seal:** focus remains `F`. Thread forwards `F`. All three points are live. Shin does not choose among them.
+
+- **Dot selection:**
+- Right dot -> external (tripod)
+- Left dot -> internal (triangle)
+- Undotted -> external (default)
+
+- **Milui:** שי״ן = three-point attachment (ש) -> pin to one committed point (י) -> straighten into locked continuation (ן). After tripling the attachment surface, commit and continue.
+
+- **Architectural note:** the midrashic claim that ש is "a letter of truth" and that "falsehood has no legs" are observations about topology. Truth stands because its letters have wide bases. Falsehood borrows ש's three-point attachment to persist. ר (unanchored head, `a=0`) is the structural inverse of ד (anchored head, `a=1`). External ש provides ר with the functional equivalent of ד's missing anchor. Internal ש (`שׂר`) provides governance: a closed internal loop of mutual constraint without external anchor.
+
+- **שׁ vs שׂ:** שׁ is external tripod and שׂ is internal triangle. The triangle's closed loop produces structural rigidity as a topological fact, not a flag. The relationship to ס is empirical, not definitional.
 
 ---
 

@@ -61,19 +61,9 @@ export const letterRegistry: LetterRegistry = {
   ר: reshOp,
   ש: shinOp,
   שׁ: shinOp,
-  שׂ: samekhOp,
+  שׂ: shinOp,
   ת: tavOp,
   ...finalsMap
 };
 
-export const compositeRegistry: CompositeRegistry = {
-  שׂ: {
-    id: "SIN_COMPOSITE",
-    read: "ס",
-    shape: "ש",
-    composite_policy: {
-      precedence: "read_first",
-      shape_effect_scope: "routing"
-    }
-  }
-};
+export const compositeRegistry: CompositeRegistry = {};

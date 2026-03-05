@@ -2,6 +2,7 @@ import { BOT_ID, createHandle } from "../state/handles";
 import { setPolicy } from "../state/policies";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
+import { selectCurrentFocus } from "../vm/select";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
@@ -15,7 +16,7 @@ const meta: LetterMeta = {
 
 export const finalPeOp: LetterOp = {
   meta,
-  select: (S: State) => ({ S, ops: { args: [S.vm.F], prefs: {} } }),
+  select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops) => {
     const utteranceId = ops.args[0];
     const handle = S.handles.get(utteranceId);

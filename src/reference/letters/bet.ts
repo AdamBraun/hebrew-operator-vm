@@ -2,6 +2,7 @@ import { BOT_ID, createHandle } from "../state/handles";
 import { addBoundary } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
+import { selectCurrentFocus } from "../vm/select";
 import { Construction, LetterMeta, LetterOp, SelectOperands, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
@@ -28,7 +29,7 @@ function isWordEntryBaseline(state: State): boolean {
 
 export const betOp: LetterOp = {
   meta,
-  select: (S: State) => ({ S, ops: { args: [S.vm.F], prefs: {} } }),
+  select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops: SelectOperands) => {
     const shouldReframeDomain = isWordEntryBaseline(S);
     const outside = S.vm.F;

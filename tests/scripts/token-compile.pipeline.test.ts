@@ -93,8 +93,9 @@ describe("token compile pipeline", () => {
     expect(compiled.tokens["6"].runtime.has_shuruk).toBe(false);
     expect(compiled.tokens["6"].runtime.should_harden).toBe(true);
     expect(compiled.tokens["6"].modifiers).toContain("KAMATZ");
-    expect(compiled.tokens["4"].op_family).toBe("SIN_COMPOSITE");
-    expect(compiled.tokens["4"].runtime.read_letter).toBe("ס");
+    expect(compiled.tokens["4"].op_family).toBe("SHIN");
+    expect(compiled.tokens["4"].runtime.read_letter).toBe("ש");
+    expect(compiled.tokens["4"].derived.modes).not.toContain("SIN_COMPOSITE");
     expect(compiled.tokens["5"].runtime.sof_modifiers).toEqual([
       {
         kind: "shva",

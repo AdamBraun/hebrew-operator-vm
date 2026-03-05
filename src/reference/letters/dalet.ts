@@ -2,6 +2,7 @@ import { BOT_ID, createHandle } from "../state/handles";
 import { addBoundary } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
+import { selectCurrentFocus } from "../vm/select";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
@@ -15,7 +16,7 @@ const meta: LetterMeta = {
 
 export const daletOp: LetterOp = {
   meta,
-  select: (S: State) => ({ S, ops: { args: [S.vm.F], prefs: {} } }),
+  select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops) => {
     const inside = ops.args[0];
     const frame = S.vm.E[S.vm.E.length - 1];

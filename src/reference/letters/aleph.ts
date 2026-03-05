@@ -1,6 +1,7 @@
 import { BOT_ID, createHandle } from "../state/handles";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
+import { resolveSelectableFocus } from "../vm/select";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
@@ -24,9 +25,12 @@ function hasWordConstruct(state: State, focusAtEntry: string): boolean {
 
 export const alephOp: LetterOp = {
   meta,
-  select: (S: State) => ({ S, ops: { args: [S.vm.wordEntryFocus ?? S.vm.F], prefs: {} } }),
+  select: (S: State) => ({
+    S,
+    ops: { args: [S.vm.wordEntryFocus ?? resolveSelectableFocus(S)], prefs: {} }
+  }),
   bound: (S: State, ops) => {
-    const focusAtEntry = ops.args[0] ?? S.vm.F;
+    const focusAtEntry = ops.args[0] ?? resolveSelectableFocus(S);
     const constructId = hasWordConstruct(S, focusAtEntry) ? S.vm.F : nextId(S, "א");
     if (constructId !== S.vm.F) {
       S.handles.set(

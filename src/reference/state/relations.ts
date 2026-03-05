@@ -17,26 +17,71 @@ function parseEdge(edge: string): [string, string] | null {
   return [source, target];
 }
 
-export function addCont(state: State, from: string, to: string): void {
-  if (!from || !to) {
-    return;
+function validHandleId(id: unknown): id is string {
+  return typeof id === "string" && id.length > 0;
+}
+
+function subPorts(state: State, parent: string): string[] {
+  const ports: string[] = [];
+  for (const edge of state.sub) {
+    const parsed = parseEdge(edge);
+    if (!parsed) {
+      continue;
+    }
+    const [source, child] = parsed;
+    if (source !== parent || !state.handles.has(child) || ports.includes(child)) {
+      continue;
+    }
+    ports.push(child);
   }
+  return ports;
+}
+
+function addContEdge(state: State, from: string, to: string): void {
   state.cont.add(edgeKey(from, to));
 }
 
-export function addCarry(state: State, source: string, target: string): void {
-  if (!source || !target) {
+function targetSitesWithFanIn(state: State, target: string): string[] {
+  const sites = [target];
+  for (const child of subPorts(state, target)) {
+    if (!sites.includes(child)) {
+      sites.push(child);
+    }
+  }
+  return sites;
+}
+
+export function addCont(state: State, from: string, to: string): void {
+  if (!validHandleId(from) || !validHandleId(to)) {
     return;
   }
-  addCont(state, source, target);
-  state.carry.add(edgeKey(source, target));
+  for (const target of targetSitesWithFanIn(state, to)) {
+    addContEdge(state, from, target);
+  }
+}
+
+export function addCarry(state: State, source: string, target: string): void {
+  if (!validHandleId(source) || !validHandleId(target)) {
+    return;
+  }
+  for (const targetSite of targetSitesWithFanIn(state, target)) {
+    addContEdge(state, source, targetSite);
+    state.carry.add(edgeKey(source, targetSite));
+  }
 }
 
 export function addSupp(state: State, closer: string, origin: string): void {
-  if (!closer || !origin) {
+  if (!validHandleId(closer) || !validHandleId(origin)) {
     return;
   }
   state.supp.add(edgeKey(closer, origin));
+}
+
+export function addSub(state: State, parent: string, child: string): void {
+  if (!parent || !child) {
+    return;
+  }
+  state.sub.add(edgeKey(parent, child));
 }
 
 export function contReachable(state: State, start: string, target: string): boolean {
@@ -83,7 +128,8 @@ export function addBoundary(
   outside: string,
   anchor: 0 | 1
 ): void {
-  state.boundaries.push({ inside, outside, anchor, id });
+  const members = [inside, ...subPorts(state, inside)];
+  state.boundaries.push({ inside, outside, anchor, id, members });
 }
 
 export function addLink(state: State, from: string, to: string, label: string): void {

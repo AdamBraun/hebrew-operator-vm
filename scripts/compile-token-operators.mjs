@@ -397,9 +397,6 @@ function compileTokenDescriptor(tokenId, descriptor, defs) {
   if (forcedLetterMode === "seeded") {
     modes.push("VAV_SEEDED");
   }
-  if (insideDotKind === "shin_dot_left") {
-    modes.push("SIN_COMPOSITE");
-  }
 
   const eventContract = uniqPreserveOrder([
     ...(selectedDef?.event_types ?? []),

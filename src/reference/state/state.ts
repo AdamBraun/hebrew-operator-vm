@@ -39,6 +39,14 @@ export type PendingJoin = {
   exported_pins: string[];
 };
 
+export type BoundaryRecord = {
+  inside: string;
+  outside: string;
+  anchor: 0 | 1;
+  id: string;
+  members?: string[];
+};
+
 export type ConstituentNode = {
   id: string;
   rank: number;
@@ -87,8 +95,9 @@ export type State = {
   cont: Set<string>;
   carry: Set<string>;
   supp: Set<string>;
+  sub: Set<string>;
   links: Array<{ from: string; to: string; label: string }>;
-  boundaries: Array<{ inside: string; outside: string; anchor: 0 | 1; id: string }>;
+  boundaries: BoundaryRecord[];
   rules: Array<{ id: string; target: string; patch: any; priority: number }>;
 };
 
@@ -146,6 +155,7 @@ export function createInitialState(): State {
     cont: new Set(),
     carry: new Set(),
     supp: new Set(),
+    sub: new Set(),
     links: [],
     boundaries: [],
     rules: []
@@ -202,6 +212,7 @@ export function serializeState(state: State): Record<string, any> {
     cont: Array.from(state.cont).sort(),
     carry: Array.from(state.carry).sort(),
     supp: Array.from(state.supp).sort(),
+    sub: Array.from(state.sub).sort(),
     links: [...state.links],
     boundaries: [...state.boundaries],
     rules: [...state.rules]
