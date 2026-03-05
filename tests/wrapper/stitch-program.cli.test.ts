@@ -104,15 +104,30 @@ describe("stitch-program cli", () => {
     expect(programText).toBe(expectedProgram);
 
     const meta = JSON.parse(fs.readFileSync(run.metaPath, "utf8")) as Record<string, unknown>;
+    const manifest = JSON.parse(fs.readFileSync(run.manifestPath, "utf8")) as Record<string, unknown>;
+    const inputDigests = meta.inputDigests as Record<string, unknown>;
+    expect(inputDigests).toBeDefined();
+    expect(inputDigests.spine_sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(inputDigests.letters_ir_sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(inputDigests.niqqud_ir_sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(inputDigests.cantillation_ir_sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(inputDigests.layout_ir_sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(inputDigests.metadata_plan_sha256).toMatch(/^[a-f0-9]{64}$/);
     expect(meta.spineDigest).toMatch(/^[a-f0-9]{64}$/);
     expect(meta.lettersDigest).toMatch(/^[a-f0-9]{64}$/);
     expect(meta.niqqudDigest).toMatch(/^[a-f0-9]{64}$/);
     expect(meta.cantDigest).toMatch(/^[a-f0-9]{64}$/);
     expect(meta.layoutDigest).toMatch(/^[a-f0-9]{64}$/);
     expect(meta.metadataDigest).toMatch(/^[a-f0-9]{64}$/);
+    expect(meta.programSchemaVersion).toBe("1.0.0");
+    expect(meta.stitchConfigDigest).toMatch(/^[a-f0-9]{64}$/);
     expect(meta.cacheDigest).toMatch(/^[a-f0-9]{64}$/);
     expect(meta.programDigest).toBe(sha256Hex(programText));
     expect(meta.stitcherVersion).toBe("1.0.0");
+    expect(meta.programPathRel).toBe(run.programPathRel);
+    expect(meta.metaPathRel).toBe(run.metaPathRel);
+    expect(run.programPathRel).toBe("ProgramIR.jsonl");
+    expect(run.metaPathRel).toBe("program.meta.json");
     expect(meta.stitchConfig).toEqual({
       outputFormat: "jsonl",
       includeLetterCantillation: true,
@@ -154,6 +169,56 @@ describe("stitch-program cli", () => {
         }
       ]
     });
+
+    expect(manifest.programSchemaVersion).toBe("1.0.0");
+    expect((manifest as { build?: { generatedAt?: string } }).build?.generatedAt).toBe(CREATED_AT);
+    expect((manifest as { stitchConfigDigest?: string }).stitchConfigDigest).toMatch(/^[a-f0-9]{64}$/);
+    expect((manifest as { cacheDigest?: string }).cacheDigest).toBe(meta.cacheDigest);
+    expect(
+      (manifest as { contains?: Record<string, unknown> }).contains
+    ).toEqual({
+      layout: true,
+      cantillation: true,
+      letterCantillation: true,
+      gapRaw: true,
+      metadataCheckpoints: true
+    });
+    expect(
+      (
+        manifest as {
+          integrity?: {
+            anchors?: Record<string, unknown>;
+            countsByRef?: Record<string, unknown>;
+            rollingHash?: { chunkSize?: number; chunkDigests?: unknown[] };
+          };
+        }
+      ).integrity?.anchors
+    ).toEqual({
+      firstRefKey: "Genesis/1/1",
+      lastRefKey: "Genesis/1/1",
+      firstGid: "Genesis/1/1#g:0",
+      lastGid: "Genesis/1/1#g:1",
+      firstGapid: "Genesis/1/1#gap:0",
+      lastGapid: "Genesis/1/1#gap:2"
+    });
+    expect(
+      (manifest as { integrity?: { countsByRef?: { refCount?: number; meanOpsPerRef?: number } } })
+        .integrity?.countsByRef?.refCount
+    ).toBe(1);
+    expect(
+      (manifest as { integrity?: { countsByRef?: { maxOpsPerRef?: number } } }).integrity
+        ?.countsByRef?.maxOpsPerRef
+    ).toBe(2);
+    expect(
+      (
+        manifest as { integrity?: { rollingHash?: { chunkSize?: number; chunkDigests?: string[] } } }
+      ).integrity?.rollingHash?.chunkSize
+    ).toBe(50_000);
+    expect(
+      (
+        manifest as { integrity?: { rollingHash?: { chunkDigests?: string[] } } }
+      ).integrity?.rollingHash?.chunkDigests?.[0]
+    ).toMatch(/^[a-f0-9]{64}$/);
   });
 
   it("is deterministic across forced rebuilds and cache-hits when unchanged", async () => {

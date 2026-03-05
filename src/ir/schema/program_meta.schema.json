@@ -8,6 +8,7 @@
     "checkpoints",
     "checkpointsByRefEnd",
     "checkpointsByIndex",
+    "inputDigests",
     "spineDigest",
     "lettersDigest",
     "niqqudDigest",
@@ -15,7 +16,11 @@
     "layoutDigest",
     "metadataDigest",
     "stitcherVersion",
+    "programSchemaVersion",
+    "stitchConfigDigest",
     "stitchConfig",
+    "programPathRel",
+    "metaPathRel",
     "counts",
     "cacheDigest",
     "programDigest",
@@ -46,6 +51,26 @@
         "items": { "$ref": "#/definitions/checkpoint" }
       }
     },
+    "inputDigests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spine_sha256",
+        "letters_ir_sha256",
+        "niqqud_ir_sha256",
+        "cantillation_ir_sha256",
+        "layout_ir_sha256",
+        "metadata_plan_sha256"
+      ],
+      "properties": {
+        "spine_sha256": { "$ref": "#/definitions/sha256" },
+        "letters_ir_sha256": { "$ref": "#/definitions/sha256" },
+        "niqqud_ir_sha256": { "$ref": "#/definitions/sha256" },
+        "cantillation_ir_sha256": { "$ref": "#/definitions/sha256" },
+        "layout_ir_sha256": { "$ref": "#/definitions/sha256" },
+        "metadata_plan_sha256": { "$ref": "#/definitions/sha256" }
+      }
+    },
     "spineDigest": { "$ref": "#/definitions/sha256" },
     "lettersDigest": { "$ref": "#/definitions/sha256" },
     "niqqudDigest": { "$ref": "#/definitions/sha256" },
@@ -56,6 +81,10 @@
       "type": "string",
       "minLength": 1
     },
+    "programSchemaVersion": {
+      "const": "1.0.0"
+    },
+    "stitchConfigDigest": { "$ref": "#/definitions/sha256" },
     "stitchConfig": {
       "type": "object",
       "additionalProperties": false,
@@ -66,6 +95,8 @@
         "includeGapRaw": { "type": "boolean" }
       }
     },
+    "programPathRel": { "type": "string", "minLength": 1 },
+    "metaPathRel": { "type": "string", "minLength": 1 },
     "counts": {
       "type": "object",
       "additionalProperties": false,

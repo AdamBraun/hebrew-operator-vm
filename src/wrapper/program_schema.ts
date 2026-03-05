@@ -48,6 +48,7 @@ import { stitchProgramRowsFromFiles } from "./stitch/stitch";
 export const PROGRAM_LAYER = "program";
 export const PROGRAM_IR_VERSION = 1;
 export const PROGRAM_MANIFEST_VERSION = "1.0.0";
+export const PROGRAM_SCHEMA_VERSION = "1.0.0";
 export const STITCHER_CONTRACT_VERSION = "1.0.0";
 export const STITCHER_VERSION = "1.0.0";
 
@@ -87,10 +88,65 @@ export type ProgramIRBoundaryRecord = {
 
 export type ProgramIRRecord = ProgramIROpRecord | ProgramIRBoundaryRecord;
 
+export type ProgramInputDigests = {
+  spine_sha256: string;
+  letters_ir_sha256: string;
+  niqqud_ir_sha256: string;
+  cantillation_ir_sha256: string;
+  layout_ir_sha256: string;
+  metadata_plan_sha256: string;
+};
+
+export type ProgramManifestBuild = {
+  gitSha: string | null;
+  nodeVersion: string;
+  platform: string;
+  generatedAt: string;
+};
+
+export type ProgramManifestContains = {
+  layout: boolean;
+  cantillation: boolean;
+  letterCantillation: boolean;
+  gapRaw: boolean;
+  metadataCheckpoints: boolean;
+};
+
+export type ProgramManifestIntegrity = {
+  anchors: {
+    firstRefKey: string | null;
+    lastRefKey: string | null;
+    firstGid: string | null;
+    lastGid: string | null;
+    firstGapid: string | null;
+    lastGapid: string | null;
+  };
+  countsByRef: {
+    refCount: number;
+    meanOpsPerRef: number;
+    maxOpsPerRef: number;
+    maxBoundariesPerRef: number;
+  };
+  rollingHash: {
+    chunkSize: number;
+    chunkDigests: string[];
+  };
+};
+
+export type ProgramCacheDigestArgs = {
+  stitcherVersion: string;
+  programSchemaVersion: string;
+  stitchConfigDigest: string;
+  inputDigests: ProgramInputDigests;
+  programDigest: string;
+};
+
 export type ProgramManifest = {
   layer: typeof PROGRAM_LAYER;
   version: typeof PROGRAM_MANIFEST_VERSION;
+  programSchemaVersion: typeof PROGRAM_SCHEMA_VERSION;
   contract: `STITCHER_CONTRACT/${typeof STITCHER_CONTRACT_VERSION}`;
+  build: ProgramManifestBuild;
   stitcher: {
     version: typeof STITCHER_VERSION;
     config: {
@@ -99,15 +155,9 @@ export type ProgramManifest = {
       include_gap_raw: boolean;
     };
   };
+  stitchConfigDigest: string;
   created_at: string;
-  input_digests: {
-    spine_sha256: string;
-    letters_ir_sha256: string;
-    niqqud_ir_sha256: string;
-    cantillation_ir_sha256: string;
-    layout_ir_sha256: string;
-    metadata_plan_sha256: string;
-  };
+  input_digests: ProgramInputDigests;
   input_row_counts: {
     spine: number;
     letters_ir: number;
@@ -130,6 +180,9 @@ export type ProgramManifest = {
       boundaries: number;
     }
   >;
+  contains: ProgramManifestContains;
+  integrity: ProgramManifestIntegrity;
+  cacheDigest: string;
   output: {
     format: ProgramIROutputFormat;
     sha256: string;
@@ -193,6 +246,8 @@ type ProgramAnchorKey = {
 const GID_PATTERN = /^([^#]+)#g:([0-9]+)$/;
 const GAPID_PATTERN = /^([^#]+)#gap:([0-9]+)$/;
 const SHA256_HEX = /^[a-f0-9]{64}$/;
+const SHORT_GIT_SHA_HEX = /^[a-f0-9]{7,40}$/;
+const PROGRAM_ROLLING_HASH_CHUNK_SIZE = 50_000;
 
 const OWN = Object.prototype.hasOwnProperty;
 
@@ -378,6 +433,43 @@ function deepClone<T>(value: T): T {
 
 function sha256Hex(text: string): string {
   return createHash("sha256").update(text).digest("hex");
+}
+
+function detectGitSha(): string | null {
+  const envCandidates = [
+    process.env.GITHUB_SHA,
+    process.env.GIT_SHA,
+    process.env.BUILD_GIT_SHA,
+    process.env.VERCEL_GIT_COMMIT_SHA
+  ];
+  for (const candidate of envCandidates) {
+    const normalized = typeof candidate === "string" ? candidate.trim().toLowerCase() : "";
+    if (SHORT_GIT_SHA_HEX.test(normalized)) {
+      return normalized;
+    }
+  }
+  return null;
+}
+
+function resolveProgramManifestBuild(generatedAt: string): ProgramManifestBuild {
+  return {
+    gitSha: detectGitSha(),
+    nodeVersion: process.version,
+    platform: `${process.platform}-${process.arch}`,
+    generatedAt
+  };
+}
+
+export function computeProgramCacheDigest(args: ProgramCacheDigestArgs): string {
+  const payload = {
+    kind: "ProgramIRCache",
+    stitcherVersion: args.stitcherVersion,
+    programSchemaVersion: args.programSchemaVersion,
+    stitchConfigDigest: args.stitchConfigDigest,
+    inputDigests: args.inputDigests,
+    programDigest: args.programDigest
+  };
+  return sha256Hex(canonicalStringify(payload));
 }
 
 function normalizeCreatedAt(value: Date | string | undefined): string {
@@ -1120,13 +1212,19 @@ export function assertProgramManifest(
     [
       "layer",
       "version",
+      "programSchemaVersion",
       "contract",
+      "build",
       "stitcher",
+      "stitchConfigDigest",
       "created_at",
       "input_digests",
       "input_row_counts",
       "counts",
       "ref_ranges_by_book",
+      "contains",
+      "integrity",
+      "cacheDigest",
       "output"
     ],
     path,
@@ -1147,10 +1245,35 @@ export function assertProgramManifest(
     );
   }
 
+  const programSchemaVersion = assertHas(value, "programSchemaVersion", path, scope);
+  if (programSchemaVersion !== PROGRAM_SCHEMA_VERSION) {
+    fail(
+      scope,
+      `${path}.programSchemaVersion`,
+      `expected '${PROGRAM_SCHEMA_VERSION}', got ${describe(programSchemaVersion)}`
+    );
+  }
+
   const contract = assertHas(value, "contract", path, scope);
   const expectedContract = `STITCHER_CONTRACT/${STITCHER_CONTRACT_VERSION}`;
   if (contract !== expectedContract) {
     fail(scope, `${path}.contract`, `expected '${expectedContract}', got ${describe(contract)}`);
+  }
+
+  const build = assertHas(value, "build", path, scope);
+  assertRecord(build, `${path}.build`, scope);
+  assertNoUnknownKeys(build, ["gitSha", "nodeVersion", "platform", "generatedAt"], `${path}.build`, scope);
+  if (build.gitSha !== null && build.gitSha !== undefined) {
+    assertNonEmptyString(build.gitSha, `${path}.build.gitSha`, scope);
+    if (!SHORT_GIT_SHA_HEX.test(build.gitSha.toLowerCase())) {
+      fail(scope, `${path}.build.gitSha`, "expected lowercase/uppercase hex git sha");
+    }
+  }
+  assertNonEmptyString(build.nodeVersion, `${path}.build.nodeVersion`, scope);
+  assertNonEmptyString(build.platform, `${path}.build.platform`, scope);
+  assertNonEmptyString(build.generatedAt, `${path}.build.generatedAt`, scope);
+  if (Number.isNaN(Date.parse(String(build.generatedAt)))) {
+    fail(scope, `${path}.build.generatedAt`, "expected valid ISO date-time");
   }
 
   const stitcher = assertHas(value, "stitcher", path, scope);
@@ -1186,6 +1309,11 @@ export function assertProgramManifest(
   }
   if (typeof stitcherConfig.include_gap_raw !== "boolean") {
     fail(scope, `${path}.stitcher.config.include_gap_raw`, "expected boolean");
+  }
+
+  const stitchConfigDigest = assertHas(value, "stitchConfigDigest", path, scope);
+  if (!isSha256Hex(stitchConfigDigest)) {
+    fail(scope, `${path}.stitchConfigDigest`, "expected lowercase sha256 hex");
   }
 
   assertNonEmptyString(assertHas(value, "created_at", path, scope), `${path}.created_at`, scope);
@@ -1260,6 +1388,85 @@ export function assertProgramManifest(
         scope
       );
     }
+  }
+
+  const contains = assertHas(value, "contains", path, scope);
+  assertRecord(contains, `${path}.contains`, scope);
+  assertNoUnknownKeys(
+    contains,
+    ["layout", "cantillation", "letterCantillation", "gapRaw", "metadataCheckpoints"],
+    `${path}.contains`,
+    scope
+  );
+  for (const key of Object.keys(contains)) {
+    if (typeof contains[key] !== "boolean") {
+      fail(scope, `${path}.contains.${key}`, "expected boolean");
+    }
+  }
+
+  const integrity = assertHas(value, "integrity", path, scope);
+  assertRecord(integrity, `${path}.integrity`, scope);
+  assertNoUnknownKeys(integrity, ["anchors", "countsByRef", "rollingHash"], `${path}.integrity`, scope);
+
+  const anchors = assertHas(integrity, "anchors", `${path}.integrity`, scope);
+  assertRecord(anchors, `${path}.integrity.anchors`, scope);
+  assertNoUnknownKeys(
+    anchors,
+    ["firstRefKey", "lastRefKey", "firstGid", "lastGid", "firstGapid", "lastGapid"],
+    `${path}.integrity.anchors`,
+    scope
+  );
+  for (const key of Object.keys(anchors)) {
+    const anchorValue = anchors[key];
+    if (anchorValue !== null) {
+      assertNonEmptyString(anchorValue, `${path}.integrity.anchors.${key}`, scope);
+    }
+  }
+
+  const countsByRef = assertHas(integrity, "countsByRef", `${path}.integrity`, scope);
+  assertRecord(countsByRef, `${path}.integrity.countsByRef`, scope);
+  assertNoUnknownKeys(
+    countsByRef,
+    ["refCount", "meanOpsPerRef", "maxOpsPerRef", "maxBoundariesPerRef"],
+    `${path}.integrity.countsByRef`,
+    scope
+  );
+  assertNonNegativeInteger(countsByRef.refCount, `${path}.integrity.countsByRef.refCount`, scope);
+  if (typeof countsByRef.meanOpsPerRef !== "number" || countsByRef.meanOpsPerRef < 0) {
+    fail(scope, `${path}.integrity.countsByRef.meanOpsPerRef`, "expected number >= 0");
+  }
+  assertNonNegativeInteger(countsByRef.maxOpsPerRef, `${path}.integrity.countsByRef.maxOpsPerRef`, scope);
+  assertNonNegativeInteger(
+    countsByRef.maxBoundariesPerRef,
+    `${path}.integrity.countsByRef.maxBoundariesPerRef`,
+    scope
+  );
+
+  const rollingHash = assertHas(integrity, "rollingHash", `${path}.integrity`, scope);
+  assertRecord(rollingHash, `${path}.integrity.rollingHash`, scope);
+  assertNoUnknownKeys(
+    rollingHash,
+    ["chunkSize", "chunkDigests"],
+    `${path}.integrity.rollingHash`,
+    scope
+  );
+  assertNonNegativeInteger(rollingHash.chunkSize, `${path}.integrity.rollingHash.chunkSize`, scope);
+  if (rollingHash.chunkSize < 1) {
+    fail(scope, `${path}.integrity.rollingHash.chunkSize`, "expected integer >= 1");
+  }
+  const chunkDigests = rollingHash.chunkDigests;
+  if (!Array.isArray(chunkDigests)) {
+    fail(scope, `${path}.integrity.rollingHash.chunkDigests`, "expected array");
+  }
+  for (let i = 0; i < chunkDigests.length; i += 1) {
+    if (!isSha256Hex(chunkDigests[i])) {
+      fail(scope, `${path}.integrity.rollingHash.chunkDigests[${i}]`, "expected sha256 hex");
+    }
+  }
+
+  const cacheDigest = assertHas(value, "cacheDigest", path, scope);
+  if (!isSha256Hex(cacheDigest)) {
+    fail(scope, `${path}.cacheDigest`, "expected lowercase sha256 hex");
   }
 
   const output = assertHas(value, "output", path, scope);
@@ -1383,6 +1590,88 @@ function buildRefRangesByBook(rows: readonly ProgramIRRecord[]): Record<
   return out;
 }
 
+function buildManifestContains(args: {
+  rows: readonly ProgramIRRecord[];
+  checkpoints: number;
+  stitcherConfig: ProgramManifest["stitcher"]["config"];
+}): ProgramManifestContains {
+  const hasBoundaryRows = args.rows.some((row) => row.kind === "boundary");
+  const hasBoundaryCantillation = args.rows.some(
+    (row) => row.kind === "boundary" && row.cant.length > 0
+  );
+  const hasLetterCantillation = args.rows.some(
+    (row) => row.kind === "op" && Array.isArray(row.cant_attached) && row.cant_attached.length > 0
+  );
+  return {
+    layout: hasBoundaryRows,
+    cantillation: hasBoundaryCantillation || hasLetterCantillation,
+    letterCantillation: args.stitcherConfig.include_letter_cantillation && hasLetterCantillation,
+    gapRaw:
+      args.stitcherConfig.include_gap_raw &&
+      args.rows.some((row) => row.kind === "boundary" && row.raw !== undefined),
+    metadataCheckpoints: args.checkpoints > 0
+  };
+}
+
+function buildManifestIntegrity(rows: readonly ProgramIRRecord[]): ProgramManifestIntegrity {
+  const firstRow = rows[0];
+  const lastRow = rows[rows.length - 1];
+  const opRows = rows.filter((row): row is ProgramIROpRecord => row.kind === "op");
+  const boundaryRows = rows.filter((row): row is ProgramIRBoundaryRecord => row.kind === "boundary");
+
+  const perRef = new Map<string, { ops: number; boundaries: number }>();
+  for (const row of rows) {
+    const tally = perRef.get(row.ref_key) ?? { ops: 0, boundaries: 0 };
+    if (row.kind === "op") {
+      tally.ops += 1;
+    } else {
+      tally.boundaries += 1;
+    }
+    perRef.set(row.ref_key, tally);
+  }
+  const refCount = perRef.size;
+  let totalOps = 0;
+  let maxOpsPerRef = 0;
+  let maxBoundariesPerRef = 0;
+  for (const tally of perRef.values()) {
+    totalOps += tally.ops;
+    if (tally.ops > maxOpsPerRef) {
+      maxOpsPerRef = tally.ops;
+    }
+    if (tally.boundaries > maxBoundariesPerRef) {
+      maxBoundariesPerRef = tally.boundaries;
+    }
+  }
+
+  const chunkDigests: string[] = [];
+  for (let start = 0; start < rows.length; start += PROGRAM_ROLLING_HASH_CHUNK_SIZE) {
+    const chunk = rows.slice(start, start + PROGRAM_ROLLING_HASH_CHUNK_SIZE);
+    const chunkText = `${chunk.map((row) => serializeProgramIRRecord(row)).join("\n")}\n`;
+    chunkDigests.push(sha256Hex(chunkText));
+  }
+
+  return {
+    anchors: {
+      firstRefKey: firstRow?.ref_key ?? null,
+      lastRefKey: lastRow?.ref_key ?? null,
+      firstGid: opRows[0]?.gid ?? null,
+      lastGid: opRows[opRows.length - 1]?.gid ?? null,
+      firstGapid: boundaryRows[0]?.gapid ?? null,
+      lastGapid: boundaryRows[boundaryRows.length - 1]?.gapid ?? null
+    },
+    countsByRef: {
+      refCount,
+      meanOpsPerRef: refCount === 0 ? 0 : totalOps / refCount,
+      maxOpsPerRef,
+      maxBoundariesPerRef
+    },
+    rollingHash: {
+      chunkSize: PROGRAM_ROLLING_HASH_CHUNK_SIZE,
+      chunkDigests
+    }
+  };
+}
+
 function createProgramManifest(args: {
   outputFormat: ProgramIROutputFormat;
   createdAt: string;
@@ -1402,28 +1691,48 @@ function createProgramManifest(args: {
   const cantillationJsonl = formatCantillationIRJsonl(args.inputs.cantillationRecords);
   const layoutJsonl = formatLayoutIRJsonl(args.inputs.layoutRecords);
   const metadataPlanJson = canonicalStringify(args.inputs.metadataPlan);
+  const stitcherConfig: ProgramManifest["stitcher"]["config"] = {
+    output_format: args.outputFormat,
+    include_letter_cantillation: true,
+    include_gap_raw: true
+  };
+  const stitchConfigDigest = sha256Hex(canonicalStringify(stitcherConfig));
+  const inputDigests: ProgramInputDigests = {
+    spine_sha256: sha256Hex(spineJsonl),
+    letters_ir_sha256: sha256Hex(lettersJsonl),
+    niqqud_ir_sha256: sha256Hex(niqqudJsonl),
+    cantillation_ir_sha256: sha256Hex(cantillationJsonl),
+    layout_ir_sha256: sha256Hex(layoutJsonl),
+    metadata_plan_sha256: sha256Hex(metadataPlanJson)
+  };
+  const cacheDigest = computeProgramCacheDigest({
+    stitcherVersion: STITCHER_VERSION,
+    programSchemaVersion: PROGRAM_SCHEMA_VERSION,
+    stitchConfigDigest,
+    inputDigests,
+    programDigest: args.outputSha256
+  });
+  const build = resolveProgramManifestBuild(args.createdAt);
+  const contains = buildManifestContains({
+    rows: args.rows,
+    checkpoints,
+    stitcherConfig
+  });
+  const integrity = buildManifestIntegrity(args.rows);
 
   return {
     layer: PROGRAM_LAYER,
     version: PROGRAM_MANIFEST_VERSION,
+    programSchemaVersion: PROGRAM_SCHEMA_VERSION,
     contract: `STITCHER_CONTRACT/${STITCHER_CONTRACT_VERSION}`,
+    build,
     stitcher: {
       version: STITCHER_VERSION,
-      config: {
-        output_format: args.outputFormat,
-        include_letter_cantillation: true,
-        include_gap_raw: true
-      }
+      config: stitcherConfig
     },
+    stitchConfigDigest,
     created_at: args.createdAt,
-    input_digests: {
-      spine_sha256: sha256Hex(spineJsonl),
-      letters_ir_sha256: sha256Hex(lettersJsonl),
-      niqqud_ir_sha256: sha256Hex(niqqudJsonl),
-      cantillation_ir_sha256: sha256Hex(cantillationJsonl),
-      layout_ir_sha256: sha256Hex(layoutJsonl),
-      metadata_plan_sha256: sha256Hex(metadataPlanJson)
-    },
+    input_digests: inputDigests,
     input_row_counts: {
       spine: args.inputs.spineRecords.length,
       letters_ir: args.inputs.lettersRecords.length,
@@ -1438,6 +1747,9 @@ function createProgramManifest(args: {
       checkpoints
     },
     ref_ranges_by_book: buildRefRangesByBook(args.rows),
+    contains,
+    integrity,
+    cacheDigest,
     output: {
       format: args.outputFormat,
       sha256: args.outputSha256

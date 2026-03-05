@@ -64,6 +64,20 @@ describe("emit program snapshot", () => {
       (emittedManifest as { input_digests?: Record<string, string> }).input_digests
         ?.spine_sha256 as string
     ).toMatch(/^[a-f0-9]{64}$/);
+    expect((emittedManifest as { programSchemaVersion?: string }).programSchemaVersion).toBe("1.0.0");
+    expect((emittedManifest as { stitchConfigDigest?: string }).stitchConfigDigest).toMatch(
+      /^[a-f0-9]{64}$/
+    );
+    expect(
+      (emittedManifest as { contains?: Record<string, boolean> }).contains?.metadataCheckpoints
+    ).toBe(true);
+    expect(
+      (
+        emittedManifest as {
+          integrity?: { rollingHash?: { chunkSize?: number; chunkDigests?: string[] } };
+        }
+      ).integrity?.rollingHash?.chunkSize
+    ).toBe(50_000);
     expect((emittedManifest as { output?: { sha256?: string } }).output?.sha256 as string).toMatch(
       /^[a-f0-9]{64}$/
     );

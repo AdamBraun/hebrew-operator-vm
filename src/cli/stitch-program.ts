@@ -3,8 +3,21 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
+  formatCantillationIRJsonl,
+  parseCantillationIRJsonl
+} from "../layers/cantillation/schema";
+import { formatLayoutIRJsonl, parseLayoutIRJsonl } from "../layers/layout/schema";
+import { formatLettersIRJsonl, parseLettersIRJsonl } from "../layers/letters/schema";
+import { formatNiqqudIRJsonl, parseNiqqudIRJsonl } from "../layers/niqqud/schema";
+import {
+  computeProgramCacheDigest,
+  formatSpineJsonl,
+  parseMetadataPlanJson,
+  parseSpineJsonl,
+  PROGRAM_SCHEMA_VERSION,
   STITCHER_VERSION,
   stitchProgramIRFromFiles,
+  type ProgramInputDigests,
   type ProgramManifest
 } from "../wrapper/program_schema";
 import {
@@ -31,18 +44,10 @@ type StitchProgramCliOptions = {
   createdAt?: string;
 };
 
-type StitchInputDigests = {
-  spineDigest: string;
-  lettersDigest: string;
-  niqqudDigest: string;
-  cantDigest: string;
-  layoutDigest: string;
-  metadataDigest: string;
-};
+type StitchInputDigests = ProgramInputDigests;
 
 type ResolvedMetadataInput = {
   metadataPlanPath: string;
-  metadataDigest: string;
   cleanup?: () => Promise<void>;
 };
 
@@ -63,6 +68,7 @@ export type ProgramMeta = {
   checkpoints: AttachedMetadataCheckpoint[];
   checkpointsByRefEnd: Record<string, AttachedMetadataCheckpoint[]>;
   checkpointsByIndex: Record<string, AttachedMetadataCheckpoint[]>;
+  inputDigests: ProgramInputDigests;
   spineDigest: string;
   lettersDigest: string;
   niqqudDigest: string;
@@ -70,7 +76,11 @@ export type ProgramMeta = {
   layoutDigest: string;
   metadataDigest: string;
   stitcherVersion: string;
+  programSchemaVersion: string;
+  stitchConfigDigest: string;
   stitchConfig: StitchConfig;
+  programPathRel: string;
+  metaPathRel: string;
   counts: {
     ops: number;
     boundaries: number;
@@ -88,7 +98,9 @@ export type StitchProgramCliResult = {
   forced: boolean;
   outputDir: string;
   programPath: string;
+  programPathRel: string;
   metaPath: string;
+  metaPathRel: string;
   manifestPath: string;
   cacheDigest: string;
   programDigest: string;
@@ -351,21 +363,13 @@ async function resolveInputFile(args: {
   );
 }
 
-async function sha256File(filePath: string): Promise<string> {
-  const data = await fs.readFile(filePath);
-  return sha256Hex(data);
-}
-
 async function resolveMetadataInput(metadataArg: string): Promise<ResolvedMetadataInput> {
   if (!isMetadataDisabledArg(metadataArg)) {
     const metadataPlanPath = await resolveInputFile({
       label: "metadata",
       inputArg: metadataArg
     });
-    return {
-      metadataPlanPath,
-      metadataDigest: await sha256File(metadataPlanPath)
-    };
+    return { metadataPlanPath };
   }
 
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "stitch-metadata-off-"));
@@ -375,7 +379,6 @@ async function resolveMetadataInput(metadataArg: string): Promise<ResolvedMetada
 
   return {
     metadataPlanPath,
-    metadataDigest: sha256Hex(metadataText),
     cleanup: async () => {
       await fs.rm(tempDir, { recursive: true, force: true });
     }
@@ -390,17 +393,71 @@ function createStitchConfig(): StitchConfig {
   };
 }
 
+function toManifestStitchConfig(stitchConfig: StitchConfig): ProgramManifest["stitcher"]["config"] {
+  return {
+    output_format: stitchConfig.outputFormat,
+    include_letter_cantillation: stitchConfig.includeLetterCantillation,
+    include_gap_raw: stitchConfig.includeGapRaw
+  };
+}
+
+function buildStitchConfigDigest(stitchConfig: StitchConfig): string {
+  return sha256Hex(canonicalStringify(toManifestStitchConfig(stitchConfig)));
+}
+
+function toPortableRelativePath(basePath: string, targetPath: string): string {
+  const rel = path.relative(basePath, targetPath);
+  const normalized = rel.length > 0 ? rel : ".";
+  return normalized.split(path.sep).join("/");
+}
+
+async function computeCanonicalInputDigests(paths: {
+  spinePath: string;
+  lettersIrPath: string;
+  niqqudIrPath: string;
+  cantillationIrPath: string;
+  layoutIrPath: string;
+  metadataPlanPath: string;
+}): Promise<ProgramInputDigests> {
+  const [spineText, lettersText, niqqudText, cantillationText, layoutText, metadataPlanText] =
+    await Promise.all([
+      fs.readFile(paths.spinePath, "utf8"),
+      fs.readFile(paths.lettersIrPath, "utf8"),
+      fs.readFile(paths.niqqudIrPath, "utf8"),
+      fs.readFile(paths.cantillationIrPath, "utf8"),
+      fs.readFile(paths.layoutIrPath, "utf8"),
+      fs.readFile(paths.metadataPlanPath, "utf8")
+    ]);
+
+  const normalizedSpine = formatSpineJsonl(parseSpineJsonl(spineText));
+  const normalizedLetters = formatLettersIRJsonl(parseLettersIRJsonl(lettersText));
+  const normalizedNiqqud = formatNiqqudIRJsonl(parseNiqqudIRJsonl(niqqudText));
+  const normalizedCantillation = formatCantillationIRJsonl(parseCantillationIRJsonl(cantillationText));
+  const normalizedLayout = formatLayoutIRJsonl(parseLayoutIRJsonl(layoutText));
+  const normalizedMetadataPlan = canonicalStringify(parseMetadataPlanJson(metadataPlanText));
+
+  return {
+    spine_sha256: sha256Hex(normalizedSpine),
+    letters_ir_sha256: sha256Hex(normalizedLetters),
+    niqqud_ir_sha256: sha256Hex(normalizedNiqqud),
+    cantillation_ir_sha256: sha256Hex(normalizedCantillation),
+    layout_ir_sha256: sha256Hex(normalizedLayout),
+    metadata_plan_sha256: sha256Hex(normalizedMetadataPlan)
+  };
+}
+
 function buildCacheDigest(args: {
   digests: StitchInputDigests;
-  stitcherVersion: string;
-  stitchConfig: StitchConfig;
+  stitchConfigDigest: string;
+  programDigest: string;
 }): string {
-  const payload = {
+  return computeProgramCacheDigest({
+    stitcherVersion: STITCHER_VERSION,
+    programSchemaVersion: PROGRAM_SCHEMA_VERSION,
+    stitchConfigDigest: args.stitchConfigDigest,
     inputDigests: args.digests,
-    stitcherVersion: args.stitcherVersion,
-    stitchConfig: args.stitchConfig
-  };
-  return sha256Hex(canonicalStringify(payload));
+    programDigest: args.programDigest
+  });
 }
 
 function buildRefStats(manifest: ProgramManifest): Record<string, RefStat> | undefined {
@@ -423,7 +480,11 @@ function buildRefStats(manifest: ProgramManifest): Record<string, RefStat> | und
 function createProgramMeta(args: {
   digests: StitchInputDigests;
   stitcherVersion: string;
+  programSchemaVersion: string;
+  stitchConfigDigest: string;
   stitchConfig: StitchConfig;
+  programPathRel: string;
+  metaPathRel: string;
   counts: { ops: number; boundaries: number; checkpoints: number };
   metadataCheckpointIndex: AttachedMetadataCheckpointIndex;
   cacheDigest: string;
@@ -436,14 +497,19 @@ function createProgramMeta(args: {
     checkpoints: args.metadataCheckpointIndex.checkpoints,
     checkpointsByRefEnd: args.metadataCheckpointIndex.checkpointsByRefEnd,
     checkpointsByIndex: args.metadataCheckpointIndex.checkpointsByIndex,
-    spineDigest: args.digests.spineDigest,
-    lettersDigest: args.digests.lettersDigest,
-    niqqudDigest: args.digests.niqqudDigest,
-    cantDigest: args.digests.cantDigest,
-    layoutDigest: args.digests.layoutDigest,
-    metadataDigest: args.digests.metadataDigest,
+    inputDigests: args.digests,
+    spineDigest: args.digests.spine_sha256,
+    lettersDigest: args.digests.letters_ir_sha256,
+    niqqudDigest: args.digests.niqqud_ir_sha256,
+    cantDigest: args.digests.cantillation_ir_sha256,
+    layoutDigest: args.digests.layout_ir_sha256,
+    metadataDigest: args.digests.metadata_plan_sha256,
     stitcherVersion: args.stitcherVersion,
+    programSchemaVersion: args.programSchemaVersion,
+    stitchConfigDigest: args.stitchConfigDigest,
     stitchConfig: args.stitchConfig,
+    programPathRel: args.programPathRel,
+    metaPathRel: args.metaPathRel,
     counts: {
       ops: args.counts.ops,
       boundaries: args.counts.boundaries,
@@ -466,10 +532,20 @@ async function readMetaSafe(filePath: string): Promise<ProgramMeta | null> {
     assertNonEmptyString(parsed.cacheDigest, "program.meta.cacheDigest");
     assertNonEmptyString(parsed.programDigest, "program.meta.programDigest");
     assertNonEmptyString(parsed.stitcherVersion, "program.meta.stitcherVersion");
+    assertNonEmptyString(parsed.programSchemaVersion, "program.meta.programSchemaVersion");
+    assertNonEmptyString(parsed.stitchConfigDigest, "program.meta.stitchConfigDigest");
+    assertNonEmptyString(parsed.programPathRel, "program.meta.programPathRel");
+    assertNonEmptyString(parsed.metaPathRel, "program.meta.metaPathRel");
     if (!SHA256_HEX.test(parsed.cacheDigest)) {
       return null;
     }
     if (!SHA256_HEX.test(parsed.programDigest)) {
+      return null;
+    }
+    if (!SHA256_HEX.test(parsed.stitchConfigDigest)) {
+      return null;
+    }
+    if (parsed.programSchemaVersion !== PROGRAM_SCHEMA_VERSION) {
       return null;
     }
     return parsed as ProgramMeta;
@@ -493,25 +569,23 @@ export async function runStitchProgram(
   const metadataInput = await resolveMetadataInput(parsed.metadataArg);
 
   try {
-    const digests: StitchInputDigests = {
-      spineDigest: await sha256File(spinePath),
-      lettersDigest: await sha256File(lettersIrPath),
-      niqqudDigest: await sha256File(niqqudIrPath),
-      cantDigest: await sha256File(cantillationIrPath),
-      layoutDigest: await sha256File(layoutIrPath),
-      metadataDigest: metadataInput.metadataDigest
-    };
-    const stitchConfig = createStitchConfig();
-    const cacheDigest = buildCacheDigest({
-      digests,
-      stitcherVersion: STITCHER_VERSION,
-      stitchConfig
+    const digests = await computeCanonicalInputDigests({
+      spinePath,
+      lettersIrPath,
+      niqqudIrPath,
+      cantillationIrPath,
+      layoutIrPath,
+      metadataPlanPath: metadataInput.metadataPlanPath
     });
+    const stitchConfig = createStitchConfig();
+    const stitchConfigDigest = buildStitchConfigDigest(stitchConfig);
 
     const outputDir = path.resolve(parsed.outDir);
     const programPath = path.join(outputDir, "ProgramIR.jsonl");
     const metaPath = path.join(outputDir, "program.meta.json");
     const manifestPath = path.join(outputDir, "program.manifest.json");
+    const programPathRel = toPortableRelativePath(outputDir, programPath);
+    const metaPathRel = toPortableRelativePath(outputDir, metaPath);
 
     if (!parsed.force) {
       const [existingMeta, programExists, manifestExists] = await Promise.all([
@@ -519,15 +593,31 @@ export async function runStitchProgram(
         pathExists(programPath),
         pathExists(manifestPath)
       ]);
-      if (programExists && manifestExists && existingMeta?.cacheDigest === cacheDigest) {
+      const expectedCacheDigest =
+        existingMeta && existingMeta.stitchConfigDigest === stitchConfigDigest
+          ? buildCacheDigest({
+              digests,
+              stitchConfigDigest,
+              programDigest: existingMeta.programDigest
+            })
+          : null;
+      if (
+        programExists &&
+        manifestExists &&
+        existingMeta &&
+        expectedCacheDigest !== null &&
+        existingMeta.cacheDigest === expectedCacheDigest
+      ) {
         return {
           cacheHit: true,
           forced: false,
           outputDir,
           programPath,
+          programPathRel,
           metaPath,
+          metaPathRel,
           manifestPath,
-          cacheDigest,
+          cacheDigest: existingMeta.cacheDigest,
           programDigest: existingMeta.programDigest
         };
       }
@@ -559,6 +649,25 @@ export async function runStitchProgram(
     ]);
 
     const programDigest = sha256Hex(stitched.programIrJsonl);
+    const cacheDigest = buildCacheDigest({
+      digests,
+      stitchConfigDigest,
+      programDigest
+    });
+    const stitchedCacheDigest = stitched.manifest.cacheDigest;
+    if (stitchedCacheDigest !== cacheDigest) {
+      throw new Error(
+        `stitch-program: manifest cacheDigest mismatch (expected ${cacheDigest}, got ${stitchedCacheDigest})`
+      );
+    }
+    if (stitched.manifest.programSchemaVersion !== PROGRAM_SCHEMA_VERSION) {
+      throw new Error(
+        `stitch-program: manifest programSchemaVersion mismatch (expected ${PROGRAM_SCHEMA_VERSION}, got ${stitched.manifest.programSchemaVersion})`
+      );
+    }
+    if (stitched.manifest.stitchConfigDigest !== stitchConfigDigest) {
+      throw new Error("stitch-program: manifest stitchConfigDigest mismatch");
+    }
     const manifestDigest = sha256Hex(stitched.manifestText);
     const createdAt =
       parsed.createdAt ??
@@ -568,7 +677,11 @@ export async function runStitchProgram(
     const meta = createProgramMeta({
       digests,
       stitcherVersion: STITCHER_VERSION,
+      programSchemaVersion: PROGRAM_SCHEMA_VERSION,
+      stitchConfigDigest,
       stitchConfig,
+      programPathRel,
+      metaPathRel,
       counts: {
         ops: stitched.manifest.counts.ops,
         boundaries: stitched.manifest.counts.boundaries,
@@ -588,7 +701,9 @@ export async function runStitchProgram(
       forced: parsed.force,
       outputDir,
       programPath,
+      programPathRel,
       metaPath,
+      metaPathRel,
       manifestPath,
       cacheDigest,
       programDigest
