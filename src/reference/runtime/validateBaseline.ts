@@ -155,6 +155,12 @@ export function validateBaseline(state: State, opts: ValidateBaselineOptions = {
   if (state.cont.size !== 0) {
     errors.push(`cont expected empty but had size ${state.cont.size}`);
   }
+  if (state.carry.size !== 0) {
+    errors.push(`carry expected empty but had size ${state.carry.size}`);
+  }
+  if (state.supp.size !== 0) {
+    errors.push(`supp expected empty but had size ${state.supp.size}`);
+  }
 
   const handleIds = Array.from(state.handles.keys());
   for (const id of handleIds) {

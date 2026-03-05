@@ -112,6 +112,16 @@ export function assertStateInvariants(state: State): void {
     ensure(from);
     ensure(to);
   }
+  for (const edge of state.carry) {
+    const [from, to] = edge.split("->");
+    ensure(from);
+    ensure(to);
+  }
+  for (const edge of state.supp) {
+    const [from, to] = edge.split("->");
+    ensure(from);
+    ensure(to);
+  }
 
   for (const boundary of state.boundaries) {
     ensure(boundary.inside);

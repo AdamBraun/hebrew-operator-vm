@@ -1,7 +1,42 @@
 import { State } from "./state";
 
+function edgeKey(source: string, target: string): string {
+  return `${source}->${target}`;
+}
+
+function parseEdge(edge: string): [string, string] | null {
+  const pivot = edge.indexOf("->");
+  if (pivot <= 0 || pivot + 2 >= edge.length) {
+    return null;
+  }
+  const source = edge.slice(0, pivot);
+  const target = edge.slice(pivot + 2);
+  if (!source || !target) {
+    return null;
+  }
+  return [source, target];
+}
+
 export function addCont(state: State, from: string, to: string): void {
-  state.cont.add(`${from}->${to}`);
+  if (!from || !to) {
+    return;
+  }
+  state.cont.add(edgeKey(from, to));
+}
+
+export function addCarry(state: State, source: string, target: string): void {
+  if (!source || !target) {
+    return;
+  }
+  addCont(state, source, target);
+  state.carry.add(edgeKey(source, target));
+}
+
+export function addSupp(state: State, closer: string, origin: string): void {
+  if (!closer || !origin) {
+    return;
+  }
+  state.supp.add(edgeKey(closer, origin));
 }
 
 export function contReachable(state: State, start: string, target: string): boolean {
@@ -15,7 +50,11 @@ export function contReachable(state: State, start: string, target: string): bool
   while (queue.length > 0) {
     const current = queue.shift() ?? "";
     for (const edge of state.cont) {
-      const [from, to] = edge.split("->");
+      const parsed = parseEdge(edge);
+      if (!parsed) {
+        continue;
+      }
+      const [from, to] = parsed;
       if (from !== current || visited.has(to)) {
         continue;
       }

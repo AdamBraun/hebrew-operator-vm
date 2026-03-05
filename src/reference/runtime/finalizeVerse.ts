@@ -148,6 +148,8 @@ function buildStateDump(state: State): Record<string, any> {
     compareText(String(left.id), String(right.id))
   );
   dump.cont.sort((left: string, right: string) => compareText(String(left), String(right)));
+  dump.carry.sort((left: string, right: string) => compareText(String(left), String(right)));
+  dump.supp.sort((left: string, right: string) => compareText(String(left), String(right)));
   sortLinks(dump.links);
   sortBoundaries(dump.boundaries);
   sortRules(dump.rules);
@@ -233,6 +235,8 @@ function resetRuntimeState(state: State, opts: FinalizeVerseOptions): void {
   state.boundaries = [];
   state.rules = [];
   state.cont = new Set();
+  state.carry = new Set();
+  state.supp = new Set();
   resetHandles(state, keepSystemHandles);
 }
 

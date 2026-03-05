@@ -19,7 +19,7 @@ function connect(adjacency: HandleAdjacency, a: unknown, b: unknown): void {
   adjacency.get(b)?.add(a);
 }
 
-function parseContEdge(edge: string): [string, string] | null {
+function parseDirectedEdge(edge: string): [string, string] | null {
   const pivot = edge.indexOf("->");
   if (pivot <= 0 || pivot + 2 >= edge.length) {
     return null;
@@ -90,7 +90,23 @@ function buildAdjacency(state: State): HandleAdjacency {
   }
 
   for (const edge of state.cont) {
-    const parsed = parseContEdge(edge);
+    const parsed = parseDirectedEdge(edge);
+    if (!parsed) {
+      continue;
+    }
+    connect(adjacency, parsed[0], parsed[1]);
+  }
+
+  for (const edge of state.carry) {
+    const parsed = parseDirectedEdge(edge);
+    if (!parsed) {
+      continue;
+    }
+    connect(adjacency, parsed[0], parsed[1]);
+  }
+
+  for (const edge of state.supp) {
+    const parsed = parseDirectedEdge(edge);
     if (!parsed) {
       continue;
     }
@@ -194,7 +210,25 @@ export function collectGarbage(state: State): void {
 
   state.cont = new Set(
     Array.from(state.cont).filter((edge) => {
-      const parsed = parseContEdge(edge);
+      const parsed = parseDirectedEdge(edge);
+      if (!parsed) {
+        return true;
+      }
+      return !removed.has(parsed[0]) && !removed.has(parsed[1]);
+    })
+  );
+  state.carry = new Set(
+    Array.from(state.carry).filter((edge) => {
+      const parsed = parseDirectedEdge(edge);
+      if (!parsed) {
+        return true;
+      }
+      return !removed.has(parsed[0]) && !removed.has(parsed[1]);
+    })
+  );
+  state.supp = new Set(
+    Array.from(state.supp).filter((edge) => {
+      const parsed = parseDirectedEdge(edge);
       if (!parsed) {
         return true;
       }

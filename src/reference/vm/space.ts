@@ -174,6 +174,18 @@ function scrubFlushedMemZoneRefs(state: State, removedHandles: Set<string>): voi
       return !isRemoved(from) && !isRemoved(to);
     })
   );
+  state.carry = new Set(
+    Array.from(state.carry).filter((edge) => {
+      const [from, to] = edge.split("->");
+      return !isRemoved(from) && !isRemoved(to);
+    })
+  );
+  state.supp = new Set(
+    Array.from(state.supp).filter((edge) => {
+      const [from, to] = edge.split("->");
+      return !isRemoved(from) && !isRemoved(to);
+    })
+  );
   state.links = state.links.filter((link) => !isRemoved(link.from) && !isRemoved(link.to));
   state.vm.aliasEdges = state.vm.aliasEdges.filter(
     (edge) => !isRemoved(edge.from) && !isRemoved(edge.to)
