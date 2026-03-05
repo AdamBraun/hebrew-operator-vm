@@ -72,21 +72,19 @@ function tryResolveLocalModule(baseFilePath: string, specifier: string): string 
 function extractLocalImports(filePath: string): string[] {
   const text = fs.readFileSync(filePath, "utf8");
   const out: string[] = [];
-  let match: RegExpExecArray | null = null;
+  let match = IMPORT_RE.exec(text);
 
-  while (true) {
-    match = IMPORT_RE.exec(text);
-    if (!match) {
-      break;
-    }
+  while (match) {
     const specifier = match[1] ?? "";
     if (!specifier.startsWith(".")) {
+      match = IMPORT_RE.exec(text);
       continue;
     }
     const resolved = tryResolveLocalModule(filePath, specifier);
     if (resolved) {
       out.push(resolved);
     }
+    match = IMPORT_RE.exec(text);
   }
 
   return out;
@@ -145,7 +143,7 @@ describe("metadata determinism + isolation", () => {
     const graphPaths = [...graph].map((filePath) => normalizeFilePath(filePath));
     const forbiddenSubpaths = [
       "/src/core/",
-      "/impl/reference/src/core/",
+      "/src/reference/core/",
       "/src/wrapper/",
       "/src/layers/letters/",
       "/src/layers/niqqud/",

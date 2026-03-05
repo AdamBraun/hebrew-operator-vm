@@ -38,8 +38,8 @@ const RULES = [
   },
   {
     key: "render_version",
-    triggerPattern: /^impl\/reference\/src\/scripts\/phraseTree\//u,
-    triggerLabel: "impl/reference/src/scripts/phraseTree/"
+    triggerPattern: /^src\/reference\/scripts\/phraseTree\//u,
+    triggerLabel: "src/reference/scripts/phraseTree/"
   },
   {
     key: "trace_version",

@@ -3,7 +3,7 @@
 Implements a deterministic VM for the Hebrew operator calculus defined in the
 normative spec under `spec/`.
 
-Reference interpreter source: `impl/reference/src/`.
+Reference interpreter source: `src/reference/`.
 
 ## Quickstart
 
@@ -495,4 +495,4 @@ Examples:
 
 ## Notes
 
-See `impl/reference/STATUS.md` for what is implemented versus stubbed.
+See `src/reference/STATUS.md` for what is implemented versus stubbed.

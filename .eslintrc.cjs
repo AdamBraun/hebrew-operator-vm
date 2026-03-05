@@ -6,18 +6,15 @@ module.exports = {
     node: true,
     es2020: true
   },
-  extends: [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended"
-  ],
-  ignorePatterns: ["dist", "impl/reference/dist", "node_modules"],
+  extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+  ignorePatterns: ["dist", "node_modules"],
   rules: {
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
-        "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_"
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_"
       }
     ]
   }

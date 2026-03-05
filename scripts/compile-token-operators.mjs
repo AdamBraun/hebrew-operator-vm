@@ -212,7 +212,9 @@ function compileTokenDescriptor(tokenId, descriptor, defs) {
   const operatorDefs = defs.operator_families ?? {};
   const baseDef = operatorDefs[base];
   if (!baseDef) {
-    errors.push(buildError(tokenId, "UNKNOWN_BASE_LETTER", `No operator definition for base '${base}'`));
+    errors.push(
+      buildError(tokenId, "UNKNOWN_BASE_LETTER", `No operator definition for base '${base}'`)
+    );
   }
 
   const roshEntries = [];
@@ -326,9 +328,15 @@ function compileTokenDescriptor(tokenId, descriptor, defs) {
   const tochOrder = defs.modifier_extraction.toch_order ?? [];
   const sofOrder = defs.modifier_extraction.sof_order ?? [];
 
-  const roshModifiers = sortByOrder(uniqPreserveOrder(roshEntries.map((entry) => entry.modifier)), roshOrder);
+  const roshModifiers = sortByOrder(
+    uniqPreserveOrder(roshEntries.map((entry) => entry.modifier)),
+    roshOrder
+  );
   const tochModifiers = sortByOrder(uniqPreserveOrder(tochRemapped), tochOrder);
-  const sofModifiers = sortByOrder(uniqPreserveOrder(sofEntries.map((entry) => entry.modifier)), sofOrder);
+  const sofModifiers = sortByOrder(
+    uniqPreserveOrder(sofEntries.map((entry) => entry.modifier)),
+    sofOrder
+  );
 
   if (roshModifiers.length > 1) {
     warnings.push(
@@ -372,12 +380,15 @@ function compileTokenDescriptor(tokenId, descriptor, defs) {
 
   if (!selectedDef) {
     errors.push(
-      buildError(tokenId, "MISSING_OPERATOR_DEF", `Unable to resolve operator definition for token ${tokenId}`)
+      buildError(
+        tokenId,
+        "MISSING_OPERATOR_DEF",
+        `Unable to resolve operator definition for token ${tokenId}`
+      )
     );
   }
 
-  const forcedLetterMode =
-    dotKind === "mappiq" ? "pinned" : dotKind === "shuruk" ? "seeded" : null;
+  const forcedLetterMode = dotKind === "mappiq" ? "pinned" : dotKind === "shuruk" ? "seeded" : null;
 
   const modes = [];
   if (forcedLetterMode === "pinned") {
@@ -504,7 +515,9 @@ function compileRegistry(registry, defs, options) {
       .slice(0, 25)
       .map((entry) => `Token ${entry.token_id} [${entry.code}] ${entry.message}`);
     const overflow = globalErrors.length > 25 ? `\n... ${globalErrors.length - 25} more` : "";
-    throw new Error(`Compile failed with ${globalErrors.length} error(s):\n${lines.join("\n")}${overflow}`);
+    throw new Error(
+      `Compile failed with ${globalErrors.length} error(s):\n${lines.join("\n")}${overflow}`
+    );
   }
 
   const warningSummary = Object.fromEntries(
@@ -606,7 +619,7 @@ function buildReport(compiled, registry, options, compiledSha256) {
 
   lines.push("## Notes");
   lines.push("");
-  lines.push("- Version contract is sourced from impl/reference/src/version.ts.");
+  lines.push("- Version contract is sourced from src/reference/version.ts.");
   lines.push("- Compilation is deterministic over registry + semantics definition table.");
   lines.push("- Runtime dispatch uses precompiled runtime fields and avoids Unicode mark parsing.");
   lines.push(
@@ -630,7 +643,7 @@ function assertSemanticsVersionAlignment(defs, versionContract, defsPath) {
   }
   if (defsSemver !== contractSemver) {
     throw new Error(
-      `Semantics version mismatch: registry/token-semantics.json declares ${defsSemver} but impl/reference/src/version.ts declares ${contractSemver}`
+      `Semantics version mismatch: registry/token-semantics.json declares ${defsSemver} but src/reference/version.ts declares ${contractSemver}`
     );
   }
 }

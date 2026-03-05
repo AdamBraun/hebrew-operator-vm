@@ -7,7 +7,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@ref": path.resolve(__dirname, "impl/reference/src")
+      "@ref": path.resolve(__dirname, "src/reference")
     }
   }
 });

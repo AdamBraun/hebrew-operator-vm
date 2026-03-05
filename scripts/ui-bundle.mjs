@@ -7,7 +7,7 @@ const cjsRequire = createRequire(import.meta.url);
 function loadUiBundleRuntime() {
   const runtimeModulePath = path.resolve(
     process.cwd(),
-    "impl/reference/dist/scripts/uiBundle/runtime"
+    "dist/src/reference/scripts/uiBundle/runtime"
   );
   try {
     return cjsRequire(runtimeModulePath);
@@ -32,4 +32,3 @@ uiBundleRuntime.main(process.argv.slice(2)).catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

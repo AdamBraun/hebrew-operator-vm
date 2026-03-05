@@ -7,12 +7,17 @@ const cjsRequire = createRequire(import.meta.url);
 function loadDownloadTorahRuntime() {
   const runtimeModulePath = path.resolve(
     process.cwd(),
-    "impl/reference/dist/scripts/downloadTorah/runtime"
+    "dist/src/reference/scripts/downloadTorah/runtime"
   );
   try {
     return cjsRequire(runtimeModulePath);
   } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "MODULE_NOT_FOUND") {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "MODULE_NOT_FOUND"
+    ) {
       throw new Error(
         "Missing compiled download torah runtime module. Run `npm run build` before `node scripts/download-torah.mjs`."
       );

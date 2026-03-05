@@ -9,7 +9,7 @@
 
 ## Allowed Domain Writers
 
-- Boundary transition handler for `□cut`, `□glue`, and `□glue_maqqef` (centralized in [`impl/reference/src/vm/domainTransition.ts`](/Users/adambraun/projects/letters/impl/reference/src/vm/domainTransition.ts)).
+- Boundary transition handler for `□cut`, `□glue`, and `□glue_maqqef` (centralized in [`src/reference/vm/domainTransition.ts`](/Users/adambraun/projects/letters/src/reference/vm/domainTransition.ts)).
 - Trope-aware boundary policy used by the same transition handler.
 
 ## Disallowed Domain Writers

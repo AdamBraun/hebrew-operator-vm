@@ -8,7 +8,7 @@ Normative for trace artifacts emitted as:
 - `corpus/verse_traces.jsonl`
 
 Canonical schema: `spec/70-TRACE-FORMAT.schema.json`.
-Reference TS types: `impl/reference/src/trace/types.ts`.
+Reference TS types: `src/reference/trace/types.ts`.
 
 ## Goals
 

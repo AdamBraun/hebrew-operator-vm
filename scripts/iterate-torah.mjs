@@ -7,12 +7,17 @@ const cjsRequire = createRequire(import.meta.url);
 function loadIterateTorahRuntime() {
   const runtimeModulePath = path.resolve(
     process.cwd(),
-    "impl/reference/dist/scripts/iterateTorah/runtime"
+    "dist/src/reference/scripts/iterateTorah/runtime"
   );
   try {
     return cjsRequire(runtimeModulePath);
   } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "MODULE_NOT_FOUND") {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "MODULE_NOT_FOUND"
+    ) {
       throw new Error(
         "Missing compiled iterate torah runtime module. Run `npm run build` before `node scripts/iterate-torah.mjs`."
       );
