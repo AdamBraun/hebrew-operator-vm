@@ -16,7 +16,7 @@ describe("samekh behavior", () => {
     expect(state.supp.has(`${child}->${parent}`)).toBe(true);
     expect(focus?.policy).toBe("soft");
     expect(focus?.meta?.samekh_lock).toBeUndefined();
-    expect(state.vm.H.find((event) => event.type === "support")).toBeUndefined();
+    expect(state.vm.H.find((event) => event.type === "fall")).toBeUndefined();
   });
 
   it("closes the nearest unresolved carry and leaves already-resolved chains unchanged", () => {

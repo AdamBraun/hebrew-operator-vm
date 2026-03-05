@@ -1,7 +1,7 @@
 import { BOT_ID, Handle, OMEGA_ID, createHandle } from "./handles";
 import type { Envelope } from "./policies";
 
-export type ObligationKind = "MEM_ZONE" | "SUPPORT" | "BOUNDARY";
+export type ObligationKind = "MEM_ZONE" | "BOUNDARY";
 
 export type Obligation = {
   kind: ObligationKind;

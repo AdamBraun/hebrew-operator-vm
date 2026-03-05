@@ -441,16 +441,6 @@ function resolveObligationsByDefault(state: State): void {
       closeMemZoneSilently(state, obligation.child);
       continue;
     }
-    if (obligation.kind === "SUPPORT") {
-      state.vm.H.push({
-        type: "fall",
-        tau: state.vm.tau,
-        data: { child: obligation.child, parent: obligation.parent }
-      });
-      state.vm.R = obligation.child;
-      state.vm.F = obligation.parent;
-      continue;
-    }
     if (obligation.kind === "BOUNDARY") {
       const boundaryId = nextId(state, "□");
       state.handles.set(
@@ -502,28 +492,6 @@ function resolveObligationsStrict(state: State, rank: number): void {
         type: "mem_spill",
         tau: state.vm.tau,
         data: { node: spillNode, zone: obligation.child, parent: obligation.parent, rank }
-      });
-      continue;
-    }
-
-    if (obligation.kind === "SUPPORT") {
-      const debtNode = nextId(state, "support_debt");
-      state.handles.set(
-        debtNode,
-        createHandle(debtNode, "structured", {
-          meta: {
-            obligation: "SUPPORT",
-            mode: "debt",
-            child: obligation.child,
-            parent: obligation.parent,
-            rank
-          }
-        })
-      );
-      state.vm.H.push({
-        type: "support_debt",
-        tau: state.vm.tau,
-        data: { node: debtNode, child: obligation.child, parent: obligation.parent, rank }
       });
       continue;
     }
@@ -701,8 +669,11 @@ function applyCut(
   rankRaw: number | null | undefined,
   transition: Omit<BoundaryTransitionArgs, "rank">
 ): void {
+  const terminalFocus = state.vm.F;
   const rank = Math.max(1, Math.trunc(Number(rankRaw ?? 1)));
   state.vm.tau += rank;
+  closeOpenCarriesAtHardBoundary(state, terminalFocus);
+  markChunkCommitBoundary(state, terminalFocus);
 
   if (rank >= 3) {
     dropPendingJoinsAtSofPasuq(state);

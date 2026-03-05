@@ -66,10 +66,6 @@ export function applyEventLinks(state: State, events: readonly VMEvent[]): void 
       case "fall":
         link(state, data.parent, data.child, "fall");
         break;
-      case "support_debt":
-        link(state, data.parent, data.node, "support_debt");
-        link(state, data.node, data.child, "support_debt");
-        break;
       case "mem_spill":
         link(state, data.parent, data.node, "mem_spill");
         link(state, data.node, data.zone, "mem_spill");

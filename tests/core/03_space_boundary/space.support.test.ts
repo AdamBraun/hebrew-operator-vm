@@ -7,7 +7,7 @@ import { createInitialState } from "@ref/state/state";
 import { applySpace } from "@ref/vm/space";
 import { runProgram } from "@ref/vm/vm";
 
-describe("space boundary SUPPORT resolution", () => {
+describe("space boundary carry resolution", () => {
   it("nun followed by boundary does not emit fall", () => {
     const state = runProgram("נ", createInitialState());
     const falls = state.vm.H.filter((event) => event.type === "fall");

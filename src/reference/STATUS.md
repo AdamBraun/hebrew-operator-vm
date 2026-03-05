@@ -5,13 +5,13 @@
 ## Implemented
 
 - Deterministic IDs (`<letter>:<tau>:<counter>`) and event log.
-- Space boundary (`□`) resolution for `SUPPORT` and `MEM_ZONE` obligations.
+- Space boundary (`□`) resolution for `MEM_ZONE` obligations and carry closure via `supp`.
 - Letters with v0 semantics: א, ב, ג, ד, ה, ו, ז, ח, ט, י, כ, ך, ל, מ, ם, נ, ן, ס, ע, פ, ף, צ, ץ, ק, ר, ש, ת.
 - Tokenizer with Hebrew letters, finals, whitespace→`□`, and basic niqqud mapping.
 - Shin/sin dot disambiguation: `שׁ` and `שׂ` are emitted as explicit token letters.
 - Composite sin execution: `שׂ` runs `read=ס` then applies `shape=ש` routing metadata (`read_first`).
-- Whitespace is semantic: `"נ ס"` inserts `□` and discharges support before `ס`.
-- Same-word `"נס"` allows samekh to discharge support before the boundary.
+- Whitespace is semantic: `"נ ס"` inserts `□`, and `glue` boundaries preserve unresolved carries.
+- Same-word `"נס"` allows samekh to close an unresolved carry via `supp`.
 - Runtime errors are thrown for illegal nesting (e.g., `ם` with non-`MEM_ZONE` on top, `ד` with non-`BOUNDARY` obligation).
 
 ## Stubbed / minimal
