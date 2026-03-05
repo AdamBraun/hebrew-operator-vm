@@ -37,8 +37,9 @@ Diacritics are small marks on a letter. They never stand alone; they **modify** 
   - Sets `H(mode)=pinned` (HY milui): execute ה normally AND export a pinned handle.
   - Prevents the word-final “breath/mater” degradation.
 - **Shin/Sin dots**: on ש only:
-  - **שׁ** (right dot) tokenizes as explicit shin and runs ש semantics (right-branch default in the reference VM).
-  - **שׂ** (left dot) tokenizes as explicit sin and runs as a composite: **read rail = ס**, **shape rail = ש** (routing/fork modifier only).
+  - **שׁ** (right dot) selects external three-point attachment (tripod).
+  - **שׂ** (left dot) selects internal three-point attachment (triangle).
+  - Undotted **ש** defaults to external tripod.
 
 ### Sof vowels (below the letter)
 
@@ -565,7 +566,7 @@ Allocate three nodes from `F`.
 
 - **Architectural note:** the midrashic claim that ש is "a letter of truth" and that "falsehood has no legs" are observations about topology. Truth stands because its letters have wide bases. Falsehood borrows ש's three-point attachment to persist. ר (unanchored head, `a=0`) is the structural inverse of ד (anchored head, `a=1`). External ש provides ר with the functional equivalent of ד's missing anchor. Internal ש (`שׂר`) provides governance: a closed internal loop of mutual constraint without external anchor.
 
-- **שׁ vs שׂ:** The old `COMPOSITE(read=ס, shape=ש)` is retired. The relationship to ס is empirical: a closed internal loop (triangle) produces structural rigidity through topology, which is mechanically distinct from samekh's carry closure but may produce similar downstream resilience.
+- **שׁ vs שׂ:** שׁ is external tripod and שׂ is internal triangle. The triangle's closed loop produces structural rigidity as a topological fact, not a flag. The relationship to ס is empirical, not definitional.
 
 ---
 
