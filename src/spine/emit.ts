@@ -143,6 +143,7 @@ function collectStats(records: readonly SpineRecord[], bytesOut: number): EmitSp
 
 export async function emitSpine(args: EmitSpineArgs): Promise<EmitSpineResult> {
   const options = normalizeOptions(args.options);
+  const configDigest = sha256Hex(Buffer.from(canonicalStringify(options), "utf8"));
   const records = await collectRecords(args.records);
   const jsonl = toJsonl(records);
   const bytesOut = Buffer.byteLength(jsonl, "utf8");
@@ -165,6 +166,7 @@ export async function emitSpine(args: EmitSpineArgs): Promise<EmitSpineResult> {
     options,
     stats,
     digests: { spineDigest },
+    configDigest,
     schema: args.spineRecordVersion ? { spine_record_version: args.spineRecordVersion } : undefined
   });
 

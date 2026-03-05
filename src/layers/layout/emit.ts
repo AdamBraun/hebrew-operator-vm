@@ -1,5 +1,7 @@
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { createLayerManifestCore, type LayerManifestCore } from "../../ir/layer_manifest_core";
 import { extractLayoutIRRecords, type ResolvedLayoutEventsByGapid } from "./extract";
 import { computeLayoutDigest, type LayoutConfig } from "./hash";
 import { serializeLayoutIRRecord } from "./schema";
@@ -35,6 +37,7 @@ export type LayoutManifest = {
     version: string;
   };
   counts: LayoutCounts;
+  cache_manifest: LayerManifestCore;
 };
 
 export type EmitLayoutArgs = {
@@ -76,6 +79,10 @@ function assertSha256Hex(value: unknown, label: string): asserts value is string
   if (typeof value !== "string" || !SHA256_HEX.test(value)) {
     throw new Error(`emitLayout: ${label} must be lowercase sha256 hex`);
   }
+}
+
+function sha256Hex(value: string | Buffer): string {
+  return crypto.createHash("sha256").update(value).digest("hex");
 }
 
 function assertNonEmptyString(value: unknown, label: string): asserts value is string {
@@ -160,6 +167,7 @@ function createLayoutManifest(args: {
   layoutConfig: LayoutConfig;
   dataset: { dataset_id: string; version: string };
   counts: LayoutCounts;
+  outputDigest: string;
   createdAt?: Date | string;
   version?: string;
 }): LayoutManifest {
@@ -171,14 +179,16 @@ function createLayoutManifest(args: {
   assertNonEmptyString(args.dataset.dataset_id, "dataset.dataset_id");
   assertNonEmptyString(args.dataset.version, "dataset.version");
   assertCounts(args.counts);
+  assertSha256Hex(args.outputDigest, "outputDigest");
 
   const version = args.version ?? LAYOUT_MANIFEST_VERSION;
   assertNonEmptyString(version, "version");
+  const createdAtIso = toIsoString(args.createdAt);
 
   return {
     layer: LAYOUT_MANIFEST_LAYER,
     version,
-    created_at: toIsoString(args.createdAt),
+    created_at: createdAtIso,
     digest: args.digest,
     inputs: {
       spineDigest: args.spineDigest,
@@ -192,7 +202,30 @@ function createLayoutManifest(args: {
       dataset_id: args.dataset.dataset_id,
       version: args.dataset.version
     },
-    counts: args.counts
+    counts: args.counts,
+    cache_manifest: createLayerManifestCore({
+      layer_name: LAYOUT_MANIFEST_LAYER,
+      layer_semver: version,
+      input_digests: {
+        spineDigest: args.spineDigest,
+        datasetDigest: args.layoutDatasetDigest,
+        configDigest: sha256Hex(JSON.stringify(args.layoutConfig))
+      },
+      output_digest: args.outputDigest,
+      ir_schema_version: version,
+      stats: {
+        record_count: args.counts.recordsEmitted,
+        gcount: args.counts.recordsEmitted,
+        gapcount: args.counts.gapsSeen,
+        event_counts: {
+          SPACE: args.counts.spaceCount,
+          SETUMA: args.counts.setumaCount,
+          PETUCHA: args.counts.petuchaCount,
+          BOOK_BREAK: args.counts.bookBreakCount
+        }
+      },
+      timestamp: createdAtIso
+    })
   };
 }
 
@@ -255,6 +288,9 @@ async function readLayoutManifest(filePath: string): Promise<LayoutManifest> {
   }
   assertNonEmptyString(parsed.dataset.dataset_id, "manifest.dataset.dataset_id");
   assertNonEmptyString(parsed.dataset.version, "manifest.dataset.version");
+  if (!isRecord(parsed.cache_manifest)) {
+    throw new Error("emitLayout: manifest.cache_manifest must be an object");
+  }
 
   return {
     layer: LAYOUT_MANIFEST_LAYER,
@@ -273,7 +309,8 @@ async function readLayoutManifest(filePath: string): Promise<LayoutManifest> {
       dataset_id: parsed.dataset.dataset_id,
       version: parsed.dataset.version
     },
-    counts: readManifestCounts(parsed.counts)
+    counts: readManifestCounts(parsed.counts),
+    cache_manifest: parsed.cache_manifest as LayerManifestCore
   };
 }
 
@@ -299,17 +336,21 @@ export async function emitLayout(args: EmitLayoutArgs): Promise<EmitLayoutResult
 
   const hasCache = (await pathExists(layoutIrPath)) && (await pathExists(manifestPath));
   if (hasCache && !force) {
-    const manifest = await readLayoutManifest(manifestPath);
-    return {
-      digest,
-      outputDir,
-      layoutIrPath,
-      manifestPath,
-      manifest,
-      counts: manifest.counts,
-      cacheHit: true,
-      forced: false
-    };
+    try {
+      const manifest = await readLayoutManifest(manifestPath);
+      return {
+        digest,
+        outputDir,
+        layoutIrPath,
+        manifestPath,
+        manifest,
+        counts: manifest.counts,
+        cacheHit: true,
+        forced: false
+      };
+    } catch {
+      // Invalid/stale manifest: rebuild and overwrite cache entry.
+    }
   }
 
   await fs.mkdir(outputDir, { recursive: true });
@@ -343,6 +384,7 @@ export async function emitLayout(args: EmitLayoutArgs): Promise<EmitLayoutResult
     layoutConfig,
     dataset: args.dataset,
     counts,
+    outputDigest: sha256Hex(await fs.readFile(layoutIrPath)),
     createdAt: args.createdAt,
     version: args.manifestVersion
   });

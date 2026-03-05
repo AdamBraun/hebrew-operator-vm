@@ -11,6 +11,7 @@ import {
   type NormalizationOptions
 } from "../spine/options";
 import { type SpineRecord } from "../spine/schema";
+import { writeRunManifestSymlinks } from "./run_manifest_symlinks";
 
 type VersePayload = {
   n: number;
@@ -223,6 +224,12 @@ export function parseArgs(argv: string[]): BuildSpineCliOptions {
       i = unknownMarkOpt.next;
       continue;
     }
+    const forceOpt = readOptionValue(argv, i, "--force");
+    if (forceOpt) {
+      force = asBoolean(forceOpt.value, "--force");
+      i = forceOpt.next;
+      continue;
+    }
 
     throw new Error(`Unknown argument '${arg}'`);
   }
@@ -276,23 +283,52 @@ async function writeAliasFile(args: {
   outRoot: string;
   spineDigest: string;
   manifestPath: string;
-  spinePath: string;
-  cacheHit: boolean;
-  forced: boolean;
 }): Promise<string> {
-  const aliasPath = path.join(args.outRoot, "runs", "latest", "manifests", "spine.json");
-  await fs.mkdir(path.dirname(aliasPath), { recursive: true });
-  const payload = {
+  const aliases = await writeRunManifestSymlinks({
+    outRoot: args.outRoot,
     layer: "spine",
-    spineDigest: args.spineDigest,
-    cache_hit: args.cacheHit,
-    forced: args.forced,
-    manifest_path: args.manifestPath,
-    spine_jsonl_path: args.spinePath,
-    updated_at: new Date().toISOString()
-  };
-  await fs.writeFile(aliasPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-  return aliasPath;
+    digest: args.spineDigest,
+    manifestPath: args.manifestPath
+  });
+  return aliases.latestAliasPath;
+}
+
+async function canReuseSpineCache(args: {
+  manifestPath: string;
+  expectedDigest: string;
+}): Promise<boolean> {
+  try {
+    const raw = await fs.readFile(args.manifestPath, "utf8");
+    const parsed = JSON.parse(raw) as unknown;
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      return false;
+    }
+    const manifest = parsed as Record<string, unknown>;
+    if (manifest.layer !== "spine") {
+      return false;
+    }
+    if (
+      typeof manifest.digests !== "object" ||
+      manifest.digests === null ||
+      Array.isArray(manifest.digests)
+    ) {
+      return false;
+    }
+    const digests = manifest.digests as Record<string, unknown>;
+    if (digests.spineDigest !== args.expectedDigest) {
+      return false;
+    }
+    if (
+      typeof manifest.cache_manifest !== "object" ||
+      manifest.cache_manifest === null ||
+      Array.isArray(manifest.cache_manifest)
+    ) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function* buildRecordsForPayload(
@@ -326,14 +362,15 @@ export async function runBuildSpine(
   const manifestPath = path.join(outputDir, "manifest.json");
 
   const hasCache = (await pathExists(spinePath)) && (await pathExists(manifestPath));
-  if (hasCache && !parsed.force) {
+  if (
+    hasCache &&
+    !parsed.force &&
+    (await canReuseSpineCache({ manifestPath, expectedDigest: digest }))
+  ) {
     const aliasPath = await writeAliasFile({
       outRoot: parsed.outRoot,
       spineDigest: digest,
-      manifestPath,
-      spinePath,
-      cacheHit: true,
-      forced: false
+      manifestPath
     });
     return {
       spineDigest: digest,
@@ -362,10 +399,7 @@ export async function runBuildSpine(
   const aliasPath = await writeAliasFile({
     outRoot: parsed.outRoot,
     spineDigest: emitted.spineDigest,
-    manifestPath: emitted.manifestPath,
-    spinePath: emitted.spinePath,
-    cacheHit: false,
-    forced: parsed.force
+    manifestPath: emitted.manifestPath
   });
 
   return {

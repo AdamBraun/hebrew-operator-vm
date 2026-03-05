@@ -1,13 +1,15 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { METADATA_PLAN_REF_ORDER_SOURCE } from "../ir/metadata_ir";
+import { createLayerManifestCore, type LayerManifestCore } from "../ir/layer_manifest_core";
+import { METADATA_PLAN_IR_VERSION, METADATA_PLAN_REF_ORDER_SOURCE } from "../ir/metadata_ir";
 import {
   buildMetadataPlan,
   DEFAULT_METADATA_DATASET_PATH
 } from "../layers/metadata/buildMetadataPlan";
 import { DEFAULT_TORAH_JSON_PATH, extractRefOrder } from "../layers/metadata/extractRefOrder";
 import { normalizePlanDataset } from "../layers/metadata/normalizePlanDataset";
+import { writeRunManifestSymlinks } from "./run_manifest_symlinks";
 
 type BuildMetadataCliOptions = {
   datasetPath: string;
@@ -46,6 +48,7 @@ export type MetadataLayerManifest = {
     config_digest: string;
   };
   artifacts: string[];
+  cache_manifest: LayerManifestCore;
 };
 
 export type BuildMetadataCliResult = {
@@ -351,6 +354,25 @@ function buildConfig(args: {
   };
 }
 
+function resolveOutputRoots(outArg: string): { outRoot: string; cacheDir: string } {
+  const resolved = path.resolve(outArg);
+  const parts = resolved.split(path.sep).filter((segment) => segment.length > 0);
+  const parsed = path.parse(resolved);
+  const isCacheLayer =
+    parts.length >= 2 &&
+    parts[parts.length - 2] === "cache" &&
+    parts[parts.length - 1] === "metadata";
+
+  if (isCacheLayer) {
+    const rootParts = parts.slice(0, -2);
+    const outRoot =
+      rootParts.length > 0 ? path.join(parsed.root, ...rootParts) : parsed.root || resolved;
+    return { outRoot, cacheDir: resolved };
+  }
+
+  return { outRoot: resolved, cacheDir: path.join(resolved, "cache", "metadata") };
+}
+
 function isManifest(value: unknown): value is MetadataLayerManifest {
   if (!isRecord(value)) {
     return false;
@@ -366,7 +388,8 @@ function isManifest(value: unknown): value is MetadataLayerManifest {
     typeof value.config_digest === "string" &&
     typeof value.created_at === "string" &&
     isRecord(value.inputs) &&
-    Array.isArray(value.artifacts)
+    Array.isArray(value.artifacts) &&
+    isRecord(value.cache_manifest)
   );
 }
 
@@ -437,6 +460,12 @@ function isCacheManifestMatch(args: {
   if (canonicalStringify(manifest.inputs.config) !== canonicalStringify(args.config)) {
     return false;
   }
+  if (!isRecord(manifest.cache_manifest)) {
+    return false;
+  }
+  if (manifest.cache_manifest.output_digest !== args.outputDigest) {
+    return false;
+  }
 
   const artifacts = [...manifest.artifacts].sort(compareText);
   const expectedArtifacts = ["manifest.json", "metadata.plan.json"];
@@ -461,6 +490,11 @@ function normalizeMetadataManifest(args: {
   digests: CacheInputDigests;
   config: MetadataLayerConfig;
   outputDigest: string;
+  stats: {
+    checkpointsTotal: number;
+    aliyahEndTotal: number;
+    parashaEndTotal: number;
+  };
   createdAt: string;
   datasetPath: string;
   torahJsonPath: string;
@@ -484,7 +518,28 @@ function normalizeMetadataManifest(args: {
       config: args.config,
       config_digest: args.digests.configDigest
     },
-    artifacts: ["metadata.plan.json", "manifest.json"]
+    artifacts: ["metadata.plan.json", "manifest.json"],
+    cache_manifest: createLayerManifestCore({
+      layer_name: METADATA_LAYER,
+      layer_semver: METADATA_LAYER_VERSION,
+      input_digests: {
+        spineDigest: null,
+        datasetDigest: args.digests.datasetDigest,
+        configDigest: args.digests.configDigest
+      },
+      output_digest: args.outputDigest,
+      ir_schema_version: METADATA_PLAN_IR_VERSION,
+      stats: {
+        record_count: args.stats.checkpointsTotal,
+        gcount: 0,
+        gapcount: 0,
+        event_counts: {
+          ALIYAH_END: args.stats.aliyahEndTotal,
+          PARASHA_END: args.stats.parashaEndTotal
+        }
+      },
+      timestamp: args.createdAt
+    })
   };
 }
 
@@ -517,7 +572,8 @@ export async function runBuildLayerMetadata(
   };
 
   const digest = buildLayerDigest(inputDigests);
-  const outputDir = path.join(parsed.outRoot, digest);
+  const { outRoot, cacheDir } = resolveOutputRoots(parsed.outRoot);
+  const outputDir = path.join(cacheDir, digest);
   const metadataPlanPath = path.join(outputDir, "metadata.plan.json");
   const manifestPath = path.join(outputDir, "manifest.json");
 
@@ -538,6 +594,12 @@ export async function runBuildLayerMetadata(
         torahJsonPath: parsed.torahJsonPath
       })
     ) {
+      await writeRunManifestSymlinks({
+        outRoot,
+        layer: METADATA_LAYER,
+        digest,
+        manifestPath
+      });
       return {
         layer: METADATA_LAYER,
         digest,
@@ -560,11 +622,20 @@ export async function runBuildLayerMetadata(
   const planText = formatJsonDocument(plan);
   const outputDigest = sha256Hex(planText);
   const createdAt = parsed.createdAt ?? plan.generated_at;
+  const aliyahEndTotal = plan.checkpoints.filter(
+    (checkpoint) => checkpoint.kind === "ALIYAH_END"
+  ).length;
+  const parashaEndTotal = plan.checkpoints.length - aliyahEndTotal;
   const manifest = normalizeMetadataManifest({
     datasetId: normalizedDataset.dataset_id,
     digests: inputDigests,
     config,
     outputDigest,
+    stats: {
+      checkpointsTotal: plan.checkpoints.length,
+      aliyahEndTotal,
+      parashaEndTotal
+    },
     createdAt,
     datasetPath: parsed.datasetPath,
     torahJsonPath: parsed.torahJsonPath
@@ -575,6 +646,12 @@ export async function runBuildLayerMetadata(
     fs.writeFile(metadataPlanPath, planText, "utf8"),
     fs.writeFile(manifestPath, formatJsonDocument(manifest), "utf8")
   ]);
+  await writeRunManifestSymlinks({
+    outRoot,
+    layer: METADATA_LAYER,
+    digest,
+    manifestPath
+  });
 
   return {
     layer: METADATA_LAYER,

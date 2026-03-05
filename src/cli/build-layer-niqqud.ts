@@ -1,5 +1,7 @@
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { createLayerManifestCore, type LayerManifestCore } from "../ir/layer_manifest_core";
 import {
   computeNiqqudConfigDigest,
   computeNiqqudDigest,
@@ -15,6 +17,7 @@ import {
   recordNiqqudWarning,
   writeNiqqudQualityArtifacts
 } from "../layers/niqqud/stats";
+import { writeRunManifestSymlinks } from "./run_manifest_symlinks";
 
 export const NIQQUD_LAYER_VERSION = "1.0.0";
 const NIQQUD_LAYER_DIGEST_VERSION = 1;
@@ -44,6 +47,7 @@ export type NiqqudBuildManifest = {
   };
   output_files: string[];
   created_at: string;
+  cache_manifest: LayerManifestCore;
 };
 
 export type BuildNiqqudCliResult = {
@@ -117,6 +121,10 @@ function isBoolean(value: unknown): value is boolean {
 
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((entry) => typeof entry === "string");
+}
+
+function sha256Hex(value: string | Buffer): string {
+  return crypto.createHash("sha256").update(value).digest("hex");
 }
 
 function toIsoString(value: Date | string | undefined): string {
@@ -342,17 +350,21 @@ async function resolveSpineDigest(args: {
   );
 }
 
-function resolveNiqqudCacheDir(outArg: string): string {
+function resolveNiqqudOutputRoots(outArg: string): { outRoot: string; cacheDir: string } {
   const resolved = path.resolve(outArg);
   const parts = resolved.split(path.sep).filter((segment) => segment.length > 0);
+  const parsed = path.parse(resolved);
   const isCacheLayer =
     parts.length >= 2 &&
     parts[parts.length - 2] === "cache" &&
     parts[parts.length - 1] === "niqqud";
   if (isCacheLayer) {
-    return resolved;
+    const rootParts = parts.slice(0, -2);
+    const outRoot =
+      rootParts.length > 0 ? path.join(parsed.root, ...rootParts) : parsed.root || resolved;
+    return { outRoot, cacheDir: resolved };
   }
-  return path.join(resolved, "cache", "niqqud");
+  return { outRoot: resolved, cacheDir: path.join(resolved, "cache", "niqqud") };
 }
 
 function parseNiqqudManifest(parsed: unknown): NiqqudBuildManifest {
@@ -389,6 +401,9 @@ function parseNiqqudManifest(parsed: unknown): NiqqudBuildManifest {
     throw new Error("build-layer-niqqud: manifest.output_files must be string[]");
   }
   assertNonEmptyString(parsed.created_at, "manifest.created_at");
+  if (!isRecord(parsed.cache_manifest)) {
+    throw new Error("build-layer-niqqud: manifest.cache_manifest must be object");
+  }
 
   return {
     layer: "niqqud",
@@ -404,7 +419,8 @@ function parseNiqqudManifest(parsed: unknown): NiqqudBuildManifest {
       strict: parsed.config.strict
     },
     output_files: parsed.output_files,
-    created_at: parsed.created_at
+    created_at: parsed.created_at,
+    cache_manifest: parsed.cache_manifest as LayerManifestCore
   };
 }
 
@@ -497,12 +513,21 @@ function createManifest(args: {
   codeFingerprint: string;
   config: NiqqudBuildManifest["config"];
   outputFiles: string[];
+  outputDigest: string;
+  stats: {
+    row_count: number;
+    ambiguous_rows: number;
+    unhandled_marks: number;
+    warnings: number;
+  };
   createdAt?: Date | string;
 }): NiqqudBuildManifest {
   assertSha256Hex(args.digest, "digest");
   assertSha256Hex(args.spineDigest, "spine_digest");
   assertSha256Hex(args.configDigest, "config_digest");
   assertSha256Hex(args.codeFingerprint, "code_fingerprint");
+  assertSha256Hex(args.outputDigest, "output_digest");
+  const createdAtIso = toIsoString(args.createdAt);
   return {
     layer: "niqqud",
     layer_version: NIQQUD_LAYER_VERSION,
@@ -513,7 +538,29 @@ function createManifest(args: {
     code_fingerprint: args.codeFingerprint,
     config: args.config,
     output_files: [...args.outputFiles],
-    created_at: toIsoString(args.createdAt)
+    created_at: createdAtIso,
+    cache_manifest: createLayerManifestCore({
+      layer_name: "niqqud",
+      layer_semver: NIQQUD_LAYER_VERSION,
+      input_digests: {
+        spineDigest: args.spineDigest,
+        datasetDigest: null,
+        configDigest: args.configDigest
+      },
+      output_digest: args.outputDigest,
+      ir_schema_version: String(NIQQUD_IR_VERSION),
+      stats: {
+        record_count: args.stats.row_count,
+        gcount: args.stats.row_count,
+        gapcount: 0,
+        event_counts: {
+          ambiguous_rows: args.stats.ambiguous_rows,
+          unhandled_marks: args.stats.unhandled_marks,
+          warnings: args.stats.warnings
+        }
+      },
+      timestamp: createdAtIso
+    })
   };
 }
 
@@ -542,7 +589,7 @@ export async function runBuildLayerNiqqud(
     codeFingerprint
   });
 
-  const cacheDir = resolveNiqqudCacheDir(parsed.outArg);
+  const { outRoot, cacheDir } = resolveNiqqudOutputRoots(parsed.outArg);
   const outputDir = path.join(cacheDir, digest);
   const niqqudIrPath = path.join(outputDir, "niqqud.ir.jsonl");
   const manifestPath = path.join(outputDir, "manifest.json");
@@ -559,6 +606,12 @@ export async function runBuildLayerNiqqud(
     config
   });
   if (hasCache && !parsed.force) {
+    await writeRunManifestSymlinks({
+      outRoot,
+      layer: "niqqud",
+      digest,
+      manifestPath
+    });
     return {
       layer: "niqqud",
       digest,
@@ -579,6 +632,9 @@ export async function runBuildLayerNiqqud(
   await fs.mkdir(outputDir, { recursive: true });
   const irHandle = await fs.open(niqqudIrPath, "w");
   const statsAccumulator = createNiqqudStatsAccumulator();
+  let rowCount = 0;
+  let ambiguousRows = 0;
+  let unhandledMarks = 0;
 
   try {
     for await (const row of readNiqqudView(resolvedSpine.spineJsonlPath, {
@@ -604,6 +660,11 @@ export async function runBuildLayerNiqqud(
       };
 
       await irHandle.write(`${serializeNiqqudIRRow(outRow)}\n`);
+      rowCount += 1;
+      if (built.flags.ambiguous) {
+        ambiguousRows += 1;
+      }
+      unhandledMarks += normalized.unhandled.length;
 
       recordNiqqudRow(statsAccumulator, {
         gid: row.gid,
@@ -647,9 +708,22 @@ export async function runBuildLayerNiqqud(
     configDigest,
     codeFingerprint,
     config,
-    outputFiles
+    outputFiles,
+    outputDigest: sha256Hex(await fs.readFile(niqqudIrPath)),
+    stats: {
+      row_count: rowCount,
+      ambiguous_rows: ambiguousRows,
+      unhandled_marks: unhandledMarks,
+      warnings: statsAccumulator.warnings.length
+    }
   });
   await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+  await writeRunManifestSymlinks({
+    outRoot,
+    layer: "niqqud",
+    digest,
+    manifestPath
+  });
 
   return {
     layer: "niqqud",

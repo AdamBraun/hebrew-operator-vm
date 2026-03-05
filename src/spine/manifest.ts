@@ -1,4 +1,5 @@
 import type { NormalizationOptions } from "./options";
+import { createLayerManifestCore, type LayerManifestCore } from "../ir/layer_manifest_core";
 
 export const SPINE_MANIFEST_LAYER = "spine";
 export const SPINE_MANIFEST_VERSION = "1.0.0";
@@ -25,6 +26,7 @@ export type SpineManifest = {
   schema: {
     spine_record_version: string;
   };
+  cache_manifest: LayerManifestCore;
 };
 
 export type CreateSpineManifestArgs = {
@@ -44,6 +46,7 @@ export type CreateSpineManifestArgs = {
   digests: {
     spineDigest: string;
   };
+  configDigest: string;
   schema?: {
     spine_record_version: string;
   };
@@ -97,17 +100,19 @@ export function createSpineManifest(args: CreateSpineManifestArgs): SpineManifes
   assertNonNegativeInt(args.stats.bytes_out, "stats.bytes_out");
 
   assertSha256(args.digests.spineDigest, "digests.spineDigest");
+  assertSha256(args.configDigest, "configDigest");
 
   const version = args.version ?? SPINE_MANIFEST_VERSION;
   assertNonEmptyString(version, "version");
 
   const spineRecordVersion = args.schema?.spine_record_version ?? SPINE_RECORD_VERSION;
   assertNonEmptyString(spineRecordVersion, "schema.spine_record_version");
+  const createdAtIso = toIsoString(args.createdAt);
 
   return {
     layer: SPINE_MANIFEST_LAYER,
     version,
-    created_at: toIsoString(args.createdAt),
+    created_at: createdAtIso,
     input: {
       path: args.input.path,
       sha256: args.input.sha256
@@ -124,6 +129,24 @@ export function createSpineManifest(args: CreateSpineManifestArgs): SpineManifes
     },
     schema: {
       spine_record_version: spineRecordVersion
-    }
+    },
+    cache_manifest: createLayerManifestCore({
+      layer_name: SPINE_MANIFEST_LAYER,
+      layer_semver: version,
+      input_digests: {
+        spineDigest: args.digests.spineDigest,
+        datasetDigest: args.input.sha256,
+        configDigest: args.configDigest
+      },
+      output_digest: args.digests.spineDigest,
+      ir_schema_version: spineRecordVersion,
+      stats: {
+        record_count: args.stats.graphemes + args.stats.gaps,
+        gcount: args.stats.graphemes,
+        gapcount: args.stats.gaps,
+        event_counts: {}
+      },
+      timestamp: createdAtIso
+    })
   };
 }

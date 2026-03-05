@@ -81,15 +81,15 @@ describe("build-spine cli", () => {
     expect(thirdSpineStat.mtimeMs).toBeGreaterThanOrEqual(secondSpineStat.mtimeMs);
     expect(thirdManifestStat.mtimeMs).toBeGreaterThanOrEqual(secondManifestStat.mtimeMs);
 
-    const alias = JSON.parse(fs.readFileSync(third.aliasPath, "utf8")) as {
-      layer: string;
-      spineDigest: string;
-      manifest_path: string;
-      spine_jsonl_path: string;
-    };
-    expect(alias.layer).toBe("spine");
-    expect(alias.spineDigest).toBe(third.spineDigest);
-    expect(alias.manifest_path).toBe(third.manifestPath);
-    expect(alias.spine_jsonl_path).toBe(third.spinePath);
+    const runAliasPath = path.join(outRoot, "runs", third.spineDigest, "manifests", "spine.json");
+    expect(fs.lstatSync(third.aliasPath).isSymbolicLink()).toBe(true);
+    expect(fs.lstatSync(runAliasPath).isSymbolicLink()).toBe(true);
+    const latestTarget = path.resolve(
+      path.dirname(third.aliasPath),
+      fs.readlinkSync(third.aliasPath)
+    );
+    const runTarget = path.resolve(path.dirname(runAliasPath), fs.readlinkSync(runAliasPath));
+    expect(latestTarget).toBe(third.manifestPath);
+    expect(runTarget).toBe(third.manifestPath);
   });
 });

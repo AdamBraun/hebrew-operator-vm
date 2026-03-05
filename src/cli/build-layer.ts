@@ -13,6 +13,7 @@ import {
   projectSpineGapsFromJsonl,
   readSpineGapDescriptorsFromJsonl
 } from "../layers/layout/spine_adapter";
+import { writeRunManifestSymlinks } from "./run_manifest_symlinks";
 
 type BuildLayoutCliOptions = {
   layer: "layout";
@@ -553,92 +554,43 @@ async function computeLayoutLayerCodeDigest(): Promise<string> {
 async function writeLayoutAliasFile(args: {
   outRoot: string;
   digest: string;
-  cacheHit: boolean;
-  forced: boolean;
   manifestPath: string;
-  layoutIrPath: string;
 }): Promise<string> {
-  const aliasPath = path.join(args.outRoot, "runs", "latest", "manifests", "layout.json");
-  await fs.mkdir(path.dirname(aliasPath), { recursive: true });
-  const payload = {
+  const aliases = await writeRunManifestSymlinks({
+    outRoot: args.outRoot,
     layer: "layout",
     digest: args.digest,
-    cache_hit: args.cacheHit,
-    forced: args.forced,
-    manifest_path: args.manifestPath,
-    layout_ir_jsonl_path: args.layoutIrPath,
-    updated_at: new Date().toISOString()
-  };
-  await fs.writeFile(aliasPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-  return aliasPath;
+    manifestPath: args.manifestPath
+  });
+  return aliases.latestAliasPath;
 }
 
 async function writeLettersAliasFile(args: {
   outRoot: string;
   digest: string;
-  cacheHit: boolean;
-  forced: boolean;
   manifestPath: string;
-  lettersIrPath: string;
 }): Promise<string> {
-  const runAliasPath = path.join(args.outRoot, "runs", args.digest, "manifests", "letters.json");
-  const latestAliasPath = path.join(args.outRoot, "runs", "latest", "manifests", "letters.json");
-  const payload = {
+  const aliases = await writeRunManifestSymlinks({
+    outRoot: args.outRoot,
     layer: "letters",
-    run: args.digest,
     digest: args.digest,
-    cache_hit: args.cacheHit,
-    forced: args.forced,
-    manifest_path: args.manifestPath,
-    letters_ir_jsonl_path: args.lettersIrPath,
-    updated_at: new Date().toISOString()
-  };
-  await fs.mkdir(path.dirname(runAliasPath), { recursive: true });
-  await fs.writeFile(runAliasPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-  await fs.mkdir(path.dirname(latestAliasPath), { recursive: true });
-  await fs.writeFile(latestAliasPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-  return latestAliasPath;
+    manifestPath: args.manifestPath
+  });
+  return aliases.latestAliasPath;
 }
 
 async function writeCantillationAliasFile(args: {
   outRoot: string;
   digest: string;
-  cacheHit: boolean;
-  forced: boolean;
   manifestPath: string;
-  cantillationIrPath: string;
-  statsPath?: string;
 }): Promise<string> {
-  const runAliasPath = path.join(
-    args.outRoot,
-    "runs",
-    args.digest,
-    "manifests",
-    "cantillation.json"
-  );
-  const latestAliasPath = path.join(
-    args.outRoot,
-    "runs",
-    "latest",
-    "manifests",
-    "cantillation.json"
-  );
-  const payload = {
+  const aliases = await writeRunManifestSymlinks({
+    outRoot: args.outRoot,
     layer: "cantillation",
-    run: args.digest,
     digest: args.digest,
-    cache_hit: args.cacheHit,
-    forced: args.forced,
-    manifest_path: args.manifestPath,
-    cantillation_ir_jsonl_path: args.cantillationIrPath,
-    ...(args.statsPath ? { stats_path: args.statsPath } : {}),
-    updated_at: new Date().toISOString()
-  };
-  await fs.mkdir(path.dirname(runAliasPath), { recursive: true });
-  await fs.writeFile(runAliasPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-  await fs.mkdir(path.dirname(latestAliasPath), { recursive: true });
-  await fs.writeFile(latestAliasPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-  return latestAliasPath;
+    manifestPath: args.manifestPath
+  });
+  return aliases.latestAliasPath;
 }
 
 export async function runBuildLayer(
@@ -693,10 +645,7 @@ export async function runBuildLayer(
     const aliasPath = await writeLayoutAliasFile({
       outRoot,
       digest: emitted.digest,
-      cacheHit: emitted.cacheHit,
-      forced: emitted.forced,
-      manifestPath: emitted.manifestPath,
-      layoutIrPath: emitted.layoutIrPath
+      manifestPath: emitted.manifestPath
     });
 
     return {
@@ -728,11 +677,7 @@ export async function runBuildLayer(
     const aliasPath = await writeCantillationAliasFile({
       outRoot,
       digest: emitted.digest,
-      cacheHit: emitted.cacheHit,
-      forced: emitted.forced,
-      manifestPath: emitted.manifestPath,
-      cantillationIrPath: emitted.cantillationIrPath,
-      ...(emitted.statsPath ? { statsPath: emitted.statsPath } : {})
+      manifestPath: emitted.manifestPath
     });
 
     return {
@@ -778,10 +723,7 @@ export async function runBuildLayer(
   const aliasPath = await writeLettersAliasFile({
     outRoot,
     digest: emitted.digest,
-    cacheHit: emitted.cacheHit,
-    forced: emitted.forced,
-    manifestPath: emitted.manifestPath,
-    lettersIrPath: emitted.lettersIrPath
+    manifestPath: emitted.manifestPath
   });
 
   return {

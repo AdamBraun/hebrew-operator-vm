@@ -17,6 +17,7 @@ import {
   type CantillationManifest,
   type CantillationManifestOutputFile
 } from "./manifest";
+import { createLayerManifestCore } from "../../ir/layer_manifest_core";
 import { createCantillationMarkCoverage, resolveCantillationMarkWithCoverage } from "./marks";
 import {
   compareCantillationEvents,
@@ -516,7 +517,10 @@ function eventSubOrder<T extends CantillationEvent>(events: T[]): T[] {
   return [...events].sort(compareCantillationEvents);
 }
 
-function readGapEvents(row: ParsedSpineGapRecord, sofPasukRank: number): CantillationBoundaryEvent[] {
+function readGapEvents(
+  row: ParsedSpineGapRecord,
+  sofPasukRank: number
+): CantillationBoundaryEvent[] {
   const events: CantillationBoundaryEvent[] = [];
 
   if (row.raw.maqaf_char) {
@@ -809,12 +813,40 @@ export async function extractCantillationIR(
     });
   }
 
+  const createdAt = new Date().toISOString();
+  const outputDigest =
+    outputFiles.find((entry) => entry.path === "cantillation.ir.jsonl")?.sha256 ??
+    (await sha256OfFile(cantillationIrPath));
+
   const manifest = createCantillationManifest({
     layer_version: CANTILLATION_LAYER_VERSION,
     spine_digest: spineDigest,
     config_hash: configHash,
     code_hash: codeHash,
-    output_files: outputFiles
+    created_at: createdAt,
+    output_files: outputFiles,
+    cache_manifest: createLayerManifestCore({
+      layer_name: "cantillation",
+      layer_semver: "1.0.0",
+      input_digests: {
+        spineDigest: spineDigest,
+        datasetDigest: null,
+        configDigest: configHash
+      },
+      output_digest: outputDigest,
+      ir_schema_version: String(CANTILLATION_LAYER_VERSION),
+      stats: {
+        record_count: stats.events_total,
+        gcount: stats.totals.graphemes,
+        gapcount: stats.events_by_type.BOUNDARY,
+        event_counts: {
+          TROPE_MARK: stats.events_by_type.TROPE_MARK,
+          UNKNOWN_MARK: stats.events_by_type.UNKNOWN_MARK,
+          BOUNDARY: stats.events_by_type.BOUNDARY
+        }
+      },
+      timestamp: createdAt
+    })
   });
   await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 

@@ -1,3 +1,5 @@
+import { type LayerManifestCore } from "../../ir/layer_manifest_core";
+
 export const CANTILLATION_MANIFEST_LAYER = "cantillation";
 
 export const CANTILLATION_LAYER_VERSION = 1;
@@ -16,7 +18,9 @@ export type CantillationManifestOutputFile = {
 };
 
 export type CantillationManifest = CantillationManifestDigestInputs & {
+  created_at: string;
   output_files: CantillationManifestOutputFile[];
+  cache_manifest: LayerManifestCore;
 };
 
 export const CANTILLATION_MANIFEST_JSON_SCHEMA = {
@@ -25,7 +29,16 @@ export const CANTILLATION_MANIFEST_JSON_SCHEMA = {
   title: "CantillationManifest",
   type: "object",
   additionalProperties: false,
-  required: ["layer", "layer_version", "spine_digest", "config_hash", "code_hash", "output_files"],
+  required: [
+    "layer",
+    "layer_version",
+    "spine_digest",
+    "config_hash",
+    "code_hash",
+    "created_at",
+    "output_files",
+    "cache_manifest"
+  ],
   properties: {
     layer: { const: CANTILLATION_MANIFEST_LAYER },
     layer_version: { type: "integer", minimum: 0 },
@@ -40,6 +53,10 @@ export const CANTILLATION_MANIFEST_JSON_SCHEMA = {
     code_hash: {
       type: "string",
       pattern: "^[a-f0-9]{64}$"
+    },
+    created_at: {
+      type: "string",
+      minLength: 1
     },
     output_files: {
       type: "array",
@@ -58,6 +75,10 @@ export const CANTILLATION_MANIFEST_JSON_SCHEMA = {
           }
         }
       }
+    },
+    cache_manifest: {
+      type: "object",
+      additionalProperties: true
     }
   }
 } as const;
@@ -301,8 +322,14 @@ export function isCantillationManifest(value: unknown): value is CantillationMan
   if (!isRecord(value) || !isCantillationManifestDigestInputs(value)) {
     return false;
   }
+  if (!isNonEmptyString((value as UnknownRecord).created_at)) {
+    return false;
+  }
   const outputFiles = (value as UnknownRecord).output_files;
   if (!Array.isArray(outputFiles)) {
+    return false;
+  }
+  if (!isRecord((value as UnknownRecord).cache_manifest)) {
     return false;
   }
 
@@ -328,7 +355,16 @@ export function assertCantillationManifest(
   assertRecord(value, path, scope);
   assertNoUnknownKeys(
     value,
-    ["layer", "layer_version", "spine_digest", "config_hash", "code_hash", "output_files"],
+    [
+      "layer",
+      "layer_version",
+      "spine_digest",
+      "config_hash",
+      "code_hash",
+      "created_at",
+      "output_files",
+      "cache_manifest"
+    ],
     path,
     scope
   );
@@ -341,7 +377,12 @@ export function assertCantillationManifest(
     code_hash: assertHas(value, "code_hash", path, scope)
   };
   assertCantillationManifestDigestInputs(digestInputs, path, scope);
+  const createdAt = assertHas(value, "created_at", path, scope);
+  if (!isNonEmptyString(createdAt)) {
+    fail(scope, `${path}.created_at`, `expected non-empty string, got ${describe(createdAt)}`);
+  }
   assertOutputFiles(assertHas(value, "output_files", path, scope), `${path}.output_files`, scope);
+  assertRecord(assertHas(value, "cache_manifest", path, scope), `${path}.cache_manifest`, scope);
 }
 
 export function createCantillationManifest(args: {
@@ -349,12 +390,18 @@ export function createCantillationManifest(args: {
   spine_digest: string;
   config_hash: string;
   code_hash: string;
+  created_at: string;
   output_files: readonly CantillationManifestOutputFile[];
+  cache_manifest: LayerManifestCore;
 }): CantillationManifest {
   assertSha256Hex(args.spine_digest, "spine_digest", "createCantillationManifest");
   assertSha256Hex(args.config_hash, "config_hash", "createCantillationManifest");
   assertSha256Hex(args.code_hash, "code_hash", "createCantillationManifest");
+  if (!isNonEmptyString(args.created_at)) {
+    throw new Error("createCantillationManifest: created_at must be non-empty string");
+  }
   assertOutputFiles(args.output_files, "output_files", "createCantillationManifest");
+  assertRecord(args.cache_manifest as unknown, "cache_manifest", "createCantillationManifest");
 
   const manifest: CantillationManifest = {
     layer: CANTILLATION_MANIFEST_LAYER,
@@ -362,7 +409,9 @@ export function createCantillationManifest(args: {
     spine_digest: args.spine_digest,
     config_hash: args.config_hash,
     code_hash: args.code_hash,
-    output_files: normalizeOutputFiles(args.output_files)
+    created_at: args.created_at,
+    output_files: normalizeOutputFiles(args.output_files),
+    cache_manifest: args.cache_manifest
   };
 
   assertCantillationManifest(manifest);

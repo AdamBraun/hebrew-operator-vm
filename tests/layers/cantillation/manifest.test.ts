@@ -6,6 +6,7 @@ import {
   isCantillationManifest,
   stringifyCantillationManifestDigestInputs
 } from "../../../src/layers/cantillation/manifest";
+import { createLayerManifestCore } from "../../../src/ir/layer_manifest_core";
 
 describe("cantillation manifest", () => {
   it("creates a valid manifest with sorted output_files", () => {
@@ -13,10 +14,32 @@ describe("cantillation manifest", () => {
       spine_digest: "a".repeat(64),
       config_hash: "b".repeat(64),
       code_hash: "c".repeat(64),
+      created_at: "2026-03-05T00:00:00.000Z",
       output_files: [
         { path: "manifest.json", sha256: "f".repeat(64) },
         { path: "cantillation.ir.jsonl", sha256: "e".repeat(64) }
-      ]
+      ],
+      cache_manifest: createLayerManifestCore({
+        layer_name: "cantillation",
+        layer_semver: "1.0.0",
+        input_digests: {
+          spineDigest: "a".repeat(64),
+          datasetDigest: null,
+          configDigest: "b".repeat(64)
+        },
+        output_digest: "e".repeat(64),
+        ir_schema_version: "1",
+        stats: {
+          record_count: 2,
+          gcount: 1,
+          gapcount: 1,
+          event_counts: {
+            TROPE_MARK: 1,
+            BOUNDARY: 1
+          }
+        },
+        timestamp: "2026-03-05T00:00:00.000Z"
+      })
     });
 
     expect(() => assertCantillationManifest(manifest)).not.toThrow();
@@ -48,7 +71,26 @@ describe("cantillation manifest", () => {
         spine_digest: "not-a-sha",
         config_hash: "b".repeat(64),
         code_hash: "c".repeat(64),
-        output_files: [{ path: "cantillation.ir.jsonl", sha256: "e".repeat(64) }]
+        created_at: "2026-03-05T00:00:00.000Z",
+        output_files: [{ path: "cantillation.ir.jsonl", sha256: "e".repeat(64) }],
+        cache_manifest: createLayerManifestCore({
+          layer_name: "cantillation",
+          layer_semver: "1.0.0",
+          input_digests: {
+            spineDigest: "a".repeat(64),
+            datasetDigest: null,
+            configDigest: "b".repeat(64)
+          },
+          output_digest: "e".repeat(64),
+          ir_schema_version: "1",
+          stats: {
+            record_count: 1,
+            gcount: 1,
+            gapcount: 0,
+            event_counts: {}
+          },
+          timestamp: "2026-03-05T00:00:00.000Z"
+        })
       })
     ).toThrow(/sha256/);
 
@@ -57,10 +99,29 @@ describe("cantillation manifest", () => {
         spine_digest: "a".repeat(64),
         config_hash: "b".repeat(64),
         code_hash: "c".repeat(64),
+        created_at: "2026-03-05T00:00:00.000Z",
         output_files: [
           { path: "cantillation.ir.jsonl", sha256: "e".repeat(64) },
           { path: "cantillation.ir.jsonl", sha256: "f".repeat(64) }
-        ]
+        ],
+        cache_manifest: createLayerManifestCore({
+          layer_name: "cantillation",
+          layer_semver: "1.0.0",
+          input_digests: {
+            spineDigest: "a".repeat(64),
+            datasetDigest: null,
+            configDigest: "b".repeat(64)
+          },
+          output_digest: "e".repeat(64),
+          ir_schema_version: "1",
+          stats: {
+            record_count: 2,
+            gcount: 1,
+            gapcount: 1,
+            event_counts: {}
+          },
+          timestamp: "2026-03-05T00:00:00.000Z"
+        })
       })
     ).toThrow(/duplicate output file path/);
   });

@@ -1,7 +1,9 @@
+import crypto from "node:crypto";
 import fsRaw from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import readline from "node:readline";
+import { createLayerManifestCore, type LayerManifestCore } from "../../ir/layer_manifest_core";
 import { type SpineRecord } from "../../spine/schema";
 import { classifyLetterOperator } from "./opMap";
 import {
@@ -55,6 +57,7 @@ export type LettersManifest = {
     letters_emitted: number;
     refs_seen: number;
   };
+  cache_manifest: LayerManifestCore;
 };
 
 export type EmitLettersFromSpineArgs = {
@@ -86,6 +89,10 @@ function assertSha256Hex(value: unknown, label: string): asserts value is string
   if (typeof value !== "string" || !/^[a-f0-9]{64}$/.test(value)) {
     throw new Error(`extractLettersIRRecordsForRef: ${label} must be lowercase sha256 hex`);
   }
+}
+
+function sha256Hex(value: string | Buffer): string {
+  return crypto.createHash("sha256").update(value).digest("hex");
 }
 
 function assertNonEmptyString(value: unknown, label: string): asserts value is string {
@@ -206,6 +213,9 @@ async function readLettersManifest(filePath: string): Promise<LettersManifest> {
   if (!Number.isInteger(refsSeen) || refsSeen < 0) {
     throw new Error("emitLettersFromSpine: manifest.counts.refs_seen must be non-negative int");
   }
+  if (!isRecord(parsed.cache_manifest)) {
+    throw new Error("emitLettersFromSpine: manifest.cache_manifest must be object");
+  }
 
   return {
     layer: "letters",
@@ -225,7 +235,8 @@ async function readLettersManifest(filePath: string): Promise<LettersManifest> {
     counts: {
       letters_emitted: lettersEmitted,
       refs_seen: refsSeen
-    }
+    },
+    cache_manifest: parsed.cache_manifest as LayerManifestCore
   };
 }
 
@@ -378,17 +389,21 @@ export async function emitLettersFromSpine(
   const hasCache = (await pathExists(lettersIrPath)) && (await pathExists(manifestPath));
 
   if (hasCache && !args.force) {
-    const manifest = await readLettersManifest(manifestPath);
-    return {
-      digest,
-      outputDir,
-      lettersIrPath,
-      manifestPath,
-      manifest,
-      counts: manifest.counts,
-      cacheHit: true,
-      forced: false
-    };
+    try {
+      const manifest = await readLettersManifest(manifestPath);
+      return {
+        digest,
+        outputDir,
+        lettersIrPath,
+        manifestPath,
+        manifest,
+        counts: manifest.counts,
+        cacheHit: true,
+        forced: false
+      };
+    } catch {
+      // Invalid/stale manifest: rebuild and overwrite cache entry.
+    }
   }
 
   await fs.mkdir(outputDir, { recursive: true });
@@ -447,10 +462,11 @@ export async function emitLettersFromSpine(
     await handle.close();
   }
 
+  const createdAtIso = toIsoString(args.createdAt);
   const manifest: LettersManifest = {
     layer: "letters",
     version,
-    created_at: toIsoString(args.createdAt),
+    created_at: createdAtIso,
     inputs: {
       spine_digest: spineDigest,
       spine_path: spinePath
@@ -459,7 +475,25 @@ export async function emitLettersFromSpine(
     outputs: {
       letters_ir_path: lettersIrPath
     },
-    counts
+    counts,
+    cache_manifest: createLayerManifestCore({
+      layer_name: "letters",
+      layer_semver: version,
+      input_digests: {
+        spineDigest: spineDigest,
+        datasetDigest: null,
+        configDigest: sha256Hex(JSON.stringify(config))
+      },
+      output_digest: sha256Hex(await fs.readFile(lettersIrPath)),
+      ir_schema_version: version,
+      stats: {
+        record_count: counts.letters_emitted,
+        gcount: counts.letters_emitted,
+        gapcount: 0,
+        event_counts: {}
+      },
+      timestamp: createdAtIso
+    })
   };
 
   await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
