@@ -204,15 +204,19 @@
     },
     "ש": {
       "op_family": "SHIN",
-      "read_letter": "ש",
-      "shape_letter": null,
-      "shape_effect_scope": null,
+      "base_plan": ["ATTACH_THREE"],
+      "base_execution_plan": ["ATTACH_THREE"],
       "default_direction": "external",
-      "direction_by_modifier": {
-        "SHIN_DOT_RIGHT": "external",
-        "SHIN_DOT_LEFT": "internal"
+      "modifiers": {
+        "SHIN_DOT_RIGHT": {
+          "plan": ["ATTACH_THREE_EXTERNAL"],
+          "direction": "external"
+        },
+        "SHIN_DOT_LEFT": {
+          "plan": ["ATTACH_THREE_INTERNAL"],
+          "direction": "internal"
+        }
       },
-      "base_execution_plan": ["FORK"],
       "event_types": ["shin"],
       "event_types_by_direction": {
         "external": ["shin", "fork_external"],
@@ -328,11 +332,11 @@
       "event_types": []
     },
     "SHIN_DOT_RIGHT": {
-      "execution_plan": ["SET_SHIN_DIRECTION_EXTERNAL"],
+      "execution_plan": ["ATTACH_THREE_EXTERNAL"],
       "event_types": []
     },
     "SHIN_DOT_LEFT": {
-      "execution_plan": ["SET_SHIN_DIRECTION_INTERNAL"],
+      "execution_plan": ["ATTACH_THREE_INTERNAL"],
       "event_types": []
     },
     "SHVA": {
