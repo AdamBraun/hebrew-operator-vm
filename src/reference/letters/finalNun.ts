@@ -1,8 +1,7 @@
 import { BOT_ID, createHandle } from "../state/handles";
-import { addCarry } from "../state/relations";
+import { addCarry, addSupp } from "../state/relations";
 import { setPolicy } from "../state/policies";
 import { State } from "../state/state";
-import { RuntimeError } from "../vm/errors";
 import { nextId } from "../vm/ids";
 import { Construction, LetterMeta, LetterOp, SelectOperands, defaultEnvelope } from "./types";
 
@@ -23,6 +22,7 @@ export const finalNunOp: LetterOp = {
     const child = nextId(S, "ן");
     S.handles.set(child, createHandle(child, "scope", { meta: { succOf: parent } }));
     addCarry(S, parent, child);
+    addSupp(S, child, parent);
     const cons: Construction = {
       base: parent,
       envelope: defaultEnvelope("framed_lock"),
@@ -31,18 +31,7 @@ export const finalNunOp: LetterOp = {
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { parent, child } = cons.meta as { parent: string; child: string };
-    S.vm.OStack_word.push({
-      kind: "SUPPORT",
-      parent,
-      child,
-      payload: {},
-      tau_created: S.vm.tau
-    });
-    const popped = S.vm.OStack_word.pop();
-    if (!popped || popped.kind !== "SUPPORT" || popped.child !== child) {
-      throw new RuntimeError("Final nun support discharge mismatch");
-    }
+    const { child } = cons.meta as { child: string };
     setPolicy(S, child, "framed_lock");
     return { S, h: child, r: BOT_ID };
   }
