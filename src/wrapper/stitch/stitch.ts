@@ -7,8 +7,8 @@ import {
 } from "../../layers/cantillation/schema";
 import { assertLayoutIRRecord, type LayoutEvent } from "../../layers/layout/schema";
 import { assertLettersIRRecord } from "../../layers/letters/schema";
-import { assertNiqqudIRRow } from "../../layers/niqqud/schema";
-import type { ProgramIRRecord } from "../program_schema";
+import { assertNiqqudIRRow, type NiqqudMods } from "../../layers/niqqud/schema";
+import type { ProgramIRRecord, ProgramMods } from "../program_schema";
 import {
   loadStitchAnchorIndexes,
   type LoadStitchAnchorIndexesArgs,
@@ -24,6 +24,9 @@ import {
 import { readSpineTraversalPlanFromJsonl, type SpineTraversalPlan } from "./spinePlan";
 
 type UnknownRecord = Record<string, unknown>;
+
+const PROGRAM_MODS_SCHEMA_VERSION = "1.0.0";
+const PROGRAM_MODS_FEATURE_KEYS = ["hasDagesh", "hasShva", "vowelCount"] as const;
 
 const LAYOUT_EVENT_TYPE_ORDER: Readonly<Record<LayoutEvent["type"], number>> = {
   SPACE: 0,
@@ -86,6 +89,41 @@ function canonicalStringify(value: unknown): string {
 
 function deepClone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function normalizeProgramMods(rawMods: NiqqudMods | undefined): ProgramMods {
+  const classesSource =
+    rawMods && Array.isArray(rawMods.classes) ? rawMods.classes.filter((entry) => typeof entry === "string") : [];
+  const classes = [...new Set(classesSource)].sort(compareText);
+
+  const featuresSource = rawMods && isRecord(rawMods.features) ? rawMods.features : {};
+  for (const key of Object.keys(featuresSource)) {
+    if (!PROGRAM_MODS_FEATURE_KEYS.includes(key as (typeof PROGRAM_MODS_FEATURE_KEYS)[number])) {
+      throw new Error(
+        `stitch: ProgramIR mods.features key '${key}' is unsupported; bump ProgramIR mods schema to add keys`
+      );
+    }
+  }
+
+  const hasDagesh =
+    typeof featuresSource.hasDagesh === "boolean" ? featuresSource.hasDagesh : false;
+  const hasShva = typeof featuresSource.hasShva === "boolean" ? featuresSource.hasShva : false;
+  const vowelCount =
+    typeof featuresSource.vowelCount === "number" &&
+    Number.isInteger(featuresSource.vowelCount) &&
+    featuresSource.vowelCount >= 0
+      ? featuresSource.vowelCount
+      : 0;
+
+  return {
+    schemaVersion: PROGRAM_MODS_SCHEMA_VERSION,
+    classes,
+    features: {
+      hasDagesh,
+      hasShva,
+      vowelCount
+    }
+  };
 }
 
 function rankValue(value: unknown): number | null | undefined {
@@ -310,8 +348,22 @@ function stitchProgramRowsFromPlan(args: {
   const graphemeByGid = new Map(args.spinePlan.graphemes.map((row) => [row.gid, row]));
   const gapByGapid = new Map(args.spinePlan.gaps.map((row) => [row.gapid, row]));
   const rows: ProgramIRRecord[] = [];
+  const nextGidByPlanIndex: Array<string | null> = new Array(args.spinePlan.plan.length);
+  let nextGid: string | null = null;
+  for (let i = args.spinePlan.plan.length - 1; i >= 0; i -= 1) {
+    const step = args.spinePlan.plan[i];
+    if (step?.kind === "g") {
+      nextGid = step.gid;
+    }
+    nextGidByPlanIndex[i] = nextGid;
+  }
+  let previousGid: string | null = null;
 
-  for (const step of args.spinePlan.plan) {
+  for (let stepIndex = 0; stepIndex < args.spinePlan.plan.length; stepIndex += 1) {
+    const step = args.spinePlan.plan[stepIndex];
+    if (!step) {
+      continue;
+    }
     if (step.kind === "g") {
       const grapheme = graphemeByGid.get(step.gid);
       if (!grapheme) {
@@ -334,16 +386,24 @@ function stitchProgramRowsFromPlan(args: {
 
       const cantAttached = normalizeCantEvents(args.indexes.cantByGid.get(step.gid) ?? []);
       const opRow: ProgramIRRecord = {
+        seq: 0,
         kind: "op",
         gid: letter.gid,
         ref_key: letter.ref_key,
         g_index: letter.g_index,
         op_kind: letter.op_kind,
-        mods: deepClone(args.indexes.niqqudByGid.get(step.gid) ?? {}),
+        mods: normalizeProgramMods(args.indexes.niqqudByGid.get(step.gid)),
+        ...(letter.word
+          ? {
+              word_id: letter.word.id,
+              pos_in_word: letter.word.index_in_word
+            }
+          : {}),
         ...(cantAttached.length > 0 ? { cant_attached: cantAttached } : {})
       };
       assertProgramIRNoRuntimeState(opRow, `ProgramIR[${String(rows.length)}]`);
       rows.push(opRow);
+      previousGid = step.gid;
       continue;
     }
 
@@ -353,10 +413,13 @@ function stitchProgramRowsFromPlan(args: {
     }
 
     const boundaryRow: ProgramIRRecord = {
+      seq: 0,
       kind: "boundary",
       gapid: gap.gapid,
       ref_key: gap.ref_key,
       gap_index: gap.gap_index,
+      left_gid: previousGid,
+      right_gid: nextGidByPlanIndex[stepIndex] ?? null,
       layout: normalizeLayoutEvents(args.indexes.layoutByGap.get(step.gapid) ?? []),
       cant: normalizeCantEvents(args.indexes.cantByGap.get(step.gapid) ?? []),
       raw: deepClone(gap.raw)
@@ -365,7 +428,10 @@ function stitchProgramRowsFromPlan(args: {
     rows.push(boundaryRow);
   }
 
-  return rows;
+  return rows.map((row, seq) => ({
+    ...row,
+    seq
+  }));
 }
 
 export async function stitchProgramRowsFromFiles(

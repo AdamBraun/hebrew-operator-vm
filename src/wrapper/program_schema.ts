@@ -27,7 +27,6 @@ import {
   type LettersIRRecord
 } from "../layers/letters/schema";
 import {
-  assertNiqqudIRRow,
   assertNiqqudIRRows,
   compareNiqqudIRRows,
   formatNiqqudIRJsonl,
@@ -49,6 +48,7 @@ export const PROGRAM_LAYER = "program";
 export const PROGRAM_IR_VERSION = 1;
 export const PROGRAM_MANIFEST_VERSION = "1.0.0";
 export const PROGRAM_SCHEMA_VERSION = "1.0.0";
+export const PROGRAM_MODS_SCHEMA_VERSION = "1.0.0";
 export const STITCHER_CONTRACT_VERSION = "1.0.0";
 export const STITCHER_VERSION = "1.0.0";
 
@@ -63,20 +63,26 @@ export type MetadataPlan = Record<string, unknown> & {
 };
 
 export type ProgramIROpRecord = {
+  seq: number;
   kind: "op";
   gid: string;
   ref_key: string;
   g_index: number;
   op_kind: string;
-  mods: NiqqudMods | Record<string, never>;
+  mods: ProgramMods;
+  word_id?: string;
+  pos_in_word?: number;
   cant_attached?: CantillationEvent[];
 };
 
 export type ProgramIRBoundaryRecord = {
+  seq: number;
   kind: "boundary";
   gapid: string;
   ref_key: string;
   gap_index: number;
+  left_gid: string | null;
+  right_gid: string | null;
   layout: LayoutEvent[];
   cant: CantillationEvent[];
   raw: {
@@ -87,6 +93,18 @@ export type ProgramIRBoundaryRecord = {
 };
 
 export type ProgramIRRecord = ProgramIROpRecord | ProgramIRBoundaryRecord;
+
+export type ProgramModsFeatures = {
+  hasDagesh: boolean;
+  hasShva: boolean;
+  vowelCount: number;
+};
+
+export type ProgramMods = {
+  schemaVersion: typeof PROGRAM_MODS_SCHEMA_VERSION;
+  classes: string[];
+  features: ProgramModsFeatures;
+};
 
 export type ProgramInputDigests = {
   spine_sha256: string;
@@ -248,6 +266,7 @@ const GAPID_PATTERN = /^([^#]+)#gap:([0-9]+)$/;
 const SHA256_HEX = /^[a-f0-9]{64}$/;
 const SHORT_GIT_SHA_HEX = /^[a-f0-9]{7,40}$/;
 const PROGRAM_ROLLING_HASH_CHUNK_SIZE = 50_000;
+const PROGRAM_MODS_FEATURE_KEYS = ["hasDagesh", "hasShva", "vowelCount"] as const;
 
 const OWN = Object.prototype.hasOwnProperty;
 
@@ -384,6 +403,41 @@ function parseGapid(value: string): { ref_key: string; gap_index: number } | nul
     return null;
   }
   return { ref_key, gap_index };
+}
+
+function normalizeProgramMods(rawMods: NiqqudMods | undefined): ProgramMods {
+  const classesSource =
+    rawMods && Array.isArray(rawMods.classes) ? rawMods.classes.filter((entry) => typeof entry === "string") : [];
+  const classes = [...new Set(classesSource)].sort(compareText);
+
+  const featuresSource = rawMods && isRecord(rawMods.features) ? rawMods.features : {};
+  for (const key of Object.keys(featuresSource)) {
+    if (!PROGRAM_MODS_FEATURE_KEYS.includes(key as (typeof PROGRAM_MODS_FEATURE_KEYS)[number])) {
+      throw new Error(
+        `stitcher: ProgramIR mods.features key '${key}' is unsupported; bump PROGRAM_MODS_SCHEMA_VERSION to add new keys`
+      );
+    }
+  }
+
+  const hasDagesh =
+    typeof featuresSource.hasDagesh === "boolean" ? featuresSource.hasDagesh : false;
+  const hasShva = typeof featuresSource.hasShva === "boolean" ? featuresSource.hasShva : false;
+  const vowelCount =
+    typeof featuresSource.vowelCount === "number" &&
+    Number.isInteger(featuresSource.vowelCount) &&
+    featuresSource.vowelCount >= 0
+      ? featuresSource.vowelCount
+      : 0;
+
+  return {
+    schemaVersion: PROGRAM_MODS_SCHEMA_VERSION,
+    classes,
+    features: {
+      hasDagesh,
+      hasShva,
+      vowelCount
+    }
+  };
 }
 
 function toCanonicalJsonValue(value: unknown): CanonicalJsonValue | undefined {
@@ -967,21 +1021,49 @@ export function compareProgramIRRecords(left: ProgramIRRecord, right: ProgramIRR
 
 function assertProgramMods(value: unknown, path: string, scope: string): void {
   assertRecord(value, path, scope);
-  if (Object.keys(value).length === 0) {
-    return;
+  assertNoUnknownKeys(value, ["schemaVersion", "classes", "features"], path, scope);
+
+  const schemaVersion = assertHas(value, "schemaVersion", path, scope);
+  if (schemaVersion !== PROGRAM_MODS_SCHEMA_VERSION) {
+    fail(
+      scope,
+      `${path}.schemaVersion`,
+      `expected '${PROGRAM_MODS_SCHEMA_VERSION}', got ${describe(schemaVersion)}`
+    );
   }
 
-  const rowLike: NiqqudIRRow = {
-    kind: "niqqud",
-    version: 1,
-    gid: "dummy/0/0#g:0",
-    ref_key: "dummy/0/0",
-    g_index: 0,
-    raw: { niqqud: [] },
-    mods: value as NiqqudMods,
-    unhandled: []
-  };
-  assertNiqqudIRRow(rowLike, path, scope);
+  const classes = assertHas(value, "classes", path, scope);
+  if (!Array.isArray(classes)) {
+    fail(scope, `${path}.classes`, "expected string[]");
+  }
+  let previousClass: string | null = null;
+  for (let i = 0; i < classes.length; i += 1) {
+    const className = classes[i];
+    if (typeof className !== "string") {
+      fail(scope, `${path}.classes[${i}]`, "expected string");
+    }
+    if (previousClass !== null && compareText(previousClass, className) >= 0) {
+      fail(scope, `${path}.classes[${i}]`, "expected strictly sorted unique class names");
+    }
+    previousClass = className;
+  }
+
+  const features = assertHas(value, "features", path, scope);
+  assertRecord(features, `${path}.features`, scope);
+  assertNoUnknownKeys(
+    features,
+    [...PROGRAM_MODS_FEATURE_KEYS],
+    `${path}.features`,
+    scope
+  );
+  if (typeof assertHas(features, "hasDagesh", `${path}.features`, scope) !== "boolean") {
+    fail(scope, `${path}.features.hasDagesh`, "expected boolean");
+  }
+  if (typeof assertHas(features, "hasShva", `${path}.features`, scope) !== "boolean") {
+    fail(scope, `${path}.features.hasShva`, "expected boolean");
+  }
+  const vowelCount = assertHas(features, "vowelCount", `${path}.features`, scope);
+  assertNonNegativeInteger(vowelCount, `${path}.features.vowelCount`, scope);
 }
 
 function assertCantillationEvent(value: unknown, path: string, scope: string): void {
@@ -1023,10 +1105,24 @@ export function assertProgramIRRecord(
   if (kind === "op") {
     assertNoUnknownKeys(
       value,
-      ["kind", "gid", "ref_key", "g_index", "op_kind", "mods", "cant_attached"],
+      [
+        "seq",
+        "kind",
+        "gid",
+        "ref_key",
+        "g_index",
+        "op_kind",
+        "mods",
+        "word_id",
+        "pos_in_word",
+        "cant_attached"
+      ],
       path,
       scope
     );
+
+    const seq = assertHas(value, "seq", path, scope);
+    assertNonNegativeInteger(seq, `${path}.seq`, scope);
 
     const gid = assertHas(value, "gid", path, scope);
     assertNonEmptyString(gid, `${path}.gid`, scope);
@@ -1052,6 +1148,20 @@ export function assertProgramIRRecord(
     assertNonEmptyString(assertHas(value, "op_kind", path, scope), `${path}.op_kind`, scope);
     assertProgramMods(assertHas(value, "mods", path, scope), `${path}.mods`, scope);
 
+    const wordId = hasOwn(value, "word_id") ? value.word_id : undefined;
+    const posInWord = hasOwn(value, "pos_in_word") ? value.pos_in_word : undefined;
+    if ((wordId === undefined) !== (posInWord === undefined)) {
+      fail(
+        scope,
+        path,
+        "word_id and pos_in_word must either both be present or both be omitted"
+      );
+    }
+    if (wordId !== undefined) {
+      assertNonEmptyString(wordId, `${path}.word_id`, scope);
+      assertNonNegativeInteger(posInWord, `${path}.pos_in_word`, scope);
+    }
+
     const cantAttached = hasOwn(value, "cant_attached") ? value.cant_attached : [];
     if (cantAttached !== undefined) {
       if (!Array.isArray(cantAttached)) {
@@ -1068,10 +1178,13 @@ export function assertProgramIRRecord(
   if (kind === "boundary") {
     assertNoUnknownKeys(
       value,
-      ["kind", "gapid", "ref_key", "gap_index", "layout", "cant", "raw"],
+      ["seq", "kind", "gapid", "ref_key", "gap_index", "left_gid", "right_gid", "layout", "cant", "raw"],
       path,
       scope
     );
+
+    const seq = assertHas(value, "seq", path, scope);
+    assertNonNegativeInteger(seq, `${path}.seq`, scope);
 
     const gapid = assertHas(value, "gapid", path, scope);
     assertNonEmptyString(gapid, `${path}.gapid`, scope);
@@ -1092,6 +1205,23 @@ export function assertProgramIRRecord(
         `${path}.gapid`,
         `gapid '${gapid}' must match ref_key='${ref_key}' and gap_index=${String(gap_index)}`
       );
+    }
+
+    const leftGid = assertHas(value, "left_gid", path, scope);
+    if (leftGid !== null) {
+      assertNonEmptyString(leftGid, `${path}.left_gid`, scope);
+      const parsedLeft = parseGid(leftGid);
+      if (!parsedLeft) {
+        fail(scope, `${path}.left_gid`, `expected '<ref_key>#g:<g_index>' or null`);
+      }
+    }
+    const rightGid = assertHas(value, "right_gid", path, scope);
+    if (rightGid !== null) {
+      assertNonEmptyString(rightGid, `${path}.right_gid`, scope);
+      const parsedRight = parseGid(rightGid);
+      if (!parsedRight) {
+        fail(scope, `${path}.right_gid`, `expected '<ref_key>#g:<g_index>' or null`);
+      }
     }
 
     const layout = assertHas(value, "layout", path, scope);
@@ -1135,6 +1265,9 @@ export function assertProgramIRRecords(
   for (let i = 0; i < records.length; i += 1) {
     const row = records[i];
     assertProgramIRRecord(row, `${path}[${i}]`, scope);
+    if (row.seq !== i) {
+      fail(scope, `${path}[${i}].seq`, `expected seq=${String(i)}, got ${String(row.seq)}`);
+    }
 
     const key = row.kind === "op" ? `${row.kind}\u0000${row.gid}` : `${row.kind}\u0000${row.gapid}`;
     if (seen.has(key)) {
@@ -1499,14 +1632,31 @@ function buildProgramRows(inputs: StitchProgramIRInputs): ProgramIRRecord[] {
   }
 
   const out: ProgramIRRecord[] = [];
+  const nextGidBySpineIndex: Array<string | null> = new Array(inputs.spineRecords.length);
+  let nextGid: string | null = null;
+  for (let i = inputs.spineRecords.length - 1; i >= 0; i -= 1) {
+    const row = inputs.spineRecords[i];
+    if (row?.kind === "g") {
+      nextGid = row.gid;
+    }
+    nextGidBySpineIndex[i] = nextGid;
+  }
+  let previousGid: string | null = null;
 
-  for (const spineRow of inputs.spineRecords) {
+  for (let spineIndex = 0; spineIndex < inputs.spineRecords.length; spineIndex += 1) {
+    const spineRow = inputs.spineRecords[spineIndex];
+    if (!spineRow) {
+      continue;
+    }
     if (spineRow.kind === "gap") {
       const boundaryRow: ProgramIRRecord = {
+        seq: 0,
         kind: "boundary",
         gapid: spineRow.gapid,
         ref_key: spineRow.ref_key,
         gap_index: spineRow.gap_index,
+        left_gid: previousGid,
+        right_gid: nextGidBySpineIndex[spineIndex] ?? null,
         layout: deepClone(layoutByGapid.get(spineRow.gapid) ?? []),
         cant: deepClone(cantillationIndex.byGapid.get(spineRow.gapid) ?? []),
         raw: deepClone(spineRow.raw)
@@ -1524,17 +1674,25 @@ function buildProgramRows(inputs: StitchProgramIRInputs): ProgramIRRecord[] {
     const niqqud = niqqudByGid.get(spineRow.gid);
     const cantAttached = deepClone(cantillationIndex.byGid.get(spineRow.gid) ?? []);
     const opRecord: ProgramIROpRecord = {
+      seq: 0,
       kind: "op",
       gid: letter.gid,
       ref_key: letter.ref_key,
       g_index: letter.g_index,
       op_kind: letter.op_kind,
-      mods: niqqud ? deepClone(niqqud) : {},
+      mods: normalizeProgramMods(niqqud),
+      ...(letter.word
+        ? {
+            word_id: letter.word.id,
+            pos_in_word: letter.word.index_in_word
+          }
+        : {}),
       ...(cantAttached.length > 0 ? { cant_attached: cantAttached } : {})
     };
     assertProgramIRNoRuntimeState(opRecord, `ProgramIR[${String(out.length)}]`);
     out.push(opRecord);
     lettersByGid.delete(spineRow.gid);
+    previousGid = spineRow.gid;
   }
 
   if (lettersByGid.size > 0) {
@@ -1543,8 +1701,12 @@ function buildProgramRows(inputs: StitchProgramIRInputs): ProgramIRRecord[] {
   }
 
   const normalized = [...out].sort(compareProgramIRRecords);
-  assertProgramIRRecords(normalized);
-  return normalized;
+  const sequenced = normalized.map((row, seq) => ({
+    ...row,
+    seq
+  }));
+  assertProgramIRRecords(sequenced);
+  return sequenced;
 }
 
 function buildRefRangesByBook(rows: readonly ProgramIRRecord[]): Record<

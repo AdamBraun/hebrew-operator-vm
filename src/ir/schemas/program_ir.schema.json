@@ -114,47 +114,56 @@
       ]
     },
     "mods": {
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["classes", "features"],
-          "properties": {
-            "classes": {
-              "type": "array",
-              "items": { "type": "string" }
-            },
-            "features": {
-              "type": "object",
-              "additionalProperties": {
-                "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }]
-              }
-            },
-            "tierHints": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "rosh": { "type": "boolean" },
-                "toch": { "type": "boolean" },
-                "sof": { "type": "boolean" }
-              }
-            }
-          }
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "classes", "features"],
+      "properties": {
+        "schemaVersion": { "const": "1.0.0" },
+        "classes": {
+          "type": "array",
+          "items": { "type": "string" }
         },
-        {
+        "features": {
           "type": "object",
           "additionalProperties": false,
-          "maxProperties": 0
+          "required": ["hasDagesh", "hasShva", "vowelCount"],
+          "properties": {
+            "hasDagesh": { "type": "boolean" },
+            "hasShva": { "type": "boolean" },
+            "vowelCount": { "type": "integer", "minimum": 0 }
+          }
         }
-      ]
+      }
     }
   },
   "oneOf": [
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "gid", "ref_key", "g_index", "op_kind", "mods"],
+      "required": ["seq", "kind", "gid", "ref_key", "g_index", "op_kind", "mods"],
+      "allOf": [
+        {
+          "if": {
+            "required": ["word_id"]
+          },
+          "then": {
+            "required": ["pos_in_word"]
+          }
+        },
+        {
+          "if": {
+            "required": ["pos_in_word"]
+          },
+          "then": {
+            "required": ["word_id"]
+          }
+        }
+      ],
       "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0
+        },
         "kind": { "const": "op" },
         "gid": {
           "type": "string",
@@ -176,6 +185,14 @@
         "mods": {
           "$ref": "#/definitions/mods"
         },
+        "word_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pos_in_word": {
+          "type": "integer",
+          "minimum": 0
+        },
         "cant_attached": {
           "type": "array",
           "items": {
@@ -187,8 +204,23 @@
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "gapid", "ref_key", "gap_index", "layout", "cant", "raw"],
+      "required": [
+        "seq",
+        "kind",
+        "gapid",
+        "ref_key",
+        "gap_index",
+        "left_gid",
+        "right_gid",
+        "layout",
+        "cant",
+        "raw"
+      ],
       "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0
+        },
         "kind": { "const": "boundary" },
         "gapid": {
           "type": "string",
@@ -202,6 +234,26 @@
         "gap_index": {
           "type": "integer",
           "minimum": 0
+        },
+        "left_gid": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^.+#g:[0-9]+$"
+            },
+            { "type": "null" }
+          ]
+        },
+        "right_gid": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^.+#g:[0-9]+$"
+            },
+            { "type": "null" }
+          ]
         },
         "layout": {
           "type": "array",
