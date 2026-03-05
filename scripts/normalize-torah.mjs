@@ -7,12 +7,17 @@ const cjsRequire = createRequire(import.meta.url);
 function loadNormalizeTorahRuntime() {
   const runtimeModulePath = path.resolve(
     process.cwd(),
-    "impl/reference/dist/scripts/normalizeTorah/runtime"
+    "dist/src/reference/scripts/normalizeTorah/runtime"
   );
   try {
     return cjsRequire(runtimeModulePath);
   } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "MODULE_NOT_FOUND") {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "MODULE_NOT_FOUND"
+    ) {
       throw new Error(
         "Missing compiled normalize torah runtime module. Run `npm run build` before `node scripts/normalize-torah.mjs`."
       );

@@ -7,12 +7,17 @@ const cjsRequire = createRequire(import.meta.url);
 function loadTorahCorpusRuntime() {
   const runtimeModulePath = path.resolve(
     process.cwd(),
-    "impl/reference/dist/scripts/torahCorpus/runtimeCommands"
+    "dist/src/reference/scripts/torahCorpus/runtimeCommands"
   );
   try {
     return cjsRequire(runtimeModulePath);
   } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "MODULE_NOT_FOUND") {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "MODULE_NOT_FOUND"
+    ) {
       throw new Error(
         "Missing compiled torah corpus runtime module. Run `npm run build` before `node scripts/torah-corpus.mjs`."
       );
@@ -23,9 +28,7 @@ function loadTorahCorpusRuntime() {
 
 const torahCorpusRuntime = loadTorahCorpusRuntime();
 
-torahCorpusRuntime
-  .main(process.argv.slice(2))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+torahCorpusRuntime.main(process.argv.slice(2)).catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

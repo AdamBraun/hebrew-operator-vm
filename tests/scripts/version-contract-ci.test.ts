@@ -17,7 +17,7 @@ function runGit(cwd: string, args: string[]): string {
 }
 
 function writeVersionFile(cwd: string, values: VersionValues): void {
-  const versionFilePath = path.join(cwd, "impl", "reference", "src", "version.ts");
+  const versionFilePath = path.join(cwd, "src", "reference", "version.ts");
   const source = [
     "export type SemVer = `${number}.${number}.${number}`;",
     "export type TraceVersion = `1.${number}.${number}`;",
@@ -38,8 +38,8 @@ function writeVersionFile(cwd: string, values: VersionValues): void {
 
 function initRepo(): { repoDir: string; baseSha: string } {
   const repoDir = fs.mkdtempSync(path.join(os.tmpdir(), "version-contract-ci-test-"));
-  fs.mkdirSync(path.join(repoDir, "impl", "reference", "src"), { recursive: true });
-  fs.mkdirSync(path.join(repoDir, "impl", "reference", "src", "scripts", "phraseTree"), {
+  fs.mkdirSync(path.join(repoDir, "src", "reference"), { recursive: true });
+  fs.mkdirSync(path.join(repoDir, "src", "reference", "scripts", "phraseTree"), {
     recursive: true
   });
   fs.mkdirSync(path.join(repoDir, "registry"), { recursive: true });
@@ -81,7 +81,7 @@ function initRepo(): { repoDir: string; baseSha: string } {
   );
   fs.writeFileSync(path.join(repoDir, "render", "rules.md"), "render rules v1\n", "utf8");
   fs.writeFileSync(
-    path.join(repoDir, "impl", "reference", "src", "scripts", "phraseTree", "runtime.ts"),
+    path.join(repoDir, "src", "reference", "scripts", "phraseTree", "runtime.ts"),
     "export const PHRASE_VERSION = 'phrase_tree.v1';\n",
     "utf8"
   );
@@ -151,7 +151,7 @@ describe("version contract CI checks", () => {
       semantics: "1.0.1",
       render: "1.0.0"
     });
-    runGit(repoDir, ["add", "registry/token-semantics.json", "impl/reference/src/version.ts"]);
+    runGit(repoDir, ["add", "registry/token-semantics.json", "src/reference/version.ts"]);
     runGit(repoDir, ["commit", "-m", "change token semantics with bump"]);
     const headSha = runGit(repoDir, ["rev-parse", "HEAD"]);
 
@@ -209,11 +209,11 @@ describe("version contract CI checks", () => {
   it("fails when phrase tree rules change without render version bump", () => {
     const { repoDir, baseSha } = initRepo();
     fs.writeFileSync(
-      path.join(repoDir, "impl", "reference", "src", "scripts", "phraseTree", "runtime.ts"),
+      path.join(repoDir, "src", "reference", "scripts", "phraseTree", "runtime.ts"),
       "export const PHRASE_VERSION = 'phrase_tree.v2';\n",
       "utf8"
     );
-    runGit(repoDir, ["add", "impl/reference/src/scripts/phraseTree/runtime.ts"]);
+    runGit(repoDir, ["add", "src/reference/scripts/phraseTree/runtime.ts"]);
     runGit(repoDir, ["commit", "-m", "phrase tree rule change"]);
     const headSha = runGit(repoDir, ["rev-parse", "HEAD"]);
 

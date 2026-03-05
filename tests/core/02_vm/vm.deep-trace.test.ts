@@ -46,7 +46,6 @@ describe("vm deep trace", () => {
     const snapshotStack = nunExit?.snapshot?.vm?.OStack_word;
 
     expect(Array.isArray(snapshotStack)).toBe(true);
-    expect(snapshotStack?.length).toBe(1);
-    expect(snapshotStack?.[0]?.kind).toBe("SUPPORT");
+    expect(snapshotStack?.length).toBe(0);
   });
 });

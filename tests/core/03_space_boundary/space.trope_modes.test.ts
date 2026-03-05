@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { isCarryResolved } from "@ref/state/eff";
 import { createInitialState } from "@ref/state/state";
 import { applySpace } from "@ref/vm/space";
 import { runProgram, runProgramWithDeepTrace, runProgramWithTrace } from "@ref/vm/vm";
@@ -58,19 +59,26 @@ describe("trope-driven space modes", () => {
     expect(thirdWordContext?.entry_focus).toBe(thirdWordContext?.pending_join_at_entry?.left);
   });
 
-  it("cut(rank=1) resolves obligations strictly (no silent fall/close)", () => {
+  it("cut(rank=1) resolves mem-zones strictly and closes carries via supp", () => {
     const { state, trace } = runProgramWithTrace("מנ֖ ס", createInitialState());
     const cutBoundary = trace.find(
       (entry) => entry.token === "□" && entry.boundary_mode === "cut" && entry.rank === 1
     );
     expect(cutBoundary).toBeDefined();
     const tau = cutBoundary?.tauAfter ?? -1;
+    const closedByCut = state.vm.H.find(
+      (event) => event.type === "BOUNDARY" && event.tau === tau && event.data?.mode === "cut"
+    )?.data?.beforeFocus as string | undefined;
 
     expect(state.vm.H.some((event) => event.type === "mem_spill" && event.tau === tau)).toBe(true);
-    expect(state.vm.H.some((event) => event.type === "support_debt" && event.tau === tau)).toBe(
-      true
-    );
     expect(state.vm.H.some((event) => event.type === "fall" && event.tau === tau)).toBe(false);
+    expect(typeof closedByCut).toBe("string");
+    if (closedByCut) {
+      const source = String(state.handles.get(closedByCut)?.meta?.succOf ?? "");
+      expect(source.length).toBeGreaterThan(0);
+      expect(state.supp.has(`${closedByCut}->${source}`)).toBe(true);
+      expect(isCarryResolved(state, source, closedByCut, { focusNodeId: closedByCut })).toBe(true);
+    }
     expect(cutBoundary?.F).toBe("Ω");
     expect(cutBoundary?.R).toBe("⊥");
     expect(cutBoundary?.KLength).toBe(2);
@@ -231,9 +239,7 @@ describe("trope-driven space modes", () => {
     expect(maqqefBoundary).toBeDefined();
     const seamTau = maqqefBoundary?.tauAfter ?? -1;
     const resolvedAtSeam = state.vm.H.filter(
-      (event) =>
-        event.tau === seamTau &&
-        (event.type === "fall" || event.type === "mem_spill" || event.type === "support_debt")
+      (event) => event.tau === seamTau && (event.type === "fall" || event.type === "mem_spill")
     );
     expect(resolvedAtSeam.length).toBe(0);
 

@@ -5,7 +5,7 @@
 ## Contract
 
 - `lexicon_version`: lexicon schema/version (independent from trace schema).
-- `render_version`: must match `impl/reference/src/version.ts` `RENDER_VERSION`.
+- `render_version`: must match `src/reference/version.ts` `RENDER_VERSION`.
 - `style`: currently `atomic`.
 - `verbs`, `nouns`, `roles`: the only allowed terms for atomic emitters.
 - `event_templates`: canonical render template per trace event kind.
@@ -28,7 +28,7 @@
    if wording changes, treat it as a render contract change and bump `render_version`.
 4. Version discipline:
    any change under `render/` requires a `RENDER_VERSION` bump in
-   `impl/reference/src/version.ts`.
+   `src/reference/version.ts`.
 5. Validate before merge:
    run render lexicon tests to ensure no duplicates, required baseline terms exist,
    and all emitted tokens are in-lexicon.

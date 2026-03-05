@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { sanitizeHebrewText } from "../../../impl/reference/src/scripts/shared/hebrewSanitizer";
+import { sanitizeHebrewText } from "../../../src/reference/scripts/shared/hebrewSanitizer";
 import { assertLayoutDataset, type LayoutDataset } from "../../../src/layers/layout/schema";
 
 type VersePayload = {

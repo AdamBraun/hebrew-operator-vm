@@ -83,6 +83,32 @@ Boundary selection for the space after a word:
 
 ---
 
+## Graph Carry Model (Current)
+
+Edge types (no flags, no metadata on edges):
+
+- `cont(source, target)`: continuation spine edge.
+- `carry(source, target)`: witness-carry edge; used when context is threaded forward.
+- `supp(closer, origin)`: back-edge that closes a carry-origin into a cycle.
+
+Carry resolution is **derived**:
+
+- A carry `carry(s, t)` is resolved iff some node `c` on the forward `cont*` chain from `t`
+  has `supp(c, s)`.
+- Otherwise it is unresolved.
+
+`eff(node, Φ)`:
+
+- Walk backward along `cont`.
+- At each visited node, inspect incoming `carry(s, node)`.
+- Resolved carries contribute committed facts.
+- Unresolved carries contribute provisional facts.
+- Shadowing: resolved over unresolved at same node; then closer node wins; then later creation.
+- Stop at chunk-commit boundary markers.
+- Do not traverse `supp`; only inspect it.
+
+---
+
 ## Letter Definitions
 
 ---
@@ -98,15 +124,18 @@ Boundary selection for the space after a word:
 `□hard`:
 
 - Increment (\tau) by 1.
-- Resolve pending obligations by boundary defaults:
-  - `MEM_ZONE` closes silently.
-  - `SUPPORT` falls.
+- Let terminal node be current focus (T) before reset.
+- Close unresolved carries in the current chunk by adding explicit `supp(T, s)` edges.
+- Mark `T` as chunk-commit boundary (`meta.chunk_commit_boundary=1`).
+- Resolve pending `MEM_ZONE` obligations by default (silent close).
 - Commit chunk, clear pending join/barrier carryover, reset baseline stack/focus.
 
 `□glue` / `□glue_maqqef`:
 
 - Increment (\tau) by 1 as continuation.
-- Do **not** apply boundary-default obligation resolution.
+- Do **not** close carries.
+- Do **not** add `supp` edges.
+- Do **not** mark a chunk boundary.
 - Do **not** reset stack/environment baseline.
 - Append continuation chunk to phrase buffer (`H_phrase`).
 - Create `PendingJoin` so the next word binds to the previous span unless blocked by barrier.
@@ -114,9 +143,11 @@ Boundary selection for the space after a word:
 `□cut(rank)`:
 
 - Increment (\tau) by ranked pause.
-- Resolve pending obligations **strictly** (no silent close/fall):
+- Let terminal node be current focus (T) before reset.
+- Close unresolved carries in the current chunk by adding explicit `supp(T, s)` edges.
+- Mark `T` as chunk-commit boundary (`meta.chunk_commit_boundary=1`).
+- Resolve pending obligations **strictly** for `MEM_ZONE`:
   - unresolved `MEM_ZONE` becomes explicit spill representation.
-  - unresolved `SUPPORT` becomes explicit debt representation.
 - Clear `PendingJoin`.
 - Set `LeftContextBarrier := rank`.
 - Emit sealed constituent node and attach by rank (`CStack`):
@@ -208,12 +239,17 @@ Operational rule:
 
 ---
 
-# ז — Gate / armed channel (ו with bilateral head)
+# ז — Exported resolved port (focus stays)
 
-- **Select:** an existing relation involving the current focus (membership, pairing, continuation-link, flow).
-- **Bound:** insert a guarded mediator on that relation (x \to y becomes x \to g \to y) and attach a policy bundle to g (throttle/allow/deny); “cut” is the forced-closed special case.
-- **Seal:** reify g as a stable handle so later letters can refine the gate locally (cascade-compatible).
-- **Note:** midrash frames ז’s tagin as oriented toward ו and ח, aligning the operator to the gate between open channel and closed boundary; זין = gate → pin → persist.
+Unary. Identical edge effect to ן, but focus does not advance.
+
+- **Select:** current focus (F).
+- **Bound:**
+  1. allocate port (`p := alloc()`).
+  2. add `cont(F, p)`.
+  3. add `carry(F, p)`.
+  4. add `supp(p, F)` (immediately resolved carry).
+- **Seal:** set `policy(p):=framed_lock`; export `p` to `K`; keep `F` unchanged.
 
 ---
 
@@ -393,53 +429,44 @@ Any remaining (MEM_ZONE) obligation is resolved as `CloseMemZoneSilently(Z)` and
 
 ---
 
-# ן — Straightening continuation (SUPPORT opened and discharged immediately)
+# ן — Final nun (immediately resolved continuation)
 
-- **Select/Bound:** identical to נ, producing (F^{+}) and cont/carry edges.
-- **Seal:**
-  1. create the SUPPORT obligation then immediately discharge it:
+Unary. Threads forward with carry resolved at birth.
 
-     ```text
-     push OStack_word := { kind=SUPPORT, parent=F, child=F^{+}, ... }
-     o := pop(OStack_word)
-     assert o.kind=SUPPORT and o.child=F^{+}
-     ```
-
-  2. set (policy(F^{+}) := framed_lock)
-  3. set (F := F^{+})
-
----
-
-# נ — Provisional continuation under carried obligation (opens SUPPORT debt)
-
-- **Select:** current focus (F) and its effective bundle (\psi := \mathrm{eff}(F, \Phi)).
+- **Select:** current focus (F).
 - **Bound:**
-  1. allocate successor (F^{+} := \mathrm{Succ}(F))
-  2. attach (\psi) to (F^{+})
-  3. add edges:
-     - (\mathrm{cont}(F, F^{+}))
-     - (\mathrm{carry}(\psi)(F, F^{+}))
-
-- **Seal:**
-  1. push SUPPORT obligation:
-
-     ```text
-     push OStack_word := {
-       kind=SUPPORT, parent=F, child=F^{+}, payload={}, tau_created=τ
-     }
-     ```
-
-  2. set (F := F^{+})
+  1. allocate successor (`F^{+} := alloc()`).
+  2. add `cont(F, F^{+})`.
+  3. add `carry(F, F^{+})`.
+  4. add `supp(F^{+}, F)` (immediate closure).
+- **Seal:** set `policy(F^{+}) := framed_lock`; set `F := F^{+}`.
 
 ---
 
-# ס — Support-ring / stabilization hull
+# נ — Nun (unresolved continuation)
 
-- **Select:** current handle (X), its active bounds, and its boundary surface (\partial X).
-- **Bound:** impose a support hull (\mathrm{Hull}(X)) that forbids boundary-crossing drift by default and treats the structure as load-bearing; later operators may act inside (X) but cannot perturb the frame without explicit boundary rewrite.
-- **Seal:** commit X^{\mathrm{stable}} and set `policy := framed_lock` so the cascade respects the hull.
-  - **Discharge hook:** if `top(OStack_word)` is a SUPPORT obligation with (o.child <=cont\* F), pop it and optionally log `support(o.child, F, τ)`. Under strict nesting, any other top kind is ill-formed for a support discharge.
-- **Note:** סמך is “closed and not open” (wall-like enclosure) and “supports the low,” matching a bounded-but-self-holding frame.
+Unary. Threads forward with an unresolved carry.
+
+- **Select:** current focus (F).
+- **Bound:**
+  1. allocate successor (`F^{+} := alloc()`).
+  2. add `cont(F, F^{+})`.
+  3. add `carry(F, F^{+})`.
+- **Seal:** set `F := F^{+}`.
+
+---
+
+# ס — Samekh (nearest carry closure)
+
+Unary. Orthogonal resolver: closes the nearest unresolved carry-thread.
+
+- **Select:**
+  1. walk backward from `F` along `cont`.
+  2. at each node `v`, inspect incoming carries `carry(s, v)` where `s` is on the same `cont*` lineage.
+  3. choose the first unresolved carry (no in-lineage `supp(c, s)` yet).
+- **Bound:** add one edge: `supp(F, s)`.
+- **Seal:** default forward sealing behavior only; no extra state changes.
+- If no unresolved carry exists on the chain, `ס` is a no-op.
 
 ---
 

@@ -7,7 +7,7 @@ const cjsRequire = createRequire(import.meta.url);
 function loadPhraseTreeRuntime() {
   const runtimeModulePath = path.resolve(
     process.cwd(),
-    "impl/reference/dist/scripts/phraseTree/runtime"
+    "dist/src/reference/scripts/phraseTree/runtime"
   );
   try {
     return cjsRequire(runtimeModulePath);

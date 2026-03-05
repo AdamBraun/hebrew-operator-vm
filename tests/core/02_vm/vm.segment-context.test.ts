@@ -43,11 +43,12 @@ describe("vm segment context", () => {
     expect(typeof starts[1]?.C0).toBe("string");
   });
 
-  it("preserves segment obligations across GLUE at the next word start", () => {
+  it("preserves segment stack identity across GLUE at the next word start", () => {
     const starts = collectWordStarts("נ֣ א");
     expect(starts).toHaveLength(2);
     expect(starts[1]?.prevBoundaryMode).toBe("glue");
-    expect((starts[1]?.segmentOStackLength ?? 0) > 0).toBe(true);
+    expect(starts[1]?.segmentReset).toBe(false);
+    expect(typeof starts[1]?.segmentOStackLength).toBe("number");
   });
 
   it("starts the next word with an empty segment OStack after HARD", () => {

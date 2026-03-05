@@ -7,7 +7,7 @@ const cjsRequire = createRequire(import.meta.url);
 function loadPasukTraceRuntime() {
   const runtimeModulePath = path.resolve(
     process.cwd(),
-    "impl/reference/dist/scripts/pasukTrace/runtime"
+    "dist/src/reference/scripts/pasukTrace/runtime"
   );
   try {
     return cjsRequire(runtimeModulePath);

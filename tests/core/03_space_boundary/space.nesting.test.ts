@@ -3,12 +3,10 @@ import { createInitialState } from "@ref/state/state";
 import { runProgram } from "@ref/vm/vm";
 
 describe("space boundary nesting", () => {
-  it("multiple nun obligations resolve LIFO", () => {
+  it("multiple nun operators leave no fall obligations", () => {
     const state = runProgram("ננ", createInitialState());
     const falls = state.vm.H.filter((event) => event.type === "fall");
-    expect(falls.length).toBe(2);
-    expect(falls[0].data.child).toBe("נ:1:2");
-    expect(falls[1].data.child).toBe("נ:1:1");
+    expect(falls.length).toBe(0);
   });
 
   it("nested mems close in LIFO order", () => {

@@ -20,7 +20,7 @@ const PASUK_SET_ID = "pasuk-trace-corpus-latest";
 function loadPasukTraceCorpusRuntime() {
   const runtimeModulePath = path.resolve(
     process.cwd(),
-    "impl/reference/dist/scripts/pasukTraceCorpus/runtime"
+    "dist/src/reference/scripts/pasukTraceCorpus/runtime"
   );
   try {
     return cjsRequire(runtimeModulePath);

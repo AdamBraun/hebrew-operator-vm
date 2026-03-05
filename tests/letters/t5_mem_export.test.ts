@@ -22,6 +22,6 @@ describe("T5 final mem exports handle", () => {
       (handle) => handle.kind === "memHandle"
     );
     expect(memHandles.length).toBeGreaterThan(0);
-    expect(state.vm.H.some((event) => event.type === "fall")).toBe(true);
+    expect(state.vm.H.some((event) => event.type === "fall")).toBe(false);
   });
 });

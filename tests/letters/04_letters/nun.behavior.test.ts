@@ -3,21 +3,30 @@ import { createInitialState } from "@ref/state/state";
 import { runProgram } from "@ref/vm/vm";
 
 describe("nun behavior", () => {
-  it("נ creates succ handle and pushes SUPPORT obligation", () => {
+  it("נ creates succ handle with matching cont/carry edges and no fall", () => {
     const state = runProgram("נ", createInitialState());
-    const supportEvents = state.vm.H.filter((event) => event.type === "fall");
-    expect(supportEvents.length).toBe(1);
-    const succ = supportEvents[0].data.child as string;
+    const falls = state.vm.H.filter((event) => event.type === "fall");
+    expect(falls.length).toBe(0);
+    const succ = String(state.vm.A[state.vm.A.length - 1] ?? "");
     const handle = state.handles.get(succ);
-    expect(handle?.meta.succOf).toBe("Ω");
+    const parent = String(handle?.meta.succOf ?? "");
+    expect(parent.length).toBeGreaterThan(0);
+    expect(state.cont.has(`${parent}->${succ}`)).toBe(true);
+    expect(state.carry.has(`${parent}->${succ}`)).toBe(true);
+    expect(state.vm.OStack_word.length).toBe(0);
   });
 
-  it("ן discharges immediately and locks succ", () => {
+  it("ן creates an immediately resolved carry cycle and locks succ", () => {
     const state = runProgram("ן", createInitialState());
     const falls = state.vm.H.filter((event) => event.type === "fall");
     expect(falls.length).toBe(0);
     const wordOut = state.vm.A[state.vm.A.length - 1];
     const focus = state.handles.get(wordOut);
+    const parent = String(focus?.meta.succOf ?? "");
+    expect(state.cont.has(`${parent}->${wordOut}`)).toBe(true);
+    expect(state.carry.has(`${parent}->${wordOut}`)).toBe(true);
+    expect(state.supp.has(`${wordOut}->${parent}`)).toBe(true);
+    expect(state.vm.OStack_word.length).toBe(0);
     expect(focus?.policy).toBe("framed_lock");
   });
 });

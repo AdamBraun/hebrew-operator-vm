@@ -8,7 +8,7 @@ This project uses three independent versions:
 - `semantics_version`: operator semantics + compiled token bundle identity basis.
 - `render_version`: human-language rendering rules (flow strings, labels, report wording, templates).
 
-Source of truth: `/Users/adambraun/projects/letters/impl/reference/src/version.ts`.
+Source of truth: `/Users/adambraun/projects/letters/src/reference/version.ts`.
 
 ## Contract
 
@@ -40,7 +40,7 @@ Every artifact family must carry version metadata:
 - If `registry/token-semantics.json` changes, `semantics_version` must increase.
 - If `registry/teamim.classification.json` changes, `semantics_version` must increase.
 - If any `render/` file changes, `render_version` must increase.
-- If `impl/reference/src/scripts/phraseTree/` changes, `render_version` must increase.
+- If `src/reference/scripts/phraseTree/` changes, `render_version` must increase.
 - If `spec/70-TRACE-FORMAT.schema.json` changes, `trace_version` must increase.
 
 Script path: `/Users/adambraun/projects/letters/scripts/check-version-contract.cjs`.
