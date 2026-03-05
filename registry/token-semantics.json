@@ -207,8 +207,17 @@
       "read_letter": "ש",
       "shape_letter": null,
       "shape_effect_scope": null,
+      "default_direction": "external",
+      "direction_by_modifier": {
+        "SHIN_DOT_RIGHT": "external",
+        "SHIN_DOT_LEFT": "internal"
+      },
       "base_execution_plan": ["FORK"],
-      "event_types": ["shin"]
+      "event_types": ["shin"],
+      "event_types_by_direction": {
+        "external": ["shin", "fork_external"],
+        "internal": ["shin", "fork_internal"]
+      }
     },
     "ת": {
       "op_family": "TAV",
@@ -219,18 +228,7 @@
       "event_types": ["finalize"]
     }
   },
-  "composites": {
-    "SIN_COMPOSITE": {
-      "base": "ש",
-      "trigger_modifier": "SHIN_DOT_LEFT",
-      "op_family": "SIN_COMPOSITE",
-      "read_letter": "ס",
-      "shape_letter": "ש",
-      "shape_effect_scope": "routing",
-      "base_execution_plan": ["READ_SAMEKH", "SHAPE_SHIN_FORK"],
-      "event_types": ["support", "shin"]
-    }
-  },
+  "composites": {},
   "modifier_extraction": {
     "rosh_order": ["HOLAM"],
     "toch_order": ["MAPIQ", "SHURUK", "DAGESH", "SHIN_DOT_RIGHT", "SHIN_DOT_LEFT"],
@@ -309,13 +307,7 @@
         "source_label": "QAMATS_QATAN"
       }
     },
-    "orthographic_noise_marks": [
-      "U+034F",
-      "U+05BD",
-      "U+05BF",
-      "U+05C4",
-      "U+05C5"
-    ],
+    "orthographic_noise_marks": ["U+034F", "U+05BD", "U+05BF", "U+05C4", "U+05C5"],
     "orthographic_noise_ranges": ["U+0591-U+05AF"]
   },
   "modifier_behaviors": {
@@ -336,11 +328,11 @@
       "event_types": []
     },
     "SHIN_DOT_RIGHT": {
-      "execution_plan": ["ROSH_BRANCH_RIGHT"],
+      "execution_plan": ["SET_SHIN_DIRECTION_EXTERNAL"],
       "event_types": []
     },
     "SHIN_DOT_LEFT": {
-      "execution_plan": ["ROSH_BRANCH_LEFT", "COMPOSITE_SIN"],
+      "execution_plan": ["SET_SHIN_DIRECTION_INTERNAL"],
       "event_types": []
     },
     "SHVA": {
