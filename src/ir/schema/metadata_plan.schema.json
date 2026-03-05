@@ -1,0 +1,228 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "src/ir/schema/metadata_plan.schema.json",
+  "title": "MetadataPlanIR",
+  "description": "Metadata layer output IR for a static one-year Torah plan.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ir_version",
+    "dataset_id",
+    "scope",
+    "cycle",
+    "ref_order_source",
+    "generated_at",
+    "plan_digest",
+    "checkpoints"
+  ],
+  "properties": {
+    "ir_version": {
+      "const": "metadata_plan_ir.v1"
+    },
+    "dataset_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope": {
+      "const": "torah"
+    },
+    "cycle": {
+      "const": "one_year"
+    },
+    "ref_order_source": {
+      "enum": ["corpus_index"]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "plan_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "parashot": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/parashaSummary" }
+    },
+    "checkpoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/checkpoint" }
+    },
+    "ranges": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/rangeSegment" }
+    },
+    "ref_to_segment_index": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/definitions/refKey" },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "ref_to_parasha": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/definitions/refKey" },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "ref_to_aliyah": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/definitions/refKey" },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 7
+      }
+    }
+  },
+  "definitions": {
+    "refKey": {
+      "type": "string",
+      "pattern": "^(Genesis|Exodus|Leviticus|Numbers|Deuteronomy)/[1-9][0-9]*/[1-9][0-9]*$"
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "$ref": "#/definitions/refKey" },
+        "end": { "$ref": "#/definitions/refKey" }
+      }
+    },
+    "aliyahSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aliyah_index", "range"],
+      "properties": {
+        "aliyah_index": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7
+        },
+        "range": { "$ref": "#/definitions/range" }
+      }
+    },
+    "parashaSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["parasha_id", "range"],
+      "properties": {
+        "parasha_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parasha_name_he": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parasha_name_en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "range": { "$ref": "#/definitions/range" },
+        "aliyot": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/aliyahSummary" },
+          "minItems": 1,
+          "maxItems": 7
+        }
+      }
+    },
+    "checkpointAliyahEnd": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checkpoint_id", "kind", "parasha_id", "aliyah_index", "ref_key_end", "ordinal"],
+      "properties": {
+        "checkpoint_id": {
+          "type": "string",
+          "pattern": "^ALIYAH_END:[a-z0-9_]+:[1-7]:(Genesis|Exodus|Leviticus|Numbers|Deuteronomy)/[1-9][0-9]*/[1-9][0-9]*$"
+        },
+        "kind": { "const": "ALIYAH_END" },
+        "parasha_id": { "type": "string", "minLength": 1 },
+        "aliyah_index": { "type": "integer", "minimum": 1, "maximum": 7 },
+        "ref_key_end": { "$ref": "#/definitions/refKey" },
+        "ordinal": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "checkpointParashaEnd": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checkpoint_id", "kind", "parasha_id", "aliyah_index", "ref_key_end", "ordinal"],
+      "properties": {
+        "checkpoint_id": {
+          "type": "string",
+          "pattern": "^PARASHA_END:[a-z0-9_]+:0:(Genesis|Exodus|Leviticus|Numbers|Deuteronomy)/[1-9][0-9]*/[1-9][0-9]*$"
+        },
+        "kind": { "const": "PARASHA_END" },
+        "parasha_id": { "type": "string", "minLength": 1 },
+        "aliyah_index": { "type": "null" },
+        "ref_key_end": { "$ref": "#/definitions/refKey" },
+        "ordinal": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "checkpoint": {
+      "oneOf": [
+        { "$ref": "#/definitions/checkpointAliyahEnd" },
+        { "$ref": "#/definitions/checkpointParashaEnd" }
+      ]
+    },
+    "rangeSegmentAliyah": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "segment_id",
+        "kind",
+        "parasha_id",
+        "aliyah_index",
+        "start",
+        "end",
+        "ordinal_start",
+        "ordinal_end"
+      ],
+      "properties": {
+        "segment_id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "ALIYAH" },
+        "parasha_id": { "type": "string", "minLength": 1 },
+        "aliyah_index": { "type": "integer", "minimum": 1, "maximum": 7 },
+        "start": { "$ref": "#/definitions/refKey" },
+        "end": { "$ref": "#/definitions/refKey" },
+        "ordinal_start": { "type": "integer", "minimum": 0 },
+        "ordinal_end": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "rangeSegmentParasha": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "segment_id",
+        "kind",
+        "parasha_id",
+        "aliyah_index",
+        "start",
+        "end",
+        "ordinal_start",
+        "ordinal_end"
+      ],
+      "properties": {
+        "segment_id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "PARASHA" },
+        "parasha_id": { "type": "string", "minLength": 1 },
+        "aliyah_index": { "type": "null" },
+        "start": { "$ref": "#/definitions/refKey" },
+        "end": { "$ref": "#/definitions/refKey" },
+        "ordinal_start": { "type": "integer", "minimum": 0 },
+        "ordinal_end": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "rangeSegment": {
+      "oneOf": [
+        { "$ref": "#/definitions/rangeSegmentAliyah" },
+        { "$ref": "#/definitions/rangeSegmentParasha" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "src/ir/schemas/layout_ir.schema.json",
+  "title": "LayoutIRRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["gapid", "ref_key", "gap_index", "layout_event"],
+  "properties": {
+    "gapid": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^.+#gap:[0-9]+$"
+    },
+    "ref_key": {
+      "type": "string",
+      "minLength": 1
+    },
+    "gap_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "layout_event": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "strength", "source"],
+          "properties": {
+            "type": { "const": "SPACE" },
+            "strength": { "const": "weak" },
+            "source": { "const": "spine_whitespace" },
+            "meta": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "strength", "source"],
+          "properties": {
+            "type": { "const": "SETUMA" },
+            "strength": { "const": "mid" },
+            "source": { "const": "dataset" },
+            "meta": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "strength", "source"],
+          "properties": {
+            "type": { "const": "PETUCHA" },
+            "strength": { "const": "strong" },
+            "source": { "const": "dataset" },
+            "meta": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "strength", "source"],
+          "properties": {
+            "type": { "const": "BOOK_BREAK" },
+            "strength": { "const": "max" },
+            "source": { "const": "dataset" },
+            "meta": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    }
+  }
+}

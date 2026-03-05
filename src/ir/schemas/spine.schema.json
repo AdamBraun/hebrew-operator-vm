@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "src/ir/schemas/spine.schema.json",
+  "title": "SpineRecord",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "gid", "ref_key", "g_index", "base_letter", "marks_raw", "raw"],
+      "properties": {
+        "kind": { "const": "g" },
+        "gid": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^.+#g:[0-9]+$"
+        },
+        "ref_key": { "type": "string", "minLength": 1 },
+        "g_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "base_letter": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[\\u05D0-\\u05EA]$"
+            },
+            { "type": "null" }
+          ]
+        },
+        "marks_raw": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["niqqud", "teamim"],
+          "properties": {
+            "niqqud": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "teamim": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "raw": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text"],
+          "properties": {
+            "text": { "type": "string" }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "gapid", "ref_key", "gap_index", "raw"],
+      "properties": {
+        "kind": { "const": "gap" },
+        "gapid": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^.+#gap:[0-9]+$"
+        },
+        "ref_key": { "type": "string", "minLength": 1 },
+        "gap_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "raw": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["whitespace", "chars"],
+          "properties": {
+            "whitespace": { "type": "boolean" },
+            "chars": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

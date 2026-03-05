@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "src/ir/schemas/metadata_plan.schema.json",
+  "title": "MetadataPlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "notes": {
+      "type": "string"
+    },
+    "labels": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": {
+        "type": ["string", "number", "boolean", "null"]
+      }
+    },
+    "checkpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ref_end"],
+        "properties": {
+          "ref_end": {
+            "type": "string",
+            "pattern": "^(Genesis|Exodus|Leviticus|Numbers|Deuteronomy)/[1-9][0-9]*/[1-9][0-9]*$"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  }
+}

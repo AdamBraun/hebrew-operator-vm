@@ -7,19 +7,20 @@ fi
 
 # Use a NUL-delimited staged file list and process in chunks to avoid shell arg limits.
 staged_list_file="$(mktemp)"
-trap 'rm -f "$staged_list_file"' EXIT INT TERM
+format_list_file="$(mktemp)"
+trap 'rm -f "$staged_list_file" "$format_list_file"' EXIT INT TERM
 git diff --cached --name-only --diff-filter=ACMR -z > "$staged_list_file"
 
-xargs -0 -n 200 npm exec -- prettier --ignore-unknown --write -- < "$staged_list_file"
-xargs -0 -n 200 git add -- < "$staged_list_file"
-
-if npm run artifacts:needs-update; then
-  :
-else
-  needs_update_status=$?
-  if [ "$needs_update_status" -eq 1 ]; then
-    npm run artifacts:verify
-  else
-    exit "$needs_update_status"
+while IFS= read -r -d '' staged_path; do
+  if [ ! -L "$staged_path" ]; then
+    printf '%s\0' "$staged_path" >> "$format_list_file"
   fi
+done < "$staged_list_file"
+
+if [ -s "$format_list_file" ]; then
+  xargs -0 -n 200 npm exec -- prettier --ignore-unknown --write -- < "$format_list_file"
+  xargs -0 -n 200 git add -- < "$format_list_file"
 fi
+
+npm run src-artifacts:recompute -- --changed-only --staged
+npm run src-artifacts:verify:lfs-outputs -- --staged

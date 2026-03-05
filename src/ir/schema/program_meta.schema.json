@@ -1,0 +1,164 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "src/ir/schema/program_meta.schema.json",
+  "title": "ProgramMeta",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "checkpoints",
+    "checkpointsByRefEnd",
+    "checkpointsByIndex",
+    "inputDigests",
+    "spineDigest",
+    "lettersDigest",
+    "niqqudDigest",
+    "cantDigest",
+    "layoutDigest",
+    "metadataDigest",
+    "stitcherVersion",
+    "programSchemaVersion",
+    "stitchConfigDigest",
+    "stitchConfig",
+    "programPathRel",
+    "metaPathRel",
+    "counts",
+    "cacheDigest",
+    "programDigest",
+    "manifestDigest",
+    "createdAt"
+  ],
+  "properties": {
+    "checkpoints": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/checkpoint" }
+    },
+    "checkpointsByRefEnd": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/definitions/refKey" },
+      "additionalProperties": {
+        "type": "array",
+        "items": { "$ref": "#/definitions/checkpoint" }
+      }
+    },
+    "checkpointsByIndex": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[0-9]+$"
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": { "$ref": "#/definitions/checkpoint" }
+      }
+    },
+    "inputDigests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spine_sha256",
+        "letters_ir_sha256",
+        "niqqud_ir_sha256",
+        "cantillation_ir_sha256",
+        "layout_ir_sha256",
+        "metadata_plan_sha256"
+      ],
+      "properties": {
+        "spine_sha256": { "$ref": "#/definitions/sha256" },
+        "letters_ir_sha256": { "$ref": "#/definitions/sha256" },
+        "niqqud_ir_sha256": { "$ref": "#/definitions/sha256" },
+        "cantillation_ir_sha256": { "$ref": "#/definitions/sha256" },
+        "layout_ir_sha256": { "$ref": "#/definitions/sha256" },
+        "metadata_plan_sha256": { "$ref": "#/definitions/sha256" }
+      }
+    },
+    "spineDigest": { "$ref": "#/definitions/sha256" },
+    "lettersDigest": { "$ref": "#/definitions/sha256" },
+    "niqqudDigest": { "$ref": "#/definitions/sha256" },
+    "cantDigest": { "$ref": "#/definitions/sha256" },
+    "layoutDigest": { "$ref": "#/definitions/sha256" },
+    "metadataDigest": { "$ref": "#/definitions/sha256" },
+    "stitcherVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "programSchemaVersion": {
+      "const": "1.0.0"
+    },
+    "stitchConfigDigest": { "$ref": "#/definitions/sha256" },
+    "stitchConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outputFormat", "includeLetterCantillation", "includeGapRaw"],
+      "properties": {
+        "outputFormat": { "enum": ["jsonl"] },
+        "includeLetterCantillation": { "type": "boolean" },
+        "includeGapRaw": { "type": "boolean" }
+      }
+    },
+    "programPathRel": { "type": "string", "minLength": 1 },
+    "metaPathRel": { "type": "string", "minLength": 1 },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ops", "boundaries", "checkpoints"],
+      "properties": {
+        "ops": { "type": "integer", "minimum": 0 },
+        "boundaries": { "type": "integer", "minimum": 0 },
+        "checkpoints": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "cacheDigest": { "$ref": "#/definitions/sha256" },
+    "programDigest": { "$ref": "#/definitions/sha256" },
+    "manifestDigest": { "$ref": "#/definitions/sha256" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "refStats": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["firstRef", "lastRef", "ops", "boundaries"],
+        "properties": {
+          "firstRef": { "type": "string", "minLength": 1 },
+          "lastRef": { "type": "string", "minLength": 1 },
+          "ops": { "type": "integer", "minimum": 0 },
+          "boundaries": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "refKey": {
+      "type": "string",
+      "pattern": "^(Genesis|Exodus|Leviticus|Numbers|Deuteronomy)/[1-9][0-9]*/[1-9][0-9]*$"
+    },
+    "checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "parasha_id", "aliyah_index", "plan_index_end", "ref_key_end"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "parasha_id": {
+          "type": ["string", "null"]
+        },
+        "aliyah_index": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "maximum": 7
+        },
+        "plan_index_end": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ref_key_end": { "$ref": "#/definitions/refKey" },
+        "checkpoint_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

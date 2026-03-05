@@ -1,0 +1,4837 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "src/layers/metadata/schema/torah_1y_plan.schema.json",
+  "title": "TorahOneYearPlanV1",
+  "description": "Static one-year Torah reading plan with uncombined parashot. Aliyah ranges are fixed and calendar-based merge variants are out of scope.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset_id", "scope", "cycle", "parashot"],
+  "properties": {
+    "dataset_id": {
+      "const": "torah_1y_plan.v1"
+    },
+    "scope": {
+      "const": "torah"
+    },
+    "cycle": {
+      "const": "one_year"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "parashot": {
+      "type": "array",
+      "minItems": 54,
+      "maxItems": 54,
+      "items": [
+        {
+          "$ref": "#/definitions/parasha_bereshit"
+        },
+        {
+          "$ref": "#/definitions/parasha_noach"
+        },
+        {
+          "$ref": "#/definitions/parasha_lech-lecha"
+        },
+        {
+          "$ref": "#/definitions/parasha_vayera"
+        },
+        {
+          "$ref": "#/definitions/parasha_chayei-sara"
+        },
+        {
+          "$ref": "#/definitions/parasha_toldot"
+        },
+        {
+          "$ref": "#/definitions/parasha_vayetzei"
+        },
+        {
+          "$ref": "#/definitions/parasha_vayishlach"
+        },
+        {
+          "$ref": "#/definitions/parasha_vayeshev"
+        },
+        {
+          "$ref": "#/definitions/parasha_miketz"
+        },
+        {
+          "$ref": "#/definitions/parasha_vayigash"
+        },
+        {
+          "$ref": "#/definitions/parasha_vayechi"
+        },
+        {
+          "$ref": "#/definitions/parasha_shemot"
+        },
+        {
+          "$ref": "#/definitions/parasha_vaera"
+        },
+        {
+          "$ref": "#/definitions/parasha_bo"
+        },
+        {
+          "$ref": "#/definitions/parasha_beshalach"
+        },
+        {
+          "$ref": "#/definitions/parasha_yitro"
+        },
+        {
+          "$ref": "#/definitions/parasha_mishpatim"
+        },
+        {
+          "$ref": "#/definitions/parasha_terumah"
+        },
+        {
+          "$ref": "#/definitions/parasha_tetzaveh"
+        },
+        {
+          "$ref": "#/definitions/parasha_ki-tisa"
+        },
+        {
+          "$ref": "#/definitions/parasha_vayakhel"
+        },
+        {
+          "$ref": "#/definitions/parasha_pekudei"
+        },
+        {
+          "$ref": "#/definitions/parasha_vayikra"
+        },
+        {
+          "$ref": "#/definitions/parasha_tzav"
+        },
+        {
+          "$ref": "#/definitions/parasha_shmini"
+        },
+        {
+          "$ref": "#/definitions/parasha_tazria"
+        },
+        {
+          "$ref": "#/definitions/parasha_metzora"
+        },
+        {
+          "$ref": "#/definitions/parasha_achrei-mot"
+        },
+        {
+          "$ref": "#/definitions/parasha_kedoshim"
+        },
+        {
+          "$ref": "#/definitions/parasha_emor"
+        },
+        {
+          "$ref": "#/definitions/parasha_behar"
+        },
+        {
+          "$ref": "#/definitions/parasha_bechukotai"
+        },
+        {
+          "$ref": "#/definitions/parasha_bamidbar"
+        },
+        {
+          "$ref": "#/definitions/parasha_nasso"
+        },
+        {
+          "$ref": "#/definitions/parasha_behaalotcha"
+        },
+        {
+          "$ref": "#/definitions/parasha_shlach"
+        },
+        {
+          "$ref": "#/definitions/parasha_korach"
+        },
+        {
+          "$ref": "#/definitions/parasha_chukat"
+        },
+        {
+          "$ref": "#/definitions/parasha_balak"
+        },
+        {
+          "$ref": "#/definitions/parasha_pinchas"
+        },
+        {
+          "$ref": "#/definitions/parasha_matot"
+        },
+        {
+          "$ref": "#/definitions/parasha_masei"
+        },
+        {
+          "$ref": "#/definitions/parasha_devarim"
+        },
+        {
+          "$ref": "#/definitions/parasha_vaetchanan"
+        },
+        {
+          "$ref": "#/definitions/parasha_eikev"
+        },
+        {
+          "$ref": "#/definitions/parasha_reeh"
+        },
+        {
+          "$ref": "#/definitions/parasha_shoftim"
+        },
+        {
+          "$ref": "#/definitions/parasha_ki-teitzei"
+        },
+        {
+          "$ref": "#/definitions/parasha_ki-tavo"
+        },
+        {
+          "$ref": "#/definitions/parasha_nitzavim"
+        },
+        {
+          "$ref": "#/definitions/parasha_vayeilech"
+        },
+        {
+          "$ref": "#/definitions/parasha_haazinu"
+        },
+        {
+          "$ref": "#/definitions/parasha_vzot-haberachah"
+        }
+      ],
+      "additionalItems": false
+    }
+  },
+  "definitions": {
+    "refKey": {
+      "type": "string",
+      "pattern": "^(Genesis|Exodus|Leviticus|Numbers|Deuteronomy)\\/[1-9][0-9]*\\/[1-9][0-9]*$"
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": {
+          "$ref": "#/definitions/refKey"
+        },
+        "end": {
+          "$ref": "#/definitions/refKey"
+        }
+      }
+    },
+    "aliyah_1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aliyah_index", "range"],
+      "properties": {
+        "aliyah_index": {
+          "const": 1
+        },
+        "range": {
+          "$ref": "#/definitions/range"
+        }
+      }
+    },
+    "aliyah_2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aliyah_index", "range"],
+      "properties": {
+        "aliyah_index": {
+          "const": 2
+        },
+        "range": {
+          "$ref": "#/definitions/range"
+        }
+      }
+    },
+    "aliyah_3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aliyah_index", "range"],
+      "properties": {
+        "aliyah_index": {
+          "const": 3
+        },
+        "range": {
+          "$ref": "#/definitions/range"
+        }
+      }
+    },
+    "aliyah_4": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aliyah_index", "range"],
+      "properties": {
+        "aliyah_index": {
+          "const": 4
+        },
+        "range": {
+          "$ref": "#/definitions/range"
+        }
+      }
+    },
+    "aliyah_5": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aliyah_index", "range"],
+      "properties": {
+        "aliyah_index": {
+          "const": 5
+        },
+        "range": {
+          "$ref": "#/definitions/range"
+        }
+      }
+    },
+    "aliyah_6": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aliyah_index", "range"],
+      "properties": {
+        "aliyah_index": {
+          "const": 6
+        },
+        "range": {
+          "$ref": "#/definitions/range"
+        }
+      }
+    },
+    "aliyah_7": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aliyah_index", "range"],
+      "properties": {
+        "aliyah_index": {
+          "const": 7
+        },
+        "range": {
+          "$ref": "#/definitions/range"
+        }
+      }
+    },
+    "parasha": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+      "properties": {
+        "parasha_id": {
+          "type": "string",
+          "enum": [
+            "bereshit",
+            "noach",
+            "lech-lecha",
+            "vayera",
+            "chayei-sara",
+            "toldot",
+            "vayetzei",
+            "vayishlach",
+            "vayeshev",
+            "miketz",
+            "vayigash",
+            "vayechi",
+            "shemot",
+            "vaera",
+            "bo",
+            "beshalach",
+            "yitro",
+            "mishpatim",
+            "terumah",
+            "tetzaveh",
+            "ki-tisa",
+            "vayakhel",
+            "pekudei",
+            "vayikra",
+            "tzav",
+            "shmini",
+            "tazria",
+            "metzora",
+            "achrei-mot",
+            "kedoshim",
+            "emor",
+            "behar",
+            "bechukotai",
+            "bamidbar",
+            "nasso",
+            "behaalotcha",
+            "shlach",
+            "korach",
+            "chukat",
+            "balak",
+            "pinchas",
+            "matot",
+            "masei",
+            "devarim",
+            "vaetchanan",
+            "eikev",
+            "reeh",
+            "shoftim",
+            "ki-teitzei",
+            "ki-tavo",
+            "nitzavim",
+            "vayeilech",
+            "haazinu",
+            "vzot-haberachah"
+          ]
+        },
+        "parasha_name_he": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parasha_name_en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "range": {
+          "$ref": "#/definitions/range"
+        },
+        "aliyot": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": [
+            {
+              "$ref": "#/definitions/aliyah_1"
+            },
+            {
+              "$ref": "#/definitions/aliyah_2"
+            },
+            {
+              "$ref": "#/definitions/aliyah_3"
+            },
+            {
+              "$ref": "#/definitions/aliyah_4"
+            },
+            {
+              "$ref": "#/definitions/aliyah_5"
+            },
+            {
+              "$ref": "#/definitions/aliyah_6"
+            },
+            {
+              "$ref": "#/definitions/aliyah_7"
+            }
+          ],
+          "additionalItems": false
+        }
+      }
+    },
+    "parasha_bereshit": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "bereshit"
+            },
+            "parasha_name_he": {
+              "const": "בראשית"
+            },
+            "parasha_name_en": {
+              "const": "Bereshit"
+            },
+            "range": {
+              "const": {
+                "start": "Genesis/1/1",
+                "end": "Genesis/6/8"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Genesis/1/1",
+                    "end": "Genesis/2/3"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Genesis/2/4",
+                    "end": "Genesis/2/19"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Genesis/2/20",
+                    "end": "Genesis/3/21"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Genesis/3/22",
+                    "end": "Genesis/4/18"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Genesis/4/19",
+                    "end": "Genesis/4/22"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Genesis/4/23",
+                    "end": "Genesis/5/24"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Genesis/5/25",
+                    "end": "Genesis/6/8"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_noach": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "noach"
+            },
+            "parasha_name_he": {
+              "const": "נח"
+            },
+            "parasha_name_en": {
+              "const": "Noach"
+            },
+            "range": {
+              "const": {
+                "start": "Genesis/6/9",
+                "end": "Genesis/11/32"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Genesis/6/9",
+                    "end": "Genesis/6/22"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Genesis/7/1",
+                    "end": "Genesis/7/16"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Genesis/7/17",
+                    "end": "Genesis/8/14"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Genesis/8/15",
+                    "end": "Genesis/9/7"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Genesis/9/8",
+                    "end": "Genesis/9/17"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Genesis/9/18",
+                    "end": "Genesis/10/32"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Genesis/11/1",
+                    "end": "Genesis/11/32"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_lech-lecha": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "lech-lecha"
+            },
+            "parasha_name_he": {
+              "const": "לך לך"
+            },
+            "parasha_name_en": {
+              "const": "Lech Lecha"
+            },
+            "range": {
+              "const": {
+                "start": "Genesis/12/1",
+                "end": "Genesis/17/27"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Genesis/12/1",
+                    "end": "Genesis/12/13"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Genesis/12/14",
+                    "end": "Genesis/13/4"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Genesis/13/5",
+                    "end": "Genesis/13/18"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Genesis/14/1",
+                    "end": "Genesis/14/20"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Genesis/14/21",
+                    "end": "Genesis/15/6"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Genesis/15/7",
+                    "end": "Genesis/17/6"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Genesis/17/7",
+                    "end": "Genesis/17/27"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_vayera": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "vayera"
+            },
+            "parasha_name_he": {
+              "const": "וירא"
+            },
+            "parasha_name_en": {
+              "const": "Vayera"
+            },
+            "range": {
+              "const": {
+                "start": "Genesis/18/1",
+                "end": "Genesis/22/24"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Genesis/18/1",
+                    "end": "Genesis/18/14"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Genesis/18/15",
+                    "end": "Genesis/18/33"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Genesis/19/1",
+                    "end": "Genesis/19/20"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Genesis/19/21",
+                    "end": "Genesis/21/4"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Genesis/21/5",
+                    "end": "Genesis/21/21"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Genesis/21/22",
+                    "end": "Genesis/21/34"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Genesis/22/1",
+                    "end": "Genesis/22/24"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_chayei-sara": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "chayei-sara"
+            },
+            "parasha_name_he": {
+              "const": "חיי שרה"
+            },
+            "parasha_name_en": {
+              "const": "Chayei Sara"
+            },
+            "range": {
+              "const": {
+                "start": "Genesis/23/1",
+                "end": "Genesis/25/18"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Genesis/23/1",
+                    "end": "Genesis/23/16"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Genesis/23/17",
+                    "end": "Genesis/24/9"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Genesis/24/10",
+                    "end": "Genesis/24/26"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Genesis/24/27",
+                    "end": "Genesis/24/52"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Genesis/24/53",
+                    "end": "Genesis/24/67"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Genesis/25/1",
+                    "end": "Genesis/25/11"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Genesis/25/12",
+                    "end": "Genesis/25/18"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_toldot": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "toldot"
+            },
+            "parasha_name_he": {
+              "const": "תולדות"
+            },
+            "parasha_name_en": {
+              "const": "Toldot"
+            },
+            "range": {
+              "const": {
+                "start": "Genesis/25/19",
+                "end": "Genesis/28/9"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Genesis/25/19",
+                    "end": "Genesis/26/5"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Genesis/26/6",
+                    "end": "Genesis/26/12"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Genesis/26/13",
+                    "end": "Genesis/26/22"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Genesis/26/23",
+                    "end": "Genesis/26/29"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Genesis/26/30",
+                    "end": "Genesis/27/27"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Genesis/27/28",
+                    "end": "Genesis/28/4"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Genesis/28/5",
+                    "end": "Genesis/28/9"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_vayetzei": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "vayetzei"
+            },
+            "parasha_name_he": {
+              "const": "ויצא"
+            },
+            "parasha_name_en": {
+              "const": "Vayetzei"
+            },
+            "range": {
+              "const": {
+                "start": "Genesis/28/10",
+                "end": "Genesis/32/3"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Genesis/28/10",
+                    "end": "Genesis/28/22"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Genesis/29/1",
+                    "end": "Genesis/29/17"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Genesis/29/18",
+                    "end": "Genesis/30/13"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Genesis/30/14",
+                    "end": "Genesis/30/27"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Genesis/30/28",
+                    "end": "Genesis/31/16"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Genesis/31/17",
+                    "end": "Genesis/31/42"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Genesis/31/43",
+                    "end": "Genesis/32/3"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_vayishlach": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "vayishlach"
+            },
+            "parasha_name_he": {
+              "const": "וישלח"
+            },
+            "parasha_name_en": {
+              "const": "Vayishlach"
+            },
+            "range": {
+              "const": {
+                "start": "Genesis/32/4",
+                "end": "Genesis/36/43"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Genesis/32/4",
+                    "end": "Genesis/32/13"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Genesis/32/14",
+                    "end": "Genesis/32/30"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Genesis/32/31",
+                    "end": "Genesis/33/5"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Genesis/33/6",
+                    "end": "Genesis/33/20"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Genesis/34/1",
+                    "end": "Genesis/35/11"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Genesis/35/12",
+                    "end": "Genesis/36/19"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Genesis/36/20",
+                    "end": "Genesis/36/43"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_vayeshev": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "vayeshev"
+            },
+            "parasha_name_he": {
+              "const": "וישב"
+            },
+            "parasha_name_en": {
+              "const": "Vayeshev"
+            },
+            "range": {
+              "const": {
+                "start": "Genesis/37/1",
+                "end": "Genesis/40/23"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Genesis/37/1",
+                    "end": "Genesis/37/11"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Genesis/37/12",
+                    "end": "Genesis/37/22"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Genesis/37/23",
+                    "end": "Genesis/37/36"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Genesis/38/1",
+                    "end": "Genesis/38/30"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Genesis/39/1",
+                    "end": "Genesis/39/6"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Genesis/39/7",
+                    "end": "Genesis/39/23"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Genesis/40/1",
+                    "end": "Genesis/40/23"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_miketz": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "miketz"
+            },
+            "parasha_name_he": {
+              "const": "מקץ"
+            },
+            "parasha_name_en": {
+              "const": "Miketz"
+            },
+            "range": {
+              "const": {
+                "start": "Genesis/41/1",
+                "end": "Genesis/44/17"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Genesis/41/1",
+                    "end": "Genesis/41/14"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Genesis/41/15",
+                    "end": "Genesis/41/38"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Genesis/41/39",
+                    "end": "Genesis/41/52"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Genesis/41/53",
+                    "end": "Genesis/42/18"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Genesis/42/19",
+                    "end": "Genesis/43/15"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Genesis/43/16",
+                    "end": "Genesis/43/29"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Genesis/43/30",
+                    "end": "Genesis/44/17"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_vayigash": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "vayigash"
+            },
+            "parasha_name_he": {
+              "const": "ויגש"
+            },
+            "parasha_name_en": {
+              "const": "Vayigash"
+            },
+            "range": {
+              "const": {
+                "start": "Genesis/44/18",
+                "end": "Genesis/47/27"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Genesis/44/18",
+                    "end": "Genesis/44/30"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Genesis/44/31",
+                    "end": "Genesis/45/7"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Genesis/45/8",
+                    "end": "Genesis/45/18"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Genesis/45/19",
+                    "end": "Genesis/45/27"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Genesis/45/28",
+                    "end": "Genesis/46/27"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Genesis/46/28",
+                    "end": "Genesis/47/10"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Genesis/47/11",
+                    "end": "Genesis/47/27"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_vayechi": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "vayechi"
+            },
+            "parasha_name_he": {
+              "const": "ויחי"
+            },
+            "parasha_name_en": {
+              "const": "Vayechi"
+            },
+            "range": {
+              "const": {
+                "start": "Genesis/47/28",
+                "end": "Genesis/50/26"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Genesis/47/28",
+                    "end": "Genesis/48/9"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Genesis/48/10",
+                    "end": "Genesis/48/16"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Genesis/48/17",
+                    "end": "Genesis/48/22"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Genesis/49/1",
+                    "end": "Genesis/49/18"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Genesis/49/19",
+                    "end": "Genesis/49/26"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Genesis/49/27",
+                    "end": "Genesis/50/20"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Genesis/50/21",
+                    "end": "Genesis/50/26"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_shemot": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "shemot"
+            },
+            "parasha_name_he": {
+              "const": "שמות"
+            },
+            "parasha_name_en": {
+              "const": "Shemot"
+            },
+            "range": {
+              "const": {
+                "start": "Exodus/1/1",
+                "end": "Exodus/6/1"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Exodus/1/1",
+                    "end": "Exodus/1/17"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Exodus/1/18",
+                    "end": "Exodus/2/10"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Exodus/2/11",
+                    "end": "Exodus/2/25"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Exodus/3/1",
+                    "end": "Exodus/3/15"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Exodus/3/16",
+                    "end": "Exodus/4/17"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Exodus/4/18",
+                    "end": "Exodus/4/31"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Exodus/5/1",
+                    "end": "Exodus/6/1"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_vaera": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "vaera"
+            },
+            "parasha_name_he": {
+              "const": "וארא"
+            },
+            "parasha_name_en": {
+              "const": "Vaera"
+            },
+            "range": {
+              "const": {
+                "start": "Exodus/6/2",
+                "end": "Exodus/9/35"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Exodus/6/2",
+                    "end": "Exodus/6/13"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Exodus/6/14",
+                    "end": "Exodus/6/28"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Exodus/6/29",
+                    "end": "Exodus/7/7"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Exodus/7/8",
+                    "end": "Exodus/8/6"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Exodus/8/7",
+                    "end": "Exodus/8/18"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Exodus/8/19",
+                    "end": "Exodus/9/16"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Exodus/9/17",
+                    "end": "Exodus/9/35"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_bo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "bo"
+            },
+            "parasha_name_he": {
+              "const": "בא"
+            },
+            "parasha_name_en": {
+              "const": "Bo"
+            },
+            "range": {
+              "const": {
+                "start": "Exodus/10/1",
+                "end": "Exodus/13/16"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Exodus/10/1",
+                    "end": "Exodus/10/11"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Exodus/10/12",
+                    "end": "Exodus/10/23"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Exodus/10/24",
+                    "end": "Exodus/11/3"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Exodus/11/4",
+                    "end": "Exodus/12/20"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Exodus/12/21",
+                    "end": "Exodus/12/28"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Exodus/12/29",
+                    "end": "Exodus/12/51"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Exodus/13/1",
+                    "end": "Exodus/13/16"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_beshalach": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "beshalach"
+            },
+            "parasha_name_he": {
+              "const": "בשלח"
+            },
+            "parasha_name_en": {
+              "const": "Beshalach"
+            },
+            "range": {
+              "const": {
+                "start": "Exodus/13/17",
+                "end": "Exodus/17/16"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Exodus/13/17",
+                    "end": "Exodus/14/8"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Exodus/14/9",
+                    "end": "Exodus/14/14"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Exodus/14/15",
+                    "end": "Exodus/14/25"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Exodus/14/26",
+                    "end": "Exodus/15/26"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Exodus/15/27",
+                    "end": "Exodus/16/10"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Exodus/16/11",
+                    "end": "Exodus/16/36"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Exodus/17/1",
+                    "end": "Exodus/17/16"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_yitro": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "yitro"
+            },
+            "parasha_name_he": {
+              "const": "יתרו"
+            },
+            "parasha_name_en": {
+              "const": "Yitro"
+            },
+            "range": {
+              "const": {
+                "start": "Exodus/18/1",
+                "end": "Exodus/20/23"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Exodus/18/1",
+                    "end": "Exodus/18/12"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Exodus/18/13",
+                    "end": "Exodus/18/23"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Exodus/18/24",
+                    "end": "Exodus/18/27"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Exodus/19/1",
+                    "end": "Exodus/19/6"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Exodus/19/7",
+                    "end": "Exodus/19/19"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Exodus/19/20",
+                    "end": "Exodus/20/14"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Exodus/20/15",
+                    "end": "Exodus/20/23"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_mishpatim": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "mishpatim"
+            },
+            "parasha_name_he": {
+              "const": "משפטים"
+            },
+            "parasha_name_en": {
+              "const": "Mishpatim"
+            },
+            "range": {
+              "const": {
+                "start": "Exodus/21/1",
+                "end": "Exodus/24/18"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Exodus/21/1",
+                    "end": "Exodus/21/19"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Exodus/21/20",
+                    "end": "Exodus/22/3"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Exodus/22/4",
+                    "end": "Exodus/22/26"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Exodus/22/27",
+                    "end": "Exodus/23/5"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Exodus/23/6",
+                    "end": "Exodus/23/19"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Exodus/23/20",
+                    "end": "Exodus/23/25"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Exodus/23/26",
+                    "end": "Exodus/24/18"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_terumah": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "terumah"
+            },
+            "parasha_name_he": {
+              "const": "תרומה"
+            },
+            "parasha_name_en": {
+              "const": "Terumah"
+            },
+            "range": {
+              "const": {
+                "start": "Exodus/25/1",
+                "end": "Exodus/27/19"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Exodus/25/1",
+                    "end": "Exodus/25/16"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Exodus/25/17",
+                    "end": "Exodus/25/30"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Exodus/25/31",
+                    "end": "Exodus/26/14"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Exodus/26/15",
+                    "end": "Exodus/26/30"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Exodus/26/31",
+                    "end": "Exodus/26/37"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Exodus/27/1",
+                    "end": "Exodus/27/8"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Exodus/27/9",
+                    "end": "Exodus/27/19"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_tetzaveh": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "tetzaveh"
+            },
+            "parasha_name_he": {
+              "const": "תצוה"
+            },
+            "parasha_name_en": {
+              "const": "Tetzaveh"
+            },
+            "range": {
+              "const": {
+                "start": "Exodus/27/20",
+                "end": "Exodus/30/10"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Exodus/27/20",
+                    "end": "Exodus/28/12"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Exodus/28/13",
+                    "end": "Exodus/28/30"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Exodus/28/31",
+                    "end": "Exodus/28/43"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Exodus/29/1",
+                    "end": "Exodus/29/18"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Exodus/29/19",
+                    "end": "Exodus/29/37"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Exodus/29/38",
+                    "end": "Exodus/29/46"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Exodus/30/1",
+                    "end": "Exodus/30/10"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_ki-tisa": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "ki-tisa"
+            },
+            "parasha_name_he": {
+              "const": "כי תשא"
+            },
+            "parasha_name_en": {
+              "const": "Ki Tisa"
+            },
+            "range": {
+              "const": {
+                "start": "Exodus/30/11",
+                "end": "Exodus/34/35"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Exodus/30/11",
+                    "end": "Exodus/31/17"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Exodus/31/18",
+                    "end": "Exodus/33/11"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Exodus/33/12",
+                    "end": "Exodus/33/16"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Exodus/33/17",
+                    "end": "Exodus/33/23"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Exodus/34/1",
+                    "end": "Exodus/34/9"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Exodus/34/10",
+                    "end": "Exodus/34/26"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Exodus/34/27",
+                    "end": "Exodus/34/35"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_vayakhel": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "vayakhel"
+            },
+            "parasha_name_he": {
+              "const": "ויקהל"
+            },
+            "parasha_name_en": {
+              "const": "Vayakhel"
+            },
+            "range": {
+              "const": {
+                "start": "Exodus/35/1",
+                "end": "Exodus/38/20"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Exodus/35/1",
+                    "end": "Exodus/35/20"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Exodus/35/21",
+                    "end": "Exodus/35/29"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Exodus/35/30",
+                    "end": "Exodus/36/7"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Exodus/36/8",
+                    "end": "Exodus/36/19"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Exodus/36/20",
+                    "end": "Exodus/37/16"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Exodus/37/17",
+                    "end": "Exodus/37/29"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Exodus/38/1",
+                    "end": "Exodus/38/20"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_pekudei": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "pekudei"
+            },
+            "parasha_name_he": {
+              "const": "פקודי"
+            },
+            "parasha_name_en": {
+              "const": "Pekudei"
+            },
+            "range": {
+              "const": {
+                "start": "Exodus/38/21",
+                "end": "Exodus/40/38"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Exodus/38/21",
+                    "end": "Exodus/39/1"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Exodus/39/2",
+                    "end": "Exodus/39/21"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Exodus/39/22",
+                    "end": "Exodus/39/32"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Exodus/39/33",
+                    "end": "Exodus/39/43"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Exodus/40/1",
+                    "end": "Exodus/40/16"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Exodus/40/17",
+                    "end": "Exodus/40/27"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Exodus/40/28",
+                    "end": "Exodus/40/38"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_vayikra": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "vayikra"
+            },
+            "parasha_name_he": {
+              "const": "ויקרא"
+            },
+            "parasha_name_en": {
+              "const": "Vayikra"
+            },
+            "range": {
+              "const": {
+                "start": "Leviticus/1/1",
+                "end": "Leviticus/5/26"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Leviticus/1/1",
+                    "end": "Leviticus/1/13"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Leviticus/1/14",
+                    "end": "Leviticus/2/6"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Leviticus/2/7",
+                    "end": "Leviticus/2/16"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Leviticus/3/1",
+                    "end": "Leviticus/3/17"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Leviticus/4/1",
+                    "end": "Leviticus/4/26"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Leviticus/4/27",
+                    "end": "Leviticus/5/10"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Leviticus/5/11",
+                    "end": "Leviticus/5/26"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_tzav": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "tzav"
+            },
+            "parasha_name_he": {
+              "const": "צו"
+            },
+            "parasha_name_en": {
+              "const": "Tzav"
+            },
+            "range": {
+              "const": {
+                "start": "Leviticus/6/1",
+                "end": "Leviticus/8/36"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Leviticus/6/1",
+                    "end": "Leviticus/6/11"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Leviticus/6/12",
+                    "end": "Leviticus/7/10"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Leviticus/7/11",
+                    "end": "Leviticus/7/38"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Leviticus/8/1",
+                    "end": "Leviticus/8/13"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Leviticus/8/14",
+                    "end": "Leviticus/8/21"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Leviticus/8/22",
+                    "end": "Leviticus/8/29"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Leviticus/8/30",
+                    "end": "Leviticus/8/36"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_shmini": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "shmini"
+            },
+            "parasha_name_he": {
+              "const": "שמיני"
+            },
+            "parasha_name_en": {
+              "const": "Shmini"
+            },
+            "range": {
+              "const": {
+                "start": "Leviticus/9/1",
+                "end": "Leviticus/11/47"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Leviticus/9/1",
+                    "end": "Leviticus/9/16"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Leviticus/9/17",
+                    "end": "Leviticus/9/23"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Leviticus/9/24",
+                    "end": "Leviticus/10/11"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Leviticus/10/12",
+                    "end": "Leviticus/10/15"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Leviticus/10/16",
+                    "end": "Leviticus/10/20"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Leviticus/11/1",
+                    "end": "Leviticus/11/32"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Leviticus/11/33",
+                    "end": "Leviticus/11/47"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_tazria": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "tazria"
+            },
+            "parasha_name_he": {
+              "const": "תזריע"
+            },
+            "parasha_name_en": {
+              "const": "Tazria"
+            },
+            "range": {
+              "const": {
+                "start": "Leviticus/12/1",
+                "end": "Leviticus/13/59"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Leviticus/12/1",
+                    "end": "Leviticus/13/5"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Leviticus/13/6",
+                    "end": "Leviticus/13/17"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Leviticus/13/18",
+                    "end": "Leviticus/13/23"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Leviticus/13/24",
+                    "end": "Leviticus/13/28"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Leviticus/13/29",
+                    "end": "Leviticus/13/39"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Leviticus/13/40",
+                    "end": "Leviticus/13/54"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Leviticus/13/55",
+                    "end": "Leviticus/13/59"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_metzora": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "metzora"
+            },
+            "parasha_name_he": {
+              "const": "מצורע"
+            },
+            "parasha_name_en": {
+              "const": "Metzora"
+            },
+            "range": {
+              "const": {
+                "start": "Leviticus/14/1",
+                "end": "Leviticus/15/33"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Leviticus/14/1",
+                    "end": "Leviticus/14/12"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Leviticus/14/13",
+                    "end": "Leviticus/14/20"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Leviticus/14/21",
+                    "end": "Leviticus/14/32"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Leviticus/14/33",
+                    "end": "Leviticus/14/53"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Leviticus/14/54",
+                    "end": "Leviticus/15/15"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Leviticus/15/16",
+                    "end": "Leviticus/15/28"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Leviticus/15/29",
+                    "end": "Leviticus/15/33"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_achrei-mot": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "achrei-mot"
+            },
+            "parasha_name_he": {
+              "const": "אחרי מות"
+            },
+            "parasha_name_en": {
+              "const": "Achrei Mot"
+            },
+            "range": {
+              "const": {
+                "start": "Leviticus/16/1",
+                "end": "Leviticus/18/30"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Leviticus/16/1",
+                    "end": "Leviticus/16/17"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Leviticus/16/18",
+                    "end": "Leviticus/16/24"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Leviticus/16/25",
+                    "end": "Leviticus/16/34"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Leviticus/17/1",
+                    "end": "Leviticus/17/7"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Leviticus/17/8",
+                    "end": "Leviticus/18/5"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Leviticus/18/6",
+                    "end": "Leviticus/18/21"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Leviticus/18/22",
+                    "end": "Leviticus/18/30"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_kedoshim": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "kedoshim"
+            },
+            "parasha_name_he": {
+              "const": "קדושים"
+            },
+            "parasha_name_en": {
+              "const": "Kedoshim"
+            },
+            "range": {
+              "const": {
+                "start": "Leviticus/19/1",
+                "end": "Leviticus/20/27"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Leviticus/19/1",
+                    "end": "Leviticus/19/14"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Leviticus/19/15",
+                    "end": "Leviticus/19/22"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Leviticus/19/23",
+                    "end": "Leviticus/19/32"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Leviticus/19/33",
+                    "end": "Leviticus/19/37"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Leviticus/20/1",
+                    "end": "Leviticus/20/7"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Leviticus/20/8",
+                    "end": "Leviticus/20/22"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Leviticus/20/23",
+                    "end": "Leviticus/20/27"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_emor": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "emor"
+            },
+            "parasha_name_he": {
+              "const": "אמור"
+            },
+            "parasha_name_en": {
+              "const": "Emor"
+            },
+            "range": {
+              "const": {
+                "start": "Leviticus/21/1",
+                "end": "Leviticus/24/23"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Leviticus/21/1",
+                    "end": "Leviticus/21/15"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Leviticus/21/16",
+                    "end": "Leviticus/22/16"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Leviticus/22/17",
+                    "end": "Leviticus/22/33"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Leviticus/23/1",
+                    "end": "Leviticus/23/22"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Leviticus/23/23",
+                    "end": "Leviticus/23/32"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Leviticus/23/33",
+                    "end": "Leviticus/23/44"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Leviticus/24/1",
+                    "end": "Leviticus/24/23"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_behar": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "behar"
+            },
+            "parasha_name_he": {
+              "const": "בהר"
+            },
+            "parasha_name_en": {
+              "const": "Behar"
+            },
+            "range": {
+              "const": {
+                "start": "Leviticus/25/1",
+                "end": "Leviticus/26/2"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Leviticus/25/1",
+                    "end": "Leviticus/25/13"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Leviticus/25/14",
+                    "end": "Leviticus/25/18"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Leviticus/25/19",
+                    "end": "Leviticus/25/24"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Leviticus/25/25",
+                    "end": "Leviticus/25/28"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Leviticus/25/29",
+                    "end": "Leviticus/25/38"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Leviticus/25/39",
+                    "end": "Leviticus/25/46"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Leviticus/25/47",
+                    "end": "Leviticus/26/2"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_bechukotai": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "bechukotai"
+            },
+            "parasha_name_he": {
+              "const": "בחוקתי"
+            },
+            "parasha_name_en": {
+              "const": "Bechukotai"
+            },
+            "range": {
+              "const": {
+                "start": "Leviticus/26/3",
+                "end": "Leviticus/27/34"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Leviticus/26/3",
+                    "end": "Leviticus/26/5"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Leviticus/26/6",
+                    "end": "Leviticus/26/9"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Leviticus/26/10",
+                    "end": "Leviticus/26/46"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Leviticus/27/1",
+                    "end": "Leviticus/27/15"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Leviticus/27/16",
+                    "end": "Leviticus/27/21"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Leviticus/27/22",
+                    "end": "Leviticus/27/28"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Leviticus/27/29",
+                    "end": "Leviticus/27/34"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_bamidbar": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "bamidbar"
+            },
+            "parasha_name_he": {
+              "const": "במדבר"
+            },
+            "parasha_name_en": {
+              "const": "Bamidbar"
+            },
+            "range": {
+              "const": {
+                "start": "Numbers/1/1",
+                "end": "Numbers/4/20"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Numbers/1/1",
+                    "end": "Numbers/1/19"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Numbers/1/20",
+                    "end": "Numbers/1/54"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Numbers/2/1",
+                    "end": "Numbers/2/34"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Numbers/3/1",
+                    "end": "Numbers/3/13"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Numbers/3/14",
+                    "end": "Numbers/3/39"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Numbers/3/40",
+                    "end": "Numbers/3/51"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Numbers/4/1",
+                    "end": "Numbers/4/20"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_nasso": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "nasso"
+            },
+            "parasha_name_he": {
+              "const": "נשא"
+            },
+            "parasha_name_en": {
+              "const": "Nasso"
+            },
+            "range": {
+              "const": {
+                "start": "Numbers/4/21",
+                "end": "Numbers/7/89"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Numbers/4/21",
+                    "end": "Numbers/4/37"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Numbers/4/38",
+                    "end": "Numbers/4/49"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Numbers/5/1",
+                    "end": "Numbers/5/10"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Numbers/5/11",
+                    "end": "Numbers/6/27"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Numbers/7/1",
+                    "end": "Numbers/7/41"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Numbers/7/42",
+                    "end": "Numbers/7/71"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Numbers/7/72",
+                    "end": "Numbers/7/89"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_behaalotcha": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "behaalotcha"
+            },
+            "parasha_name_he": {
+              "const": "בהעלותך"
+            },
+            "parasha_name_en": {
+              "const": "Beha'alotcha"
+            },
+            "range": {
+              "const": {
+                "start": "Numbers/8/1",
+                "end": "Numbers/12/16"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Numbers/8/1",
+                    "end": "Numbers/8/14"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Numbers/8/15",
+                    "end": "Numbers/8/26"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Numbers/9/1",
+                    "end": "Numbers/9/14"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Numbers/9/15",
+                    "end": "Numbers/10/10"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Numbers/10/11",
+                    "end": "Numbers/10/34"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Numbers/10/35",
+                    "end": "Numbers/11/29"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Numbers/11/30",
+                    "end": "Numbers/12/16"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_shlach": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "shlach"
+            },
+            "parasha_name_he": {
+              "const": "שלח"
+            },
+            "parasha_name_en": {
+              "const": "Sh'lach"
+            },
+            "range": {
+              "const": {
+                "start": "Numbers/13/1",
+                "end": "Numbers/15/41"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Numbers/13/1",
+                    "end": "Numbers/13/20"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Numbers/13/21",
+                    "end": "Numbers/14/7"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Numbers/14/8",
+                    "end": "Numbers/14/25"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Numbers/14/26",
+                    "end": "Numbers/15/7"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Numbers/15/8",
+                    "end": "Numbers/15/16"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Numbers/15/17",
+                    "end": "Numbers/15/26"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Numbers/15/27",
+                    "end": "Numbers/15/41"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_korach": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "korach"
+            },
+            "parasha_name_he": {
+              "const": "קרח"
+            },
+            "parasha_name_en": {
+              "const": "Korach"
+            },
+            "range": {
+              "const": {
+                "start": "Numbers/16/1",
+                "end": "Numbers/18/32"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Numbers/16/1",
+                    "end": "Numbers/16/13"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Numbers/16/14",
+                    "end": "Numbers/16/19"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Numbers/16/20",
+                    "end": "Numbers/17/8"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Numbers/17/9",
+                    "end": "Numbers/17/15"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Numbers/17/16",
+                    "end": "Numbers/17/24"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Numbers/17/25",
+                    "end": "Numbers/18/20"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Numbers/18/21",
+                    "end": "Numbers/18/32"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_chukat": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "chukat"
+            },
+            "parasha_name_he": {
+              "const": "חקת"
+            },
+            "parasha_name_en": {
+              "const": "Chukat"
+            },
+            "range": {
+              "const": {
+                "start": "Numbers/19/1",
+                "end": "Numbers/22/1"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Numbers/19/1",
+                    "end": "Numbers/19/17"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Numbers/19/18",
+                    "end": "Numbers/20/6"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Numbers/20/7",
+                    "end": "Numbers/20/13"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Numbers/20/14",
+                    "end": "Numbers/20/21"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Numbers/20/22",
+                    "end": "Numbers/21/9"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Numbers/21/10",
+                    "end": "Numbers/21/20"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Numbers/21/21",
+                    "end": "Numbers/22/1"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_balak": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "balak"
+            },
+            "parasha_name_he": {
+              "const": "בלק"
+            },
+            "parasha_name_en": {
+              "const": "Balak"
+            },
+            "range": {
+              "const": {
+                "start": "Numbers/22/2",
+                "end": "Numbers/25/9"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Numbers/22/2",
+                    "end": "Numbers/22/12"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Numbers/22/13",
+                    "end": "Numbers/22/20"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Numbers/22/21",
+                    "end": "Numbers/22/38"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Numbers/22/39",
+                    "end": "Numbers/23/12"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Numbers/23/13",
+                    "end": "Numbers/23/26"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Numbers/23/27",
+                    "end": "Numbers/24/13"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Numbers/24/14",
+                    "end": "Numbers/25/9"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_pinchas": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "pinchas"
+            },
+            "parasha_name_he": {
+              "const": "פנחס"
+            },
+            "parasha_name_en": {
+              "const": "Pinchas"
+            },
+            "range": {
+              "const": {
+                "start": "Numbers/25/10",
+                "end": "Numbers/30/1"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Numbers/25/10",
+                    "end": "Numbers/26/4"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Numbers/26/5",
+                    "end": "Numbers/26/51"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Numbers/26/52",
+                    "end": "Numbers/27/5"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Numbers/27/6",
+                    "end": "Numbers/27/23"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Numbers/28/1",
+                    "end": "Numbers/28/15"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Numbers/28/16",
+                    "end": "Numbers/29/11"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Numbers/29/12",
+                    "end": "Numbers/30/1"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_matot": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "matot"
+            },
+            "parasha_name_he": {
+              "const": "מטות"
+            },
+            "parasha_name_en": {
+              "const": "Matot"
+            },
+            "range": {
+              "const": {
+                "start": "Numbers/30/2",
+                "end": "Numbers/32/42"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Numbers/30/2",
+                    "end": "Numbers/30/17"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Numbers/31/1",
+                    "end": "Numbers/31/12"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Numbers/31/13",
+                    "end": "Numbers/31/24"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Numbers/31/25",
+                    "end": "Numbers/31/41"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Numbers/31/42",
+                    "end": "Numbers/31/54"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Numbers/32/1",
+                    "end": "Numbers/32/19"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Numbers/32/20",
+                    "end": "Numbers/32/42"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_masei": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "masei"
+            },
+            "parasha_name_he": {
+              "const": "מסעי"
+            },
+            "parasha_name_en": {
+              "const": "Masei"
+            },
+            "range": {
+              "const": {
+                "start": "Numbers/33/1",
+                "end": "Numbers/36/13"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Numbers/33/1",
+                    "end": "Numbers/33/10"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Numbers/33/11",
+                    "end": "Numbers/33/49"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Numbers/33/50",
+                    "end": "Numbers/34/15"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Numbers/34/16",
+                    "end": "Numbers/34/29"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Numbers/35/1",
+                    "end": "Numbers/35/8"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Numbers/35/9",
+                    "end": "Numbers/35/34"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Numbers/36/1",
+                    "end": "Numbers/36/13"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_devarim": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "devarim"
+            },
+            "parasha_name_he": {
+              "const": "דברים"
+            },
+            "parasha_name_en": {
+              "const": "Devarim"
+            },
+            "range": {
+              "const": {
+                "start": "Deuteronomy/1/1",
+                "end": "Deuteronomy/3/22"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Deuteronomy/1/1",
+                    "end": "Deuteronomy/1/10"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Deuteronomy/1/11",
+                    "end": "Deuteronomy/1/21"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Deuteronomy/1/22",
+                    "end": "Deuteronomy/1/38"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Deuteronomy/1/39",
+                    "end": "Deuteronomy/2/1"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Deuteronomy/2/2",
+                    "end": "Deuteronomy/2/30"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Deuteronomy/2/31",
+                    "end": "Deuteronomy/3/14"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Deuteronomy/3/15",
+                    "end": "Deuteronomy/3/22"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_vaetchanan": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "vaetchanan"
+            },
+            "parasha_name_he": {
+              "const": "ואתחנן"
+            },
+            "parasha_name_en": {
+              "const": "Vaetchanan"
+            },
+            "range": {
+              "const": {
+                "start": "Deuteronomy/3/23",
+                "end": "Deuteronomy/7/11"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Deuteronomy/3/23",
+                    "end": "Deuteronomy/4/4"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Deuteronomy/4/5",
+                    "end": "Deuteronomy/4/40"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Deuteronomy/4/41",
+                    "end": "Deuteronomy/4/49"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Deuteronomy/5/1",
+                    "end": "Deuteronomy/5/18"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Deuteronomy/5/19",
+                    "end": "Deuteronomy/6/3"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Deuteronomy/6/4",
+                    "end": "Deuteronomy/6/25"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Deuteronomy/7/1",
+                    "end": "Deuteronomy/7/11"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_eikev": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "eikev"
+            },
+            "parasha_name_he": {
+              "const": "עקב"
+            },
+            "parasha_name_en": {
+              "const": "Eikev"
+            },
+            "range": {
+              "const": {
+                "start": "Deuteronomy/7/12",
+                "end": "Deuteronomy/11/25"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Deuteronomy/7/12",
+                    "end": "Deuteronomy/8/10"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Deuteronomy/8/11",
+                    "end": "Deuteronomy/9/3"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Deuteronomy/9/4",
+                    "end": "Deuteronomy/9/29"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Deuteronomy/10/1",
+                    "end": "Deuteronomy/10/11"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Deuteronomy/10/12",
+                    "end": "Deuteronomy/11/9"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Deuteronomy/11/10",
+                    "end": "Deuteronomy/11/21"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Deuteronomy/11/22",
+                    "end": "Deuteronomy/11/25"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_reeh": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "reeh"
+            },
+            "parasha_name_he": {
+              "const": "ראה"
+            },
+            "parasha_name_en": {
+              "const": "Re'eh"
+            },
+            "range": {
+              "const": {
+                "start": "Deuteronomy/11/26",
+                "end": "Deuteronomy/16/17"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Deuteronomy/11/26",
+                    "end": "Deuteronomy/12/10"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Deuteronomy/12/11",
+                    "end": "Deuteronomy/12/28"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Deuteronomy/12/29",
+                    "end": "Deuteronomy/13/19"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Deuteronomy/14/1",
+                    "end": "Deuteronomy/14/21"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Deuteronomy/14/22",
+                    "end": "Deuteronomy/14/29"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Deuteronomy/15/1",
+                    "end": "Deuteronomy/15/18"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Deuteronomy/15/19",
+                    "end": "Deuteronomy/16/17"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_shoftim": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "shoftim"
+            },
+            "parasha_name_he": {
+              "const": "שופטים"
+            },
+            "parasha_name_en": {
+              "const": "Shoftim"
+            },
+            "range": {
+              "const": {
+                "start": "Deuteronomy/16/18",
+                "end": "Deuteronomy/21/9"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Deuteronomy/16/18",
+                    "end": "Deuteronomy/17/13"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Deuteronomy/17/14",
+                    "end": "Deuteronomy/17/20"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Deuteronomy/18/1",
+                    "end": "Deuteronomy/18/5"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Deuteronomy/18/6",
+                    "end": "Deuteronomy/18/13"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Deuteronomy/18/14",
+                    "end": "Deuteronomy/19/13"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Deuteronomy/19/14",
+                    "end": "Deuteronomy/20/9"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Deuteronomy/20/10",
+                    "end": "Deuteronomy/21/9"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_ki-teitzei": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "ki-teitzei"
+            },
+            "parasha_name_he": {
+              "const": "כי תצא"
+            },
+            "parasha_name_en": {
+              "const": "Ki Teitzei"
+            },
+            "range": {
+              "const": {
+                "start": "Deuteronomy/21/10",
+                "end": "Deuteronomy/25/19"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Deuteronomy/21/10",
+                    "end": "Deuteronomy/21/21"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Deuteronomy/21/22",
+                    "end": "Deuteronomy/22/7"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Deuteronomy/22/8",
+                    "end": "Deuteronomy/23/7"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Deuteronomy/23/8",
+                    "end": "Deuteronomy/23/24"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Deuteronomy/23/25",
+                    "end": "Deuteronomy/24/4"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Deuteronomy/24/5",
+                    "end": "Deuteronomy/24/13"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Deuteronomy/24/14",
+                    "end": "Deuteronomy/25/19"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_ki-tavo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "ki-tavo"
+            },
+            "parasha_name_he": {
+              "const": "כי תבוא"
+            },
+            "parasha_name_en": {
+              "const": "Ki Tavo"
+            },
+            "range": {
+              "const": {
+                "start": "Deuteronomy/26/1",
+                "end": "Deuteronomy/29/8"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Deuteronomy/26/1",
+                    "end": "Deuteronomy/26/11"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Deuteronomy/26/12",
+                    "end": "Deuteronomy/26/15"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Deuteronomy/26/16",
+                    "end": "Deuteronomy/26/19"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Deuteronomy/27/1",
+                    "end": "Deuteronomy/27/10"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Deuteronomy/27/11",
+                    "end": "Deuteronomy/28/6"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Deuteronomy/28/7",
+                    "end": "Deuteronomy/28/69"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Deuteronomy/29/1",
+                    "end": "Deuteronomy/29/8"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_nitzavim": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "nitzavim"
+            },
+            "parasha_name_he": {
+              "const": "נצבים"
+            },
+            "parasha_name_en": {
+              "const": "Nitzavim"
+            },
+            "range": {
+              "const": {
+                "start": "Deuteronomy/29/9",
+                "end": "Deuteronomy/30/20"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Deuteronomy/29/9",
+                    "end": "Deuteronomy/29/11"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Deuteronomy/29/12",
+                    "end": "Deuteronomy/29/14"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Deuteronomy/29/15",
+                    "end": "Deuteronomy/29/28"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Deuteronomy/30/1",
+                    "end": "Deuteronomy/30/6"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Deuteronomy/30/7",
+                    "end": "Deuteronomy/30/10"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Deuteronomy/30/11",
+                    "end": "Deuteronomy/30/14"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Deuteronomy/30/15",
+                    "end": "Deuteronomy/30/20"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_vayeilech": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "vayeilech"
+            },
+            "parasha_name_he": {
+              "const": "וילך"
+            },
+            "parasha_name_en": {
+              "const": "Vayeilech"
+            },
+            "range": {
+              "const": {
+                "start": "Deuteronomy/31/1",
+                "end": "Deuteronomy/31/30"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Deuteronomy/31/1",
+                    "end": "Deuteronomy/31/3"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Deuteronomy/31/4",
+                    "end": "Deuteronomy/31/6"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Deuteronomy/31/7",
+                    "end": "Deuteronomy/31/9"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Deuteronomy/31/10",
+                    "end": "Deuteronomy/31/13"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Deuteronomy/31/14",
+                    "end": "Deuteronomy/31/19"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Deuteronomy/31/20",
+                    "end": "Deuteronomy/31/24"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Deuteronomy/31/25",
+                    "end": "Deuteronomy/31/30"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_haazinu": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "haazinu"
+            },
+            "parasha_name_he": {
+              "const": "האזינו"
+            },
+            "parasha_name_en": {
+              "const": "Ha'Azinu"
+            },
+            "range": {
+              "const": {
+                "start": "Deuteronomy/32/1",
+                "end": "Deuteronomy/32/52"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Deuteronomy/32/1",
+                    "end": "Deuteronomy/32/6"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Deuteronomy/32/7",
+                    "end": "Deuteronomy/32/12"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Deuteronomy/32/13",
+                    "end": "Deuteronomy/32/18"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Deuteronomy/32/19",
+                    "end": "Deuteronomy/32/28"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Deuteronomy/32/29",
+                    "end": "Deuteronomy/32/39"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Deuteronomy/32/40",
+                    "end": "Deuteronomy/32/43"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Deuteronomy/32/44",
+                    "end": "Deuteronomy/32/52"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "parasha_vzot-haberachah": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/parasha"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parasha_id", "parasha_name_he", "parasha_name_en", "range", "aliyot"],
+          "properties": {
+            "parasha_id": {
+              "const": "vzot-haberachah"
+            },
+            "parasha_name_he": {
+              "const": "וזאת הברכה"
+            },
+            "parasha_name_en": {
+              "const": "V'Zot HaBerachah"
+            },
+            "range": {
+              "const": {
+                "start": "Deuteronomy/33/1",
+                "end": "Deuteronomy/34/12"
+              }
+            },
+            "aliyot": {
+              "const": [
+                {
+                  "aliyah_index": 1,
+                  "range": {
+                    "start": "Deuteronomy/33/1",
+                    "end": "Deuteronomy/33/7"
+                  }
+                },
+                {
+                  "aliyah_index": 2,
+                  "range": {
+                    "start": "Deuteronomy/33/8",
+                    "end": "Deuteronomy/33/12"
+                  }
+                },
+                {
+                  "aliyah_index": 3,
+                  "range": {
+                    "start": "Deuteronomy/33/13",
+                    "end": "Deuteronomy/33/17"
+                  }
+                },
+                {
+                  "aliyah_index": 4,
+                  "range": {
+                    "start": "Deuteronomy/33/18",
+                    "end": "Deuteronomy/33/21"
+                  }
+                },
+                {
+                  "aliyah_index": 5,
+                  "range": {
+                    "start": "Deuteronomy/33/22",
+                    "end": "Deuteronomy/33/26"
+                  }
+                },
+                {
+                  "aliyah_index": 6,
+                  "range": {
+                    "start": "Deuteronomy/33/27",
+                    "end": "Deuteronomy/33/29"
+                  }
+                },
+                {
+                  "aliyah_index": 7,
+                  "range": {
+                    "start": "Deuteronomy/34/1",
+                    "end": "Deuteronomy/34/12"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -600,6 +600,8 @@ function applyCut(
   collectGarbage(state);
 }
 
+// Wrapper hygiene/flush behavior that consumes LayoutIR must follow
+// spec/LAYOUT_OBLIGATIONS.md (determinism, anchoring, no semantic overreach).
 export function applySpace(state: State, options: ApplySpaceOptions = {}): void {
   const mode = options.mode ?? "hard";
   const beforeFocus = state.vm.F;
