@@ -269,7 +269,7 @@ export type ShinEvent = TraceEventBase<
     spine: HandleId;
     left: HandleId;
     right: HandleId;
-    active: HandleId;
+    active?: HandleId;
     direction?: "external" | "internal";
   }
 >;

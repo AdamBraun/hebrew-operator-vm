@@ -301,12 +301,19 @@ export function collectGarbage(state: State): void {
   }
 
   for (const handle of state.handles.values()) {
-    const activeChild = handle.meta?.active_child;
-    if (typeof activeChild === "string" && removed.has(activeChild)) {
-      const nextMeta = { ...(handle.meta ?? {}) };
-      delete nextMeta.active_child;
-      handle.meta = nextMeta;
+    const forkPorts = Array.isArray(handle.meta?.fork_ports) ? handle.meta.fork_ports : null;
+    if (!forkPorts) {
+      continue;
     }
+    const retained = forkPorts.filter((id) => typeof id === "string" && !removed.has(id));
+    const nextMeta = { ...(handle.meta ?? {}) };
+    if (retained.length > 0) {
+      nextMeta.fork_ports = retained;
+    } else {
+      delete nextMeta.fork_ports;
+      delete nextMeta.fork_direction;
+    }
+    handle.meta = nextMeta;
   }
 
   state.vm.OStack_word = state.vm.OStack_word.filter(

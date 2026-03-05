@@ -17,26 +17,96 @@ function parseEdge(edge: string): [string, string] | null {
   return [source, target];
 }
 
-export function addCont(state: State, from: string, to: string): void {
-  if (!from || !to) {
-    return;
+function validHandleId(id: unknown): id is string {
+  return typeof id === "string" && id.length > 0;
+}
+
+function forkPortsFromMeta(state: State, id: string): string[] {
+  const meta = state.handles.get(id)?.meta ?? {};
+  const raw = Array.isArray(meta.fork_ports) ? meta.fork_ports : [];
+  const ports: string[] = [];
+  for (const candidate of raw) {
+    if (typeof candidate !== "string" || candidate.length === 0) {
+      continue;
+    }
+    if (!state.handles.has(candidate) || candidate === id || ports.includes(candidate)) {
+      continue;
+    }
+    ports.push(candidate);
   }
+  return ports;
+}
+
+function subPorts(state: State, parent: string): string[] {
+  const ports: string[] = [];
+  for (const edge of state.sub) {
+    const parsed = parseEdge(edge);
+    if (!parsed) {
+      continue;
+    }
+    const [source, child] = parsed;
+    if (source !== parent || !state.handles.has(child) || ports.includes(child)) {
+      continue;
+    }
+    ports.push(child);
+  }
+  return ports;
+}
+
+function attachmentSites(state: State, id: string): string[] {
+  const sites = [id];
+  const ports = forkPortsFromMeta(state, id);
+  const inferred = ports.length > 0 ? ports : subPorts(state, id);
+  for (const port of inferred) {
+    if (!sites.includes(port)) {
+      sites.push(port);
+    }
+  }
+  return sites;
+}
+
+function addContEdge(state: State, from: string, to: string): void {
   state.cont.add(edgeKey(from, to));
 }
 
-export function addCarry(state: State, source: string, target: string): void {
-  if (!source || !target) {
+export function addCont(state: State, from: string, to: string): void {
+  if (!validHandleId(from) || !validHandleId(to)) {
     return;
   }
-  addCont(state, source, target);
-  state.carry.add(edgeKey(source, target));
+  const fromSites = attachmentSites(state, from);
+  const toSites = attachmentSites(state, to);
+  for (const source of fromSites) {
+    for (const target of toSites) {
+      addContEdge(state, source, target);
+    }
+  }
+}
+
+export function addCarry(state: State, source: string, target: string): void {
+  if (!validHandleId(source) || !validHandleId(target)) {
+    return;
+  }
+  const sourceSites = attachmentSites(state, source);
+  const targetSites = attachmentSites(state, target);
+  for (const sourceSite of sourceSites) {
+    for (const targetSite of targetSites) {
+      addContEdge(state, sourceSite, targetSite);
+      state.carry.add(edgeKey(sourceSite, targetSite));
+    }
+  }
 }
 
 export function addSupp(state: State, closer: string, origin: string): void {
-  if (!closer || !origin) {
+  if (!validHandleId(closer) || !validHandleId(origin)) {
     return;
   }
-  state.supp.add(edgeKey(closer, origin));
+  const closerSites = attachmentSites(state, closer);
+  const originSites = attachmentSites(state, origin);
+  for (const closerSite of closerSites) {
+    for (const originSite of originSites) {
+      state.supp.add(edgeKey(closerSite, originSite));
+    }
+  }
 }
 
 export function addSub(state: State, parent: string, child: string): void {

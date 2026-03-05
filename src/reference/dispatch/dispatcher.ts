@@ -47,13 +47,13 @@ function applyRosh(runtime: CompiledTokenRuntime, ops: SelectOperands): SelectOp
   if (runtime.rosh_branch === "right") {
     return {
       ...ops,
-      prefs: { ...ops.prefs, shin_branch: "right", shin_direction: "external" }
+      prefs: { ...ops.prefs, shin_direction: "external" }
     };
   }
   if (runtime.rosh_branch === "left") {
     return {
       ...ops,
-      prefs: { ...ops.prefs, shin_branch: "left", shin_direction: "internal" }
+      prefs: { ...ops.prefs, shin_direction: "internal" }
     };
   }
   return ops;

@@ -4,28 +4,33 @@ import { createInitialState } from "@ref/state/state";
 import { executeLetterForTest } from "@ref/vm/vm";
 
 describe("shin internal fork selection", () => {
-  it("reroutes subsequent Select-from-F to active_child", () => {
+  it("fans subsequent attachments into all internal sub ports", () => {
     const state = createInitialState();
-    const tokens = tokenize("שׂי");
+    const tokens = tokenize("שׂנ");
     executeLetterForTest(state, tokens[0], {
       isWordFinal: false,
-      wordText: "שׂי",
+      wordText: "שׂנ",
       prevBoundaryMode: "hard"
     });
     const shinEvent = state.vm.H.find((event) => event.type === "shin");
-    const parent = shinEvent?.data?.id as string;
-    const activeChild = shinEvent?.data?.active as string;
+    const parent = shinEvent?.data?.focus as string;
+    const ports = [shinEvent?.data?.spine, shinEvent?.data?.left, shinEvent?.data?.right].map(
+      (id) => String(id)
+    );
     executeLetterForTest(state, tokens[1], {
       isWordFinal: true,
-      wordText: "שׂי",
+      wordText: "שׂנ",
       prevBoundaryMode: "hard"
     });
-    const outputId = state.vm.F;
-    const output = state.handles.get(outputId);
+    const childId = state.vm.F;
+    const child = state.handles.get(childId);
 
     expect(shinEvent?.data?.direction).toBe("internal");
-    expect(state.sub.has(`${parent}->${activeChild}`)).toBe(true);
-    expect(output?.meta.seedOf).toBe(activeChild);
-    expect(output?.meta.seedOf).not.toBe(parent);
+    for (const port of ports) {
+      expect(state.sub.has(`${parent}->${port}`)).toBe(true);
+      expect(state.carry.has(`${port}->${childId}`)).toBe(true);
+    }
+    expect(state.carry.has(`${parent}->${childId}`)).toBe(true);
+    expect(child?.meta.succOf).toBe(parent);
   });
 });

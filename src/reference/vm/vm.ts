@@ -250,13 +250,13 @@ function applyRoshWrappers(token: Token, ops: SelectOperands): SelectOperands {
   if (token.inside_dot_kind === "shin_dot_right") {
     return {
       ...ops,
-      prefs: { ...ops.prefs, shin_branch: "right", shin_direction: "external" }
+      prefs: { ...ops.prefs, shin_direction: "external" }
     };
   }
   if (token.inside_dot_kind === "shin_dot_left") {
     return {
       ...ops,
-      prefs: { ...ops.prefs, shin_branch: "left", shin_direction: "internal" }
+      prefs: { ...ops.prefs, shin_direction: "internal" }
     };
   }
   return ops;
@@ -371,7 +371,6 @@ function executeReadRail(
   recorder?.record("rosh", {
     wrapped_operands: normalizeForJson(ops),
     inside_dot_kind: token.inside_dot_kind,
-    shin_branch: ops.prefs?.shin_branch ?? null,
     rosh_diacritics: normalizeForJson(roshDiacritics)
   });
   const letterMode = resolveLetterMode(token, context.isWordFinal);

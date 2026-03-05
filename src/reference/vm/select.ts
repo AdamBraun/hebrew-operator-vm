@@ -34,29 +34,7 @@ function enforceDistinct(values: string[], message: string, enabled: boolean): v
 }
 
 export function resolveSelectableFocus(state: State): string {
-  const focus = state.vm.F;
-  const focusMeta = state.handles.get(focus)?.meta ?? {};
-
-  if (focusMeta.fork_direction === "external") {
-    const topOfStack = state.vm.K[state.vm.K.length - 1];
-    const children = new Set([focusMeta.spine, focusMeta.left, focusMeta.right]);
-    if (
-      typeof topOfStack === "string" &&
-      children.has(topOfStack) &&
-      state.handles.has(topOfStack)
-    ) {
-      return topOfStack;
-    }
-  }
-
-  const activeChild = focusMeta.active_child;
-  if (typeof activeChild !== "string" || activeChild.length === 0) {
-    return focus;
-  }
-  if (!state.handles.has(activeChild)) {
-    return focus;
-  }
-  return activeChild;
+  return state.vm.F;
 }
 
 function resolveFocusCandidate(state: State, candidate: string): string {
