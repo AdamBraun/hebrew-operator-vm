@@ -141,6 +141,8 @@ export type ProgramManifestIntegrity = {
   };
   countsByRef: {
     refCount: number;
+    totalGraphemes: number;
+    totalGaps: number;
     meanOpsPerRef: number;
     maxOpsPerRef: number;
     maxBoundariesPerRef: number;
@@ -407,7 +409,9 @@ function parseGapid(value: string): { ref_key: string; gap_index: number } | nul
 
 function normalizeProgramMods(rawMods: NiqqudMods | undefined): ProgramMods {
   const classesSource =
-    rawMods && Array.isArray(rawMods.classes) ? rawMods.classes.filter((entry) => typeof entry === "string") : [];
+    rawMods && Array.isArray(rawMods.classes)
+      ? rawMods.classes.filter((entry) => typeof entry === "string")
+      : [];
   const classes = [...new Set(classesSource)].sort(compareText);
 
   const featuresSource = rawMods && isRecord(rawMods.features) ? rawMods.features : {};
@@ -1050,12 +1054,7 @@ function assertProgramMods(value: unknown, path: string, scope: string): void {
 
   const features = assertHas(value, "features", path, scope);
   assertRecord(features, `${path}.features`, scope);
-  assertNoUnknownKeys(
-    features,
-    [...PROGRAM_MODS_FEATURE_KEYS],
-    `${path}.features`,
-    scope
-  );
+  assertNoUnknownKeys(features, [...PROGRAM_MODS_FEATURE_KEYS], `${path}.features`, scope);
   if (typeof assertHas(features, "hasDagesh", `${path}.features`, scope) !== "boolean") {
     fail(scope, `${path}.features.hasDagesh`, "expected boolean");
   }
@@ -1151,11 +1150,7 @@ export function assertProgramIRRecord(
     const wordId = hasOwn(value, "word_id") ? value.word_id : undefined;
     const posInWord = hasOwn(value, "pos_in_word") ? value.pos_in_word : undefined;
     if ((wordId === undefined) !== (posInWord === undefined)) {
-      fail(
-        scope,
-        path,
-        "word_id and pos_in_word must either both be present or both be omitted"
-      );
+      fail(scope, path, "word_id and pos_in_word must either both be present or both be omitted");
     }
     if (wordId !== undefined) {
       assertNonEmptyString(wordId, `${path}.word_id`, scope);
@@ -1178,7 +1173,18 @@ export function assertProgramIRRecord(
   if (kind === "boundary") {
     assertNoUnknownKeys(
       value,
-      ["seq", "kind", "gapid", "ref_key", "gap_index", "left_gid", "right_gid", "layout", "cant", "raw"],
+      [
+        "seq",
+        "kind",
+        "gapid",
+        "ref_key",
+        "gap_index",
+        "left_gid",
+        "right_gid",
+        "layout",
+        "cant",
+        "raw"
+      ],
       path,
       scope
     );
@@ -1395,7 +1401,12 @@ export function assertProgramManifest(
 
   const build = assertHas(value, "build", path, scope);
   assertRecord(build, `${path}.build`, scope);
-  assertNoUnknownKeys(build, ["gitSha", "nodeVersion", "platform", "generatedAt"], `${path}.build`, scope);
+  assertNoUnknownKeys(
+    build,
+    ["gitSha", "nodeVersion", "platform", "generatedAt"],
+    `${path}.build`,
+    scope
+  );
   if (build.gitSha !== null && build.gitSha !== undefined) {
     assertNonEmptyString(build.gitSha, `${path}.build.gitSha`, scope);
     if (!SHORT_GIT_SHA_HEX.test(build.gitSha.toLowerCase())) {
@@ -1539,7 +1550,12 @@ export function assertProgramManifest(
 
   const integrity = assertHas(value, "integrity", path, scope);
   assertRecord(integrity, `${path}.integrity`, scope);
-  assertNoUnknownKeys(integrity, ["anchors", "countsByRef", "rollingHash"], `${path}.integrity`, scope);
+  assertNoUnknownKeys(
+    integrity,
+    ["anchors", "countsByRef", "rollingHash"],
+    `${path}.integrity`,
+    scope
+  );
 
   const anchors = assertHas(integrity, "anchors", `${path}.integrity`, scope);
   assertRecord(anchors, `${path}.integrity.anchors`, scope);
@@ -1560,20 +1576,44 @@ export function assertProgramManifest(
   assertRecord(countsByRef, `${path}.integrity.countsByRef`, scope);
   assertNoUnknownKeys(
     countsByRef,
-    ["refCount", "meanOpsPerRef", "maxOpsPerRef", "maxBoundariesPerRef"],
+    [
+      "refCount",
+      "totalGraphemes",
+      "totalGaps",
+      "meanOpsPerRef",
+      "maxOpsPerRef",
+      "maxBoundariesPerRef"
+    ],
     `${path}.integrity.countsByRef`,
     scope
   );
   assertNonNegativeInteger(countsByRef.refCount, `${path}.integrity.countsByRef.refCount`, scope);
+  assertNonNegativeInteger(
+    countsByRef.totalGraphemes,
+    `${path}.integrity.countsByRef.totalGraphemes`,
+    scope
+  );
+  assertNonNegativeInteger(countsByRef.totalGaps, `${path}.integrity.countsByRef.totalGaps`, scope);
   if (typeof countsByRef.meanOpsPerRef !== "number" || countsByRef.meanOpsPerRef < 0) {
     fail(scope, `${path}.integrity.countsByRef.meanOpsPerRef`, "expected number >= 0");
   }
-  assertNonNegativeInteger(countsByRef.maxOpsPerRef, `${path}.integrity.countsByRef.maxOpsPerRef`, scope);
+  assertNonNegativeInteger(
+    countsByRef.maxOpsPerRef,
+    `${path}.integrity.countsByRef.maxOpsPerRef`,
+    scope
+  );
   assertNonNegativeInteger(
     countsByRef.maxBoundariesPerRef,
     `${path}.integrity.countsByRef.maxBoundariesPerRef`,
     scope
   );
+  if (countsByRef.totalGaps !== countsByRef.totalGraphemes + countsByRef.refCount) {
+    fail(
+      scope,
+      `${path}.integrity.countsByRef`,
+      "expected totalGaps === totalGraphemes + refCount"
+    );
+  }
 
   const rollingHash = assertHas(integrity, "rollingHash", `${path}.integrity`, scope);
   assertRecord(rollingHash, `${path}.integrity.rollingHash`, scope);
@@ -1779,7 +1819,9 @@ function buildManifestIntegrity(rows: readonly ProgramIRRecord[]): ProgramManife
   const firstRow = rows[0];
   const lastRow = rows[rows.length - 1];
   const opRows = rows.filter((row): row is ProgramIROpRecord => row.kind === "op");
-  const boundaryRows = rows.filter((row): row is ProgramIRBoundaryRecord => row.kind === "boundary");
+  const boundaryRows = rows.filter(
+    (row): row is ProgramIRBoundaryRecord => row.kind === "boundary"
+  );
 
   const perRef = new Map<string, { ops: number; boundaries: number }>();
   for (const row of rows) {
@@ -1792,6 +1834,8 @@ function buildManifestIntegrity(rows: readonly ProgramIRRecord[]): ProgramManife
     perRef.set(row.ref_key, tally);
   }
   const refCount = perRef.size;
+  const totalGraphemes = opRows.length;
+  const totalGaps = boundaryRows.length;
   let totalOps = 0;
   let maxOpsPerRef = 0;
   let maxBoundariesPerRef = 0;
@@ -1803,6 +1847,12 @@ function buildManifestIntegrity(rows: readonly ProgramIRRecord[]): ProgramManife
     if (tally.boundaries > maxBoundariesPerRef) {
       maxBoundariesPerRef = tally.boundaries;
     }
+  }
+
+  if (totalGaps !== totalGraphemes + refCount) {
+    throw new Error(
+      `stitcher: boundary invariant failed (totalGaps=${String(totalGaps)}, totalGraphemes=${String(totalGraphemes)}, refCount=${String(refCount)}); expected totalGaps = totalGraphemes + refCount`
+    );
   }
 
   const chunkDigests: string[] = [];
@@ -1823,6 +1873,8 @@ function buildManifestIntegrity(rows: readonly ProgramIRRecord[]): ProgramManife
     },
     countsByRef: {
       refCount,
+      totalGraphemes,
+      totalGaps,
       meanOpsPerRef: refCount === 0 ? 0 : totalOps / refCount,
       maxOpsPerRef,
       maxBoundariesPerRef

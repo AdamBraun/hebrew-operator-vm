@@ -104,7 +104,10 @@ describe("stitch-program cli", () => {
     expect(programText).toBe(expectedProgram);
 
     const meta = JSON.parse(fs.readFileSync(run.metaPath, "utf8")) as Record<string, unknown>;
-    const manifest = JSON.parse(fs.readFileSync(run.manifestPath, "utf8")) as Record<string, unknown>;
+    const manifest = JSON.parse(fs.readFileSync(run.manifestPath, "utf8")) as Record<
+      string,
+      unknown
+    >;
     const inputDigests = meta.inputDigests as Record<string, unknown>;
     expect(inputDigests).toBeDefined();
     expect(inputDigests.spine_sha256).toMatch(/^[a-f0-9]{64}$/);
@@ -172,11 +175,11 @@ describe("stitch-program cli", () => {
 
     expect(manifest.programSchemaVersion).toBe("1.0.0");
     expect((manifest as { build?: { generatedAt?: string } }).build?.generatedAt).toBe(CREATED_AT);
-    expect((manifest as { stitchConfigDigest?: string }).stitchConfigDigest).toMatch(/^[a-f0-9]{64}$/);
+    expect((manifest as { stitchConfigDigest?: string }).stitchConfigDigest).toMatch(
+      /^[a-f0-9]{64}$/
+    );
     expect((manifest as { cacheDigest?: string }).cacheDigest).toBe(meta.cacheDigest);
-    expect(
-      (manifest as { contains?: Record<string, unknown> }).contains
-    ).toEqual({
+    expect((manifest as { contains?: Record<string, unknown> }).contains).toEqual({
       layout: true,
       cantillation: true,
       letterCantillation: true,
@@ -201,23 +204,35 @@ describe("stitch-program cli", () => {
       firstGapid: "Genesis/1/1#gap:0",
       lastGapid: "Genesis/1/1#gap:2"
     });
-    expect(
-      (manifest as { integrity?: { countsByRef?: { refCount?: number; meanOpsPerRef?: number } } })
-        .integrity?.countsByRef?.refCount
-    ).toBe(1);
-    expect(
-      (manifest as { integrity?: { countsByRef?: { maxOpsPerRef?: number } } }).integrity
-        ?.countsByRef?.maxOpsPerRef
-    ).toBe(2);
+    const countsByRef = (
+      manifest as {
+        integrity?: {
+          countsByRef?: {
+            refCount?: number;
+            totalGraphemes?: number;
+            totalGaps?: number;
+            maxOpsPerRef?: number;
+          };
+        };
+      }
+    ).integrity?.countsByRef;
+    expect(countsByRef?.refCount).toBe(1);
+    expect(countsByRef?.totalGraphemes).toBe(2);
+    expect(countsByRef?.totalGaps).toBe(3);
+    expect(countsByRef?.totalGaps).toBe(
+      (countsByRef?.totalGraphemes ?? 0) + (countsByRef?.refCount ?? 0)
+    );
+    expect(countsByRef?.maxOpsPerRef).toBe(2);
     expect(
       (
-        manifest as { integrity?: { rollingHash?: { chunkSize?: number; chunkDigests?: string[] } } }
+        manifest as {
+          integrity?: { rollingHash?: { chunkSize?: number; chunkDigests?: string[] } };
+        }
       ).integrity?.rollingHash?.chunkSize
     ).toBe(50_000);
     expect(
-      (
-        manifest as { integrity?: { rollingHash?: { chunkDigests?: string[] } } }
-      ).integrity?.rollingHash?.chunkDigests?.[0]
+      (manifest as { integrity?: { rollingHash?: { chunkDigests?: string[] } } }).integrity
+        ?.rollingHash?.chunkDigests?.[0]
     ).toMatch(/^[a-f0-9]{64}$/);
   });
 

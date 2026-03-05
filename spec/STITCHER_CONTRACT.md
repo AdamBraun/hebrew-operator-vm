@@ -41,6 +41,7 @@ The stitcher emits:
 
 - `boundary_frame` (anchored by `gapid`):
   - emitted for each spine gap anchor
+  - boundary emission rule: for each `ref_key` with `N` graphemes, emit exactly `N+1` boundaries for `gap:0..gap:N`
   - zero-or-more `layout_events` by `gapid`
   - zero-or-more `cantillation_events` by `gapid`
 
@@ -76,6 +77,9 @@ Given identical inputs, serialized `ProgramIR` bytes are identical.
 5. Anchor integrity:
    - every `gid` / `gapid` referenced by `LettersIR`, `NiqqudIR`, `CantillationIR`, or `LayoutIR` must exist in `Spine`.
    - violation is fatal with precise source-layer + row-index + anchor-id error.
+6. Gap/grapheme cardinality:
+   - manifest-derived stats must satisfy `totalGaps === totalGraphemes + refCount`.
+   - if the invariant fails, stitching is rejected as a spine/stitch mismatch.
 
 ## Validation Rules
 
@@ -106,6 +110,13 @@ Rejections are fail-fast and must identify:
 - output `ProgramIR` digest.
 
 Manifest content is canonicalized for deterministic serialization.
+
+Manifest integrity stats include:
+
+- `refCount`
+- `totalGraphemes`
+- `totalGaps`
+- per-ref extrema and rolling hash metadata
 
 ## Non-Goals
 
