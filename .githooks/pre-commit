@@ -13,13 +13,4 @@ git diff --cached --name-only --diff-filter=ACMR -z > "$staged_list_file"
 xargs -0 -n 200 npm exec -- prettier --ignore-unknown --write -- < "$staged_list_file"
 xargs -0 -n 200 git add -- < "$staged_list_file"
 
-if npm run artifacts:needs-update; then
-  :
-else
-  needs_update_status=$?
-  if [ "$needs_update_status" -eq 1 ]; then
-    npm run artifacts:verify
-  else
-    exit "$needs_update_status"
-  fi
-fi
+npm run src-artifacts:recompute -- --changed-only --staged
