@@ -19,6 +19,14 @@ export type Construction = {
   meta: Record<string, any>;
 };
 
+export type SealResult = {
+  S: import("../state/state").State;
+  h: string;
+  r: string;
+  export_handle?: string;
+  advance_focus?: boolean;
+};
+
 export type LetterOp = {
   meta: LetterMeta;
   select: (S: import("../state/state").State) => {
@@ -29,8 +37,5 @@ export type LetterOp = {
     S: import("../state/state").State,
     ops: SelectOperands
   ) => { S: import("../state/state").State; cons: Construction };
-  seal: (
-    S: import("../state/state").State,
-    cons: Construction
-  ) => { S: import("../state/state").State; h: string; r: string };
+  seal: (S: import("../state/state").State, cons: Construction) => SealResult;
 };

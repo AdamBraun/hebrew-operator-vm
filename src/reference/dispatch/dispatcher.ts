@@ -150,6 +150,7 @@ function executeReadRail(
   context: ExecuteContext
 ): void {
   const D_before = state.vm.D;
+  const F_before = state.vm.F;
   const selectResult = op.select(state);
   const ops = applyRosh(bundle.runtime, selectResult.ops);
   const letterMode = resolveLetterMode(bundle.runtime, context.isWordFinal);
@@ -180,8 +181,9 @@ function executeReadRail(
     sealResult.S.vm.wordLastSealedArtifact = sealed;
   }
 
-  sealResult.S.vm.K.push(sealed);
-  sealResult.S.vm.F = sealed;
+  const exportHandle = sealResult.export_handle ?? sealed;
+  sealResult.S.vm.K.push(exportHandle);
+  sealResult.S.vm.F = sealResult.advance_focus === false ? F_before : sealed;
   sealResult.S.vm.R = sealResult.r;
   assertOperatorDomainStable(sealResult.S, {
     before: D_before,

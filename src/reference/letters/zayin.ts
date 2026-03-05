@@ -1,4 +1,6 @@
 import { BOT_ID, createHandle } from "../state/handles";
+import { addCarry, addSupp } from "../state/relations";
+import { setPolicy } from "../state/policies";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
@@ -16,23 +18,21 @@ export const zayinOp: LetterOp = {
   meta,
   select: (S: State) => ({ S, ops: { args: [S.vm.F], prefs: {} } }),
   bound: (S: State, ops) => {
-    const target = ops.args[0];
-    const gateId = nextId(S, "ז");
-    S.handles.set(
-      gateId,
-      createHandle(gateId, "gate", { meta: { target, armed: 1, policy: "guard" } })
-    );
+    const focus = ops.args[0];
+    const portId = nextId(S, "ז");
+    S.handles.set(portId, createHandle(portId, "scope", { meta: { portOf: focus } }));
+    addCarry(S, focus, portId);
+    addSupp(S, portId, focus);
     const cons: Construction = {
-      base: target,
-      envelope: defaultEnvelope(),
-      meta: { gateId, target }
+      base: focus,
+      envelope: defaultEnvelope("framed_lock"),
+      meta: { portId, focus }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { gateId, target } = cons.meta as { gateId: string; target: string };
-    S.links.push({ from: target, to: gateId, label: "gate" });
-    S.vm.H.push({ type: "gate", tau: S.vm.tau, data: { id: gateId, target } });
-    return { S, h: gateId, r: BOT_ID };
+    const { portId } = cons.meta as { portId: string };
+    setPolicy(S, portId, "framed_lock");
+    return { S, h: portId, r: BOT_ID, export_handle: portId, advance_focus: false };
   }
 };
