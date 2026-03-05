@@ -1,10 +1,15 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { createLayerManifestCore, type LayerManifestCore } from "../../ir/layer_manifest_core";
+import {
+  LayerAnchorOrderingAccumulator,
+  createLayerManifestCore,
+  type LayerManifestCore,
+  type LayerManifestCoreOrdering
+} from "../../ir/layer_manifest_core";
 import { extractLayoutIRRecords, type ResolvedLayoutEventsByGapid } from "./extract";
 import { computeLayoutDigest, type LayoutConfig } from "./hash";
-import { serializeLayoutIRRecord } from "./schema";
+import { compareLayoutIRRecords, serializeLayoutIRRecord, type LayoutIRRecord } from "./schema";
 import { type GapDescriptor } from "./spine_adapter";
 
 export const LAYOUT_MANIFEST_LAYER = "layout";
@@ -168,6 +173,7 @@ function createLayoutManifest(args: {
   dataset: { dataset_id: string; version: string };
   counts: LayoutCounts;
   outputDigest: string;
+  ordering: LayerManifestCoreOrdering;
   createdAt?: Date | string;
   version?: string;
 }): LayoutManifest {
@@ -224,6 +230,7 @@ function createLayoutManifest(args: {
           BOOK_BREAK: args.counts.bookBreakCount
         }
       },
+      ordering: args.ordering,
       timestamp: createdAtIso
     })
   };
@@ -355,6 +362,8 @@ export async function emitLayout(args: EmitLayoutArgs): Promise<EmitLayoutResult
 
   await fs.mkdir(outputDir, { recursive: true });
   const counts = initializeCounts();
+  const orderingAccumulator = new LayerAnchorOrderingAccumulator();
+  let previousOutputRecord: LayoutIRRecord | null = null;
   const countGaps = async function* (): AsyncGenerator<GapDescriptor> {
     for await (const gap of args.gaps) {
       counts.gapsSeen += 1;
@@ -368,7 +377,15 @@ export async function emitLayout(args: EmitLayoutArgs): Promise<EmitLayoutResult
       gaps: countGaps(),
       eventsByGapid: args.eventsByGapid
     })) {
+      if (previousOutputRecord && compareLayoutIRRecords(previousOutputRecord, record) >= 0) {
+        throw new Error(
+          "emitLayout: non-canonical output ordering at " +
+            `gapid='${record.gapid}' after gapid='${previousOutputRecord.gapid}'`
+        );
+      }
       await handle.write(`${serializeLayoutIRRecord(record)}\n`);
+      orderingAccumulator.push(`gap:${record.gapid}`);
+      previousOutputRecord = record;
       counts.recordsEmitted += 1;
       countRecordType(counts, record.layout_event.type);
     }
@@ -385,6 +402,7 @@ export async function emitLayout(args: EmitLayoutArgs): Promise<EmitLayoutResult
     dataset: args.dataset,
     counts,
     outputDigest: sha256Hex(await fs.readFile(layoutIrPath)),
+    ordering: orderingAccumulator.finalize(),
     createdAt: args.createdAt,
     version: args.manifestVersion
   });

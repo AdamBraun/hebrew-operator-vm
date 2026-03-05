@@ -17,9 +17,13 @@ import {
   type CantillationManifest,
   type CantillationManifestOutputFile
 } from "./manifest";
-import { createLayerManifestCore } from "../../ir/layer_manifest_core";
+import {
+  LayerAnchorOrderingAccumulator,
+  createLayerManifestCore
+} from "../../ir/layer_manifest_core";
 import { createCantillationMarkCoverage, resolveCantillationMarkWithCoverage } from "./marks";
 import {
+  compareCantillationIRRecords,
   compareCantillationEvents,
   serializeCantillationIRRecord,
   type CantillationBoundaryEvent,
@@ -517,6 +521,26 @@ function eventSubOrder<T extends CantillationEvent>(events: T[]): T[] {
   return [...events].sort(compareCantillationEvents);
 }
 
+function cantillationAnchorToken(record: CantillationIRRecord): string {
+  return `${record.anchor.kind}:${record.anchor.id}`;
+}
+
+function assertCanonicalOutputOrdering(
+  previous: CantillationIRRecord | null,
+  current: CantillationIRRecord
+): void {
+  if (!previous) {
+    return;
+  }
+  if (compareCantillationIRRecords(previous, current) >= 0) {
+    throw new Error(
+      "cantillation extract: non-canonical output ordering at " +
+        `anchor='${current.anchor.kind}:${current.anchor.id}' ` +
+        `after '${previous.anchor.kind}:${previous.anchor.id}'`
+    );
+  }
+}
+
 function readGapEvents(
   row: ParsedSpineGapRecord,
   sofPasukRank: number
@@ -549,13 +573,18 @@ async function extractToArtifacts(args: {
   config: CantillationLayerConfig;
   cantillationIrPath: string;
   statsPath?: string;
-}): Promise<CantillationStats> {
+}): Promise<{
+  stats: CantillationStats;
+  ordering: ReturnType<LayerAnchorOrderingAccumulator["finalize"]>;
+}> {
   const stats = initializeCantillationStats(toStatsConfigSnapshot(args.config));
   const coverage = createCantillationMarkCoverage();
   const refTallies = new Map<string, CantillationStatsRefTally>();
   const markTallies = new Map<string, CantillationStatsMarkTally>();
   const eventTypeCounts = createCantillationEventTypeCounts();
   const anchorValidator = args.config.strict ? new CantillationAnchorValidator() : null;
+  const orderingAccumulator = new LayerAnchorOrderingAccumulator();
+  let previousOutputRecord: CantillationIRRecord | null = null;
 
   const handle = await fs.open(args.cantillationIrPath, "w");
   const stream = fsRaw.createReadStream(args.spinePath, { encoding: "utf8" });
@@ -668,7 +697,10 @@ async function extractToArtifacts(args: {
         gidRecords.sort((left, right) => compareCantillationEvents(left.event, right.event));
         for (const record of gidRecords) {
           anchorValidator?.assertEventAnchorExists(record);
+          assertCanonicalOutputOrdering(previousOutputRecord, record);
           await handle.write(`${serializeCantillationIRRecord(record)}\n`);
+          orderingAccumulator.push(cantillationAnchorToken(record));
+          previousOutputRecord = record;
           incrementCantillationEventType(eventTypeCounts, record.event.type);
           refTally.events_emitted += 1;
         }
@@ -688,7 +720,10 @@ async function extractToArtifacts(args: {
           }
         };
         anchorValidator?.assertEventAnchorExists(record);
+        assertCanonicalOutputOrdering(previousOutputRecord, record);
         await handle.write(`${serializeCantillationIRRecord(record)}\n`);
+        orderingAccumulator.push(cantillationAnchorToken(record));
+        previousOutputRecord = record;
         incrementCantillationEventType(eventTypeCounts, record.event.type);
         refTally.gap_events += 1;
         refTally.events_emitted += 1;
@@ -715,7 +750,10 @@ async function extractToArtifacts(args: {
     await writeStatsFile(args.statsPath, finalized);
   }
 
-  return finalized;
+  return {
+    stats: finalized,
+    ordering: orderingAccumulator.finalize()
+  };
 }
 
 export async function extractCantillationIR(
@@ -792,12 +830,13 @@ export async function extractCantillationIR(
 
   await fs.mkdir(outputDir, { recursive: true });
 
-  const stats = await extractToArtifacts({
+  const extracted = await extractToArtifacts({
     spinePath: resolvedSpinePath,
     config: normalizedConfig,
     cantillationIrPath,
     ...(statsPath ? { statsPath } : {})
   });
+  const stats = extracted.stats;
 
   const outputFiles: CantillationManifestOutputFile[] = [
     {
@@ -845,6 +884,7 @@ export async function extractCantillationIR(
           BOUNDARY: stats.events_by_type.BOUNDARY
         }
       },
+      ordering: extracted.ordering,
       timestamp: createdAt
     })
   });

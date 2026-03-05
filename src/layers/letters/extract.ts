@@ -3,11 +3,16 @@ import fsRaw from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import readline from "node:readline";
-import { createLayerManifestCore, type LayerManifestCore } from "../../ir/layer_manifest_core";
+import {
+  LayerAnchorOrderingAccumulator,
+  createLayerManifestCore,
+  type LayerManifestCore
+} from "../../ir/layer_manifest_core";
 import { type SpineRecord } from "../../spine/schema";
 import { classifyLetterOperator } from "./opMap";
 import {
   assertLettersIRRecordsAgainstSpine,
+  compareLettersIRRecords,
   serializeLettersIRRecord,
   type LettersIRRecord
 } from "./schema";
@@ -411,6 +416,8 @@ export async function emitLettersFromSpine(
   const closedRefs = new Set<string>();
   let currentRefKey: string | null = null;
   let currentRefRows: SpineRecord[] = [];
+  let previousOutputRow: LettersIRRecord | null = null;
+  const orderingAccumulator = new LayerAnchorOrderingAccumulator();
   const counts = {
     letters_emitted: 0,
     refs_seen: 0
@@ -427,9 +434,18 @@ export async function emitLettersFromSpine(
       includeWordMetadata: config.include_word_segmentation,
       strictLetters: config.strict_letters
     });
+    rows.sort(compareLettersIRRecords);
 
     for (const row of rows) {
+      if (previousOutputRow && compareLettersIRRecords(previousOutputRow, row) >= 0) {
+        throw new Error(
+          "emitLettersFromSpine: non-canonical output ordering at " +
+            `gid='${row.gid}' after gid='${previousOutputRow.gid}'`
+        );
+      }
       await handle.write(`${serializeLettersIRRecord(row)}\n`);
+      orderingAccumulator.push(`gid:${row.gid}`);
+      previousOutputRow = row;
       counts.letters_emitted += 1;
     }
 
@@ -463,6 +479,7 @@ export async function emitLettersFromSpine(
   }
 
   const createdAtIso = toIsoString(args.createdAt);
+  const ordering = orderingAccumulator.finalize();
   const manifest: LettersManifest = {
     layer: "letters",
     version,
@@ -492,6 +509,7 @@ export async function emitLettersFromSpine(
         gapcount: 0,
         event_counts: {}
       },
+      ordering,
       timestamp: createdAtIso
     })
   };

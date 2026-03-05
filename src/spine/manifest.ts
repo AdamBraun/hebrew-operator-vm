@@ -1,5 +1,9 @@
 import type { NormalizationOptions } from "./options";
-import { createLayerManifestCore, type LayerManifestCore } from "../ir/layer_manifest_core";
+import {
+  createLayerManifestCore,
+  type LayerManifestCore,
+  type LayerManifestCoreOrdering
+} from "../ir/layer_manifest_core";
 
 export const SPINE_MANIFEST_LAYER = "spine";
 export const SPINE_MANIFEST_VERSION = "1.0.0";
@@ -47,6 +51,7 @@ export type CreateSpineManifestArgs = {
     spineDigest: string;
   };
   configDigest: string;
+  ordering?: LayerManifestCoreOrdering;
   schema?: {
     spine_record_version: string;
   };
@@ -146,6 +151,7 @@ export function createSpineManifest(args: CreateSpineManifestArgs): SpineManifes
         gapcount: args.stats.gaps,
         event_counts: {}
       },
+      ordering: args.ordering,
       timestamp: createdAtIso
     })
   };

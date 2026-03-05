@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -7,6 +8,11 @@ import { parseCantillationIRJsonl } from "../../../src/layers/cantillation/schem
 
 const SPINE_DIGEST = "c".repeat(64);
 const CODE_HASH = "0".repeat(64);
+
+function hashAnchors(anchors: readonly string[]): string {
+  const joined = anchors.length === 0 ? "" : `${anchors.join("\n")}\n`;
+  return crypto.createHash("sha256").update(joined, "utf8").digest("hex");
+}
 
 function writeSpineFixture(baseDir: string): { spinePath: string; spineManifestPath: string } {
   const spineDir = path.join(baseDir, "outputs", "cache", "spine", SPINE_DIGEST);
@@ -137,6 +143,16 @@ describe("cantillation extractor", () => {
       rank: 3,
       reason: "SOF_PASUK"
     });
+    const anchors = records.map((row) => `${row.anchor.kind}:${row.anchor.id}`);
+    expect(first.manifest.cache_manifest.ordering.first_anchor).toBe(anchors[0] ?? null);
+    expect(first.manifest.cache_manifest.ordering.last_anchor).toBe(
+      anchors[anchors.length - 1] ?? null
+    );
+    expect(first.manifest.cache_manifest.ordering.anchor_hash).toBe(hashAnchors(anchors));
+    expect(first.manifest.cache_manifest.ordering.rolling_anchor_hash.chunk_size).toBe(50_000);
+    expect(first.manifest.cache_manifest.ordering.rolling_anchor_hash.chunk_digests).toEqual([
+      hashAnchors(anchors)
+    ]);
 
     expect(first.stats.totals).toEqual({
       graphemes: 2,

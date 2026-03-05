@@ -12,6 +12,11 @@ function sha256Hex(content: string): string {
   return crypto.createHash("sha256").update(content, "utf8").digest("hex");
 }
 
+function hashAnchors(anchors: readonly string[]): string {
+  const joined = anchors.length === 0 ? "" : `${anchors.join("\n")}\n`;
+  return sha256Hex(joined);
+}
+
 async function collectFromBuilder(refKey: string, text: string): Promise<SpineRecord[]> {
   const rows: SpineRecord[] = [];
   for await (const row of buildSpineForRef({
@@ -60,6 +65,17 @@ describe("spine emit", () => {
       stats: { refs: number; graphemes: number; gaps: number; bytes_out: number };
       digests: { spineDigest: string };
       schema: { spine_record_version: string };
+      cache_manifest: {
+        ordering: {
+          first_anchor: string | null;
+          last_anchor: string | null;
+          anchor_hash: string;
+          rolling_anchor_hash: {
+            chunk_size: number;
+            chunk_digests: string[];
+          };
+        };
+      };
     };
     expect(manifest.layer).toBe("spine");
     expect(manifest.version).toBe("1.0.0");
@@ -77,6 +93,21 @@ describe("spine emit", () => {
     });
     expect(manifest.digests.spineDigest).toBe(result.spineDigest);
     expect(manifest.schema.spine_record_version).toBe("1.0.0");
+
+    const anchors = jsonl
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        const row = JSON.parse(line) as SpineRecord;
+        return row.kind === "gap" ? `gap:${row.gapid}` : `gid:${row.gid}`;
+      });
+    expect(manifest.cache_manifest.ordering.first_anchor).toBe(anchors[0] ?? null);
+    expect(manifest.cache_manifest.ordering.last_anchor).toBe(anchors[anchors.length - 1] ?? null);
+    expect(manifest.cache_manifest.ordering.anchor_hash).toBe(hashAnchors(anchors));
+    expect(manifest.cache_manifest.ordering.rolling_anchor_hash.chunk_size).toBe(50_000);
+    expect(manifest.cache_manifest.ordering.rolling_anchor_hash.chunk_digests).toEqual([
+      hashAnchors(anchors)
+    ]);
   });
 
   it("uses digest-addressed path deterministically across repeated runs", async () => {
@@ -122,6 +153,15 @@ describe("spine emit", () => {
       graphemes: 0,
       gaps: 0,
       bytes_out: 0
+    });
+    expect(result.manifest.cache_manifest.ordering).toEqual({
+      first_anchor: null,
+      last_anchor: null,
+      anchor_hash: sha256Hex(""),
+      rolling_anchor_hash: {
+        chunk_size: 50_000,
+        chunk_digests: []
+      }
     });
   });
 });

@@ -1,7 +1,12 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { createLayerManifestCore, type LayerManifestCore } from "../ir/layer_manifest_core";
+import {
+  LayerAnchorOrderingAccumulator,
+  createLayerManifestCore,
+  type LayerManifestCore,
+  type LayerManifestCoreOrdering
+} from "../ir/layer_manifest_core";
 import {
   computeNiqqudConfigDigest,
   computeNiqqudDigest,
@@ -9,7 +14,12 @@ import {
 } from "../layers/niqqud/hash";
 import { buildNiqqudMods } from "../layers/niqqud/mods";
 import { normalizeNiqqudMarks } from "../layers/niqqud/normalize_marks";
-import { NIQQUD_IR_VERSION, serializeNiqqudIRRow, type NiqqudIRRow } from "../layers/niqqud/schema";
+import {
+  NIQQUD_IR_VERSION,
+  compareNiqqudIRRows,
+  serializeNiqqudIRRow,
+  type NiqqudIRRow
+} from "../layers/niqqud/schema";
 import { readNiqqudView } from "../layers/niqqud/spine_view";
 import {
   createNiqqudStatsAccumulator,
@@ -514,6 +524,7 @@ function createManifest(args: {
   config: NiqqudBuildManifest["config"];
   outputFiles: string[];
   outputDigest: string;
+  ordering: LayerManifestCoreOrdering;
   stats: {
     row_count: number;
     ambiguous_rows: number;
@@ -559,6 +570,7 @@ function createManifest(args: {
           warnings: args.stats.warnings
         }
       },
+      ordering: args.ordering,
       timestamp: createdAtIso
     })
   };
@@ -632,6 +644,8 @@ export async function runBuildLayerNiqqud(
   await fs.mkdir(outputDir, { recursive: true });
   const irHandle = await fs.open(niqqudIrPath, "w");
   const statsAccumulator = createNiqqudStatsAccumulator();
+  const orderingAccumulator = new LayerAnchorOrderingAccumulator();
+  let previousRow: NiqqudIRRow | null = null;
   let rowCount = 0;
   let ambiguousRows = 0;
   let unhandledMarks = 0;
@@ -659,7 +673,16 @@ export async function runBuildLayerNiqqud(
         flags: built.flags
       };
 
+      if (previousRow && compareNiqqudIRRows(previousRow, outRow) >= 0) {
+        throw new Error(
+          "build-layer-niqqud: non-canonical output ordering at " +
+            `gid='${outRow.gid}' after gid='${previousRow.gid}'`
+        );
+      }
+
       await irHandle.write(`${serializeNiqqudIRRow(outRow)}\n`);
+      orderingAccumulator.push(`gid:${outRow.gid}`);
+      previousRow = outRow;
       rowCount += 1;
       if (built.flags.ambiguous) {
         ambiguousRows += 1;
@@ -710,6 +733,7 @@ export async function runBuildLayerNiqqud(
     config,
     outputFiles,
     outputDigest: sha256Hex(await fs.readFile(niqqudIrPath)),
+    ordering: orderingAccumulator.finalize(),
     stats: {
       row_count: rowCount,
       ambiguous_rows: ambiguousRows,

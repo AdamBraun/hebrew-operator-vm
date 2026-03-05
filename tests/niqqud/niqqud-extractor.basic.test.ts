@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -13,6 +14,11 @@ const EXPECTED_FIXTURE = path.resolve(
   "fixtures",
   "niqqud.ir.expected.jsonl"
 );
+
+function hashAnchors(anchors: readonly string[]): string {
+  const joined = anchors.length === 0 ? "" : `${anchors.join("\n")}\n`;
+  return crypto.createHash("sha256").update(joined, "utf8").digest("hex");
+}
 
 function setupFixture(tmpRoot: string): {
   spinePath: string;
@@ -78,5 +84,27 @@ describe("niqqud extractor basic fixture", () => {
 
     const withPatah = actual.find((row) => row.gid === "Genesis/1/1#g:0");
     expect(withPatah?.mods.classes).toEqual(["PATAH"]);
+
+    const manifest = JSON.parse(fs.readFileSync(run.manifestPath, "utf8")) as {
+      cache_manifest: {
+        ordering: {
+          first_anchor: string | null;
+          last_anchor: string | null;
+          anchor_hash: string;
+          rolling_anchor_hash: {
+            chunk_size: number;
+            chunk_digests: string[];
+          };
+        };
+      };
+    };
+    const anchors = actual.map((row) => `gid:${row.gid}`);
+    expect(manifest.cache_manifest.ordering.first_anchor).toBe(anchors[0] ?? null);
+    expect(manifest.cache_manifest.ordering.last_anchor).toBe(anchors[anchors.length - 1] ?? null);
+    expect(manifest.cache_manifest.ordering.anchor_hash).toBe(hashAnchors(anchors));
+    expect(manifest.cache_manifest.ordering.rolling_anchor_hash.chunk_size).toBe(50_000);
+    expect(manifest.cache_manifest.ordering.rolling_anchor_hash.chunk_digests).toEqual([
+      hashAnchors(anchors)
+    ]);
   });
 });

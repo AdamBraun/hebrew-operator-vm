@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -6,6 +7,11 @@ import { emitLettersFromSpine } from "../../../src/layers/letters/extract";
 import { parseLettersIRJsonl } from "../../../src/layers/letters/schema";
 
 const SPINE_DIGEST = "c".repeat(64);
+
+function hashAnchors(anchors: readonly string[]): string {
+  const joined = anchors.length === 0 ? "" : `${anchors.join("\n")}\n`;
+  return crypto.createHash("sha256").update(joined, "utf8").digest("hex");
+}
 
 function setupFixture(tmpRoot: string): {
   spinePath: string;
@@ -75,6 +81,17 @@ describe("letters extractor streaming", () => {
       config: { include_word_segmentation: boolean; strict_letters: boolean };
       outputs: { letters_ir_path: string };
       counts: { letters_emitted: number; refs_seen: number };
+      cache_manifest: {
+        ordering: {
+          first_anchor: string | null;
+          last_anchor: string | null;
+          anchor_hash: string;
+          rolling_anchor_hash: {
+            chunk_size: number;
+            chunk_digests: string[];
+          };
+        };
+      };
     };
     expect(manifest.layer).toBe("letters");
     expect(manifest.version).toBe("1.0.0");
@@ -88,6 +105,14 @@ describe("letters extractor streaming", () => {
       refs_seen: 2
     });
     expect(records).toHaveLength(manifest.counts.letters_emitted);
+    const anchors = records.map((row) => `gid:${row.gid}`);
+    expect(manifest.cache_manifest.ordering.first_anchor).toBe(anchors[0] ?? null);
+    expect(manifest.cache_manifest.ordering.last_anchor).toBe(anchors[anchors.length - 1] ?? null);
+    expect(manifest.cache_manifest.ordering.anchor_hash).toBe(hashAnchors(anchors));
+    expect(manifest.cache_manifest.ordering.rolling_anchor_hash.chunk_size).toBe(50_000);
+    expect(manifest.cache_manifest.ordering.rolling_anchor_hash.chunk_digests).toEqual([
+      hashAnchors(anchors)
+    ]);
 
     const second = await emitLettersFromSpine({
       spinePath,

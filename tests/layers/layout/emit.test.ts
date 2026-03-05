@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -7,6 +8,11 @@ import { computeLayoutDatasetDigest } from "../../../src/layers/layout/hash";
 import { parseLayoutIRJsonl } from "../../../src/layers/layout/schema";
 import { type GapDescriptor } from "../../../src/layers/layout/spine_adapter";
 import { type ResolvedLayoutDatasetEvent } from "../../../src/layers/layout/dataset_loader";
+
+function hashAnchors(anchors: readonly string[]): string {
+  const joined = anchors.length === 0 ? "" : `${anchors.join("\n")}\n`;
+  return crypto.createHash("sha256").update(joined, "utf8").digest("hex");
+}
 
 describe("layout emit", () => {
   it("writes digest-addressed layout.ir.jsonl + manifest with required fields and counts", async () => {
@@ -85,6 +91,17 @@ describe("layout emit", () => {
         bookBreakCount: number;
       };
       created_at: string;
+      cache_manifest: {
+        ordering: {
+          first_anchor: string | null;
+          last_anchor: string | null;
+          anchor_hash: string;
+          rolling_anchor_hash: {
+            chunk_size: number;
+            chunk_digests: string[];
+          };
+        };
+      };
     };
     expect(manifest.layer).toBe("layout");
     expect(manifest.digest).toBe(result.digest);
@@ -105,6 +122,14 @@ describe("layout emit", () => {
       bookBreakCount: 0
     });
     expect(manifest.created_at).toBe("2026-03-01T00:00:00.000Z");
+    const anchors = layoutRows.map((row) => `gap:${row.gapid}`);
+    expect(manifest.cache_manifest.ordering.first_anchor).toBe(anchors[0] ?? null);
+    expect(manifest.cache_manifest.ordering.last_anchor).toBe(anchors[anchors.length - 1] ?? null);
+    expect(manifest.cache_manifest.ordering.anchor_hash).toBe(hashAnchors(anchors));
+    expect(manifest.cache_manifest.ordering.rolling_anchor_hash.chunk_size).toBe(50_000);
+    expect(manifest.cache_manifest.ordering.rolling_anchor_hash.chunk_digests).toEqual([
+      hashAnchors(anchors)
+    ]);
   });
 
   it("returns cache hit when digest inputs match and cached files exist", async () => {
