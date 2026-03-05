@@ -4,7 +4,7 @@ import { createInitialState } from "@ref/state/state";
 import { executeLetterForTest } from "@ref/vm/vm";
 
 describe("shin internal fork selection", () => {
-  it("fans subsequent attachments into all internal sub ports", () => {
+  it("keeps direct carry on the selected focus while preserving internal sub ports", () => {
     const state = createInitialState();
     const tokens = tokenize("שׂנ");
     executeLetterForTest(state, tokens[0], {
@@ -28,7 +28,7 @@ describe("shin internal fork selection", () => {
     expect(shinEvent?.data?.direction).toBe("internal");
     for (const port of ports) {
       expect(state.sub.has(`${parent}->${port}`)).toBe(true);
-      expect(state.carry.has(`${port}->${childId}`)).toBe(true);
+      expect(state.carry.has(`${port}->${childId}`)).toBe(false);
     }
     expect(state.carry.has(`${parent}->${childId}`)).toBe(true);
     expect(child?.meta.succOf).toBe(parent);

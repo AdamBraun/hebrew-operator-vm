@@ -1,5 +1,5 @@
 import { BOT_ID, OMEGA_ID, Handle, createHandle } from "../state/handles";
-import { State, serializeState } from "../state/state";
+import { BoundaryRecord, State, serializeState } from "../state/state";
 import { applyBoundaryTransition } from "../vm/domainTransition";
 import { validateBaseline } from "./validateBaseline";
 
@@ -59,9 +59,7 @@ function sortLinks(links: Array<{ from: string; to: string; label: string }>): v
   });
 }
 
-function sortBoundaries(
-  boundaries: Array<{ inside: string; outside: string; anchor: 0 | 1; id: string }>
-): void {
+function sortBoundaries(boundaries: BoundaryRecord[]): void {
   boundaries.sort((left, right) => {
     const idOrder = compareText(String(left.id), String(right.id));
     if (idOrder !== 0) {

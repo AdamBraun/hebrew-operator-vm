@@ -39,6 +39,14 @@ export type PendingJoin = {
   exported_pins: string[];
 };
 
+export type BoundaryRecord = {
+  inside: string;
+  outside: string;
+  anchor: 0 | 1;
+  id: string;
+  members?: string[];
+};
+
 export type ConstituentNode = {
   id: string;
   rank: number;
@@ -89,7 +97,7 @@ export type State = {
   supp: Set<string>;
   sub: Set<string>;
   links: Array<{ from: string; to: string; label: string }>;
-  boundaries: Array<{ inside: string; outside: string; anchor: 0 | 1; id: string }>;
+  boundaries: BoundaryRecord[];
   rules: Array<{ id: string; target: string; patch: any; priority: number }>;
 };
 

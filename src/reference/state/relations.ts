@@ -37,30 +37,26 @@ function subPorts(state: State, parent: string): string[] {
   return ports;
 }
 
-function attachmentSites(state: State, id: string): string[] {
-  const sites = [id];
-  for (const port of subPorts(state, id)) {
-    if (!sites.includes(port)) {
-      sites.push(port);
+function addContEdge(state: State, from: string, to: string): void {
+  state.cont.add(edgeKey(from, to));
+}
+
+function targetSitesWithFanIn(state: State, target: string): string[] {
+  const sites = [target];
+  for (const child of subPorts(state, target)) {
+    if (!sites.includes(child)) {
+      sites.push(child);
     }
   }
   return sites;
-}
-
-function addContEdge(state: State, from: string, to: string): void {
-  state.cont.add(edgeKey(from, to));
 }
 
 export function addCont(state: State, from: string, to: string): void {
   if (!validHandleId(from) || !validHandleId(to)) {
     return;
   }
-  const fromSites = attachmentSites(state, from);
-  const toSites = attachmentSites(state, to);
-  for (const source of fromSites) {
-    for (const target of toSites) {
-      addContEdge(state, source, target);
-    }
+  for (const target of targetSitesWithFanIn(state, to)) {
+    addContEdge(state, from, target);
   }
 }
 
@@ -68,13 +64,9 @@ export function addCarry(state: State, source: string, target: string): void {
   if (!validHandleId(source) || !validHandleId(target)) {
     return;
   }
-  const sourceSites = attachmentSites(state, source);
-  const targetSites = attachmentSites(state, target);
-  for (const sourceSite of sourceSites) {
-    for (const targetSite of targetSites) {
-      addContEdge(state, sourceSite, targetSite);
-      state.carry.add(edgeKey(sourceSite, targetSite));
-    }
+  for (const targetSite of targetSitesWithFanIn(state, target)) {
+    addContEdge(state, source, targetSite);
+    state.carry.add(edgeKey(source, targetSite));
   }
 }
 
@@ -82,13 +74,7 @@ export function addSupp(state: State, closer: string, origin: string): void {
   if (!validHandleId(closer) || !validHandleId(origin)) {
     return;
   }
-  const closerSites = attachmentSites(state, closer);
-  const originSites = attachmentSites(state, origin);
-  for (const closerSite of closerSites) {
-    for (const originSite of originSites) {
-      state.supp.add(edgeKey(closerSite, originSite));
-    }
-  }
+  state.supp.add(edgeKey(closer, origin));
 }
 
 export function addSub(state: State, parent: string, child: string): void {
@@ -142,7 +128,8 @@ export function addBoundary(
   outside: string,
   anchor: 0 | 1
 ): void {
-  state.boundaries.push({ inside, outside, anchor, id });
+  const members = [inside, ...subPorts(state, inside)];
+  state.boundaries.push({ inside, outside, anchor, id, members });
 }
 
 export function addLink(state: State, from: string, to: string, label: string): void {
