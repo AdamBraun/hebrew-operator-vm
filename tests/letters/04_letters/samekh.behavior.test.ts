@@ -1,62 +1,55 @@
 import { describe, expect, it } from "vitest";
 import { BOT_ID, createHandle } from "@ref/state/handles";
 import { samekhOp } from "@ref/letters/samekh";
-import { addCont } from "@ref/state/relations";
+import { addCarry, addSupp } from "@ref/state/relations";
 import { createInitialState } from "@ref/state/state";
 import { runProgram } from "@ref/vm/vm";
 
 describe("samekh behavior", () => {
-  it("stabilizes focus (framed_lock)", () => {
+  it("adds supp(F, s) for nearest unresolved carry and does not lock focus", () => {
     const state = runProgram("נס", createInitialState());
-    const wordOut = state.vm.A[state.vm.A.length - 1];
-    const focus = state.handles.get(wordOut);
-    expect(focus?.policy).toBe("framed_lock");
-    expect(focus?.meta?.samekh_lock).toBe(1);
-    expect(focus?.meta?.last_operator).toBe("ס");
+    const child = String(state.vm.A[state.vm.A.length - 1] ?? "");
+    const parent = String(state.handles.get(child)?.meta?.succOf ?? "");
+    const focus = state.handles.get(child);
+
+    expect(parent.length).toBeGreaterThan(0);
+    expect(state.supp.has(`${child}->${parent}`)).toBe(true);
+    expect(focus?.policy).toBe("soft");
+    expect(focus?.meta?.samekh_lock).toBeUndefined();
+    expect(state.vm.H.find((event) => event.type === "support")).toBeUndefined();
   });
 
-  it("discharges SUPPORT only when child <=cont* F", () => {
+  it("closes the nearest unresolved carry and leaves already-resolved chains unchanged", () => {
     const state = createInitialState();
-    const parent = state.vm.F;
-    const child = "child";
-    const other = "other";
+    seedNodes(state, ["s0", "s1", "t0", "t1"]);
 
-    state.handles.set(child, createHandle(child, "scope"));
-    state.handles.set(other, createHandle(other, "scope"));
-    addCont(state, parent, other);
+    addCarry(state, "s0", "t0");
+    addCarry(state, "t0", "t1");
+    state.vm.F = "t1";
 
-    state.vm.OStack_word.push({
-      kind: "SUPPORT",
-      parent,
-      child,
-      payload: {},
-      tau_created: state.vm.tau
-    });
+    const { S, ops } = samekhOp.select(state);
+    const { cons } = samekhOp.bound(S, ops);
+    samekhOp.seal(state, cons);
 
-    const select1 = samekhOp.select(state);
-    const bound1 = samekhOp.bound(select1.S, select1.ops);
-    samekhOp.seal(bound1.S, bound1.cons);
-    expect(state.vm.OStack_word.length).toBe(1);
-    expect(state.vm.H.find((event) => event.type === "support")).toBeUndefined();
+    expect(state.supp.has("t1->t0")).toBe(true);
+    expect(state.supp.has("t1->s0")).toBe(false);
 
-    addCont(state, parent, child);
-    state.vm.F = child;
-    state.vm.OStack_word.push({
-      kind: "SUPPORT",
-      parent,
-      child,
-      payload: {},
-      tau_created: state.vm.tau
-    });
+    const beforeSuppSize = state.supp.size;
+    addSupp(state, "t0", "s0");
+    state.vm.F = "t0";
     const select2 = samekhOp.select(state);
     const bound2 = samekhOp.bound(select2.S, select2.ops);
     samekhOp.seal(bound2.S, bound2.cons);
-    const supportEvent = state.vm.H.find((event) => event.type === "support");
-    expect(supportEvent).toBeDefined();
-    expect(supportEvent?.data).toEqual({
-      child,
-      parent
-    });
+
+    expect(state.supp.size).toBe(beforeSuppSize + 1);
     expect(state.vm.R).toBe(BOT_ID);
   });
 });
+
+function seedNodes(state: ReturnType<typeof createInitialState>, ids: string[]): void {
+  for (const id of ids) {
+    if (!state.handles.has(id)) {
+      state.handles.set(id, createHandle(id, "scope"));
+    }
+  }
+}

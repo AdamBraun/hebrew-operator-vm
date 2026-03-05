@@ -1,6 +1,6 @@
 import { BOT_ID } from "../state/handles";
-import { contReachable } from "../state/relations";
-import { setPolicy } from "../state/policies";
+import { isCarryUnresolved } from "../state/eff";
+import { addSupp, contReachable } from "../state/relations";
 import { State } from "../state/state";
 import { Construction, LetterMeta, LetterOp, SelectOperands, defaultEnvelope } from "./types";
 
@@ -18,32 +18,102 @@ export const samekhOp: LetterOp = {
   select: (S: State) => ({ S, ops: { args: [S.vm.F], prefs: {} } }),
   bound: (S: State, ops: SelectOperands) => {
     const focus = ops.args[0];
-    setPolicy(S, focus, "framed_lock");
-    const handle = S.handles.get(focus);
-    if (handle) {
-      handle.meta = { ...handle.meta, stable: 1, samekh_lock: 1, last_operator: "ס" };
+    const origin = findNearestUnresolvedCarrySource(S, focus);
+    if (origin) {
+      addSupp(S, focus, origin);
     }
     const cons: Construction = {
       base: focus,
-      envelope: defaultEnvelope("framed_lock"),
-      meta: { focus }
+      envelope: defaultEnvelope(),
+      meta: { focus, origin }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
     const focus = cons.meta.focus as string;
-    const top = S.vm.OStack_word[S.vm.OStack_word.length - 1];
-    if (top && top.kind === "SUPPORT" && contReachable(S, top.child, focus)) {
-      const popped = S.vm.OStack_word.pop();
-      if (popped) {
-        const parent = focus === popped.child ? popped.parent : focus;
-        S.vm.H.push({
-          type: "support",
-          tau: S.vm.tau,
-          data: { child: popped.child, parent }
-        });
-      }
-    }
     return { S, h: focus, r: BOT_ID };
   }
 };
+
+function parseEdge(edge: string): [string, string] | null {
+  const pivot = edge.indexOf("->");
+  if (pivot <= 0 || pivot + 2 >= edge.length) {
+    return null;
+  }
+  const source = edge.slice(0, pivot);
+  const target = edge.slice(pivot + 2);
+  if (!source || !target) {
+    return null;
+  }
+  return [source, target];
+}
+
+function buildContPredecessorIndex(state: State): Map<string, string[]> {
+  const out = new Map<string, string[]>();
+  for (const edge of state.cont) {
+    const parsed = parseEdge(edge);
+    if (!parsed) {
+      continue;
+    }
+    const [source, target] = parsed;
+    const predecessors = out.get(target) ?? [];
+    predecessors.push(source);
+    out.set(target, predecessors);
+  }
+  return out;
+}
+
+type IncomingCarry = {
+  source: string;
+  target: string;
+};
+
+function buildIncomingCarryIndex(state: State): Map<string, IncomingCarry[]> {
+  const out = new Map<string, IncomingCarry[]>();
+  for (const edge of state.carry) {
+    const parsed = parseEdge(edge);
+    if (!parsed) {
+      continue;
+    }
+    const [source, target] = parsed;
+    const incoming = out.get(target) ?? [];
+    incoming.push({ source, target });
+    out.set(target, incoming);
+  }
+  return out;
+}
+
+function findNearestUnresolvedCarrySource(state: State, focus: string): string | null {
+  const predecessors = buildContPredecessorIndex(state);
+  const incomingCarryByTarget = buildIncomingCarryIndex(state);
+  const visited = new Set<string>([focus]);
+  const queue: string[] = [focus];
+
+  while (queue.length > 0) {
+    const current = queue.shift() ?? "";
+    const incoming = incomingCarryByTarget.get(current) ?? [];
+    for (let index = incoming.length - 1; index >= 0; index -= 1) {
+      const carry = incoming[index];
+      if (!contReachable(state, carry.source, focus)) {
+        continue;
+      }
+      if (
+        isCarryUnresolved(state, carry.source, carry.target, {
+          focusNodeId: focus
+        })
+      ) {
+        return carry.source;
+      }
+    }
+
+    for (const previous of predecessors.get(current) ?? []) {
+      if (visited.has(previous)) {
+        continue;
+      }
+      visited.add(previous);
+      queue.push(previous);
+    }
+  }
+
+  return null;
+}
