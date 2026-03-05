@@ -1,6 +1,6 @@
 import { BOT_ID } from "../state/handles";
 import { State } from "../state/state";
-import { fork, ForkDirection, ForkResult } from "../vm/constructs/fork";
+import { attachThree, AttachThreeDirection } from "../vm/constructs/attach-three";
 import { selectCurrentFocus } from "../vm/select";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
 
@@ -18,18 +18,15 @@ export const shinOp: LetterOp = {
   select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops) => {
     const focus = ops.args[0];
-    const direction: ForkDirection =
+    const direction: AttachThreeDirection =
       ops.prefs?.shin_direction === "internal" ? "internal" : "external";
-    const forkHandle = fork(S, focus, direction);
+    const attachThreeResult = attachThree(focus, direction, S);
     const cons: Construction = {
       base: focus,
       envelope: defaultEnvelope(),
-      meta: forkHandle
+      meta: attachThreeResult
     };
     return { S, cons };
   },
-  seal: (S: State, cons: Construction) => {
-    const { focusId } = cons.meta as ForkResult;
-    return { S, h: focusId, r: BOT_ID };
-  }
+  seal: (S: State, cons: Construction) => ({ S, h: cons.base, r: BOT_ID })
 };
