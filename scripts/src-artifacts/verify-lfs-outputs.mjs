@@ -72,6 +72,18 @@ function isPathLfsTracked(filePath) {
   return out.endsWith(": filter: lfs");
 }
 
+function shouldBeLfsOutput(filePath) {
+  return (
+    filePath.startsWith("outputs/") &&
+    filePath.endsWith(".jsonl") &&
+    !filePath.startsWith("outputs/cache/")
+  );
+}
+
+function isCacheOutput(filePath) {
+  return filePath.startsWith("outputs/cache/");
+}
+
 function listStagedOutputFiles() {
   return parseNewlineOutput(
     runGit(["diff", "--cached", "--name-only", "--diff-filter=ACM", "--", "outputs"])
@@ -113,6 +125,15 @@ function listChangedOutputsInCommit(commitOid) {
 
 function validateBlobObject(args) {
   const { mode, blobOid, label, filePath } = args;
+  if (isCacheOutput(filePath)) {
+    return [
+      {
+        type: "cache",
+        filePath,
+        detail: `${label} is under outputs/cache/**, which must not be tracked in Git`
+      }
+    ];
+  }
   if (mode === "120000") {
     return [];
   }
@@ -129,11 +150,22 @@ function validateBlobObject(args) {
   }
 
   const violations = [];
-  if (!isPathLfsTracked(filePath)) {
+  const expectedLfs = shouldBeLfsOutput(filePath);
+  const pathTrackedByLfs = isPathLfsTracked(filePath);
+  if (expectedLfs && !pathTrackedByLfs) {
     violations.push({
       type: "attr",
       filePath,
       detail: `${filePath} is not matched by an LFS filter rule`
+    });
+  }
+  if (!expectedLfs && pathTrackedByLfs) {
+    violations.push({
+      type: "attr",
+      filePath,
+      detail:
+        `${filePath} should not be matched by an LFS filter rule ` +
+        "(only outputs/**/*.jsonl outside outputs/cache/** are allowed)"
     });
   }
 
@@ -149,20 +181,30 @@ function validateBlobObject(args) {
   }
 
   if (sizeBytes > LFS_POINTER_MAX_BYTES) {
-    violations.push({
-      type: "pointer",
-      filePath,
-      detail: `${label} stores a non-pointer blob (${String(sizeBytes)} bytes)`
-    });
+    if (expectedLfs) {
+      violations.push({
+        type: "pointer",
+        filePath,
+        detail: `${label} stores a non-pointer blob (${String(sizeBytes)} bytes)`
+      });
+    }
     return violations;
   }
 
   const content = runGit(["cat-file", "-p", blobOid], { allowFailure: true });
-  if (!isLfsPointerText(content)) {
+  const isPointer = isLfsPointerText(content);
+  if (expectedLfs && !isPointer) {
     violations.push({
       type: "pointer",
       filePath,
       detail: `${label} does not contain a valid Git LFS pointer`
+    });
+  }
+  if (!expectedLfs && isPointer) {
+    violations.push({
+      type: "pointer",
+      filePath,
+      detail: `${label} contains an LFS pointer but should be a regular Git blob`
     });
   }
 
@@ -213,13 +255,18 @@ function validateStagedBlob(filePath) {
 
 function printViolations(violations) {
   console.error("src-artifacts:verify:lfs-outputs failed");
-  console.error("Non-LFS output artifacts detected:");
+  console.error("Output LFS policy violations detected:");
   for (const violation of violations) {
     console.error(`- [${violation.type}] ${violation.detail}`);
   }
   console.error(
-    'Fix: ensure outputs are LFS-tracked, then re-add or migrate history (e.g. `git lfs migrate import --include="outputs/**"`).'
+    "Fix: only outputs/**/*.jsonl (excluding outputs/cache/**) should be LFS-tracked. " +
+      "Re-add files or migrate history to match this policy."
   );
+}
+
+function listTrackedCacheFiles() {
+  return parseNewlineOutput(runGit(["ls-files", "--", "outputs/cache"]));
 }
 
 function main() {
@@ -235,6 +282,14 @@ function main() {
   }
 
   const violations = [];
+  for (const cacheFile of listTrackedCacheFiles()) {
+    violations.push({
+      type: "cache",
+      filePath: cacheFile,
+      detail: `${cacheFile} is tracked but outputs/cache/** must stay out of Git`
+    });
+  }
+
   if (stagedMode) {
     const stagedFiles = listStagedOutputFiles();
     if (verbose) {
