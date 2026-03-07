@@ -96,6 +96,37 @@ export function resolveSelectableFocus(state: State): string {
   return state.vm.F;
 }
 
+export function resolveExportedAdjunctsOfCurrentFocus(state: State): string[] {
+  return exportedAdjuncts(state, resolveSelectableFocus(state));
+}
+
+export function resolveMostRecentExportedAdjunctOfCurrentFocus(state: State): string | null {
+  const adjuncts = resolveExportedAdjunctsOfCurrentFocus(state);
+  return adjuncts.length === 0 ? null : (adjuncts[adjuncts.length - 1] ?? null);
+}
+
+export function selectExportedAdjunctsOfCurrentFocus(
+  state: State,
+  options: {
+    recency?: "all" | "most_recent";
+  } = {}
+): { S: State; ops: SelectOperands } {
+  const adjuncts = resolveExportedAdjunctsOfCurrentFocus(state);
+  const args =
+    options.recency === "most_recent"
+      ? adjuncts.length === 0
+        ? []
+        : [adjuncts[adjuncts.length - 1] as string]
+      : adjuncts;
+  return {
+    S: state,
+    ops: {
+      args,
+      prefs: selectionPrefs(state, true)
+    }
+  };
+}
+
 function resolveFocusCandidate(state: State, candidate: string): string {
   if (candidate !== state.vm.F) {
     return candidate;
