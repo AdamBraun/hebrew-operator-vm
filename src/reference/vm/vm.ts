@@ -232,10 +232,7 @@ function resolveLetterMode(token: Token, _isWordFinal: boolean): LetterMode | un
     if (token.letter_mode !== undefined) {
       throw new CompileError(`Unsupported letter_mode '${String(token.letter_mode)}' for 'ו'`);
     }
-    if (token.dot_kind === "shuruk") {
-      return "seeded";
-    }
-    return "plain";
+    return undefined;
   }
   return undefined;
 }
@@ -268,15 +265,8 @@ function applyTochWrappers(
     token.meta.traceOrder.push("toch");
   }
   const meta = { ...cons.meta };
-  if (token.letter === "ו" && isVavMode(letterMode)) {
-    meta.vav_mode = letterMode;
-  }
   if (token.meta && Object.prototype.hasOwnProperty.call(token.meta, "exported_adjuncts")) {
     meta.exported_adjuncts = token.meta.exported_adjuncts;
-  }
-  if (token.dot_kind === "shuruk") {
-    meta.carrier_mode = "seeded";
-    meta.rep_flag = 1;
   }
   return { ...cons, meta };
 }
@@ -376,7 +366,6 @@ function executeReadRail(
   recorder?.record("bound", {
     construction: normalizeForJson(boundResult.cons)
   });
-  const hasShuruk = token.dot_kind === "shuruk";
   const shouldHarden = token.dot_kind === "dagesh";
   const cons = applyTochWrappers(token, boundResult.cons, letterMode);
   const tochDiacritics = token.diacritics.filter((diacritic) => diacritic.tier === "toch");
@@ -405,16 +394,6 @@ function executeReadRail(
     recorder?.record("dot_harden", {
       sealed_handle: sealed,
       reason: "dagesh"
-    });
-  }
-  if (hasShuruk && cons.meta?.carrier_mode === "seeded") {
-    const handle = sealResult.S.handles.get(sealed);
-    if (handle) {
-      handle.meta = { ...handle.meta, carrier_mode: "seeded", rep_flag: 1 };
-    }
-    recorder?.record("shuruk_seed", {
-      sealed_handle: sealed,
-      carrier_mode: "seeded"
     });
   }
   if (token.dot_kind === "dagesh") {

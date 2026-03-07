@@ -46,7 +46,7 @@ function resolveLetterMode(
     return runtime.letter_mode_forced;
   }
   if (runtime.token_letter === "ו") {
-    return "plain";
+    return undefined;
   }
   return undefined;
 }
@@ -73,13 +73,6 @@ function applyToch(
   letterMode?: LetterMode
 ): Construction {
   const meta = { ...cons.meta };
-  if (runtime.token_letter === "ו" && isVavMode(letterMode)) {
-    meta.vav_mode = letterMode;
-  }
-  if (runtime.has_shuruk) {
-    meta.carrier_mode = "seeded";
-    meta.rep_flag = 1;
-  }
   return { ...cons, meta };
 }
 
@@ -177,13 +170,6 @@ function executeReadRail(
     const handle = sealResult.S.handles.get(sealed);
     if (handle) {
       handle.meta = { ...handle.meta, hard: 1 };
-    }
-  }
-
-  if (bundle.runtime.has_shuruk && cons.meta?.carrier_mode === "seeded") {
-    const handle = sealResult.S.handles.get(sealed);
-    if (handle) {
-      handle.meta = { ...handle.meta, carrier_mode: "seeded", rep_flag: 1 };
     }
   }
 
