@@ -91,6 +91,34 @@ export function addSub(state: State, parent: string, child: string): void {
   state.sub.add(edgeKey(parent, child));
 }
 
+export function addExportedAdjunct(state: State, head: string, adjunct: string): void {
+  if (!validHandleId(head) || !validHandleId(adjunct)) {
+    return;
+  }
+  addSub(state, head, adjunct);
+  const existing = state.adjuncts[head] ?? [];
+  if (existing.includes(adjunct)) {
+    return;
+  }
+  state.adjuncts[head] = [...existing, adjunct];
+}
+
+export function exportedAdjuncts(state: State, head: string): string[] {
+  const entries = state.adjuncts[head] ?? [];
+  const out: string[] = [];
+  for (const adjunct of entries) {
+    if (
+      !state.handles.has(adjunct) ||
+      !state.sub.has(edgeKey(head, adjunct)) ||
+      out.includes(adjunct)
+    ) {
+      continue;
+    }
+    out.push(adjunct);
+  }
+  return out;
+}
+
 export function contReachable(state: State, start: string, target: string): boolean {
   if (start === target) {
     return true;

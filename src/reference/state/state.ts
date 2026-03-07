@@ -97,6 +97,7 @@ export type State = {
   supp: Set<string>;
   head_of: Set<string>;
   sub: Set<string>;
+  adjuncts: Record<string, string[]>;
   links: Array<{ from: string; to: string; label: string }>;
   boundaries: BoundaryRecord[];
   rules: Array<{ id: string; target: string; patch: any; priority: number }>;
@@ -158,6 +159,7 @@ export function createInitialState(): State {
     supp: new Set(),
     head_of: new Set(),
     sub: new Set(),
+    adjuncts: {},
     links: [],
     boundaries: [],
     rules: []
@@ -203,7 +205,7 @@ export function serializeState(state: State): Record<string, any> {
   if (route_arity !== undefined) {
     vm.route_arity = route_arity;
   }
-  return {
+  const serialized: Record<string, any> = {
     vm,
     handles: Array.from(state.handles.entries())
       .map(([, handle]) => ({
@@ -220,4 +222,13 @@ export function serializeState(state: State): Record<string, any> {
     boundaries: [...state.boundaries],
     rules: [...state.rules]
   };
+  const adjunctEntries = Object.entries(state.adjuncts).filter(([, ids]) => ids.length > 0);
+  if (adjunctEntries.length > 0) {
+    serialized.adjuncts = Object.fromEntries(
+      adjunctEntries
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([head, ids]) => [head, [...ids]])
+    );
+  }
+  return serialized;
 }

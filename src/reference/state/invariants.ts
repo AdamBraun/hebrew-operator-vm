@@ -69,6 +69,17 @@ export function assertStateInvariants(state: State): void {
     if (event.data?.parent) {
       ensure(event.data.parent);
     }
+    if (event.data?.head) {
+      ensure(event.data.head);
+    }
+    if (event.data?.adjunct) {
+      ensure(event.data.adjunct);
+    }
+    if (Array.isArray(event.data?.adjuncts)) {
+      for (const adjunctId of event.data.adjuncts) {
+        ensure(adjunctId);
+      }
+    }
   }
 
   for (let i = 1; i < state.vm.H.length; i += 1) {
@@ -134,6 +145,23 @@ export function assertStateInvariants(state: State): void {
     const [from, to] = edge.split("->");
     ensure(from);
     ensure(to);
+  }
+  for (const [head, adjunctIds] of Object.entries(state.adjuncts)) {
+    ensure(head);
+    if (!Array.isArray(adjunctIds)) {
+      throw new Error(`Adjunct registry for ${head} must be an array`);
+    }
+    const seen = new Set<string>();
+    for (const adjunctId of adjunctIds) {
+      ensure(adjunctId);
+      if (seen.has(adjunctId)) {
+        throw new Error(`Adjunct registry for ${head} contains duplicate ${adjunctId}`);
+      }
+      if (!state.sub.has(`${head}->${adjunctId}`)) {
+        throw new Error(`Adjunct registry edge missing sub(${head}, ${adjunctId})`);
+      }
+      seen.add(adjunctId);
+    }
   }
 
   for (const boundary of state.boundaries) {

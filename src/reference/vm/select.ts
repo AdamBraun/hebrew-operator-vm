@@ -1,4 +1,5 @@
 import { BOT_ID } from "../state/handles";
+import { exportedAdjuncts } from "../state/relations";
 import { State } from "../state/state";
 import { LetterMeta, SelectOperands } from "../letters/types";
 import { RuntimeError } from "./errors";
@@ -63,7 +64,13 @@ function subChildren(state: State, parent: string): string[] {
 }
 
 function selectionTargetsFromFocus(state: State): string[] {
-  return subChildren(state, state.vm.F);
+  const targets = subChildren(state, state.vm.F);
+  for (const adjunct of exportedAdjuncts(state, state.vm.F)) {
+    if (!targets.includes(adjunct)) {
+      targets.push(adjunct);
+    }
+  }
+  return targets;
 }
 
 function selectionPrefs(state: State, usedFocus: boolean): Record<string, any> {
@@ -71,10 +78,18 @@ function selectionPrefs(state: State, usedFocus: boolean): Record<string, any> {
     return {};
   }
   const targets = selectionTargetsFromFocus(state);
-  if (targets.length === 0) {
+  const adjuncts = exportedAdjuncts(state, state.vm.F);
+  if (targets.length === 0 && adjuncts.length === 0) {
     return {};
   }
-  return { selection_targets: targets };
+  const prefs: Record<string, any> = {};
+  if (targets.length > 0) {
+    prefs.selection_targets = targets;
+  }
+  if (adjuncts.length > 0) {
+    prefs.exported_adjuncts = adjuncts;
+  }
+  return prefs;
 }
 
 export function resolveSelectableFocus(state: State): string {

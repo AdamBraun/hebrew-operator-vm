@@ -277,6 +277,9 @@ function applyTochWrappers(
   if (token.letter === "ו" && isVavMode(letterMode)) {
     meta.vav_mode = letterMode;
   }
+  if (token.meta && Object.prototype.hasOwnProperty.call(token.meta, "exported_adjuncts")) {
+    meta.exported_adjuncts = token.meta.exported_adjuncts;
+  }
   if (token.dot_kind === "shuruk") {
     meta.carrier_mode = "seeded";
     meta.rep_flag = 1;
