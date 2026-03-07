@@ -72,10 +72,7 @@ VM-origin event kinds:
 - `GIMEL.BESTOW`
 - `DALET.BOUNDARY_CLOSE`
 - `RESH.BOUNDARY_CLOSE`
-- `HE.DECLARE`
-- `HE.DECLARE_BREATH`
-- `HE.DECLARE_PIN`
-- `HE.DECLARE_ALIAS`
+- `HE.HEAD_WITH_LEG`
 - `ZAYIN.GATE`
 - `HET.COMPARTMENT`
 - `TET.COVERT`
@@ -85,11 +82,21 @@ VM-origin event kinds:
 - `FINAL_PE.UTTER_CLOSE`
 - `TSADI.ALIGN`
 - `FINAL_TSADI.ALIGN_FINAL`
-- `QOF.APPROX`
-- `SHIN.ATTACH_THREE`
+- `QOF.HEAD_WITH_LEG`
+- `SHIN.FORK`
 - `TAV.FINALIZE`
 - `SPACE.SUPPORT_DISCHARGE`
 - `SPACE.BOUNDARY_AUTO_CLOSE`
+
+`HE.HEAD_WITH_LEG` / `QOF.HEAD_WITH_LEG` payloads record the head-family structure directly with:
+
+- `source`
+- `head`
+- `adjunct`
+- `focus`
+- `exported_adjuncts`
+- `edges`
+- `resolved`
 
 Derived (obligation/boundary) kinds:
 

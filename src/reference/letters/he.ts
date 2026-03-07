@@ -1,8 +1,7 @@
-import { BOT_ID, createHandle } from "../state/handles";
+import { BOT_ID } from "../state/handles";
 import { State } from "../state/state";
-import { nextId } from "../vm/ids";
-import { selectCurrentFocus } from "../vm/select";
-import { HehMode } from "../compile/types";
+import { resolveSelectableFocus, selectCurrentFocus } from "../vm/select";
+import { exposeHeadWithLeg } from "./headAdjunct";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
@@ -16,91 +15,81 @@ const meta: LetterMeta = {
 
 export const heOp: LetterOp = {
   meta,
-  select: (S: State) => selectCurrentFocus(S),
+  select: (S: State) => {
+    const source = selectHeSource(S);
+    if (source === S.vm.F) {
+      return selectCurrentFocus(S);
+    }
+    return { S, ops: { args: [source], prefs: {} } };
+  },
   bound: (S: State, ops) => {
+    const source = ops.args[0] ?? selectHeSource(S);
+    const { head, leg } = exposeHeadWithLeg(S, {
+      source,
+      resolved: true,
+      headIdPrefix: "ה",
+      legIdPrefix: "ה",
+      headMeta: { exposedBy: "ה", headOf: source, backed_head: 1 },
+      legMeta: { exposedBy: "ה", detached_leg: 1 }
+    });
+    const headHandle = S.handles.get(head);
+    if (headHandle) {
+      headHandle.meta = { ...(headHandle.meta ?? {}), detached_leg: leg };
+    }
     const cons: Construction = {
-      base: ops.args[0],
+      base: source,
       envelope: defaultEnvelope(),
-      meta: { focus: ops.args[0] }
+      meta: { source, headId: head, legId: leg }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const focus = cons.meta.focus as string;
-    const mode = (cons.meta.heh_mode as HehMode | undefined) ?? "public";
-
-    const declarePublic = (): string => {
-      const ruleId = nextId(S, "ה");
-      S.handles.set(
-        ruleId,
-        createHandle(ruleId, "rule", {
-          meta: { source: focus, public: 1, tau: S.vm.tau, he_mode: mode }
-        })
-      );
-      S.rules.push({ id: ruleId, target: focus, patch: { public: true }, priority: 0 });
-      S.vm.H.push({
-        type: "declare",
-        tau: S.vm.tau,
-        data: { id: ruleId, target: focus, mode }
-      });
-      return ruleId;
+    const { source, headId, legId } = cons.meta as {
+      source: string;
+      headId: string;
+      legId: string;
     };
-
-    if (mode === "breath") {
-      const target = S.handles.get(focus);
-      if (target) {
-        target.meta = {
-          ...target.meta,
-          he_mode: "breath",
-          final_tail: "breath",
-          soft_public_shading: 1
-        };
+    S.vm.H.push({
+      type: "head_with_leg",
+      tau: S.vm.tau,
+      data: {
+        letter: "ה",
+        source,
+        head: headId,
+        focus: headId,
+        adjunct: legId,
+        exported_adjuncts: [legId],
+        resolved: true,
+        edges: [
+          { kind: "head_of", from: headId, to: source },
+          { kind: "carry", from: source, to: headId },
+          { kind: "supp", from: headId, to: source },
+          { kind: "cont", from: headId, to: legId },
+          { kind: "carry", from: headId, to: legId },
+          { kind: "supp", from: legId, to: headId }
+        ]
       }
-      S.vm.H.push({
-        type: "declare_breath",
-        tau: S.vm.tau,
-        data: { target: focus }
-      });
-      return { S, h: focus, r: BOT_ID };
-    }
-
-    const decl = declarePublic();
-
-    if (mode === "pinned") {
-      const pinId = nextId(S, "ה");
-      S.handles.set(
-        pinId,
-        createHandle(pinId, "entity", {
-          anchor: 1,
-          meta: { seedOf: decl, source: focus, port: "interface", he_mode: "pinned" }
-        })
-      );
-      S.vm.H.push({
-        type: "declare_pin",
-        tau: S.vm.tau,
-        data: { declaration: decl, pin: pinId }
-      });
-      return { S, h: pinId, r: BOT_ID };
-    }
-
-    if (mode === "alias") {
-      const aliasId = nextId(S, "ה");
-      S.handles.set(
-        aliasId,
-        createHandle(aliasId, "alias", {
-          meta: { left: decl, right: focus, transport: true, he_mode: "alias" }
-        })
-      );
-      S.links.push({ from: decl, to: focus, label: "transport" });
-      S.links.push({ from: focus, to: decl, label: "transport" });
-      S.vm.H.push({
-        type: "declare_alias",
-        tau: S.vm.tau,
-        data: { declaration: decl, referent: focus, alias: aliasId }
-      });
-      return { S, h: aliasId, r: BOT_ID };
-    }
-
-    return { S, h: decl, r: BOT_ID };
+    });
+    return { S, h: headId, r: BOT_ID };
   }
 };
+
+function isWordEntryBaseline(state: State): boolean {
+  const entryFocus = state.vm.wordEntryFocus ?? state.vm.F;
+  const focus = state.vm.F;
+  const baselineFocus =
+    (state.vm.activeConstruct !== undefined && focus === state.vm.activeConstruct) ||
+    focus === entryFocus;
+  const stackMatches =
+    state.vm.K.length === 2 &&
+    state.vm.K[1] === BOT_ID &&
+    (state.vm.K[0] === focus || state.vm.K[0] === entryFocus);
+  return baselineFocus && state.vm.R === BOT_ID && stackMatches;
+}
+
+function selectHeSource(state: State): string {
+  if (isWordEntryBaseline(state)) {
+    return state.vm.wordEntryFocus ?? resolveSelectableFocus(state);
+  }
+  return resolveSelectableFocus(state);
+}

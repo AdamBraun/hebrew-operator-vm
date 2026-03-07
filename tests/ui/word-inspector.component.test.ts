@@ -22,15 +22,30 @@ describe("word inspector component", () => {
       token_ids: [149, 51, 280],
       events: [
         {
-          kind: "HE.DECLARE",
+          kind: "HE.HEAD_WITH_LEG",
           index: 0,
           tau: 1,
           source: "vm_event",
-          payload: { id: "ה:1:1" }
+          payload: {
+            source: "Ω",
+            head: "ה:1:1",
+            adjunct: "ה:1:2",
+            focus: "ה:1:1",
+            exported_adjuncts: ["ה:1:2"],
+            resolved: true,
+            edges: [
+              { kind: "head_of", from: "ה:1:1", to: "Ω" },
+              { kind: "carry", from: "Ω", to: "ה:1:1" },
+              { kind: "supp", from: "ה:1:1", to: "Ω" },
+              { kind: "cont", from: "ה:1:1", to: "ה:1:2" },
+              { kind: "carry", from: "ה:1:1", to: "ה:1:2" },
+              { kind: "supp", from: "ה:1:2", to: "ה:1:1" }
+            ]
+          }
         }
       ],
-      skeleton: ["HE.DECLARE", "RESH.BOUNDARY_CLOSE"],
-      flow: "ה declare(public) ⇢ ר head expose",
+      skeleton: ["HE.HEAD_WITH_LEG", "RESH.BOUNDARY_CLOSE"],
+      flow: "ה backed head + detached leg ⇢ ר head expose",
       mode: "WORD",
       extensions: {
         grapheme_signatures: ["בָ", "ּרָ", "א"]
@@ -69,8 +84,8 @@ describe("word inspector component", () => {
     expect(markup).toContain("בָּרָא");
     expect(markup).toContain("149, 51, 280");
     expect(markup).toContain("בָ, ּרָ, א");
-    expect(markup).toContain("HE.DECLARE -&gt; RESH.BOUNDARY_CLOSE");
-    expect(markup).toContain("ה declare(public) ⇢ ר head expose");
+    expect(markup).toContain("HE.HEAD_WITH_LEG -&gt; RESH.BOUNDARY_CLOSE");
+    expect(markup).toContain("ה backed head + detached leg ⇢ ר head expose");
     expect(markup).toContain("HEAD");
     expect(markup).toContain("n_1_3_split &gt; n_1_2_join");
     expect(markup).toContain("C1.2");

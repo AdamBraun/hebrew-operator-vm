@@ -223,8 +223,7 @@ export function buildCuratedGoldens({
   const edgeRules = [
     {
       note: "edge:mappiq",
-      predicate: (row: GoldenCandidateRow) =>
-        row.surface.includes("הּ") || row.skeleton.includes("HE.DECLARE_PIN")
+      predicate: (row: GoldenCandidateRow) => row.surface.includes("הּ")
     },
     {
       note: "edge:shin_sin",

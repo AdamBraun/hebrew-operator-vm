@@ -31,6 +31,7 @@ export const TRACE_EVENT_KINDS = [
   "GIMEL.BESTOW",
   "DALET.BOUNDARY_CLOSE",
   "RESH.BOUNDARY_CLOSE",
+  "HE.HEAD_WITH_LEG",
   "HE.DECLARE",
   "HE.DECLARE_BREATH",
   "HE.DECLARE_PIN",
@@ -45,6 +46,7 @@ export const TRACE_EVENT_KINDS = [
   "SAMEKH.SUPPORT_DISCHARGE",
   "PE.UTTER",
   "TSADI.ALIGN",
+  "QOF.HEAD_WITH_LEG",
   "QOF.APPROX",
   "SHIN.FORK",
   "TAV.FINALIZE",
@@ -75,6 +77,12 @@ export type TraceEventBase<
   tau: number;
   source: S;
   payload: P;
+};
+
+export type TraceEdge = {
+  kind: string;
+  from: HandleId;
+  to: HandleId;
 };
 
 export type AliasEvent = TraceEventBase<
@@ -142,6 +150,20 @@ export type DeclareAliasEvent = TraceEventBase<
     declaration: HandleId;
     referent: HandleId;
     alias: HandleId;
+  }
+>;
+
+export type HeadWithLegEvent = TraceEventBase<
+  "HE.HEAD_WITH_LEG" | "QOF.HEAD_WITH_LEG",
+  "vm_event",
+  {
+    source: HandleId;
+    head: HandleId;
+    adjunct: HandleId;
+    focus: HandleId;
+    exported_adjuncts: HandleId[];
+    edges: TraceEdge[];
+    resolved: boolean;
   }
 >;
 
@@ -387,6 +409,7 @@ export type TraceEvent =
   | AliasEvent
   | BestowEvent
   | BoundaryCloseEvent
+  | HeadWithLegEvent
   | DeclareEvent
   | DeclareBreathEvent
   | DeclarePinEvent

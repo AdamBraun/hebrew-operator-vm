@@ -34,17 +34,30 @@
           }
         },
         {
-          "kind": "HE.DECLARE_BREATH",
+          "kind": "HE.HEAD_WITH_LEG",
           "index": 1,
           "tau": 1,
           "source": "vm_event",
           "payload": {
-            "target": "mem:1"
+            "source": "mem:1",
+            "head": "he:1",
+            "adjunct": "he:2",
+            "focus": "he:1",
+            "exported_adjuncts": ["he:2"],
+            "resolved": true,
+            "edges": [
+              { "kind": "head_of", "from": "he:1", "to": "mem:1" },
+              { "kind": "carry", "from": "mem:1", "to": "he:1" },
+              { "kind": "supp", "from": "he:1", "to": "mem:1" },
+              { "kind": "cont", "from": "he:1", "to": "he:2" },
+              { "kind": "carry", "from": "he:1", "to": "he:2" },
+              { "kind": "supp", "from": "he:2", "to": "he:1" }
+            ]
           }
         }
       ],
-      "skeleton": ["MEM.OPEN", "HE.DECLARE_BREATH"],
-      "flow": "open and breathe",
+      "skeleton": ["MEM.OPEN", "HE.HEAD_WITH_LEG"],
+      "flow": "מ open mem-zone ⇢ ה backed head + detached leg",
       "mode": "WORD",
       "canonical_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
     }

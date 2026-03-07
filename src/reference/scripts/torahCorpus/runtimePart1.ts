@@ -49,10 +49,7 @@ const OP_FLOW_LABEL = {
   "ALEPH.ALIAS": "א alias",
   "GIMEL.BESTOW": "ג bestowal",
   "DALET.BOUNDARY_CLOSE": "ד backed head expose",
-  "HE.DECLARE": "ה declare(public)",
-  "HE.DECLARE_BREATH": "ה breath tail",
-  "HE.DECLARE_PIN": "ה pin export",
-  "HE.DECLARE_ALIAS": "ה declare+alias",
+  "HE.HEAD_WITH_LEG": "ה backed head + detached leg",
   "VAV.TRANSPORT": "ו transport",
   "ZAYIN.GATE": "ז gate",
   "HET.COMPARTMENT": "ח compartment",
@@ -64,6 +61,7 @@ const OP_FLOW_LABEL = {
   "AYIN.SELECT": "ע witness/select",
   "PE.UTTER": "פ utterance",
   "TSADI.ALIGN": "צ normalize-to-exemplar",
+  "QOF.HEAD_WITH_LEG": "ק bare head + detached leg",
   "QOF.APPROX": "ק approximate",
   "RESH.BOUNDARY_CLOSE": "ר head expose",
   "SHIN.FORK": "ש fork route",
@@ -82,10 +80,6 @@ const OP_FLOW_LABEL = {
 const IMPORTANT_EVENT_TYPES = new Set([
   "alias",
   "bestow",
-  "declare",
-  "declare_breath",
-  "declare_pin",
-  "declare_alias",
   "finalize",
   "support",
   "fall",
@@ -94,6 +88,7 @@ const IMPORTANT_EVENT_TYPES = new Set([
   "boundary_close",
   "head_backed",
   "head_expose",
+  "head_with_leg",
   "boundary_auto_close",
   "utter",
   "utter_close",
@@ -189,9 +184,6 @@ function tokenBaseLetter(token) {
 
 function deriveSignatureNotes(signature) {
   const notes = [];
-  if (signature.toch.includes("mappiq")) {
-    notes.push("forcesPinnedHehMode");
-  }
   if (signature.toch.includes("shuruk")) {
     notes.push("seedsVavCarrierMode");
   }
@@ -388,14 +380,6 @@ function dedupeConsecutive(values) {
 
 function summarizeEvent(type, event, traceEntry) {
   switch (type) {
-    case "declare":
-      return `mode=${event.data?.mode ?? "public"}`;
-    case "declare_breath":
-      return "mode=breath";
-    case "declare_pin":
-      return "mode=pinned";
-    case "declare_alias":
-      return "mode=alias";
     case "bestow":
       return "directed transfer";
     case "finalize":
@@ -414,6 +398,10 @@ function summarizeEvent(type, event, traceEntry) {
       return "backed head exposure";
     case "head_expose":
       return "bare head exposure";
+    case "head_with_leg":
+      return event.data?.resolved
+        ? "resolved head with detached leg"
+        : "unresolved head with detached leg";
     case "boundary_auto_close":
       return "auto-close at space";
     case "alias":
@@ -491,47 +479,6 @@ function mapRawEventToFlow(event, traceEntry) {
           from: asHandleId(data.from),
           to: asHandleId(data.to),
           payload: data.payload
-        }
-      };
-    case "declare":
-      return {
-        op_family: "HE.DECLARE",
-        params_summary: summarizeEvent(event.type, event, traceEntry),
-        trace_source: "vm_event",
-        payload: {
-          id: asHandleId(data.id),
-          target: asHandleId(data.target),
-          mode: data.mode === "pinned" || data.mode === "alias" ? data.mode : "public"
-        }
-      };
-    case "declare_breath":
-      return {
-        op_family: "HE.DECLARE_BREATH",
-        params_summary: summarizeEvent(event.type, event, traceEntry),
-        trace_source: "vm_event",
-        payload: {
-          target: asHandleId(data.target)
-        }
-      };
-    case "declare_pin":
-      return {
-        op_family: "HE.DECLARE_PIN",
-        params_summary: summarizeEvent(event.type, event, traceEntry),
-        trace_source: "vm_event",
-        payload: {
-          declaration: asHandleId(data.declaration),
-          pin: asHandleId(data.pin)
-        }
-      };
-    case "declare_alias":
-      return {
-        op_family: "HE.DECLARE_ALIAS",
-        params_summary: summarizeEvent(event.type, event, traceEntry),
-        trace_source: "vm_event",
-        payload: {
-          declaration: asHandleId(data.declaration),
-          referent: asHandleId(data.referent),
-          alias: asHandleId(data.alias)
         }
       };
     case "alias":
@@ -616,6 +563,45 @@ function mapRawEventToFlow(event, traceEntry) {
           anchor: 0
         }
       };
+    case "head_with_leg": {
+      const op_family =
+        data.letter === "ה" ? "HE.HEAD_WITH_LEG" : data.letter === "ק" ? "QOF.HEAD_WITH_LEG" : null;
+      if (!op_family) {
+        return null;
+      }
+      const adjunct =
+        asHandleId(data.adjunct, "") ||
+        (Array.isArray(data.exported_adjuncts)
+          ? asHandleId(data.exported_adjuncts[0], "")
+          : Array.isArray(data.adjuncts)
+            ? asHandleId(data.adjuncts[0], "")
+            : "") ||
+        "unknown";
+      return {
+        op_family,
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          source: asHandleId(data.source),
+          head: asHandleId(data.head),
+          adjunct,
+          focus: asHandleId(data.focus ?? data.head),
+          exported_adjuncts: Array.isArray(data.exported_adjuncts)
+            ? data.exported_adjuncts.map((value) => asHandleId(value))
+            : adjunct === "unknown"
+              ? []
+              : [adjunct],
+          edges: Array.isArray(data.edges)
+            ? data.edges.map((edge) => ({
+                kind: String(edge?.kind ?? "unknown"),
+                from: asHandleId(edge?.from),
+                to: asHandleId(edge?.to)
+              }))
+            : [],
+          resolved: Boolean(data.resolved)
+        }
+      };
+    }
     case "utter":
       return {
         op_family: "PE.UTTER",
@@ -693,7 +679,7 @@ function mapRawEventToFlow(event, traceEntry) {
           right: asHandleId(data.right)
         }
       };
-    case "shin":
+    case "shin": {
       const shinPayload = {
         id: asHandleId(data.id),
         focus: asHandleId(data.focus),
@@ -711,6 +697,7 @@ function mapRawEventToFlow(event, traceEntry) {
         trace_source: "vm_event",
         payload: shinPayload
       };
+    }
     default:
       return null;
   }

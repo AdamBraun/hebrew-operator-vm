@@ -1,12 +1,12 @@
-import { BOT_ID, createHandle } from "../state/handles";
+import { BOT_ID } from "../state/handles";
 import { State } from "../state/state";
-import { nextId } from "../vm/ids";
-import { selectOperands } from "../vm/select";
+import { resolveSelectableFocus, selectCurrentFocus } from "../vm/select";
+import { exposeHeadWithLeg } from "./headAdjunct";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
   letter: "ק",
-  arity_req: 2,
+  arity_req: 1,
   arity_opt: 0,
   distinct_required: false,
   distinct_optional: false,
@@ -15,26 +15,79 @@ const meta: LetterMeta = {
 
 export const qofOp: LetterOp = {
   meta,
-  select: (S: State) => selectOperands(S, meta),
+  select: (S: State) => {
+    const source = selectQofSource(S);
+    if (source === S.vm.F) {
+      return selectCurrentFocus(S);
+    }
+    return { S, ops: { args: [source], prefs: {} } };
+  },
   bound: (S: State, ops) => {
-    const [left, right] = ops.args;
+    const source = ops.args[0] ?? selectQofSource(S);
+    const { head, leg } = exposeHeadWithLeg(S, {
+      source,
+      resolved: false,
+      headIdPrefix: "ק",
+      legIdPrefix: "ק",
+      headMeta: { exposedBy: "ק", headOf: source, bare_head: 1 },
+      legMeta: { exposedBy: "ק", detached_leg: 1 }
+    });
+    const headHandle = S.handles.get(head);
+    if (headHandle) {
+      headHandle.meta = { ...(headHandle.meta ?? {}), detached_leg: leg };
+    }
     const cons: Construction = {
-      base: left,
+      base: source,
       envelope: defaultEnvelope(),
-      meta: { left, right }
+      meta: { source, headId: head, legId: leg }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { left, right } = cons.meta as { left: string; right: string };
-    const approxId = nextId(S, "ק");
-    S.handles.set(
-      approxId,
-      createHandle(approxId, "alias", { meta: { left, right, approx: true } })
-    );
-    S.links.push({ from: left, to: right, label: "approx" });
-    S.links.push({ from: right, to: left, label: "approx" });
-    S.vm.H.push({ type: "approx", tau: S.vm.tau, data: { left, right, id: approxId } });
-    return { S, h: approxId, r: BOT_ID };
+    const { source, headId, legId } = cons.meta as {
+      source: string;
+      headId: string;
+      legId: string;
+    };
+    S.vm.H.push({
+      type: "head_with_leg",
+      tau: S.vm.tau,
+      data: {
+        letter: "ק",
+        source,
+        head: headId,
+        focus: headId,
+        adjunct: legId,
+        exported_adjuncts: [legId],
+        resolved: false,
+        edges: [
+          { kind: "head_of", from: headId, to: source },
+          { kind: "carry", from: source, to: headId },
+          { kind: "cont", from: headId, to: legId },
+          { kind: "carry", from: headId, to: legId }
+        ]
+      }
+    });
+    return { S, h: headId, r: BOT_ID };
   }
 };
+
+function isWordEntryBaseline(state: State): boolean {
+  const entryFocus = state.vm.wordEntryFocus ?? state.vm.F;
+  const focus = state.vm.F;
+  const baselineFocus =
+    (state.vm.activeConstruct !== undefined && focus === state.vm.activeConstruct) ||
+    focus === entryFocus;
+  const stackMatches =
+    state.vm.K.length === 2 &&
+    state.vm.K[1] === BOT_ID &&
+    (state.vm.K[0] === focus || state.vm.K[0] === entryFocus);
+  return baselineFocus && state.vm.R === BOT_ID && stackMatches;
+}
+
+function selectQofSource(state: State): string {
+  if (isWordEntryBaseline(state)) {
+    return state.vm.wordEntryFocus ?? resolveSelectableFocus(state);
+  }
+  return resolveSelectableFocus(state);
+}

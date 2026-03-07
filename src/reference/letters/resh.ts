@@ -3,6 +3,7 @@ import { addCarry, addHeadOf } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
 import { resolveSelectableFocus, selectCurrentFocus } from "../vm/select";
+import { exportHeadAdjuncts } from "./headAdjunct";
 import { Construction, LetterMeta, LetterOp, SelectOperands, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
@@ -42,14 +43,24 @@ export const reshOp: LetterOp = {
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { headId, whole } = cons.meta as {
+    const { headId, whole, exported_adjuncts } = cons.meta as {
       headId: string;
       whole: string;
+      exported_adjuncts?: unknown;
     };
+    const adjuncts = exportHeadAdjuncts(S, {
+      headId,
+      sourceLetter: "ר",
+      specs: exported_adjuncts
+    });
+    const data: { id: string; whole: string; adjuncts?: string[] } = { id: headId, whole };
+    if (adjuncts.length > 0) {
+      data.adjuncts = adjuncts;
+    }
     S.vm.H.push({
       type: "head_expose",
       tau: S.vm.tau,
-      data: { id: headId, whole }
+      data
     });
     return { S, h: headId, r: BOT_ID };
   }

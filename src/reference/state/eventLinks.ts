@@ -62,15 +62,6 @@ export function applyEventLinks(state: State, events: readonly VMEvent[]): void 
       case "alias":
         bi(state, data.left, data.right, "transport");
         break;
-      case "declare":
-        link(state, data.target, data.id, "declare");
-        break;
-      case "declare_pin":
-        link(state, data.declaration, data.pin, "pin");
-        break;
-      case "declare_alias":
-        bi(state, data.declaration, data.referent, "transport");
-        break;
       case "shin":
         if (data.focus !== data.id) {
           link(state, data.focus, data.id, "construct");

@@ -471,8 +471,8 @@ Recommended review artifacts to commit when semantics change:
   are semantic word boundaries.
 - **Shin/Sin disambiguation:** `שׁ` and `שׂ` tokenize distinctly; `שׂ` executes as
   composite `read=ס`, `shape=ש` (read-first, routing-only shape effect).
-- **Mappiq vs final he:** `הּ` executes as a full heh declaration and exports a pinned handle.
-  Final `...ה` without the dot uses breath/mater tail behavior and does not allocate a new declaration handle.
+- **He head-family:** `ה` executes as the resolved `head + detached leg` sibling of `ק`, while `ד/ר` remain the head-only resolved/unresolved pair.
+- **Mappiq and final he:** `mappiq` remains lexical classification only; current runtime routes both dotted and undotted `ה` through the same head-family path. Any future distinction must be introduced explicitly inside that model, not via declaration modes.
 - **Space boundary (`□`):** on a space token (or end-of-input), `tau` increments
   and any remaining obligations are resolved: `SUPPORT` falls (logging a `fall`
   event and restoring focus), and `MEM_ZONE` closes silently.

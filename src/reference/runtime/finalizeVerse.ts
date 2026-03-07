@@ -239,6 +239,7 @@ function resetRuntimeState(state: State, opts: FinalizeVerseOptions): void {
   state.supp = new Set();
   state.head_of = new Set();
   state.sub = new Set();
+  state.adjuncts = {};
   resetHandles(state, keepSystemHandles);
 }
 

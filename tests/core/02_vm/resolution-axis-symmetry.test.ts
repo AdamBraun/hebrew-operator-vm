@@ -56,4 +56,18 @@ describe("resolved/unresolved symmetry across nun/final-nun and resh/dalet", () 
     expect(matrix["ן"].supp && matrix["ד"].supp).toBe(true);
     expect(matrix["נ"].supp || matrix["ר"].supp).toBe(false);
   });
+
+  it("uses the same carry-plus-supp distinction in the detached-leg pair", () => {
+    const matrix = {
+      ק: inspectResolution("רק", "ק"),
+      ה: inspectResolution("רה", "ה")
+    };
+
+    expect(new Set(Object.values(matrix).map((shape) => shape.operand))).toEqual(
+      new Set(["ר:1:1"])
+    );
+
+    expect(matrix["ק"]).toMatchObject({ carry: true, supp: false });
+    expect(matrix["ה"]).toMatchObject({ carry: true, supp: true });
+  });
 });

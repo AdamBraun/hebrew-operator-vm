@@ -33,9 +33,8 @@ export type InsideDotKind =
   | "shin_dot_left"
   | "none";
 
-export type HehMode = "public" | "breath" | "pinned" | "alias";
 export type VavMode = "plain" | "seeded" | "transport";
-export type LetterMode = HehMode | VavMode;
+export type LetterMode = VavMode;
 
 export type TropeKind = "none" | "conj" | "disj";
 

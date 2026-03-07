@@ -17,5 +17,12 @@ describe("he contract", () => {
     const { h, r } = heOp.seal(state, cons);
     expect(state.handles.has(h)).toBe(true);
     expect(state.handles.has(r) || r === "⊥").toBe(true);
+    expect(state.head_of.size).toBe(1);
+    expect(state.carry.size).toBe(2);
+    expect(state.cont.size).toBe(2);
+    expect(state.supp.size).toBe(2);
+    expect(state.sub.size).toBe(1);
+    expect(state.adjuncts[h]).toHaveLength(1);
+    expect(state.rules).toEqual([]);
   });
 });

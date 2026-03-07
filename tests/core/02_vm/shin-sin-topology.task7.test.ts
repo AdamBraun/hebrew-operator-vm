@@ -446,8 +446,8 @@ describe("Task 7: shin/sin topology and fan-in matrix", () => {
     expect(sheqerGraph.edgeCount).toBeGreaterThan(qerGraph.edgeCount);
     expect(qer.state.boundaries).toEqual([]);
     expect(sheqer.state.boundaries).toEqual([]);
-    expect(qer.state.head_of.size).toBe(1);
-    expect(sheqer.state.head_of.size).toBe(1);
+    expect(qer.state.head_of.size).toBe(2);
+    expect(sheqer.state.head_of.size).toBe(2);
   });
 
   it("7g: captures שׂר bare-head topology and contrasts it with samekh resh", () => {

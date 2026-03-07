@@ -22,7 +22,7 @@
 - `ב` creates an anchored boundary handle for “inside-of” and updates the ambient world.
 - `ד` creates an anchored boundary handle for inside/outside (using `R` or the current boundary context).
 - `ג` records a `bestow` link/event and creates a structured handle.
-- `ה` seals a public rule handle and records a declaration event.
+- `ה` seals a resolved head and exports a detached adjunct leg while keeping focus on the head.
 - `וּ` (shuruk) marks the sealed handle with `meta.carrier_mode = seeded` and `meta.rep_flag = 1`.
 - `ו` creates a structured link handle labeled `vav`.
 - `י` creates an `entity` handle seeded from focus.
