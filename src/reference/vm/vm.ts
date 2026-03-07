@@ -1,6 +1,6 @@
 import { tokenize, makeSpaceToken } from "../compile/tokenizer";
 import { validateTokens } from "../compile/validate";
-import { HehMode, LetterMode, SpaceBoundaryMode, Token } from "../compile/types";
+import { LetterMode, SpaceBoundaryMode, Token } from "../compile/types";
 import { compositeRegistry, letterRegistry } from "../letters/registry";
 import { Construction, LetterOp, SelectOperands } from "../letters/types";
 import { FinalizeVerseOptions, VerseSnapshot, finalizeVerse } from "../runtime/finalizeVerse";
@@ -210,27 +210,11 @@ function normalizeForJson(value: unknown): any {
   return String(value);
 }
 
-function isHehMode(mode: LetterMode | undefined): mode is HehMode {
-  return mode === "public" || mode === "breath" || mode === "pinned" || mode === "alias";
-}
-
 function isVavMode(mode: LetterMode | undefined): mode is "plain" | "seeded" | "transport" {
   return mode === "plain" || mode === "seeded" || mode === "transport";
 }
 
-function resolveLetterMode(token: Token, isWordFinal: boolean): LetterMode | undefined {
-  if (token.letter === "ה") {
-    if (isHehMode(token.letter_mode)) {
-      return token.letter_mode;
-    }
-    if (token.dot_kind === "mappiq") {
-      return "pinned";
-    }
-    if (isWordFinal) {
-      return "breath";
-    }
-    return "public";
-  }
+function resolveLetterMode(token: Token, _isWordFinal: boolean): LetterMode | undefined {
   if (token.letter === "ו") {
     if (isVavMode(token.letter_mode)) {
       return token.letter_mode;
@@ -271,9 +255,6 @@ function applyTochWrappers(
     token.meta.traceOrder.push("toch");
   }
   const meta = { ...cons.meta };
-  if (token.letter === "ה" && isHehMode(letterMode)) {
-    meta.heh_mode = letterMode;
-  }
   if (token.letter === "ו" && isVavMode(letterMode)) {
     meta.vav_mode = letterMode;
   }

@@ -70,11 +70,11 @@ describe("shin/sin pair: שָׂרָה vs שָׁרָה", () => {
     expect(sinFork?.data?.direction).toBe("internal");
     expect(shinFork?.data?.direction).toBe("external");
     expect(outgoingCount(sinRun.state.sub, sinFocus)).toBe(3);
-    expect(outgoingCount(sinRun.state.cont, sinFocus)).toBe(0);
+    expect(outgoingCount(sinRun.state.cont, sinFocus)).toBe(1);
     expect(outgoingCount(shinRun.state.sub, shinFocus)).toBe(0);
-    expect(outgoingCount(shinRun.state.cont, shinFocus)).toBe(3);
-    expect(sinRun.state.supp.size).toBe(0);
-    expect(shinRun.state.supp.size).toBe(0);
+    expect(outgoingCount(shinRun.state.cont, shinFocus)).toBe(4);
+    expect(sinRun.state.supp.size).toBe(3);
+    expect(shinRun.state.supp.size).toBe(3);
     for (const id of sinPorts) {
       expect(sinRun.state.handles.get(id)?.kind).toBe("compartment");
     }
@@ -89,8 +89,8 @@ describe("shin/sin pair: שָׂרָה vs שָׁרָה", () => {
     expect(sinSecondTargets).toEqual(sinPorts);
     expect(shinSecondTargets).toEqual([]);
 
-    expect(tochLetterMode(sinDeep[2])).toBe("breath");
-    expect(tochLetterMode(shinDeep[2])).toBe("breath");
+    expect(tochLetterMode(sinDeep[2])).toBeNull();
+    expect(tochLetterMode(shinDeep[2])).toBeNull();
 
     for (const index of [0, 1, 2]) {
       const sinKinds = sinPrepared[index].diacritics

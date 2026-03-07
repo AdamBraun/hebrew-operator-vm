@@ -1,4 +1,4 @@
-import { HehMode, LetterMode } from "../compile/types";
+import { LetterMode } from "../compile/types";
 import { letterRegistry } from "../letters/registry";
 import { Construction, LetterOp, SelectOperands } from "../letters/types";
 import { applyEventLinks } from "../state/eventLinks";
@@ -19,23 +19,16 @@ type ExecuteContext = {
   isWordFinal: boolean;
 };
 
-function isHehMode(mode: LetterMode | null | undefined): mode is HehMode {
-  return mode === "public" || mode === "breath" || mode === "pinned" || mode === "alias";
-}
-
 function isVavMode(mode: LetterMode | null | undefined): mode is "plain" | "seeded" | "transport" {
   return mode === "plain" || mode === "seeded" || mode === "transport";
 }
 
 function resolveLetterMode(
   runtime: CompiledTokenRuntime,
-  isWordFinal: boolean
+  _isWordFinal: boolean
 ): LetterMode | undefined {
   if (runtime.letter_mode_forced) {
     return runtime.letter_mode_forced;
-  }
-  if (runtime.token_letter === "ה") {
-    return isWordFinal ? "breath" : "public";
   }
   if (runtime.token_letter === "ו") {
     return "plain";
@@ -65,9 +58,6 @@ function applyToch(
   letterMode?: LetterMode
 ): Construction {
   const meta = { ...cons.meta };
-  if (runtime.token_letter === "ה" && isHehMode(letterMode)) {
-    meta.heh_mode = letterMode;
-  }
   if (runtime.token_letter === "ו" && isVavMode(letterMode)) {
     meta.vav_mode = letterMode;
   }

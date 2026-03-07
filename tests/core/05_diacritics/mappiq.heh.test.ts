@@ -1,36 +1,43 @@
 import { describe, expect, it } from "vitest";
-import { createInitialState } from "@ref/state/state";
+import { createInitialState, serializeState } from "@ref/state/state";
 import { runProgram } from "@ref/vm/vm";
 
 const MAPIQ_CASES = ["יָהּ", "לָהּ", "שְׁמָהּ", "בְּיָדָהּ", "אָרְכָּהּ"];
 
+function normalizeWordText<T extends Record<string, any>>(value: T): T {
+  const serialized = structuredClone(value);
+  const events = serialized.vm?.H;
+  if (!Array.isArray(events)) {
+    return serialized;
+  }
+  for (const event of events) {
+    if (event?.type !== "WORD_START" || !event.data || typeof event.data !== "object") {
+      continue;
+    }
+    delete event.data.wordText;
+  }
+  return serialized;
+}
+
 describe("mappiq vs final he behavior", () => {
-  it.each(MAPIQ_CASES)("final he with mappiq exports a pinned handle (%s)", (word) => {
+  it.each(MAPIQ_CASES)("final he with mappiq stays in the head-family topology (%s)", (word) => {
     const state = runProgram(word, createInitialState());
-    const wordOut = state.vm.A[state.vm.A.length - 1];
-    const out = state.handles.get(wordOut);
-    expect(out?.meta.he_mode).toBe("pinned");
-    expect(out?.meta.seedOf).toBeTypeOf("string");
-    const declaration = state.handles.get(out?.meta.seedOf as string);
-    expect(declaration?.kind).toBe("rule");
+    expect(Array.from(state.handles.values()).some((handle) => handle.kind === "rule")).toBe(false);
+    expect(state.rules).toEqual([]);
+    expect(state.head_of.size).toBeGreaterThan(0);
+    expect(Object.keys(state.adjuncts).length).toBeGreaterThan(0);
   });
 
-  it("final he without mappiq applies breath tail and allocates no declaration handle", () => {
+  it("final he without mappiq has the same runtime topology as mappiq final he", () => {
     const dotted = runProgram("לָהּ", createInitialState());
     const plain = runProgram("לָה", createInitialState());
 
-    const dottedRules = Array.from(dotted.handles.values()).filter(
-      (handle) => handle.kind === "rule"
+    expect(normalizeWordText(serializeState(dotted))).toEqual(
+      normalizeWordText(serializeState(plain))
     );
-    const plainRules = Array.from(plain.handles.values()).filter(
-      (handle) => handle.kind === "rule"
+    expect(Array.from(dotted.handles.values()).some((handle) => handle.kind === "rule")).toBe(
+      false
     );
-    expect(dottedRules.length).toBeGreaterThan(0);
-    expect(plainRules.length).toBe(0);
-
-    const plainOut = plain.vm.A[plain.vm.A.length - 1];
-    const plainHandle = plain.handles.get(plainOut);
-    expect(plainHandle?.meta.he_mode).toBe("breath");
-    expect(plainHandle?.meta.final_tail).toBe("breath");
+    expect(Array.from(plain.handles.values()).some((handle) => handle.kind === "rule")).toBe(false);
   });
 });

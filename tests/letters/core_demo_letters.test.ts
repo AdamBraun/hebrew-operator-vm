@@ -68,18 +68,19 @@ describe("core demo letters", () => {
 
   it("he can be first", () => {
     const state = runProgram("הא", createInitialState());
-    const rules = Array.from(state.handles.values()).filter((handle) => handle.kind === "rule");
-    expect(rules.length).toBe(1);
-    expect(rules[0].meta.public).toBe(1);
+    const [head] = String(Array.from(state.head_of)[0] ?? "->").split("->");
+    expect(Array.from(state.handles.values()).some((handle) => handle.kind === "rule")).toBe(false);
+    expect(state.head_of.size).toBe(1);
+    expect(state.adjuncts[head]).toHaveLength(1);
   });
 
   it("he can be last", () => {
     const state = runProgram("אה", createInitialState());
-    const rules = Array.from(state.handles.values()).filter((handle) => handle.kind === "rule");
-    expect(rules.length).toBe(0);
+    const [head] = String(Array.from(state.head_of)[0] ?? "->").split("->");
     const wordOut = state.vm.A[state.vm.A.length - 1];
-    const handle = state.handles.get(wordOut);
-    expect(handle?.meta.he_mode).toBe("breath");
-    expect(handle?.meta.final_tail).toBe("breath");
+    expect(Array.from(state.handles.values()).some((handle) => handle.kind === "rule")).toBe(false);
+    expect(state.head_of.size).toBe(1);
+    expect(state.adjuncts[head]).toHaveLength(1);
+    expect(wordOut).toBe(head);
   });
 });
