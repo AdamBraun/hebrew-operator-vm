@@ -10,17 +10,82 @@
     "OStack_word": [],
     "H": [
       {
-        "type": "fall",
+        "type": "BOUNDARY",
+        "tau": 1,
+        "data": {
+          "mode": "hard",
+          "beforeFocus": "Ω",
+          "afterFocus": "Ω",
+          "segmentIdBefore": 0
+        }
+      },
+      {
+        "type": "WORD_START",
+        "tau": 1,
+        "data": {
+          "F0": "Ω",
+          "C0": "C:1:1",
+          "inboundFocus": "Ω",
+          "wordText": "נ",
+          "prevBoundaryMode": "hard",
+          "segmentIdAfter": 1,
+          "segmentReset": true,
+          "segmentId": 1,
+          "segmentOStackLength": 0,
+          "activeConstruct": "C:1:1",
+          "focus": "C:1:1",
+          "hasAliasForward": true,
+          "hasAliasReverse": true,
+          "aliasReachableForward": true,
+          "aliasReachableReverse": true
+        }
+      },
+      {
+        "type": "BOUNDARY",
         "tau": 2,
         "data": {
-          "child": "נ:1:1",
-          "parent": "Ω"
+          "mode": "hard",
+          "beforeFocus": "נ:1:1",
+          "afterFocus": "Ω",
+          "segmentIdBefore": 1
+        }
+      },
+      {
+        "type": "WORD_START",
+        "tau": 2,
+        "data": {
+          "F0": "Ω",
+          "C0": "C:2:2",
+          "inboundFocus": "Ω",
+          "wordText": "ס",
+          "prevBoundaryMode": "hard",
+          "segmentIdAfter": 2,
+          "segmentReset": true,
+          "segmentId": 2,
+          "segmentOStackLength": 0,
+          "activeConstruct": "C:2:2",
+          "focus": "C:2:2",
+          "hasAliasForward": true,
+          "hasAliasReverse": true,
+          "aliasReachableForward": true,
+          "aliasReachableReverse": true
+        }
+      },
+      {
+        "type": "BOUNDARY",
+        "tau": 3,
+        "data": {
+          "mode": "hard",
+          "beforeFocus": "C:2:2",
+          "afterFocus": "Ω",
+          "segmentIdBefore": 2
         }
       }
     ],
-    "A": ["⊥", "Ω", "Ω"],
+    "A": ["⊥", "נ:1:1", "C:2:2"],
     "wordHasContent": false,
     "metaCounter": {
+      "C": 2,
       "נ": 1
     }
   },
@@ -43,9 +108,56 @@
       "meta": {}
     },
     {
+      "id": "C:1:1",
+      "kind": "scope",
+      "policy": "soft",
+      "anchor": 1,
+      "edge_mode": "free",
+      "envelope": {
+        "ctx_flow": "LOW",
+        "x_flow": "IMPLICIT_OK",
+        "data_flow": "LIVE",
+        "edit_flow": "OPEN",
+        "ports": [],
+        "coupling": "LINK",
+        "policy": "soft"
+      },
+      "meta": {
+        "owner": "word",
+        "construct_role": "baseline",
+        "payload": {},
+        "word_text": "נ",
+        "ephemeral": 1
+      }
+    },
+    {
+      "id": "C:2:2",
+      "kind": "scope",
+      "policy": "soft",
+      "anchor": 1,
+      "edge_mode": "free",
+      "envelope": {
+        "ctx_flow": "LOW",
+        "x_flow": "IMPLICIT_OK",
+        "data_flow": "LIVE",
+        "edit_flow": "OPEN",
+        "ports": [],
+        "coupling": "LINK",
+        "policy": "soft"
+      },
+      "meta": {
+        "owner": "word",
+        "construct_role": "baseline",
+        "payload": {},
+        "word_text": "ס",
+        "ephemeral": 1,
+        "chunk_commit_boundary": 1
+      }
+    },
+    {
       "id": "Ω",
       "kind": "scope",
-      "policy": "framed_lock",
+      "policy": "soft",
       "anchor": 0,
       "edge_mode": "free",
       "envelope": {
@@ -55,12 +167,10 @@
         "edit_flow": "OPEN",
         "ports": [],
         "coupling": "LINK",
-        "policy": "framed_lock"
+        "policy": "soft"
       },
       "meta": {
-        "stable": 1,
-        "samekh_lock": 1,
-        "last_operator": "ס"
+        "chunk_commit_boundary": 1
       }
     },
     {
@@ -79,18 +189,17 @@
         "policy": "soft"
       },
       "meta": {
-        "succOf": "Ω"
+        "succOf": "C:1:1",
+        "chunk_commit_boundary": 1
       }
     }
   ],
-  "cont": ["Ω->נ:1:1"],
-  "links": [
-    {
-      "from": "Ω",
-      "to": "נ:1:1",
-      "label": "fall"
-    }
-  ],
+  "cont": ["C:1:1->נ:1:1"],
+  "carry": ["C:1:1->נ:1:1"],
+  "supp": ["נ:1:1->C:1:1"],
+  "head_of": [],
+  "sub": [],
+  "links": [],
   "boundaries": [],
   "rules": []
 }

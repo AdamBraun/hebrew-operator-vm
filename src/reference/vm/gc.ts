@@ -113,6 +113,14 @@ function buildAdjacency(state: State): HandleAdjacency {
     connect(adjacency, parsed[0], parsed[1]);
   }
 
+  for (const edge of state.head_of) {
+    const parsed = parseDirectedEdge(edge);
+    if (!parsed) {
+      continue;
+    }
+    connect(adjacency, parsed[0], parsed[1]);
+  }
+
   for (const edge of state.sub) {
     const parsed = parseDirectedEdge(edge);
     if (!parsed) {
@@ -236,6 +244,15 @@ export function collectGarbage(state: State): void {
   );
   state.supp = new Set(
     Array.from(state.supp).filter((edge) => {
+      const parsed = parseDirectedEdge(edge);
+      if (!parsed) {
+        return true;
+      }
+      return !removed.has(parsed[0]) && !removed.has(parsed[1]);
+    })
+  );
+  state.head_of = new Set(
+    Array.from(state.head_of).filter((edge) => {
       const parsed = parseDirectedEdge(edge);
       if (!parsed) {
         return true;

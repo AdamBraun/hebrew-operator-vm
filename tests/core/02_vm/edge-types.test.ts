@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addCarry, addSub, addSupp } from "@ref/state/relations";
+import { addCarry, addHeadOf, addSub, addSupp } from "@ref/state/relations";
 import { createInitialState } from "@ref/state/state";
 
 describe("edge types", () => {
@@ -29,5 +29,16 @@ describe("edge types", () => {
     expect(state.cont.size).toBe(0);
     expect(state.carry.size).toBe(0);
     expect(state.supp.size).toBe(0);
+  });
+
+  it("addHeadOf inserts a representational edge head_of(head,whole)", () => {
+    const state = createInitialState();
+    addHeadOf(state, "head", "whole");
+
+    expect(state.head_of.has("head->whole")).toBe(true);
+    expect(state.cont.size).toBe(0);
+    expect(state.carry.size).toBe(0);
+    expect(state.supp.size).toBe(0);
+    expect(state.sub.size).toBe(0);
   });
 });
