@@ -161,6 +161,9 @@ export function validateBaseline(state: State, opts: ValidateBaselineOptions = {
   if (state.supp.size !== 0) {
     errors.push(`supp expected empty but had size ${state.supp.size}`);
   }
+  if (state.head_of.size !== 0) {
+    errors.push(`head_of expected empty but had size ${state.head_of.size}`);
+  }
   if (state.sub.size !== 0) {
     errors.push(`sub expected empty but had size ${state.sub.size}`);
   }

@@ -68,6 +68,7 @@ describe("finalizeVerse", () => {
     expect(Array.from(state.cont)).toEqual([]);
     expect(Array.from(state.carry)).toEqual([]);
     expect(Array.from(state.supp)).toEqual([]);
+    expect(Array.from(state.head_of)).toEqual([]);
     expect(Array.from(state.sub)).toEqual([]);
     expect(Array.from(state.handles.keys())).toEqual([OMEGA_ID, BOT_ID]);
 
@@ -146,6 +147,7 @@ describe("finalizeVerse", () => {
     state.cont = new Set(["z->a", "a->b"]);
     state.carry = new Set(["z->a", "a->b"]);
     state.supp = new Set(["z->a", "a->b"]);
+    state.head_of = new Set(["z->a", "a->b"]);
     state.sub = new Set(["z->a", "a->b"]);
 
     const snapshot = finalizeVerse(state);
@@ -164,6 +166,7 @@ describe("finalizeVerse", () => {
     const cont = snapshot.state_dump.cont as string[];
     const carry = snapshot.state_dump.carry as string[];
     const supp = snapshot.state_dump.supp as string[];
+    const headOf = snapshot.state_dump.head_of as string[];
     const sub = snapshot.state_dump.sub as string[];
 
     expect(links).toEqual([
@@ -182,6 +185,7 @@ describe("finalizeVerse", () => {
     expect(cont).toEqual(["a->b", "z->a"]);
     expect(carry).toEqual(["a->b", "z->a"]);
     expect(supp).toEqual(["a->b", "z->a"]);
+    expect(headOf).toEqual(["a->b", "z->a"]);
     expect(sub).toEqual(["a->b", "z->a"]);
   });
 
@@ -224,6 +228,7 @@ describe("finalizeVerse", () => {
     expect(Array.from(state.cont)).toEqual([]);
     expect(Array.from(state.carry)).toEqual([]);
     expect(Array.from(state.supp)).toEqual([]);
+    expect(Array.from(state.head_of)).toEqual([]);
     expect(Array.from(state.sub)).toEqual([]);
     expect(Array.from(state.handles.keys())).toEqual([OMEGA_ID, BOT_ID]);
   });

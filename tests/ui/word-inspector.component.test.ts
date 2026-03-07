@@ -30,7 +30,7 @@ describe("word inspector component", () => {
         }
       ],
       skeleton: ["HE.DECLARE", "RESH.BOUNDARY_CLOSE"],
-      flow: "ה declare(public) ⇢ ר boundary close",
+      flow: "ה declare(public) ⇢ ר head expose",
       mode: "WORD",
       extensions: {
         grapheme_signatures: ["בָ", "ּרָ", "א"]
@@ -70,7 +70,7 @@ describe("word inspector component", () => {
     expect(markup).toContain("149, 51, 280");
     expect(markup).toContain("בָ, ּרָ, א");
     expect(markup).toContain("HE.DECLARE -&gt; RESH.BOUNDARY_CLOSE");
-    expect(markup).toContain("ה declare(public) ⇢ ר boundary close");
+    expect(markup).toContain("ה declare(public) ⇢ ר head expose");
     expect(markup).toContain("HEAD");
     expect(markup).toContain("n_1_3_split &gt; n_1_2_join");
     expect(markup).toContain("C1.2");

@@ -10,17 +10,51 @@
     "OStack_word": [],
     "H": [
       {
-        "type": "fall",
+        "type": "BOUNDARY",
+        "tau": 1,
+        "data": {
+          "mode": "hard",
+          "beforeFocus": "Ω",
+          "afterFocus": "Ω",
+          "segmentIdBefore": 0
+        }
+      },
+      {
+        "type": "WORD_START",
+        "tau": 1,
+        "data": {
+          "F0": "Ω",
+          "C0": "C:1:1",
+          "inboundFocus": "Ω",
+          "wordText": "נמםס",
+          "prevBoundaryMode": "hard",
+          "segmentIdAfter": 1,
+          "segmentReset": true,
+          "segmentId": 1,
+          "segmentOStackLength": 0,
+          "activeConstruct": "C:1:1",
+          "focus": "C:1:1",
+          "hasAliasForward": true,
+          "hasAliasReverse": true,
+          "aliasReachableForward": true,
+          "aliasReachableReverse": true
+        }
+      },
+      {
+        "type": "BOUNDARY",
         "tau": 2,
         "data": {
-          "child": "נ:1:1",
-          "parent": "Ω"
+          "mode": "hard",
+          "beforeFocus": "ם:1:1",
+          "afterFocus": "Ω",
+          "segmentIdBefore": 1
         }
       }
     ],
-    "A": ["⊥", "Ω"],
+    "A": ["⊥", "ם:1:1"],
     "wordHasContent": false,
     "metaCounter": {
+      "C": 1,
       "נ": 1,
       "מ": 1,
       "ם": 1
@@ -59,7 +93,9 @@
         "coupling": "LINK",
         "policy": "soft"
       },
-      "meta": {}
+      "meta": {
+        "chunk_commit_boundary": 1
+      }
     },
     {
       "id": "מ:1:1",
@@ -84,7 +120,7 @@
     {
       "id": "ם:1:1",
       "kind": "memHandle",
-      "policy": "framed_lock",
+      "policy": "soft",
       "anchor": 0,
       "edge_mode": "free",
       "envelope": {
@@ -94,13 +130,11 @@
         "edit_flow": "OPEN",
         "ports": [],
         "coupling": "LINK",
-        "policy": "framed_lock"
+        "policy": "soft"
       },
       "meta": {
         "zone": "מ:1:1",
-        "stable": 1,
-        "samekh_lock": 1,
-        "last_operator": "ס"
+        "chunk_commit_boundary": 1
       }
     },
     {
@@ -119,18 +153,16 @@
         "policy": "soft"
       },
       "meta": {
-        "succOf": "Ω"
+        "succOf": "C:1:1"
       }
     }
   ],
-  "cont": ["Ω->נ:1:1"],
-  "links": [
-    {
-      "from": "Ω",
-      "to": "נ:1:1",
-      "label": "fall"
-    }
-  ],
+  "cont": [],
+  "carry": [],
+  "supp": [],
+  "head_of": [],
+  "sub": [],
+  "links": [],
   "boundaries": [],
   "rules": []
 }

@@ -77,6 +77,13 @@ export function addSupp(state: State, closer: string, origin: string): void {
   state.supp.add(edgeKey(closer, origin));
 }
 
+export function addHeadOf(state: State, head: string, whole: string): void {
+  if (!validHandleId(head) || !validHandleId(whole)) {
+    return;
+  }
+  state.head_of.add(edgeKey(head, whole));
+}
+
 export function addSub(state: State, parent: string, child: string): void {
   if (!parent || !child) {
     return;

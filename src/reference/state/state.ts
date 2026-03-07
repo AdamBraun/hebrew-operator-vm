@@ -95,6 +95,7 @@ export type State = {
   cont: Set<string>;
   carry: Set<string>;
   supp: Set<string>;
+  head_of: Set<string>;
   sub: Set<string>;
   links: Array<{ from: string; to: string; label: string }>;
   boundaries: BoundaryRecord[];
@@ -155,6 +156,7 @@ export function createInitialState(): State {
     cont: new Set(),
     carry: new Set(),
     supp: new Set(),
+    head_of: new Set(),
     sub: new Set(),
     links: [],
     boundaries: [],
@@ -212,6 +214,7 @@ export function serializeState(state: State): Record<string, any> {
     cont: Array.from(state.cont).sort(),
     carry: Array.from(state.carry).sort(),
     supp: Array.from(state.supp).sort(),
+    head_of: Array.from(state.head_of).sort(),
     sub: Array.from(state.sub).sort(),
     links: [...state.links],
     boundaries: [...state.boundaries],

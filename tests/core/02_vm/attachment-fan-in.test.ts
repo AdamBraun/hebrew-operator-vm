@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createHandle } from "@ref/state/handles";
-import { addBoundary, addCarry, addCont, addSub, addSupp } from "@ref/state/relations";
+import { addBoundary, addCarry, addCont, addHeadOf, addSub, addSupp } from "@ref/state/relations";
 import { createInitialState } from "@ref/state/state";
 
 describe("attachment fan-in", () => {
@@ -41,19 +41,23 @@ describe("attachment fan-in", () => {
     expect(state.cont.has("src->c2")).toBe(true);
   });
 
-  it("does not fan supp or sub edges", () => {
+  it("does not fan supp, head_of, or sub edges", () => {
     const state = createInitialState();
     state.handles.set("closer", createHandle("closer", "scope"));
+    state.handles.set("head", createHandle("head", "scope"));
     state.handles.set("parent", createHandle("parent", "scope"));
     state.handles.set("F", createHandle("F", "scope"));
     state.handles.set("c1", createHandle("c1", "compartment"));
 
     addSub(state, "F", "c1");
     addSupp(state, "closer", "F");
+    addHeadOf(state, "head", "F");
     addSub(state, "parent", "F");
 
     expect(state.supp.has("closer->F")).toBe(true);
     expect(state.supp.has("closer->c1")).toBe(false);
+    expect(state.head_of.has("head->F")).toBe(true);
+    expect(state.head_of.has("head->c1")).toBe(false);
     expect(state.sub.has("parent->F")).toBe(true);
     expect(state.sub.has("parent->c1")).toBe(false);
   });

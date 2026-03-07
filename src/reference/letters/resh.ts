@@ -1,9 +1,9 @@
 import { BOT_ID, createHandle } from "../state/handles";
-import { addBoundary } from "../state/relations";
+import { addCarry, addHeadOf } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
-import { selectCurrentFocus } from "../vm/select";
-import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
+import { resolveSelectableFocus, selectCurrentFocus } from "../vm/select";
+import { Construction, LetterMeta, LetterOp, SelectOperands, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
   letter: "ר",
@@ -16,38 +16,61 @@ const meta: LetterMeta = {
 
 export const reshOp: LetterOp = {
   meta,
-  select: (S: State) => selectCurrentFocus(S),
-  bound: (S: State, ops) => {
-    const inside = ops.args[0];
-    const frame = S.vm.E[S.vm.E.length - 1];
-    const outside = S.vm.R !== BOT_ID ? S.vm.R : frame?.D_frame ? frame.D_frame : S.vm.D;
-    const boundaryId = nextId(S, "ר");
+  select: (S: State) => {
+    const source = selectReshSource(S);
+    if (source === S.vm.F) {
+      return selectCurrentFocus(S);
+    }
+    return { S, ops: { args: [source], prefs: {} } };
+  },
+  bound: (S: State, ops: SelectOperands) => {
+    const whole = ops.args[0] ?? selectReshSource(S);
+    const headId = nextId(S, "ר");
     S.handles.set(
-      boundaryId,
-      createHandle(boundaryId, "boundary", {
-        anchor: 0,
-        meta: { inside, outside, closedBy: "ר" }
+      headId,
+      createHandle(headId, "scope", {
+        meta: { exposedBy: "ר", headOf: whole, bare_head: 1 }
       })
     );
-    addBoundary(S, boundaryId, inside, outside, 0);
+    addHeadOf(S, headId, whole);
+    addCarry(S, whole, headId);
     const cons: Construction = {
-      base: inside,
+      base: whole,
       envelope: defaultEnvelope(),
-      meta: { boundaryId, inside, outside }
+      meta: { headId, whole }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { boundaryId, inside, outside } = cons.meta as {
-      boundaryId: string;
-      inside: string;
-      outside: string;
+    const { headId, whole } = cons.meta as {
+      headId: string;
+      whole: string;
     };
     S.vm.H.push({
-      type: "boundary_close",
+      type: "head_expose",
       tau: S.vm.tau,
-      data: { id: boundaryId, inside, outside, anchor: 0 }
+      data: { id: headId, whole }
     });
-    return { S, h: boundaryId, r: BOT_ID };
+    return { S, h: headId, r: BOT_ID };
   }
 };
+
+function isWordEntryBaseline(state: State): boolean {
+  const entryFocus = state.vm.wordEntryFocus ?? state.vm.F;
+  const focus = state.vm.F;
+  const baselineFocus =
+    (state.vm.activeConstruct !== undefined && focus === state.vm.activeConstruct) ||
+    focus === entryFocus;
+  const stackMatches =
+    state.vm.K.length === 2 &&
+    state.vm.K[1] === BOT_ID &&
+    (state.vm.K[0] === focus || state.vm.K[0] === entryFocus);
+  return baselineFocus && state.vm.R === BOT_ID && stackMatches;
+}
+
+function selectReshSource(state: State): string {
+  if (isWordEntryBaseline(state)) {
+    return state.vm.wordEntryFocus ?? resolveSelectableFocus(state);
+  }
+  return resolveSelectableFocus(state);
+}

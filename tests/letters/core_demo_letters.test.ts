@@ -6,11 +6,13 @@ describe("core demo letters", () => {
   it("bet can be first", () => {
     const state = runProgram("בד", createInitialState());
     expect(state.vm.OStack_word.length).toBe(0);
-    expect(state.boundaries.length).toBe(2);
+    expect(state.boundaries.length).toBe(1);
     const opened = state.handles.get(state.boundaries[0].id);
-    const closed = state.handles.get(state.boundaries[1].id);
+    const [head, whole] = String(Array.from(state.head_of)[0] ?? "->").split("->");
+    const exposed = state.handles.get(head);
     expect(opened?.meta.openedBy).toBe("ב");
-    expect(closed?.meta.closedBy).toBe("ד");
+    expect(whole).toBe(state.boundaries[0].id);
+    expect(exposed?.meta.exposedBy).toBe("ד");
   });
 
   it("bet can be last", () => {
@@ -24,16 +26,20 @@ describe("core demo letters", () => {
 
   it("dalet can be first", () => {
     const state = runProgram("דא", createInitialState());
-    expect(state.boundaries.length).toBe(1);
-    const boundaryHandle = state.handles.get(state.boundaries[0].id);
-    expect(boundaryHandle?.meta.closedBy).toBe("ד");
+    const [head, whole] = String(Array.from(state.head_of)[0] ?? "->").split("->");
+    const exposed = state.handles.get(head);
+    expect(state.boundaries.length).toBe(0);
+    expect(whole).toBe("Ω");
+    expect(exposed?.meta.exposedBy).toBe("ד");
+    expect(state.supp.has(`${head}->Ω`)).toBe(true);
   });
 
   it("dalet can be last", () => {
     const state = runProgram("בד", createInitialState());
     expect(state.vm.OStack_word.length).toBe(0);
-    const boundaryHandle = state.handles.get(state.boundaries[1].id);
-    expect(boundaryHandle?.meta.closedBy).toBe("ד");
+    expect(state.boundaries.length).toBe(1);
+    expect(state.head_of.size).toBe(1);
+    expect(state.supp.size).toBe(1);
   });
 
   it("gimel can be first", () => {

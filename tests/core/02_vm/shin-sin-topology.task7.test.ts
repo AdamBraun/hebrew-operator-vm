@@ -11,6 +11,16 @@ type ShinPayload = {
   direction: "external" | "internal";
 };
 
+type SnapshotGraphState = {
+  vm?: { F?: string };
+  cont?: string[];
+  carry?: string[];
+  supp?: string[];
+  head_of?: string[];
+  sub?: string[];
+  boundaries?: unknown[];
+};
+
 type UndirectedGraph = {
   adjacency: Map<string, Set<string>>;
   edgeCount: number;
@@ -119,6 +129,19 @@ function selectionTargets(entry: DeepTraceEntry): string[] {
   return Array.isArray(targets) ? targets.map(String) : [];
 }
 
+function findTokenEntry(entries: DeepTraceEntry[], token: string): DeepTraceEntry {
+  const entry = nonSpace(entries).find((candidate) => candidate.token === token);
+  if (!entry) {
+    throw new Error(`Expected deep trace to include token '${token}'`);
+  }
+  return entry;
+}
+
+function tokenExitSnapshot(entry: DeepTraceEntry): SnapshotGraphState {
+  return (entry.phases.find((phase) => phase.phase === "token_exit")?.snapshot ??
+    {}) as SnapshotGraphState;
+}
+
 function boundaryTargetsFromId(run: RunWithTrace, boundaryId: string): Set<string> {
   return new Set(
     run.state.links
@@ -183,6 +206,10 @@ function collectGraphWithEventEdges(run: RunWithTrace): UndirectedGraph {
     const [from, to] = parseEdge(edge);
     add(from, to, "supp");
   }
+  for (const edge of run.state.head_of) {
+    const [from, to] = parseEdge(edge);
+    add(from, to, "head_of");
+  }
 
   for (const step of run.trace) {
     for (const event of step.events) {
@@ -205,93 +232,39 @@ function collectGraphWithEventEdges(run: RunWithTrace): UndirectedGraph {
   return { adjacency, edgeCount: edgeKeys.size };
 }
 
-function listSimplePaths(
+function shortestPathLength(
   adjacency: Map<string, Set<string>>,
   start: string,
   target: string
-): string[][] {
-  const results: string[][] = [];
-  const maxDepth = Math.max(1, adjacency.size + 2);
-
-  function walk(node: string, path: string[], visited: Set<string>): void {
-    if (path.length > maxDepth) {
-      return;
-    }
-    if (node === target) {
-      results.push([...path]);
-      return;
-    }
-    const nextNodes = adjacency.get(node) ?? new Set<string>();
-    for (const next of nextNodes) {
-      if (visited.has(next)) {
-        continue;
-      }
-      visited.add(next);
-      path.push(next);
-      walk(next, path, visited);
-      path.pop();
-      visited.delete(next);
-    }
+): number | null {
+  if (start === target) {
+    return 0;
   }
-
   if (!adjacency.has(start) || !adjacency.has(target)) {
-    return [];
+    return null;
   }
 
   const visited = new Set<string>([start]);
-  walk(start, [start], visited);
-  return results;
-}
+  const queue: Array<{ node: string; distance: number }> = [{ node: start, distance: 0 }];
 
-function pathEdgeSet(path: readonly string[]): Set<string> {
-  const used = new Set<string>();
-  for (let i = 0; i < path.length - 1; i += 1) {
-    const left = path[i] ?? "";
-    const right = path[i + 1] ?? "";
-    if (!left || !right) {
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) {
       continue;
     }
-    const [a, b] = left < right ? [left, right] : [right, left];
-    used.add(`${a}<->${b}`);
-  }
-  return used;
-}
-
-function maxEdgeDisjointPathCount(
-  adjacency: Map<string, Set<string>>,
-  start: string,
-  target: string
-): number {
-  const paths = listSimplePaths(adjacency, start, target).map((path) => pathEdgeSet(path));
-  if (paths.length === 0) {
-    return 0;
-  }
-
-  function solve(index: number, used: Set<string>): number {
-    if (index >= paths.length) {
-      return 0;
-    }
-    let best = solve(index + 1, used);
-
-    const current = paths[index];
-    let overlaps = false;
-    for (const edge of current) {
-      if (used.has(edge)) {
-        overlaps = true;
-        break;
+    for (const next of adjacency.get(current.node) ?? []) {
+      if (visited.has(next)) {
+        continue;
       }
-    }
-    if (!overlaps) {
-      const nextUsed = new Set(used);
-      for (const edge of current) {
-        nextUsed.add(edge);
+      if (next === target) {
+        return current.distance + 1;
       }
-      best = Math.max(best, 1 + solve(index + 1, nextUsed));
+      visited.add(next);
+      queue.push({ node: next, distance: current.distance + 1 });
     }
-    return best;
   }
 
-  return solve(0, new Set());
+  return null;
 }
 
 function firstWordStartC0(run: RunWithTrace): string {
@@ -402,28 +375,35 @@ describe("Task 7: shin/sin topology and fan-in matrix", () => {
   });
 
   it("7d: enforces fan-in divergence for שָׂרָה vs שָׁרָה", () => {
-    const sin = runProgramWithTrace("שָׂרָה", createInitialState());
-    const shin = runProgramWithTrace("שָׁרָה", createInitialState());
+    const sin = runProgramWithDeepTrace("שָׂרָה", createInitialState(), {
+      includeStateSnapshots: true
+    });
+    const shin = runProgramWithDeepTrace("שָׁרָה", createInitialState(), {
+      includeStateSnapshots: true
+    });
 
     const sinFork = extractShinPayload(sin);
     const shinFork = extractShinPayload(shin);
-    const sinBoundary = sin.state.boundaries[0];
-    const shinBoundary = shin.state.boundaries[0];
-    expect(sinBoundary?.anchor).toBe(0);
-    expect(shinBoundary?.anchor).toBe(0);
+    const sinResh = findTokenEntry(sin.deepTrace, "ר");
+    const shinResh = findTokenEntry(shin.deepTrace, "ר");
+    const sinExit = tokenExitSnapshot(sinResh);
+    const shinExit = tokenExitSnapshot(shinResh);
+    const [sinHead, sinWhole] = parseEdge(sinExit.head_of?.[0] ?? "->");
+    const [shinHead, shinWhole] = parseEdge(shinExit.head_of?.[0] ?? "->");
 
-    expect(sinBoundary?.members).toEqual([sinFork.focus, ...sinFork.ports]);
-    expect(shinBoundary?.members).toEqual([shinFork.focus]);
+    expect(selectionTargets(sinResh)).toEqual(sinFork.ports);
+    expect(selectionTargets(shinResh)).toEqual([]);
 
-    const sinTargets = boundaryTargetsFromId(sin, String(sinBoundary?.id ?? ""));
-    expect(sinTargets.has("Ω")).toBe(true);
-    expect(sinTargets.has(sinFork.focus)).toBe(true);
-    for (const port of sinFork.ports) {
-      expect(sinTargets.has(port)).toBe(true);
-    }
-
-    const shinTargets = boundaryTargetsFromId(shin, String(shinBoundary?.id ?? ""));
-    expect(shinTargets).toEqual(new Set([shinFork.focus, "Ω"]));
+    expect(sinWhole).toBe(sinFork.focus);
+    expect(shinWhole).toBe(shinFork.focus);
+    expect(sinExit.head_of).toEqual([`${sinHead}->${sinFork.focus}`]);
+    expect(shinExit.head_of).toEqual([`${shinHead}->${shinFork.focus}`]);
+    expect(sinExit.carry).toContain(`${sinFork.focus}->${sinHead}`);
+    expect(shinExit.carry).toContain(`${shinFork.focus}->${shinHead}`);
+    expect(sinExit.supp).toEqual([]);
+    expect(shinExit.supp).toEqual([]);
+    expect(sinExit.boundaries).toEqual([]);
+    expect(shinExit.boundaries).toEqual([]);
   });
 
   it("7e: preserves כבשׂ vs כבשׁ regression invariants with final-position shin/sin", () => {
@@ -447,7 +427,7 @@ describe("Task 7: shin/sin topology and fan-in matrix", () => {
     expect(shin.state.boundaries[0]?.members).toEqual([shin.state.boundaries[0]?.inside]);
   });
 
-  it("7f: shows שקר survives with higher entry-to-boundary connectivity than קר", () => {
+  it("7f: keeps שקר denser while preserving a direct route from entry to the exposed head", () => {
     const qer = runProgramWithTrace("קר", createInitialState());
     const sheqer = runProgramWithTrace("שקר", createInitialState());
 
@@ -455,54 +435,70 @@ describe("Task 7: shin/sin topology and fan-in matrix", () => {
     const sheqerGraph = collectGraphWithEventEdges(sheqer);
     const qerEntry = firstWordStartC0(qer);
     const sheqerEntry = firstWordStartC0(sheqer);
-    const qerBoundary = String(qer.state.boundaries[0]?.id ?? "");
-    const sheqerBoundary = String(sheqer.state.boundaries[0]?.id ?? "");
+    const qerHead = parseEdge(Array.from(qer.state.head_of)[0] ?? "->")[0];
+    const sheqerHead = parseEdge(Array.from(sheqer.state.head_of)[0] ?? "->")[0];
+    const qerDistance = shortestPathLength(qerGraph.adjacency, qerEntry, qerHead);
+    const sheqerDistance = shortestPathLength(sheqerGraph.adjacency, sheqerEntry, sheqerHead);
 
-    const qerPaths = maxEdgeDisjointPathCount(qerGraph.adjacency, qerEntry, qerBoundary);
-    const sheqerPaths = maxEdgeDisjointPathCount(
-      sheqerGraph.adjacency,
-      sheqerEntry,
-      sheqerBoundary
-    );
-
-    expect(sheqerPaths).toBeGreaterThan(qerPaths);
+    expect(qerDistance).not.toBeNull();
+    expect(sheqerDistance).not.toBeNull();
+    expect(sheqerDistance).toBeLessThan(qerDistance as number);
     expect(sheqerGraph.edgeCount).toBeGreaterThan(qerGraph.edgeCount);
-
-    // Boundary cleanup behavior is the same in both words.
-    expect(qer.state.boundaries[0]?.anchor).toBe(0);
-    expect(sheqer.state.boundaries[0]?.anchor).toBe(0);
-    expect(qer.state.boundaries[0]?.members).toEqual([qer.state.boundaries[0]?.inside]);
-    expect(sheqer.state.boundaries[0]?.members).toEqual([sheqer.state.boundaries[0]?.inside]);
+    expect(qer.state.boundaries).toEqual([]);
+    expect(sheqer.state.boundaries).toEqual([]);
+    expect(qer.state.head_of.size).toBe(1);
+    expect(sheqer.state.head_of.size).toBe(1);
   });
 
-  it("7g: captures שׂר governance topology and contrasts it with samekh resh", () => {
-    const sinResh = runProgramWithTrace("שׂר", createInitialState());
+  it("7g: captures שׂר bare-head topology and contrasts it with samekh resh", () => {
+    const sinResh = runProgramWithDeepTrace("שׂר", createInitialState(), {
+      includeStateSnapshots: true
+    });
     const sinFork = extractShinPayload(sinResh);
-    const sinBoundary = sinResh.state.boundaries[0];
+    const sinReshEntry = findTokenEntry(sinResh.deepTrace, "ר");
+    const sinExit = tokenExitSnapshot(sinReshEntry);
+    const [sinHead, sinWhole] = parseEdge(sinExit.head_of?.[0] ?? "->");
 
     expect(sinFork.direction).toBe("internal");
-    expect(sinResh.state.sub.size).toBe(6);
-    expect(sinBoundary?.id.startsWith("ר:")).toBe(true);
-    expect(sinBoundary?.anchor).toBe(0);
-    expect(sinBoundary?.members).toEqual([sinFork.focus, ...sinFork.ports]);
+    expect(sinExit.sub?.length).toBe(6);
+    expect(sinHead.startsWith("ר:")).toBe(true);
+    expect(sinWhole).toBe(sinFork.focus);
+    expect(sinExit.boundaries).toEqual([]);
+    expect(sinExit.carry).toEqual([`${sinFork.focus}->${sinHead}`]);
+    expect(sinExit.supp).toEqual([]);
     expect(hasTrianglePairwiseAdjacency(sinResh.state.sub, sinFork.ports)).toBe(true);
     expect(hasDirectedTriangleCycle(sinResh.state.sub, sinFork.ports)).toBe(true);
 
-    const samekhResh = runProgramWithTrace("סר", createInitialState());
-    expect(samekhResh.state.sub.size).toBe(0);
-    expect(samekhResh.state.boundaries[0]?.anchor).toBe(0);
-    expect(samekhResh.state.boundaries[0]?.members).toEqual([
-      samekhResh.state.boundaries[0]?.inside
-    ]);
+    const samekhResh = runProgramWithDeepTrace("סר", createInitialState(), {
+      includeStateSnapshots: true
+    });
+    const samekhReshEntry = findTokenEntry(samekhResh.deepTrace, "ר");
+    const samekhExit = tokenExitSnapshot(samekhReshEntry);
+    const [samekhHead, samekhWhole] = parseEdge(samekhExit.head_of?.[0] ?? "->");
 
-    // samekh closes unresolved carry when one exists (contextual precondition shown via נסר).
-    const contextualSamekhResh = runProgramWithTrace("נסר", createInitialState());
-    expect(contextualSamekhResh.state.supp.size).toBe(1);
-    expect(contextualSamekhResh.state.sub.size).toBe(0);
+    expect(samekhExit.sub).toEqual([]);
+    expect(samekhExit.boundaries).toEqual([]);
+    expect(samekhWhole).toBe(firstWordStartC0(samekhResh));
+    expect(samekhExit.carry).toEqual([`${samekhWhole}->${samekhHead}`]);
+    expect(samekhExit.supp).toEqual([]);
+
+    const contextualSamekhResh = runProgramWithDeepTrace("נסר", createInitialState(), {
+      includeStateSnapshots: true
+    });
+    const contextualReshEntry = findTokenEntry(contextualSamekhResh.deepTrace, "ר");
+    const contextualExit = tokenExitSnapshot(contextualReshEntry);
+    const [contextualHead, contextualWhole] = parseEdge(contextualExit.head_of?.[0] ?? "->");
+    const contextualEntry = firstWordStartC0(contextualSamekhResh);
+
+    expect(contextualWhole.startsWith("נ:")).toBe(true);
+    expect(contextualExit.carry).toContain(`${contextualWhole}->${contextualHead}`);
+    expect(contextualExit.supp).toEqual([`${contextualWhole}->${contextualEntry}`]);
+    expect(contextualExit.supp?.includes(`${contextualHead}->${contextualWhole}`)).toBe(false);
+    expect(contextualExit.boundaries).toEqual([]);
   });
 
   it("7h: preserves cross-pair consistency across sin-led and shin-led sets", () => {
-    for (const word of ["שָׂבָע", "שָׂרָה", "שׂר"]) {
+    for (const word of ["שָׂבָע"]) {
       const run = runProgramWithTrace(word, createInitialState());
       const sin = extractShinPayload(run);
       const boundary = run.state.boundaries[0];
@@ -514,7 +510,7 @@ describe("Task 7: shin/sin topology and fan-in matrix", () => {
       expect(boundary?.members).toEqual([sin.focus, ...sin.ports]);
     }
 
-    for (const word of ["שָׁבָע", "שָׁרָה", "שקר"]) {
+    for (const word of ["שָׁבָע"]) {
       const run = runProgramWithTrace(word, createInitialState());
       const shin = extractShinPayload(run);
 
@@ -525,6 +521,42 @@ describe("Task 7: shin/sin topology and fan-in matrix", () => {
       expect(run.state.boundaries.every((boundary) => (boundary.members ?? []).length === 1)).toBe(
         true
       );
+    }
+
+    for (const word of ["שָׂרָה"]) {
+      const run = runProgramWithDeepTrace(word, createInitialState(), {
+        includeStateSnapshots: true
+      });
+      const sin = extractShinPayload(run);
+      const reshEntry = findTokenEntry(run.deepTrace, "ר");
+      const reshExit = tokenExitSnapshot(reshEntry);
+
+      expect(sin.direction).toBe("internal");
+      expect(selectionTargets(reshEntry)).toEqual(sin.ports);
+      expect(countEdgesFromToSet(run.state.sub, sin.focus, sin.ports)).toBe(3);
+      expect(countEdgesWithinSet(run.state.sub, sin.ports)).toBe(3);
+      expect(hasDirectedTriangleCycle(run.state.sub, sin.ports)).toBe(true);
+      expect(reshExit.boundaries).toEqual([]);
+      expect(reshExit.supp).toEqual([]);
+      expect(reshExit.head_of?.length).toBe(1);
+    }
+
+    for (const word of ["שָׁרָה"]) {
+      const run = runProgramWithDeepTrace(word, createInitialState(), {
+        includeStateSnapshots: true
+      });
+      const shin = extractShinPayload(run);
+      const reshEntry = findTokenEntry(run.deepTrace, "ר");
+      const reshExit = tokenExitSnapshot(reshEntry);
+
+      expect(shin.direction).toBe("external");
+      expect(selectionTargets(reshEntry)).toEqual([]);
+      expect(countEdgesFromToSet(run.state.cont, shin.focus, shin.ports)).toBe(3);
+      expect(countEdgesWithinSet(run.state.sub, shin.ports)).toBe(0);
+      expect(hasDirectedTriangleCycle(run.state.sub, shin.ports)).toBe(false);
+      expect(reshExit.boundaries).toEqual([]);
+      expect(reshExit.supp).toEqual([]);
+      expect(reshExit.head_of?.length).toBe(1);
     }
   });
 

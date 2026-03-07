@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { eff } from "@ref/state/eff";
 import { createHandle } from "@ref/state/handles";
-import { addCarry, addCont, addSupp } from "@ref/state/relations";
+import { addCarry, addCont, addHeadOf, addSupp } from "@ref/state/relations";
 import { createInitialState } from "@ref/state/state";
 
 function seedNodes(state: ReturnType<typeof createInitialState>, ids: string[]): void {
@@ -107,5 +107,16 @@ describe("eff bundle resolution", () => {
     addCarry(state, "s", "a");
 
     expect(eff(state, "b")).toEqual({ cyc: 1 });
+  });
+
+  it("ignores head_of edges entirely", () => {
+    const state = createInitialState();
+    seedNodes(state, ["q", "head", "s"]);
+    state.handles.set("s", createHandle("s", "scope", { meta: { witness: { ghost: 1 } } }));
+
+    addHeadOf(state, "head", "q");
+    addCarry(state, "s", "head");
+
+    expect(eff(state, "q")).toEqual({});
   });
 });
