@@ -24,6 +24,23 @@
       "type": "string",
       "minLength": 1
     },
+    "TraceEdge": {
+      "type": "object",
+      "required": ["kind", "from", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from": {
+          "$ref": "#/$defs/HandleId"
+        },
+        "to": {
+          "$ref": "#/$defs/HandleId"
+        }
+      }
+    },
     "RefWord": {
       "type": "object",
       "required": ["book", "chapter", "verse", "token_index"],
@@ -73,10 +90,7 @@
         "GIMEL.BESTOW",
         "DALET.BOUNDARY_CLOSE",
         "RESH.BOUNDARY_CLOSE",
-        "HE.DECLARE",
-        "HE.DECLARE_BREATH",
-        "HE.DECLARE_PIN",
-        "HE.DECLARE_ALIAS",
+        "HE.HEAD_WITH_LEG",
         "ZAYIN.GATE",
         "HET.COMPARTMENT",
         "TET.COVERT",
@@ -87,7 +101,7 @@
         "SAMEKH.SUPPORT_DISCHARGE",
         "PE.UTTER",
         "TSADI.ALIGN",
-        "QOF.APPROX",
+        "QOF.HEAD_WITH_LEG",
         "SHIN.FORK",
         "TAV.FINALIZE",
         "FINAL_NUN.SUPPORT_DEBT",
@@ -109,10 +123,7 @@
         "GIMEL.BESTOW",
         "DALET.BOUNDARY_CLOSE",
         "RESH.BOUNDARY_CLOSE",
-        "HE.DECLARE",
-        "HE.DECLARE_BREATH",
-        "HE.DECLARE_PIN",
-        "HE.DECLARE_ALIAS",
+        "HE.HEAD_WITH_LEG",
         "ZAYIN.GATE",
         "HET.COMPARTMENT",
         "TET.COVERT",
@@ -123,7 +134,7 @@
         "SAMEKH.SUPPORT_DISCHARGE",
         "PE.UTTER",
         "TSADI.ALIGN",
-        "QOF.APPROX",
+        "QOF.HEAD_WITH_LEG",
         "SHIN.FORK",
         "TAV.FINALIZE",
         "FINAL_NUN.SUPPORT_DEBT",
@@ -157,16 +168,7 @@
           "$ref": "#/$defs/BoundaryCloseEvent"
         },
         {
-          "$ref": "#/$defs/DeclareEvent"
-        },
-        {
-          "$ref": "#/$defs/DeclareBreathEvent"
-        },
-        {
-          "$ref": "#/$defs/DeclarePinEvent"
-        },
-        {
-          "$ref": "#/$defs/DeclareAliasEvent"
+          "$ref": "#/$defs/HeadWithLegEvent"
         },
         {
           "$ref": "#/$defs/GateEvent"
@@ -197,9 +199,6 @@
         },
         {
           "$ref": "#/$defs/AlignEvent"
-        },
-        {
-          "$ref": "#/$defs/ApproxEvent"
         },
         {
           "$ref": "#/$defs/ShinEvent"
@@ -352,13 +351,13 @@
         }
       }
     },
-    "DeclareEvent": {
+    "HeadWithLegEvent": {
       "type": "object",
       "required": ["kind", "index", "tau", "source", "payload"],
       "additionalProperties": false,
       "properties": {
         "kind": {
-          "const": "HE.DECLARE"
+          "enum": ["HE.HEAD_WITH_LEG", "QOF.HEAD_WITH_LEG"]
         },
         "index": {
           "type": "integer",
@@ -373,120 +372,43 @@
         },
         "payload": {
           "type": "object",
-          "required": ["id", "target", "mode"],
+          "required": [
+            "source",
+            "head",
+            "adjunct",
+            "focus",
+            "exported_adjuncts",
+            "edges",
+            "resolved"
+          ],
           "additionalProperties": false,
           "properties": {
-            "id": {
+            "source": {
               "$ref": "#/$defs/HandleId"
             },
-            "target": {
+            "head": {
               "$ref": "#/$defs/HandleId"
             },
-            "mode": {
-              "type": "string",
-              "enum": ["public", "pinned", "alias"]
-            }
-          }
-        }
-      }
-    },
-    "DeclareBreathEvent": {
-      "type": "object",
-      "required": ["kind", "index", "tau", "source", "payload"],
-      "additionalProperties": false,
-      "properties": {
-        "kind": {
-          "const": "HE.DECLARE_BREATH"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "tau": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "source": {
-          "const": "vm_event"
-        },
-        "payload": {
-          "type": "object",
-          "required": ["target"],
-          "additionalProperties": false,
-          "properties": {
-            "target": {
-              "$ref": "#/$defs/HandleId"
-            }
-          }
-        }
-      }
-    },
-    "DeclarePinEvent": {
-      "type": "object",
-      "required": ["kind", "index", "tau", "source", "payload"],
-      "additionalProperties": false,
-      "properties": {
-        "kind": {
-          "const": "HE.DECLARE_PIN"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "tau": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "source": {
-          "const": "vm_event"
-        },
-        "payload": {
-          "type": "object",
-          "required": ["declaration", "pin"],
-          "additionalProperties": false,
-          "properties": {
-            "declaration": {
+            "adjunct": {
               "$ref": "#/$defs/HandleId"
             },
-            "pin": {
-              "$ref": "#/$defs/HandleId"
-            }
-          }
-        }
-      }
-    },
-    "DeclareAliasEvent": {
-      "type": "object",
-      "required": ["kind", "index", "tau", "source", "payload"],
-      "additionalProperties": false,
-      "properties": {
-        "kind": {
-          "const": "HE.DECLARE_ALIAS"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "tau": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "source": {
-          "const": "vm_event"
-        },
-        "payload": {
-          "type": "object",
-          "required": ["declaration", "referent", "alias"],
-          "additionalProperties": false,
-          "properties": {
-            "declaration": {
+            "focus": {
               "$ref": "#/$defs/HandleId"
             },
-            "referent": {
-              "$ref": "#/$defs/HandleId"
+            "exported_adjuncts": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/HandleId"
+              }
             },
-            "alias": {
-              "$ref": "#/$defs/HandleId"
+            "edges": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TraceEdge"
+              }
+            },
+            "resolved": {
+              "type": "boolean"
             }
           }
         }
@@ -868,43 +790,6 @@
               "$ref": "#/$defs/HandleId"
             },
             "exemplar": {
-              "$ref": "#/$defs/HandleId"
-            }
-          }
-        }
-      }
-    },
-    "ApproxEvent": {
-      "type": "object",
-      "required": ["kind", "index", "tau", "source", "payload"],
-      "additionalProperties": false,
-      "properties": {
-        "kind": {
-          "const": "QOF.APPROX"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "tau": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "source": {
-          "const": "vm_event"
-        },
-        "payload": {
-          "type": "object",
-          "required": ["id", "left", "right"],
-          "additionalProperties": false,
-          "properties": {
-            "id": {
-              "$ref": "#/$defs/HandleId"
-            },
-            "left": {
-              "$ref": "#/$defs/HandleId"
-            },
-            "right": {
               "$ref": "#/$defs/HandleId"
             }
           }

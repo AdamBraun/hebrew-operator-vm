@@ -14,7 +14,7 @@ Token = {
   features: {
     dot_kind?: 'dagesh' | 'shuruk' | 'mappiq' | 'none',
     inside_dot_kind?: 'dagesh' | 'shuruk' | 'mappiq' | 'shin_dot_right' | 'shin_dot_left' | 'none'
-    letter_mode?: 'public' | 'breath' | 'pinned' | 'alias' | 'plain' | 'seeded' | 'transport',
+    letter_mode?: 'plain' | 'seeded' | 'transport',
     is_final?: boolean
   }
 }
@@ -45,5 +45,7 @@ A dot inside a host letter is **not** a separate modifier. It sets `features.ins
 - Otherwise → `dot_kind=none`, `inside_dot_kind=none`.
 
 Modifier semantics use `dot_kind`/`inside_dot_kind` to dispatch to the appropriate toch- or rosh-tier behavior.
+
+`mappiq` is lexical classification only. It does not imply any retired letter-specific mode branch or declaration behavior for `ה`.
 
 For plain `ש` without a shin/sin dot, token letter remains plain `ש` (or profile-defined ambiguity handling, if enabled).
