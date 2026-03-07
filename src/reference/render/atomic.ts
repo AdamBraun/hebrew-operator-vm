@@ -6,6 +6,7 @@ const LEXICON = loadLexiconV1();
 const EVENT_KIND_SET = new Set<string>(TRACE_EVENT_KINDS as readonly string[]);
 const HANDLE_PAYLOAD_KEYS = new Set<string>([
   "active",
+  "adjunct",
   "alias",
   "boundaryId",
   "child",
@@ -16,6 +17,7 @@ const HANDLE_PAYLOAD_KEYS = new Set<string>([
   "focus",
   "from",
   "handle",
+  "head",
   "id",
   "inside",
   "left",
@@ -42,6 +44,7 @@ const OBLIGATION_POLICY_BY_EVENT: Record<TraceEventKind, ObligationPolicy | null
   "GIMEL.BESTOW": null,
   "DALET.BOUNDARY_CLOSE": null,
   "RESH.BOUNDARY_CLOSE": null,
+  "HE.HEAD_WITH_LEG": null,
   "HE.DECLARE": null,
   "HE.DECLARE_BREATH": null,
   "HE.DECLARE_PIN": null,
@@ -68,6 +71,7 @@ const OBLIGATION_POLICY_BY_EVENT: Record<TraceEventKind, ObligationPolicy | null
   },
   "PE.UTTER": null,
   "TSADI.ALIGN": null,
+  "QOF.HEAD_WITH_LEG": null,
   "QOF.APPROX": null,
   "SHIN.FORK": null,
   "TAV.FINALIZE": null,

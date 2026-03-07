@@ -948,11 +948,9 @@ function phraseGroupForRole(role: string): string | null {
 
 const VERSE_LEDGER_EXPORT_OPS = new Set([
   "GIMEL.BESTOW",
-  "HE.DECLARE",
-  "HE.DECLARE_BREATH",
-  "HE.DECLARE_PIN",
-  "HE.DECLARE_ALIAS",
+  "HE.HEAD_WITH_LEG",
   "PE.UTTER",
+  "QOF.HEAD_WITH_LEG",
   "VAV.TRANSPORT"
 ]);
 

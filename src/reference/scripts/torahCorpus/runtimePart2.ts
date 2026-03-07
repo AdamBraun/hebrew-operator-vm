@@ -370,12 +370,12 @@ function buildPatternIndex(fullRows) {
       description: "word ends with TAV.FINALIZE",
       occurrences: []
     },
-    HE_DECLARE_PUBLIC: {
-      description: "HE.DECLARE (public)",
+    HE_HEAD_WITH_LEG: {
+      description: "HE.HEAD_WITH_LEG (resolved head + detached leg)",
       occurrences: []
     },
-    HE_DECLARE_BREATH: {
-      description: "HE.DECLARE_BREATH (breath tail)",
+    QOF_HEAD_WITH_LEG: {
+      description: "QOF.HEAD_WITH_LEG (unresolved head + detached leg)",
       occurrences: []
     }
   };
@@ -416,11 +416,11 @@ function buildPatternIndex(fullRows) {
     if (ops[ops.length - 1] === "TAV.FINALIZE") {
       explicitPatterns.FINALIZE_AT_END.occurrences.push(row.ref_key);
     }
-    if (ops.includes("HE.DECLARE")) {
-      explicitPatterns.HE_DECLARE_PUBLIC.occurrences.push(row.ref_key);
+    if (ops.includes("HE.HEAD_WITH_LEG")) {
+      explicitPatterns.HE_HEAD_WITH_LEG.occurrences.push(row.ref_key);
     }
-    if (ops.includes("HE.DECLARE_BREATH")) {
-      explicitPatterns.HE_DECLARE_BREATH.occurrences.push(row.ref_key);
+    if (ops.includes("QOF.HEAD_WITH_LEG")) {
+      explicitPatterns.QOF_HEAD_WITH_LEG.occurrences.push(row.ref_key);
     }
 
     for (let i = 0; i + 1 < ops.length; i += 1) {
