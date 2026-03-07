@@ -81,22 +81,22 @@ describe("verse explorer trace alignment", () => {
       makeTrace(
         4,
         "אֱלֹהִים",
-        ["ALEPH.ALIAS", "LAMED.ENDPOINT", "HE.DECLARE", "FINAL_MEM.CLOSE"],
-        "א alias ⇢ ל endpoint bind ⇢ ה declare(public) ⇢ ם close mem-zone"
+        ["ALEPH.ALIAS", "LAMED.ENDPOINT", "HE.HEAD_WITH_LEG", "FINAL_MEM.CLOSE"],
+        "א alias ⇢ ל endpoint bind ⇢ ה backed head + detached leg ⇢ ם close mem-zone"
       ),
       makeTrace(5, "אֵת", ["ALEPH.ALIAS", "TAV.FINALIZE"], "א alias ⇢ ת finalize+stamp"),
       makeTrace(
         6,
         "הַשָּׁמַיִם",
-        ["HE.DECLARE", "SHIN.FORK", "MEM.OPEN", "FINAL_MEM.CLOSE"],
-        "ה declare(public) ⇢ ש fork route ⇢ מ open mem-zone ⇢ ם close mem-zone"
+        ["HE.HEAD_WITH_LEG", "SHIN.FORK", "MEM.OPEN", "FINAL_MEM.CLOSE"],
+        "ה backed head + detached leg ⇢ ש fork route ⇢ מ open mem-zone ⇢ ם close mem-zone"
       ),
       makeTrace(7, "וְאֵת", ["ALEPH.ALIAS", "TAV.FINALIZE"], "א alias ⇢ ת finalize+stamp"),
       makeTrace(
         8,
         "הָאָרֶץ",
-        ["HE.DECLARE", "ALEPH.ALIAS", "RESH.BOUNDARY_CLOSE", "FINAL_TSADI.ALIGN_FINAL"],
-        "ה declare(public) ⇢ א alias ⇢ ר head expose ⇢ ץ final align"
+        ["HE.HEAD_WITH_LEG", "ALEPH.ALIAS", "RESH.BOUNDARY_CLOSE", "FINAL_TSADI.ALIGN_FINAL"],
+        "ה backed head + detached leg ⇢ א alias ⇢ ר head expose ⇢ ץ final align"
       )
     ];
 
@@ -107,7 +107,7 @@ describe("verse explorer trace alignment", () => {
     expect(aligned[2].skeleton).toEqual([
       "ALEPH.ALIAS",
       "LAMED.ENDPOINT",
-      "HE.DECLARE",
+      "HE.HEAD_WITH_LEG",
       "FINAL_MEM.CLOSE"
     ]);
   });

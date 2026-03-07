@@ -45,8 +45,8 @@ describe("diff logic fixtures", () => {
 
     expect(result.wordSkeletonDiffs).toHaveLength(1);
     expect(result.wordSkeletonDiffs[0]?.wordIndex).toBe(1);
-    expect(result.wordSkeletonDiffs[0]?.leftSkeleton).toEqual(["HE.DECLARE"]);
-    expect(result.wordSkeletonDiffs[0]?.rightSkeleton).toEqual(["MEM.OPEN", "HE.DECLARE_BREATH"]);
+    expect(result.wordSkeletonDiffs[0]?.leftSkeleton).toEqual(["HE.HEAD_WITH_LEG"]);
+    expect(result.wordSkeletonDiffs[0]?.rightSkeleton).toEqual(["MEM.OPEN", "HE.HEAD_WITH_LEG"]);
 
     expect(
       result.ledgerAnchorDiffs.some(

@@ -75,8 +75,16 @@ export function assertStateInvariants(state: State): void {
     if (event.data?.adjunct) {
       ensure(event.data.adjunct);
     }
+    if (event.data?.focus) {
+      ensure(event.data.focus);
+    }
     if (Array.isArray(event.data?.adjuncts)) {
       for (const adjunctId of event.data.adjuncts) {
+        ensure(adjunctId);
+      }
+    }
+    if (Array.isArray(event.data?.exported_adjuncts)) {
+      for (const adjunctId of event.data.exported_adjuncts) {
         ensure(adjunctId);
       }
     }

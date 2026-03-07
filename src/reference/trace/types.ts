@@ -79,6 +79,12 @@ export type TraceEventBase<
   payload: P;
 };
 
+export type TraceEdge = {
+  kind: string;
+  from: HandleId;
+  to: HandleId;
+};
+
 export type AliasEvent = TraceEventBase<
   "ALEPH.ALIAS",
   "vm_event",
@@ -154,6 +160,9 @@ export type HeadWithLegEvent = TraceEventBase<
     source: HandleId;
     head: HandleId;
     adjunct: HandleId;
+    focus: HandleId;
+    exported_adjuncts: HandleId[];
+    edges: TraceEdge[];
     resolved: boolean;
   }
 >;

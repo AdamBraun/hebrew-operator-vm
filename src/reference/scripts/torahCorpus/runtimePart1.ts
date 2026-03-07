@@ -571,7 +571,11 @@ function mapRawEventToFlow(event, traceEntry) {
       }
       const adjunct =
         asHandleId(data.adjunct, "") ||
-        (Array.isArray(data.adjuncts) ? asHandleId(data.adjuncts[0], "") : "") ||
+        (Array.isArray(data.exported_adjuncts)
+          ? asHandleId(data.exported_adjuncts[0], "")
+          : Array.isArray(data.adjuncts)
+            ? asHandleId(data.adjuncts[0], "")
+            : "") ||
         "unknown";
       return {
         op_family,
@@ -581,6 +585,19 @@ function mapRawEventToFlow(event, traceEntry) {
           source: asHandleId(data.source),
           head: asHandleId(data.head),
           adjunct,
+          focus: asHandleId(data.focus ?? data.head),
+          exported_adjuncts: Array.isArray(data.exported_adjuncts)
+            ? data.exported_adjuncts.map((value) => asHandleId(value))
+            : adjunct === "unknown"
+              ? []
+              : [adjunct],
+          edges: Array.isArray(data.edges)
+            ? data.edges.map((edge) => ({
+                kind: String(edge?.kind ?? "unknown"),
+                from: asHandleId(edge?.from),
+                to: asHandleId(edge?.to)
+              }))
+            : [],
           resolved: Boolean(data.resolved)
         }
       };

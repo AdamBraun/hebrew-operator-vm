@@ -56,8 +56,9 @@ export const qofOp: LetterOp = {
         letter: "ק",
         source,
         head: headId,
+        focus: headId,
         adjunct: legId,
-        adjuncts: [legId],
+        exported_adjuncts: [legId],
         resolved: false,
         edges: [
           { kind: "head_of", from: headId, to: source },

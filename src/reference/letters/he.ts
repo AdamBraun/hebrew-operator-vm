@@ -56,8 +56,9 @@ export const heOp: LetterOp = {
         letter: "ה",
         source,
         head: headId,
+        focus: headId,
         adjunct: legId,
-        adjuncts: [legId],
+        exported_adjuncts: [legId],
         resolved: true,
         edges: [
           { kind: "head_of", from: headId, to: source },

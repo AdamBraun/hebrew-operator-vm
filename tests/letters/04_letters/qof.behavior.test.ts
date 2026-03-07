@@ -69,8 +69,9 @@ describe("qof behavior", () => {
       letter: "ק",
       source: "Ω",
       head,
+      focus: head,
       adjunct: leg,
-      adjuncts: [leg],
+      exported_adjuncts: [leg],
       resolved: false
     });
     expect(headEvent?.data?.edges).toEqual([
@@ -100,6 +101,7 @@ describe("qof behavior", () => {
     expect(headEvent?.data).toMatchObject({
       source: "נ:1:1",
       head,
+      focus: head,
       adjunct: leg
     });
   });

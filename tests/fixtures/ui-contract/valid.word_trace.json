@@ -14,19 +14,30 @@
   "token_ids": [1],
   "events": [
     {
-      "kind": "HE.DECLARE",
+      "kind": "HE.HEAD_WITH_LEG",
       "index": 0,
       "tau": 1,
       "source": "vm_event",
       "payload": {
-        "id": "ה:1:1",
-        "target": "Ω",
-        "mode": "public"
+        "source": "Ω",
+        "head": "ה:1:1",
+        "adjunct": "ה:1:2",
+        "focus": "ה:1:1",
+        "exported_adjuncts": ["ה:1:2"],
+        "resolved": true,
+        "edges": [
+          { "kind": "head_of", "from": "ה:1:1", "to": "Ω" },
+          { "kind": "carry", "from": "Ω", "to": "ה:1:1" },
+          { "kind": "supp", "from": "ה:1:1", "to": "Ω" },
+          { "kind": "cont", "from": "ה:1:1", "to": "ה:1:2" },
+          { "kind": "carry", "from": "ה:1:1", "to": "ה:1:2" },
+          { "kind": "supp", "from": "ה:1:2", "to": "ה:1:1" }
+        ]
       }
     }
   ],
-  "skeleton": ["HE.DECLARE"],
-  "flow": "ה declare(public)",
+  "skeleton": ["HE.HEAD_WITH_LEG"],
+  "flow": "ה backed head + detached leg",
   "mode": "WORD",
   "canonical_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 }

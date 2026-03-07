@@ -42,11 +42,17 @@ describe("exported adjunct selection", () => {
       expect(focusSelect.ops.args).toEqual([head]);
       expect(focusSelect.ops.prefs.exported_adjuncts).toEqual([leg]);
       expect(focusSelect.ops.prefs.selection_targets).toContain(leg);
+      expect(Object.keys(focusSelect.ops.prefs).sort()).toEqual([
+        "exported_adjuncts",
+        "selection_targets"
+      ]);
       expect(resolveExportedAdjunctsOfCurrentFocus(state)).toEqual([leg]);
       expect(resolveMostRecentExportedAdjunctOfCurrentFocus(state)).toBe(leg);
       expect(adjunctSelect.ops.args).toEqual([leg]);
       expect(adjunctSelect.ops.prefs.exported_adjuncts).toEqual([leg]);
       expect(adjunctSelect.ops.prefs.selection_targets).toContain(leg);
+      expect(adjunctSelect.ops.prefs.declared).toBeUndefined();
+      expect(adjunctSelect.ops.prefs.public_handles).toBeUndefined();
       expect(state.vm.F).toBe(head);
     }
   );

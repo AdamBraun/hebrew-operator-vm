@@ -69,8 +69,9 @@ describe("he behavior", () => {
       letter: "ה",
       source: "Ω",
       head,
+      focus: head,
       adjunct: leg,
-      adjuncts: [leg],
+      exported_adjuncts: [leg],
       resolved: true
     });
     expect(headEvent?.data?.edges).toEqual([
@@ -102,6 +103,7 @@ describe("he behavior", () => {
     expect(headEvent?.data).toMatchObject({
       source: "נ:1:1",
       head,
+      focus: head,
       adjunct: leg
     });
   });

@@ -22,6 +22,16 @@ describe("torah corpus runtimePart1", () => {
           source: "X",
           head: "h",
           adjunct: "leg",
+          focus: "h",
+          exported_adjuncts: ["leg"],
+          edges: [
+            { kind: "head_of", from: "h", to: "X" },
+            { kind: "carry", from: "X", to: "h" },
+            { kind: "supp", from: "h", to: "X" },
+            { kind: "cont", from: "h", to: "leg" },
+            { kind: "carry", from: "h", to: "leg" },
+            { kind: "supp", from: "leg", to: "h" }
+          ],
           resolved: true
         }
       },
@@ -36,6 +46,16 @@ describe("torah corpus runtimePart1", () => {
         source: "X",
         head: "h",
         adjunct: "leg",
+        focus: "h",
+        exported_adjuncts: ["leg"],
+        edges: [
+          { kind: "head_of", from: "h", to: "X" },
+          { kind: "carry", from: "X", to: "h" },
+          { kind: "supp", from: "h", to: "X" },
+          { kind: "cont", from: "h", to: "leg" },
+          { kind: "carry", from: "h", to: "leg" },
+          { kind: "supp", from: "leg", to: "h" }
+        ],
         resolved: true
       }
     });
