@@ -199,11 +199,15 @@ Operational rule:
 
 ---
 
-# ד — Boundary / door (anchored corner)
+# ד — Backed head / resolved head exposure
 
-- **Select:** an inside `ScopeHandle` (F) and an outside scope (from R or boundary context).
-- **Bound:** construct an anchored head boundary `Head_anchored(F, outside)` producing `BoundaryHandle(a=1)`.
-- **Seal:** allocate the boundary handle, attach an anchored head pin and three deterministic ports (inside/surface/outside), and register it as a stable scope boundary for later selection.
+- **Select:** current construct `X`. If no construct exists yet in the word, select word-entry ambient `W₀`.
+- **Bound:**
+  1. `h := alloc()`
+  2. add `head_of(h, X)`
+  3. add `carry(X, h)`
+  4. add `supp(h, X)`
+- **Seal:** set `F := h`.
 
 ---
 
@@ -281,8 +285,8 @@ Unary. Identical edge effect to ן, but focus does not advance.
   This is not a class, not an interior, not a target—just the minimal “this-exact-one” hook that other relations can attach to.
 - **Seal:** commit (\iota(x)) as stable under further refinement: subsequent letters may change what you look at _relative to_ (x), but the hook stays (x).
   - **Interface lead (ו):** the pin includes a single exported attachment port so later letters can bind to it after focus shifts.
-  - **Anchored interface (ד):** set anchor bit (a=1) by default; treat the pin as a micro door between anchored inside and ambient outside.
-- **Note (latest):** this (Y) is the universal prefix used implicitly by all letters in (f*\ell=\Delta*\ell\circ V\circ Y). “Extra yuds” that distinguish letters (e.g., the yud-behind of ד vs ר) are not this base-seed; they live in (\Delta\_\ell) as **anchoring** or other structural modifiers.
+  - **Head exposure (ד/ר):** later head-exposure letters reuse the focused scope; `ד` backs the carry immediately and `ר` leaves it provisional.
+- **Note (latest):** this (Y) is the universal prefix used implicitly by all letters in (f*\ell=\Delta*\ell\circ V\circ Y). “Extra yuds” from letter lore are not this base-seed; the ד/ר distinction is encoded structurally by the presence or absence of `supp`.
 
 ---
 
@@ -341,9 +345,9 @@ None.
 # ל — Endpoint interface (to/for, keyed-by)
 
 - **Select:** endpoint (x) and an active “to/at” relation (\to_C), plus an optional source scope (s) from (F/R/\Omega).
-- **Bound:** open a candidate membrane (M_s) as the domain of eligible (y), form the endpoint fiber (L_s(x)={y\in M_s\mid y\to_C x}), and cut an anchored door boundary that treats L_s(x) as the admitted-at-(x) interface.
+- **Bound:** open a candidate membrane (M_s) as the domain of eligible (y), form the endpoint fiber (L_s(x)={y\in M_s\mid y\to_C x}), and cut a stable door boundary that treats L_s(x) as the admitted-at-(x) interface.
 - **Seal:** commit an `EndpointHandle(x, domain=M_s, fiber=L_s(x), door=D_x)` and set focus to it.
-- **Note (milui):** למד reads as endpoint (ל) + domain membrane (מ) + anchored door (ד).
+- **Note (milui):** למד reads as endpoint (ל) + domain membrane (מ) + stable door (ד).
 
 ---
 
@@ -526,12 +530,14 @@ Unary. Orthogonal resolver: closes the nearest unresolved carry-thread.
 
 ---
 
-# ר — Corner / head-handle (unanchored; paired with ד)
+# ר — Bare head / unresolved head exposure
 
-- **Select:** an inside `ScopeHandle` (F) and an outside scope (from R or boundary context).
-- **Bound:** construct an unanchored head boundary `Head_unanchored(F, outside)` producing `BoundaryHandle(a=0)`.
-- **Seal:** allocate the boundary handle, attach a head pin (י-like) and three deterministic ports (ש-like: inside/surface/outside), and register it as a stable head for later selection.
-- **Note (milui):** רי״ש (ראש) reads as head + pin + tri-port interface; the midrashic split (ראש/רע) matches the unanchored head (a=0).
+- **Select:** current construct `X`. If no construct exists yet in the word, select word-entry ambient `W₀`.
+- **Bound:**
+  1. `h := alloc()`
+  2. add `head_of(h, X)`
+  3. add `carry(X, h)`
+- **Seal:** set `F := h`.
 
 ---
 
@@ -564,7 +570,7 @@ Allocate three nodes from `F`.
 
 - **Milui:** שי״ן = three-point attachment (ש) -> pin to one committed point (י) -> straighten into locked continuation (ן). After tripling the attachment surface, commit and continue.
 
-- **Architectural note:** the midrashic claim that ש is "a letter of truth" and that "falsehood has no legs" are observations about topology. Truth stands because its letters have wide bases. Falsehood borrows ש's three-point attachment to persist. ר (unanchored head, `a=0`) is the structural inverse of ד (anchored head, `a=1`). External ש provides ר with the functional equivalent of ד's missing anchor. Internal ש (`שׂר`) provides governance: a closed internal loop of mutual constraint without external anchor.
+- **Architectural note:** the midrashic claim that ש is "a letter of truth" and that "falsehood has no legs" are observations about topology. Truth stands because its letters have wide bases. Falsehood borrows ש's three-point attachment to persist. ר is the bare head exposure paired with ד's backed head exposure. External ש provides additional persistence around ר. Internal ש (`שׂר`) provides governance: a closed internal loop of mutual constraint around the exposed head.
 
 - **שׁ vs שׂ:** שׁ is external tripod and שׂ is internal triangle. The triangle's closed loop produces structural rigidity as a topological fact, not a flag. The relationship to ס is empirical, not definitional.
 

@@ -12,7 +12,7 @@ This profile provides a pedagogical, concrete instantiation of the abstract stat
 ## Handle mapping
 
 - `ScopeHandle(scope_id, ...)` → class, group, or student scopes
-- `BoundaryHandle(boundary_id, inside, outside, a, ...)` → classroom partitions
+- Partition records or scope-local interfaces → classroom partitions
 - `AliasHandle(alias_id, h1, h2, transports, ...)` → identity/transport across views
 - `RuleHandle(rule_id, target_scope, patch, priority, ...)` → classroom rules/constraints
 - `ArtifactHandle(artifact_id, payload, policy=final, ...)` → finalized outputs
@@ -25,15 +25,15 @@ This profile provides a pedagogical, concrete instantiation of the abstract stat
 - Membership (`∈`) between students and groups
 - Labeled links (`E`) between entities
 - Continuation links (`E_cont`) with reachability `≤cont*`
-- Boundaries (`B`) with anchor bit `a ∈ {0,1}`
+- Boundaries (`B`) when the profile needs inside/outside separation
 - Policies (`soft`, `framed_lock`, `final`)
 - Edge modes (`free`, `gated`, `stabilized`, `convergent`, `committed`, `bundled`, `collapsed`)
-- Head hints (`anchored`, `unanchored`, `none`)
+- Head states (`backed`, `bare`, `none`)
 
 ## Typing constraints (profile view)
 
 - Membership (`∈`) only applies between `EntityHandle` and `ScopeHandle`.
-- Head constructors consume `ScopeHandle` and produce `BoundaryHandle`.
+- Head-exposure letters consume `ScopeHandle` and produce `ScopeHandle`.
 - Letters declare input/output handle kinds and must respect them.
 - Each letter declares `(in_types_req, in_types_opt, out_type)` and a finite list of allowed coercions; if no coercion exists, mismatched kinds are a compile error.
 

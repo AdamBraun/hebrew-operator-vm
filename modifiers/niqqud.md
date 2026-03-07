@@ -79,8 +79,8 @@ Execution of a token ((\ell, \delta)) (let (S_0) be the current state):
 | מ    | from-zone membrane OPEN (collect candidates)                         |
 | ם    | from-zone membrane CLOSE (commit/export membrane handle)             |
 | ק    | ≈-interchangeability + representative selection (+ optional descent) |
-| ר    | unanchored head boundary (a=0)                                       |
-| ד    | anchored head boundary (a=1)                                         |
+| ר    | bare head exposure with unresolved carry                             |
+| ד    | backed head exposure with immediately resolved carry                 |
 | ס    | framed_lock support hull                                             |
 | צ/ץ  | exemplar alignment / atomic aligned handle (in ץ)                    |
 | ת    | finalize-and-stamp (`policy=final`)                                  |
@@ -104,16 +104,16 @@ Execution of a token ((\ell, \delta)) (let (S_0) be the current state):
 
 - **MicroGraph:** `Y(L)+Y(R)`
 - **Tier:** `Sof`
-- **Semantics:** `Stabilize` (`edge_mode=stabilized`, `support_pins={L,R}`, optional `head_hint=unanchored`)
-- **NameSignature:** exemplar-align + pin + unanchored-head + pin.
+- **Semantics:** `Stabilize` (`edge_mode=stabilized`, `support_pins={L,R}`, optional `head_hint=bare`)
+- **NameSignature:** exemplar-align + pin + bare-head + pin.
 
 #### Hiriq (ִ) — rep-token commit (Sof)
 
 - **MicroGraph:** `Y((sof, C))`
 - **Tier:** `Sof`
 - **DesugarsTo:** `Y_C^in ⊕ Y_C^out` (implicit inside Seal)
-- **Semantics:** `RepTokenCommit` (`h1 := GateShell(h)`, `h2 := Pin_in(h1)`, `h3 := HeadHint(unanchored, h2)`, `h4 := Pin_out(h3)`, `h5 := MarkAsRepresentative≈(h4)`, `edge_mode=committed`)
-- **NameSignature:** gated + pin + unanchored head + pin + ≈.
+- **Semantics:** `RepTokenCommit` (`h1 := GateShell(h)`, `h2 := Pin_in(h1)`, `h3 := HeadHint(bare, h2)`, `h4 := Pin_out(h3)`, `h5 := MarkAsRepresentative≈(h4)`, `edge_mode=committed`)
+- **NameSignature:** gated + pin + bare head + pin + ≈.
 
 #### Segol (ֶ) — converge / TO (Sof)
 
@@ -171,14 +171,14 @@ Execution of a token ((\ell, \delta)) (let (S_0) be the current state):
 | Glyph       | Tier          | Micro-graph                | Effect                                                                      | NameSignature                                                           | HostConstraint         |
 | ----------- | ------------- | -------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------- |
 | patach (ַ)  | Sof (below)   | `V(L,R)`                   | `Gate` (controlled gate)                                                    | utterance-export + finalize-stamp + gated-compartment ⇒ controlled gate | none                   |
-| tzere (ֵ)   | Sof (below)   | `Y(L)+Y(R)`                | `Stabilize` (`edge_mode=stabilized`, `head_hint=unanchored`)                | exemplar-align + pin + unanchored-head + pin                            | none                   |
-| hiriq (ִ)   | Sof (below)   | `Y((sof, C))`              | `RepTokenCommit` (compressed pin-pair, `edge_mode=committed`)               | gated + pin + unanchored head + pin + ≈                                 | none                   |
+| tzere (ֵ)   | Sof (below)   | `Y(L)+Y(R)`                | `Stabilize` (`edge_mode=stabilized`, `head_hint=bare`)                      | exemplar-align + pin + bare-head + pin                                  | none                   |
+| hiriq (ִ)   | Sof (below)   | `Y((sof, C))`              | `RepTokenCommit` (compressed pin-pair, `edge_mode=committed`)               | gated + pin + bare head + pin + ≈                                       | none                   |
 | segol (ֶ)   | Sof (below)   | `Y(L)+Y(R)+Y(C)`           | `ConvergeToEndpoint` (`edge_mode=convergent`)                               | framed_lock + bestowal (י–מ–ל) + channel + endpoint                     | none                   |
 | kamatz (ָ)  | Sof (below)   | `V(L,R)+Y(C)`              | `CommitRepresentativeToAtomic` (`edge_mode=committed`, declared `out_type`) | ≈ + membrane-open + atomic finalize                                     | none                   |
 | shva (ְ)    | Sof (below)   | `Y(C₁)+Y(C₂)`              | `CollapseToAlias` (`edge_mode=collapsed`)                                   | branch + channel + alias                                                | none                   |
 | kubutz (ֻ)  | Sof (below)   | `Seq[Y(p1), Y(p2), Y(p3)]` | `Bundle` (`edge_mode=bundled`)                                              | ≈ + channel + interiorize + channel + atomic                            | none                   |
 | cholam (ֹ)  | Rosh (above)  | `Y((rosh, L))`             | `HeadBiasToSealedEndpoint` (bias toward sealed endpoint handles)            | gated-compartment + channel + endpoint + mem-close                      | none                   |
-| shuruk (וּ) | Toch (inside) | `Y((toch, C))` on ו        | `CarrierActivation` (δ_toch on ו)                                           | branch + carrier + unanchored head + carrier + ≈                        | inside_dot_kind=shuruk |
+| shuruk (וּ) | Toch (inside) | `Y((toch, C))` on ו        | `CarrierActivation` (δ_toch on ו)                                           | branch + carrier + bare head + carrier + ≈                              | inside_dot_kind=shuruk |
 | dagesh (ּ)  | Toch (inside) | `Y((toch, C))`             | `HARDEN` (Toch envelope)                                                    | non-checksummed (hard bit)                                              | inside_dot_kind=dagesh |
 
 ### Compositional identities
@@ -202,8 +202,8 @@ Execution of a token ((\ell, \delta)) (let (S_0) be the current state):
 ### Diacritic VM effects
 
 - `Gate(h: Handle) -> Handle`: annotate `h` with `edge_mode=gated` and `gate_span=(L,R)`; preserve handle kind.
-- `Stabilize(h: Handle) -> Handle`: set `edge_mode=stabilized`, record `support_pins={L,R}`, and optionally set `head_hint=unanchored`.
-- `RepTokenCommit(h: Handle) -> Handle`: `h1 := GateShell(h)` (minimal ח-like interface shell), `h2 := Pin_in(h1)`, `h3 := HeadHint(unanchored, h2)` (hint only), `h4 := Pin_out(h3)`, `h5 := MarkAsRepresentative≈(h4)` (set ≈-rep), set `edge_mode=committed`.
+- `Stabilize(h: Handle) -> Handle`: set `edge_mode=stabilized`, record `support_pins={L,R}`, and optionally set `head_hint=bare`.
+- `RepTokenCommit(h: Handle) -> Handle`: `h1 := GateShell(h)` (minimal ח-like interface shell), `h2 := Pin_in(h1)`, `h3 := HeadHint(bare, h2)` (hint only), `h4 := Pin_out(h3)`, `h5 := MarkAsRepresentative≈(h4)` (set ≈-rep), set `edge_mode=committed`.
 - `ConvergeToEndpoint(h: Handle) -> Handle`: set `edge_mode=convergent`, `commit_node=C`, optional `endpoint_bias=true`.
 - `CommitRepresentativeToAtomic(h: Handle) -> ArtifactHandle`: finalize representative as `ArtifactHandle(payload=rep, policy=final)` (declared `out_type`), `edge_mode=committed`.
 - `CollapseToAlias(h: Handle) -> AliasHandle`: create alias handle tying branches with `transports=on` (declared `out_type`), `edge_mode=collapsed`.
@@ -241,8 +241,8 @@ Require: `BC_glyph(\delta) == BC_name` and `tier` matches before acceptance.
 
 - if `tier=Toch` and INV contains “carrier/channel” → `CarrierActivation`
 - else if `tier=Rosh` and INV contains “gated compartment” (ח) and “carrier/channel” (ו) and “endpoint fiber” (ל) and “from-zone membrane CLOSE” (ם) → `HeadBiasToSealedEndpoint`
-- else if INV contains “≈-interchangeability” and “unanchored head boundary” (ר) and two “pinned seed” (י twice) → `RepTokenCommit`
-- else if INV contains “unanchored head boundary” (ר) and two “pinned seed” (י twice) and not “≈-interchangeability” → `Stabilize`
+- else if INV contains “≈-interchangeability” and “bare head exposure” (ר) and two “pinned seed” (י twice) → `RepTokenCommit`
+- else if INV contains “bare head exposure” (ר) and two “pinned seed” (י twice) and not “≈-interchangeability” → `Stabilize`
 - else if INV contains “alias/transport” → `CollapseToAlias`
 - else if INV contains “≈-interchangeability” and “from-zone membrane OPEN” (מ) and “atomic aligned handle” (ץ) → `CommitRepresentativeToAtomic`
 - else if INV contains “≈-interchangeability” and “atomic aligned handle” (ץ) → `Bundle`
@@ -260,7 +260,7 @@ Require: `BC_glyph(\delta) == BC_name` and `tier` matches before acceptance.
 
 - Base trace: `א → ל`.
 - `אַל` uses patach (Sof: `V(L,R)`) ⇒ export becomes a controlled gate.
-- `אֵל` uses tzere (Sof: `Y(L)+Y(R)`) ⇒ stabilize rails with `head_hint=unanchored`.
+- `אֵל` uses tzere (Sof: `Y(L)+Y(R)`) ⇒ stabilize rails with `head_hint=bare`.
 - `אֶל` uses segol (Sof: tzere + hiriq) ⇒ supported frame + rep-token commit ⇒ converge-to-lamed.
 
 ---
@@ -396,8 +396,8 @@ Invariant tags (excerpt):
 - `מ`: membrane OPEN
 - `ם`: membrane CLOSE
 - `ק`: ≈ interchangeability
-- `ר`: unanchored head boundary
-- `ד`: anchored head boundary
+- `ר`: bare head exposure
+- `ד`: backed head exposure
 - `ס`: framed_lock support hull
 - `צ/ץ`: exemplar alignment / atomic aligned handle
 - `ת`: finalize-and-stamp

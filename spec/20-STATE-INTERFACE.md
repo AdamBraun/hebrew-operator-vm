@@ -7,7 +7,6 @@ This defines the **minimum abstract interface** a profile must implement. It is 
 Profiles MUST provide these handle kinds (or exact equivalents):
 
 - `ScopeHandle`: an addressable scope/region.
-- `BoundaryHandle`: a separable inside/outside interface for scopes.
 - `AliasHandle`: declares transport/identity or equivalence between handles.
 - `RuleHandle`: persistent constraints or patches applied to scopes.
 - `ArtifactHandle`: finalized, non-editable output objects.
@@ -20,16 +19,15 @@ Profiles MAY define additional kinds, but letter signatures MUST declare which k
 Implementations MUST support these abstract relations or traits, independent of any world semantics:
 
 - **Scope relation:** a containment/association relation between handles and scopes.
-- **Boundary relation:** a separation relation for inside/outside traversal.
-- **Ports:** each boundary or interface handle exposes deterministic ports (`L`, `C`, `R` at minimum).
+- **Boundary relation (optional but recommended):** a separation relation for inside/outside traversal when a profile models partitions or gates.
+- **Ports (optional):** profiles MAY expose interface projections or attachment points, but no fixed tri-port schema is required.
 - **Policies:** edit policies `{soft, framed_lock, final}`.
 - Policy semantics (minimum): `framed_lock` blocks frame rewrites but allows interior edits; `final` blocks all mutation. Profiles MAY refine this but MUST preserve the ordering `soft → framed_lock → final`.
-- **Anchoring:** a boolean anchor bit `a ∈ {0,1}` (anchored vs unanchored). Conventional interpretation: `a=1` = anchored/internal/receiving, `a=0` = unanchored/external/autonomous.
 - **Coupling / edit permissions:** traits that gate how patches flow (context flow, data flow, edit flow).
 - **Link relation:** labeled directed links between handles.
 - **Continuation relation (optional but recommended):** for ordered progression handles.
 - **Edge modes:** metadata for behavior classes (e.g., `gated`, `stabilized`, `convergent`, `committed`, `bundled`, `collapsed`).
-- **Head hints:** optional metadata that can bias selection without overriding anchoring.
+- **Head hints:** optional metadata that can bias selection without overriding graph relations.
 - **Cascade rules (optional but recommended):** a persistent rule set `Φ`, where each rule is `(target, bound, priority)`. Profiles may name this differently but must expose deterministic lookup/update if used by letter semantics.
 
 ## Required operations
