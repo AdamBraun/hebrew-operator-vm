@@ -75,9 +75,9 @@ describe("verse explorer trace alignment", () => {
         2,
         "רֵאשִׁית",
         ["RESH.BOUNDARY_CLOSE", "ALEPH.ALIAS", "SHIN.FORK", "TAV.FINALIZE"],
-        "ר boundary close ⇢ א alias ⇢ ש fork route ⇢ ת finalize+stamp"
+        "ר head expose ⇢ א alias ⇢ ש fork route ⇢ ת finalize+stamp"
       ),
-      makeTrace(3, "בָּרָא", ["RESH.BOUNDARY_CLOSE", "ALEPH.ALIAS"], "ר boundary close ⇢ א alias"),
+      makeTrace(3, "בָּרָא", ["RESH.BOUNDARY_CLOSE", "ALEPH.ALIAS"], "ר head expose ⇢ א alias"),
       makeTrace(
         4,
         "אֱלֹהִים",
@@ -96,7 +96,7 @@ describe("verse explorer trace alignment", () => {
         8,
         "הָאָרֶץ",
         ["HE.DECLARE", "ALEPH.ALIAS", "RESH.BOUNDARY_CLOSE", "FINAL_TSADI.ALIGN_FINAL"],
-        "ה declare(public) ⇢ א alias ⇢ ר boundary close ⇢ ץ final align"
+        "ה declare(public) ⇢ א alias ⇢ ר head expose ⇢ ץ final align"
       )
     ];
 

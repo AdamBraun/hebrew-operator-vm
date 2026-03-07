@@ -43,7 +43,7 @@ describe("render atomic runtime", () => {
     expect(first.words).toBe(1);
     expect(first.events).toBe(4);
     expect(first.atomicEventsText).toContain(
-      "Genesis/1/1/2\t2\t0\tclose boundary kind=RESH.BOUNDARY_CLOSE"
+      "Genesis/1/1/2\t2\t0\texport handle rosh kind=RESH.BOUNDARY_CLOSE"
     );
   });
 

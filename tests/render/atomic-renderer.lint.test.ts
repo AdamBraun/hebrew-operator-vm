@@ -99,10 +99,10 @@ describe("atomic renderer lint", () => {
     const lines = rows.map((row) => formatAtomicRenderedEvent(row));
 
     expect(lines).toEqual([
-      "Genesis/1/1/2\t2\t0\tclose boundary kind=RESH.BOUNDARY_CLOSE source=vm_event tau=2 payload.anchor=0 payload.id=h1 payload.inside=h2 payload.outside=h3.",
-      "Genesis/1/1/2\t2\t1\talias handle alias kind=ALEPH.ALIAS source=vm_event tau=3 payload.id=h4 payload.left=h5 payload.right=h2.",
-      "Genesis/1/1/2\t2\t2\tfork handle kind=SHIN.FORK source=vm_event tau=4 payload.active=h6 payload.focus=h4 payload.id=h7 payload.left=h6 payload.right=h8 payload.spine=h9.",
-      "Genesis/1/1/2\t2\t3\tseal handle kind=TAV.FINALIZE source=vm_event tau=5 payload.boundaryId=h10 payload.id=h11 payload.outside=h2 payload.residueId=h12 payload.target=h7."
+      "Genesis/1/1/2\t2\t0\texport handle rosh kind=RESH.BOUNDARY_CLOSE source=vm_event tau=2 payload.anchor=0 payload.id=h1 payload.inside=h2 payload.outside=h2.",
+      "Genesis/1/1/2\t2\t1\talias handle alias kind=ALEPH.ALIAS source=vm_event tau=3 payload.id=h3 payload.left=h4 payload.right=h2.",
+      "Genesis/1/1/2\t2\t2\tfork handle kind=SHIN.FORK source=vm_event tau=4 payload.active=h5 payload.focus=h3 payload.id=h6 payload.left=h5 payload.right=h7 payload.spine=h8.",
+      "Genesis/1/1/2\t2\t3\tseal handle kind=TAV.FINALIZE source=vm_event tau=5 payload.boundaryId=h9 payload.id=h10 payload.outside=h2 payload.residueId=h11 payload.target=h6."
     ]);
   });
 });

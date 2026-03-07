@@ -338,7 +338,7 @@ describe("torah corpus execute module helpers", () => {
           surface: "בְּרֵאשִׁית",
           tokens: [1, 2, 3],
           flow_compact: ["RESH.BOUNDARY_CLOSE", "TAV.FINALIZE"],
-          one_liner: "ר boundary close -> ת finalize+stamp"
+          one_liner: "ר head expose -> ת finalize+stamp"
         },
         {
           ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 2 },

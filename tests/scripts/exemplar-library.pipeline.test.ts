@@ -58,7 +58,7 @@ describe("exemplar library build + verify pipeline", () => {
         surface: "רֵאשִׁית",
         token_ids: [11, 12, 13],
         skeleton: ["RESH.BOUNDARY_CLOSE", "ALEPH.ALIAS", "SHIN.FORK", "TAV.FINALIZE"],
-        flow: "ר boundary close ⇢ א alias ⇢ ש fork route ⇢ ת finalize+stamp",
+        flow: "ר head expose ⇢ א alias ⇢ ש fork route ⇢ ת finalize+stamp",
         semantics_version: "1.0.0"
       },
       {
@@ -101,7 +101,7 @@ describe("exemplar library build + verify pipeline", () => {
           "TAV.FINALIZE",
           "SPACE.MEM_AUTO_CLOSE"
         ],
-        flow: "מ open mem-zone ⇢ ר boundary close ⇢ ח compartment ⇢ פ utterance ⇢ ת finalize+stamp ⇢ □ mem auto-close",
+        flow: "מ open mem-zone ⇢ ר head expose ⇢ ח compartment ⇢ פ utterance ⇢ ת finalize+stamp ⇢ □ mem auto-close",
         semantic_version: "1.0.0"
       },
       {
@@ -128,7 +128,7 @@ describe("exemplar library build + verify pipeline", () => {
         surface: "הָאָרֶץ",
         token_ids: [81, 82, 83],
         skeleton: ["HE.DECLARE", "ALEPH.ALIAS", "RESH.BOUNDARY_CLOSE", "FINAL_TSADI.ALIGN_FINAL"],
-        flow: "ה declare(public) ⇢ א alias ⇢ ר boundary close ⇢ ץ final align",
+        flow: "ה declare(public) ⇢ א alias ⇢ ר head expose ⇢ ץ final align",
         semantic_version: "1.0.0"
       },
       {
@@ -172,7 +172,7 @@ describe("exemplar library build + verify pipeline", () => {
         surface: "וַיִּקְרָא",
         token_ids: [121, 122],
         skeleton: ["QOF.APPROX", "RESH.BOUNDARY_CLOSE", "ALEPH.ALIAS"],
-        flow: "ק approximate ⇢ ר boundary close ⇢ א alias",
+        flow: "ק approximate ⇢ ר head expose ⇢ א alias",
         semantic_version: "1.0.0"
       },
       {
@@ -214,7 +214,7 @@ describe("exemplar library build + verify pipeline", () => {
         surface: "מַזְרִיעַ",
         token_ids: [161, 162],
         skeleton: ["MEM.OPEN", "ZAYIN.GATE", "RESH.BOUNDARY_CLOSE", "SPACE.MEM_AUTO_CLOSE"],
-        flow: "מ open mem-zone ⇢ ז gate ⇢ ר boundary close ⇢ □ mem auto-close",
+        flow: "מ open mem-zone ⇢ ז gate ⇢ ר head expose ⇢ □ mem auto-close",
         semantic_version: "1.0.0"
       },
       {
