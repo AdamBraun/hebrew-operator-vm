@@ -190,7 +190,7 @@ describe("exemplar library build + verify pipeline", () => {
         surface: "וַיַּבְדֵּל",
         token_ids: [141, 142],
         skeleton: ["DALET.BOUNDARY_CLOSE", "LAMED.ENDPOINT"],
-        flow: "ד boundary close ⇢ ל endpoint bind",
+        flow: "ד backed head expose ⇢ ל endpoint bind",
         semantic_version: "1.0.0"
       },
       {
@@ -205,7 +205,7 @@ describe("exemplar library build + verify pipeline", () => {
           "LAMED.ENDPOINT",
           "FINAL_MEM.CLOSE"
         ],
-        flow: "ה declare(public) ⇢ ג bestowal ⇢ ד boundary close ⇢ ל endpoint bind ⇢ ם close mem-zone",
+        flow: "ה declare(public) ⇢ ג bestowal ⇢ ד backed head expose ⇢ ל endpoint bind ⇢ ם close mem-zone",
         semantic_version: "1.0.0"
       },
       {

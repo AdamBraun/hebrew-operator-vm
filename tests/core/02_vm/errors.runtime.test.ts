@@ -12,7 +12,10 @@ describe("runtime errors", () => {
 
   it("dalet does not depend on boundary obligations", () => {
     const state = runProgram("נד", createInitialState());
-    expect(state.boundaries.length).toBe(1);
+    const [head, whole] = String(Array.from(state.head_of)[0] ?? "->").split("->");
+    expect(state.boundaries).toEqual([]);
+    expect(state.head_of.size).toBe(1);
+    expect(state.supp.has(`${head}->${whole}`)).toBe(true);
   });
 
   it("cont reachability on missing nodes returns false", () => {

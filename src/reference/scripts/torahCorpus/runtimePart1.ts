@@ -48,7 +48,7 @@ const DIACRITIC_KIND_MAP = {
 const OP_FLOW_LABEL = {
   "ALEPH.ALIAS": "א alias",
   "GIMEL.BESTOW": "ג bestowal",
-  "DALET.BOUNDARY_CLOSE": "ד boundary close",
+  "DALET.BOUNDARY_CLOSE": "ד backed head expose",
   "HE.DECLARE": "ה declare(public)",
   "HE.DECLARE_BREATH": "ה breath tail",
   "HE.DECLARE_PIN": "ה pin export",
@@ -92,6 +92,7 @@ const IMPORTANT_EVENT_TYPES = new Set([
   "align",
   "align_final",
   "boundary_close",
+  "head_backed",
   "head_expose",
   "boundary_auto_close",
   "utter",
@@ -409,6 +410,8 @@ function summarizeEvent(type, event, traceEntry) {
       return "boundary support discharge";
     case "boundary_close":
       return traceEntry.read_op === "ד" ? "close via dalet" : "close via resh";
+    case "head_backed":
+      return "backed head exposure";
     case "head_expose":
       return "bare head exposure";
     case "boundary_auto_close":
@@ -589,6 +592,18 @@ function mapRawEventToFlow(event, traceEntry) {
         payload
       };
     }
+    case "head_backed":
+      return {
+        op_family: "DALET.BOUNDARY_CLOSE",
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "vm_event",
+        payload: {
+          id: asHandleId(data.id),
+          inside: asHandleId(data.whole),
+          outside: asHandleId(data.whole),
+          anchor: 1
+        }
+      };
     case "head_expose":
       return {
         op_family: "RESH.BOUNDARY_CLOSE",
