@@ -1,4 +1,4 @@
-import { LetterMode } from "../compile/types";
+import { CompileError, LetterMode } from "../compile/types";
 import { letterRegistry } from "../letters/registry";
 import { Construction, LetterOp, SelectOperands } from "../letters/types";
 import { applyEventLinks } from "../state/eventLinks";
@@ -28,6 +28,21 @@ function resolveLetterMode(
   _isWordFinal: boolean
 ): LetterMode | undefined {
   if (runtime.letter_mode_forced) {
+    if (runtime.token_letter === "ה") {
+      throw new CompileError(
+        `Legacy ה letter_mode '${String(runtime.letter_mode_forced)}' is no longer supported; ה only uses the head-family implementation`
+      );
+    }
+    if (runtime.token_letter !== "ו") {
+      throw new CompileError(
+        `Unsupported forced letter_mode '${String(runtime.letter_mode_forced)}' for '${runtime.token_letter}'; only ו supports forced modes`
+      );
+    }
+    if (!isVavMode(runtime.letter_mode_forced)) {
+      throw new CompileError(
+        `Unsupported forced letter_mode '${String(runtime.letter_mode_forced)}' for 'ו'`
+      );
+    }
     return runtime.letter_mode_forced;
   }
   if (runtime.token_letter === "ו") {

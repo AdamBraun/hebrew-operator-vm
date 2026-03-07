@@ -23,4 +23,21 @@ describe("token validation", () => {
     const tokens = tokenize("ךםןףץ");
     expect(() => validateTokens(tokens, letterRegistry)).not.toThrow();
   });
+
+  it("rejects legacy he letter modes", () => {
+    const tokens = [
+      {
+        letter: "ה",
+        diacritics: [],
+        dot_kind: "none",
+        inside_dot_kind: "none",
+        letter_mode: "public" as any,
+        is_final: true,
+        raw: "ה"
+      }
+    ];
+    expect(() => validateTokens(tokens, letterRegistry)).toThrow(
+      /Legacy ה letter_mode 'public' is no longer supported/
+    );
+  });
 });
