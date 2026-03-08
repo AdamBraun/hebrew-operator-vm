@@ -4,6 +4,15 @@ export function addCont(state: State, from: string, to: string): void {
   state.cont.add(`${from}->${to}`);
 }
 
+export function addCarry(state: State, from: string, to: string): void {
+  addCont(state, from, to);
+  state.carry.add(`${from}->${to}`);
+}
+
+export function addSupp(state: State, from: string, to: string): void {
+  state.supp.add(`${from}->${to}`);
+}
+
 export function contReachable(state: State, start: string, target: string): boolean {
   if (start === target) {
     return true;

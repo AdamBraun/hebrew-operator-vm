@@ -478,12 +478,19 @@ Unary. Orthogonal resolver: closes the nearest unresolved carry-thread.
 
 ---
 
-# ע — עין (נ + ו at base)
+# ע — Exported-origin continuation
 
-- **Select:** pick a target (x) from current focus (F).
-- **Bound:** create a persistent watch-handle on (x): a live tether (ו) that keeps “this target” selectable across later scope/focus shifts (the persistence aspect comes from the נ-thread).
-- **Seal:** reify the watch-handle as an addressable selector (the recorded eye); it stays available even when (F) changes.
-- **Key difference:** ע creates one persistent pointer, not multiple branches.
+Unary. Continue forward under unresolved carry, exporting the point of departure as an addressable handle.
+
+- **Select:** current focus (F).
+- **Bound:**
+  1. let `s := F` (snapshot origin).
+  2. allocate successor (`F⁺ := alloc()`).
+  3. add `cont(s, F⁺)`.
+  4. add `carry(s, F⁺)`.
+  5. allocate origin handle (`h := handle_to(s)`).
+- **Seal:** push `h` to `K`; set `F := F⁺`.
+- **Note:** edge set identical to נ; distinction is origin export. Milui עי״ן = export-origin (ע) → pin (י) → commit-lock (ן).
 
 ---
 

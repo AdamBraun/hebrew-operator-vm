@@ -49,7 +49,23 @@ letters:
   "נ": { status: implemented, obligations: { opens: ["SUPPORT"] } }
   "ן": { status: implemented, obligations: { opens: ["SUPPORT"], closes: ["SUPPORT"] } }
   "ס": { id: SAMEKH, status: implemented, obligations: { closes: ["SUPPORT"] } }
-  "ע": { status: implemented }
+  "ע":
+    status: implemented
+    arity_req: 1
+    arity_opt: 0
+    edges: ["cont", "carry"]
+    focus:
+      behavior: advances
+      effect: "F := F⁺"
+    export:
+      handle: origin
+      destination: K
+    obligations:
+      opens: []
+      closes: []
+    carry:
+      resolution: unresolved
+      supp_edge: false
   "פ": { status: implemented, arity_req: 2, arity_opt: 1 }
   "ף": { status: implemented }
   "צ": { status: implemented, arity_req: 2 }

@@ -426,7 +426,8 @@ function executeReadRail(
     sealResult.S.vm.wordLastSealedArtifact = sealed;
   }
 
-  sealResult.S.vm.K.push(sealed);
+  const exportHandle = sealResult.export_handle ?? sealed;
+  sealResult.S.vm.K.push(exportHandle);
   sealResult.S.vm.F = sealed;
   sealResult.S.vm.R = sealResult.r;
   recorder?.record("register_commit", {

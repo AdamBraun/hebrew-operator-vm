@@ -85,6 +85,8 @@ export type State = {
   vm: VM;
   handles: Map<string, Handle>;
   cont: Set<string>;
+  carry: Set<string>;
+  supp: Set<string>;
   links: Array<{ from: string; to: string; label: string }>;
   boundaries: Array<{ inside: string; outside: string; anchor: 0 | 1; id: string }>;
   rules: Array<{ id: string; target: string; patch: any; priority: number }>;
@@ -142,6 +144,8 @@ export function createInitialState(): State {
     vm,
     handles,
     cont: new Set(),
+    carry: new Set(),
+    supp: new Set(),
     links: [],
     boundaries: [],
     rules: []
@@ -196,6 +200,8 @@ export function serializeState(state: State): Record<string, any> {
       }))
       .sort((a, b) => a.id.localeCompare(b.id)),
     cont: Array.from(state.cont).sort(),
+    carry: Array.from(state.carry).sort(),
+    supp: Array.from(state.supp).sort(),
     links: [...state.links],
     boundaries: [...state.boundaries],
     rules: [...state.rules]

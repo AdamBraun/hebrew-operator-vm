@@ -1,9 +1,12 @@
 import { BOT_ID, createHandle } from "../state/handles";
+import { addCarry } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
-import { selectOperands } from "../vm/select";
-import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
+import { selectCurrentFocus } from "../vm/select";
+import { Construction, LetterMeta, LetterOp, SelectOperands, defaultEnvelope } from "./types";
 
+// ע — Exported-origin continuation.
+// Same cont/carry step as נ, but K receives a handle to the origin.
 const meta: LetterMeta = {
   letter: "ע",
   arity_req: 1,
@@ -15,23 +18,28 @@ const meta: LetterMeta = {
 
 export const ayinOp: LetterOp = {
   meta,
-  select: (S: State) => selectOperands(S, meta),
-  bound: (S: State, ops) => {
-    const target = ops.args[0];
-    const watchId = nextId(S, "ע");
-    S.handles.set(watchId, createHandle(watchId, "watch", { meta: { target } }));
+  select: (S: State) => selectCurrentFocus(S),
+  bound: (S: State, ops: SelectOperands) => {
+    const origin = ops.args[0];
+    const child = nextId(S, "ע");
+    S.handles.set(child, createHandle(child, "scope", { meta: { succOf: origin } }));
+    addCarry(S, origin, child);
+    const originHandleId = nextId(S, "ע");
+    S.handles.set(
+      originHandleId,
+      createHandle(originHandleId, "alias", {
+        meta: { target: origin, export_origin: true }
+      })
+    );
     const cons: Construction = {
-      base: target,
+      base: origin,
       envelope: defaultEnvelope(),
-      meta: { watchId, target }
+      meta: { origin, child, originHandleId }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { watchId } = cons.meta as { watchId: string };
-    if (!S.vm.W.includes(watchId)) {
-      S.vm.W.push(watchId);
-    }
-    return { S, h: watchId, r: BOT_ID };
+    const { child, originHandleId } = cons.meta as { child: string; originHandleId: string };
+    return { S, h: child, r: BOT_ID, export_handle: originHandleId };
   }
 };

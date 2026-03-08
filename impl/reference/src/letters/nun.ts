@@ -1,5 +1,5 @@
 import { BOT_ID, createHandle } from "../state/handles";
-import { addCont } from "../state/relations";
+import { addCarry } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
 import { Construction, LetterMeta, LetterOp, SelectOperands, defaultEnvelope } from "./types";
@@ -20,7 +20,7 @@ export const nunOp: LetterOp = {
     const parent = ops.args[0];
     const child = nextId(S, "נ");
     S.handles.set(child, createHandle(child, "scope", { meta: { succOf: parent } }));
-    addCont(S, parent, child);
+    addCarry(S, parent, child);
     const cons: Construction = {
       base: parent,
       envelope: defaultEnvelope(),

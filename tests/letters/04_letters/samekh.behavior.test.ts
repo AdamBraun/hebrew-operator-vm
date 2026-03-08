@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { ayinOp } from "@ref/letters/ayin";
+import { nunOp } from "@ref/letters/nun";
 import { BOT_ID, createHandle } from "@ref/state/handles";
 import { samekhOp } from "@ref/letters/samekh";
+import type { LetterOp } from "@ref/letters/types";
 import { addCarry, addSupp } from "@ref/state/relations";
 import { createInitialState } from "@ref/state/state";
 import { runProgram } from "@ref/vm/vm";
@@ -44,6 +47,45 @@ describe("samekh behavior", () => {
     expect(state.supp.size).toBe(beforeSuppSize + 1);
     expect(state.vm.R).toBe(BOT_ID);
   });
+
+  it("resolves ayin's unresolved carry by walking backward from the current focus", () => {
+    const state = createInitialState();
+    const ayinStep = executeUnary(state, ayinOp);
+    const samekhStep = executeUnary(state, samekhOp);
+
+    expect(samekhStep.child).toBe(ayinStep.child);
+    expect(state.supp.has(`${ayinStep.child}->${ayinStep.origin}`)).toBe(true);
+    expect(state.supp.size).toBe(1);
+    expect(state.vm.R).toBe(BOT_ID);
+  });
+
+  it("with nun then ayin, first samekh closes ayin's carry and second samekh closes nun's", () => {
+    const state = createInitialState();
+    const nunStep = executeUnary(state, nunOp);
+    const ayinStep = executeUnary(state, ayinOp);
+
+    const firstSamekh = executeUnary(state, samekhOp);
+    expect(firstSamekh.child).toBe(ayinStep.child);
+    expect(state.supp.has(`${ayinStep.child}->${ayinStep.origin}`)).toBe(true);
+    expect(state.supp.has(`${ayinStep.child}->${nunStep.origin}`)).toBe(false);
+
+    const secondSamekh = executeUnary(state, samekhOp);
+    expect(secondSamekh.child).toBe(ayinStep.child);
+    expect(state.supp.has(`${ayinStep.child}->${nunStep.origin}`)).toBe(true);
+    expect(state.vm.R).toBe(BOT_ID);
+  });
+
+  it("without ayin, samekh still resolves the nearest unresolved carry regardless of origin letter", () => {
+    const state = createInitialState();
+    const firstNun = executeUnary(state, nunOp);
+    const secondNun = executeUnary(state, nunOp);
+    const samekhStep = executeUnary(state, samekhOp);
+
+    expect(samekhStep.child).toBe(secondNun.child);
+    expect(state.supp.has(`${secondNun.child}->${secondNun.origin}`)).toBe(true);
+    expect(state.supp.has(`${secondNun.child}->${firstNun.origin}`)).toBe(false);
+    expect(state.vm.R).toBe(BOT_ID);
+  });
 });
 
 function seedNodes(state: ReturnType<typeof createInitialState>, ids: string[]): void {
@@ -52,4 +94,22 @@ function seedNodes(state: ReturnType<typeof createInitialState>, ids: string[]):
       state.handles.set(id, createHandle(id, "scope"));
     }
   }
+}
+
+type UnaryStep = {
+  origin: string;
+  child: string;
+};
+
+function executeUnary(state: ReturnType<typeof createInitialState>, op: LetterOp): UnaryStep {
+  const origin = state.vm.F;
+  const selected = op.select(state);
+  const bound = op.bound(selected.S, selected.ops);
+  const sealed = op.seal(bound.S, bound.cons);
+
+  state.vm.K.push(sealed.export_handle ?? sealed.h);
+  state.vm.F = sealed.advance_focus === false ? origin : sealed.h;
+  state.vm.R = sealed.r;
+
+  return { origin, child: sealed.h };
 }
