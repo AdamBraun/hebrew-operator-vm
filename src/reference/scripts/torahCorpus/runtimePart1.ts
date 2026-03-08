@@ -50,7 +50,7 @@ const OP_FLOW_LABEL = {
   "GIMEL.BESTOW": "ג bestowal",
   "DALET.BOUNDARY_CLOSE": "ד backed head expose",
   "HE.HEAD_WITH_LEG": "ה backed head + detached leg",
-  "VAV.TRANSPORT": "ו transport",
+  "VAV.CONTINUATION": "ו continuation",
   "ZAYIN.GATE": "ז gate",
   "HET.COMPARTMENT": "ח compartment",
   "TET.COVERT": "ט covert",

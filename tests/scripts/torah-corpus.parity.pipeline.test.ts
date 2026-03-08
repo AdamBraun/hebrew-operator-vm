@@ -123,10 +123,10 @@ describe("torah corpus CLI parity checksums", () => {
 
     expect(runTwo).toEqual(runOne);
     expect(runOne).toEqual({
-      traces: "2dde53b609f2cd58cae1439ece65532b1a7681f57f2276b12c6e46b1e9f618f3",
-      flows: "864f108e4c3d20ae87c94698b8962bb31935bb1576cd112438e613a9206449f2",
-      verseTraces: "b53af6100037d3ddb8a56dc12d5e1e69156f4030e23bd09c5fbf4b730b897f06",
-      verseMotifIndex: "82f3c1f5c47007d9f02c0b929effa4de6942ef6917715793ebbe85b8e29edc45"
+      traces: "7bcc684677f662d7e437553e62590c8942950ce687d0ada804bfe20478a67a0c",
+      flows: "8226aa552425212560b163d0777a8f4d852d0a696f8cef9fb8abf62f93534f5d",
+      verseTraces: "b09fcbd50dbe9fb1c8e84717f9c89fd65784250228661c4568afa52cb663d713",
+      verseMotifIndex: "bd1448a281cd727267dc19e95d310dd46bdbb759850aa05ba52dc0e97f5f05c5"
     });
   });
 

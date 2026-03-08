@@ -1,30 +1,27 @@
-import { z } from 'zod';
+import { z } from "zod";
 import {
   isoUtcTimestampSchema,
   nonEmptyStringSchema,
   sha256HexSchema,
   versionContractSchema
-} from './common';
+} from "./common";
 
 export const requiredArtifactKinds = [
-  'word_traces',
-  'verse_phrase_trees',
-  'word_phrase_roles'
+  "word_traces",
+  "verse_phrase_trees",
+  "word_phrase_roles"
 ] as const;
 
 export const optionalArtifactKinds = [
-  'render_strict_paraphrase',
-  'render_poetic_paraphrase'
+  "render_strict_paraphrase",
+  "render_poetic_paraphrase"
 ] as const;
 
-export const manifestArtifactKinds = [
-  ...requiredArtifactKinds,
-  ...optionalArtifactKinds
-] as const;
+export const manifestArtifactKinds = [...requiredArtifactKinds, ...optionalArtifactKinds] as const;
 
 export const manifestArtifactKindSchema = z.enum(manifestArtifactKinds);
 
-export const manifestArtifactFormatSchema = z.enum(['jsonl']);
+export const manifestArtifactFormatSchema = z.enum(["jsonl"]);
 
 export const manifestArtifactSchema = z
   .object({
@@ -44,7 +41,12 @@ export const uiDataManifestSchema = z
     artifact_set: nonEmptyStringSchema,
     generated_at: isoUtcTimestampSchema,
     version_contract: versionContractSchema,
-    artifacts: z.array(manifestArtifactSchema)
+    artifacts: z.array(manifestArtifactSchema),
+    artifact_set_id: nonEmptyStringSchema.optional(),
+    engine_inputs_hash: sha256HexSchema.optional(),
+    engine_git_sha: nonEmptyStringSchema.optional(),
+    artifact_generated_at: isoUtcTimestampSchema.optional(),
+    artifact_tool_versions: z.record(nonEmptyStringSchema).optional()
   })
   .strict()
   .superRefine((manifest, ctx) => {
@@ -57,7 +59,7 @@ export const uiDataManifestSchema = z
       if (seenKinds.has(artifact.kind)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          path: ['artifacts', index, 'kind'],
+          path: ["artifacts", index, "kind"],
           message: `Duplicate artifact kind '${artifact.kind}'`
         });
       } else {
@@ -67,7 +69,7 @@ export const uiDataManifestSchema = z
       if (seenPaths.has(artifact.path)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          path: ['artifacts', index, 'path'],
+          path: ["artifacts", index, "path"],
           message: `Duplicate artifact path '${artifact.path}'`
         });
       } else {
@@ -79,7 +81,7 @@ export const uiDataManifestSchema = z
       if (!seenKinds.has(kind)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          path: ['artifacts'],
+          path: ["artifacts"],
           message: `Missing required artifact kind '${kind}'`
         });
       }

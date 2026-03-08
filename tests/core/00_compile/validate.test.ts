@@ -40,4 +40,21 @@ describe("token validation", () => {
       /Legacy ה letter_mode 'public' is no longer supported/
     );
   });
+
+  it("rejects legacy vav letter modes", () => {
+    const tokens = [
+      {
+        letter: "ו",
+        diacritics: [],
+        dot_kind: "none",
+        inside_dot_kind: "none",
+        letter_mode: "seeded" as any,
+        is_final: true,
+        raw: "ו"
+      }
+    ];
+    expect(() => validateTokens(tokens, letterRegistry)).toThrow(
+      /Legacy ו letter_mode 'seeded' is no longer supported/
+    );
+  });
 });

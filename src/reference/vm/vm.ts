@@ -210,32 +210,21 @@ function normalizeForJson(value: unknown): any {
   return String(value);
 }
 
-function isVavMode(mode: LetterMode | undefined): mode is "plain" | "seeded" | "transport" {
-  return mode === "plain" || mode === "seeded" || mode === "transport";
-}
-
 function resolveLetterMode(token: Token, _isWordFinal: boolean): LetterMode | undefined {
-  if (token.letter_mode !== undefined && token.letter !== "ו") {
+  if (token.letter_mode !== undefined) {
     if (token.letter === "ה") {
       throw new CompileError(
         `Legacy ה letter_mode '${String(token.letter_mode)}' is no longer supported; ה only uses the head-family implementation`
       );
     }
+    if (token.letter === "ו") {
+      throw new CompileError(
+        `Legacy ו letter_mode '${String(token.letter_mode)}' is no longer supported; ו no longer performs grouping and only advances the spine`
+      );
+    }
     throw new CompileError(
-      `Unsupported letter_mode '${String(token.letter_mode)}' for '${token.letter}'; only ו supports letter_mode`
+      `Legacy letter_mode '${String(token.letter_mode)}' is no longer supported for '${token.letter}'`
     );
-  }
-  if (token.letter === "ו") {
-    if (isVavMode(token.letter_mode)) {
-      return token.letter_mode;
-    }
-    if (token.letter_mode !== undefined) {
-      throw new CompileError(`Unsupported letter_mode '${String(token.letter_mode)}' for 'ו'`);
-    }
-    if (token.dot_kind === "shuruk") {
-      return "seeded";
-    }
-    return "plain";
   }
   return undefined;
 }
@@ -259,24 +248,13 @@ function applyRoshWrappers(token: Token, ops: SelectOperands): SelectOperands {
   return ops;
 }
 
-function applyTochWrappers(
-  token: Token,
-  cons: Construction,
-  letterMode?: LetterMode
-): Construction {
+function applyTochWrappers(token: Token, cons: Construction): Construction {
   if (token.meta?.traceOrder) {
     token.meta.traceOrder.push("toch");
   }
   const meta = { ...cons.meta };
-  if (token.letter === "ו" && isVavMode(letterMode)) {
-    meta.vav_mode = letterMode;
-  }
   if (token.meta && Object.prototype.hasOwnProperty.call(token.meta, "exported_adjuncts")) {
     meta.exported_adjuncts = token.meta.exported_adjuncts;
-  }
-  if (token.dot_kind === "shuruk") {
-    meta.carrier_mode = "seeded";
-    meta.rep_flag = 1;
   }
   return { ...cons, meta };
 }
@@ -370,19 +348,18 @@ function executeReadRail(
     inside_dot_kind: token.inside_dot_kind,
     rosh_diacritics: normalizeForJson(roshDiacritics)
   });
-  const letterMode = resolveLetterMode(token, context.isWordFinal);
+  resolveLetterMode(token, context.isWordFinal);
 
   const boundResult = op.bound(selectResult.S, ops);
   recorder?.record("bound", {
     construction: normalizeForJson(boundResult.cons)
   });
-  const hasShuruk = token.dot_kind === "shuruk";
   const shouldHarden = token.dot_kind === "dagesh";
-  const cons = applyTochWrappers(token, boundResult.cons, letterMode);
+  const cons = applyTochWrappers(token, boundResult.cons);
   const tochDiacritics = token.diacritics.filter((diacritic) => diacritic.tier === "toch");
   recorder?.record("toch", {
     wrapped_construction: normalizeForJson(cons),
-    letter_mode: letterMode ?? null,
+    letter_mode: null,
     dot_kind: token.dot_kind,
     inside_dot_kind: token.inside_dot_kind,
     toch_diacritics: normalizeForJson(tochDiacritics)
@@ -407,16 +384,6 @@ function executeReadRail(
       reason: "dagesh"
     });
   }
-  if (hasShuruk && cons.meta?.carrier_mode === "seeded") {
-    const handle = sealResult.S.handles.get(sealed);
-    if (handle) {
-      handle.meta = { ...handle.meta, carrier_mode: "seeded", rep_flag: 1 };
-    }
-    recorder?.record("shuruk_seed", {
-      sealed_handle: sealed,
-      carrier_mode: "seeded"
-    });
-  }
   if (token.dot_kind === "dagesh") {
     const handle = sealResult.S.handles.get(sealed);
     if (handle) {
@@ -429,6 +396,9 @@ function executeReadRail(
     sealResult.S.vm.wordLastSealedArtifact = sealed;
   }
 
+  // Register commit only publishes the sealed handle as the next focus.
+  // The engine does not synthesize a universal continuation edge here;
+  // letters own any cont/carry/supp emission themselves.
   const exportHandle = sealResult.export_handle ?? sealed;
   sealResult.S.vm.K.push(exportHandle);
   sealResult.S.vm.F = sealResult.advance_focus === false ? F_before : sealed;

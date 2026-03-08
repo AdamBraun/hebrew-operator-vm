@@ -477,6 +477,23 @@ Recommended review artifacts to commit when semantics change:
   and any remaining obligations are resolved: `SUPPORT` falls (logging a `fall`
   event and restoring focus), and `MEM_ZONE` closes silently.
 
+### Continuation family
+
+`ו`, `נ`, `ן`, and `ז` share the same forward `cont` shape and differ on two
+independent axes: whether focus advances, and whether carry is absent,
+unresolved, or resolved. This family is structural, not grouping-based.
+
+|                  | Focus advances | Focus stays |
+| ---------------- | -------------- | ----------- |
+| No carry         | ו              | —           |
+| Unresolved carry | נ              | —           |
+| Resolved carry   | ן              | ז           |
+
+- `ו` — pure continuation.
+- `נ` — continuation with unresolved carry.
+- `ן` — continuation with immediately resolved carry.
+- `ז` — resolved export without cursor advance.
+
 ## Spaces Are Operators
 
 Whitespace is not just formatting: it compiles to the `□` operator. This means

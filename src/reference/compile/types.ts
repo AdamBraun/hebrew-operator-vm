@@ -33,8 +33,8 @@ export type InsideDotKind =
   | "shin_dot_left"
   | "none";
 
-export type VavMode = "plain" | "seeded" | "transport";
-export type LetterMode = VavMode;
+// Legacy encoded letter modes remain typed only so old artifacts can be rejected cleanly.
+export type LetterMode = "public" | "pinned" | "alias" | "plain" | "seeded" | "transport";
 
 export type TropeKind = "none" | "conj" | "disj";
 

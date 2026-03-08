@@ -11,6 +11,16 @@ export function assertStateInvariants(state: State): void {
       throw new Error(`Missing handle ${id}`);
     }
   };
+  const ensureEventHandle = (event: State["vm"]["H"][number], field: string, id: string): void => {
+    if (
+      event.type === "WORD_START" &&
+      field === "focus" &&
+      (id === event.data?.C0 || id === event.data?.activeConstruct)
+    ) {
+      return;
+    }
+    ensure(id);
+  };
 
   ensure(BOT_ID);
   ensure(OMEGA_ID);
@@ -64,19 +74,19 @@ export function assertStateInvariants(state: State): void {
       throw new Error(`Event tau ${event.tau} out of bounds`);
     }
     if (event.data?.child) {
-      ensure(event.data.child);
+      ensureEventHandle(event, "child", event.data.child);
     }
     if (event.data?.parent) {
-      ensure(event.data.parent);
+      ensureEventHandle(event, "parent", event.data.parent);
     }
     if (event.data?.head) {
-      ensure(event.data.head);
+      ensureEventHandle(event, "head", event.data.head);
     }
     if (event.data?.adjunct) {
-      ensure(event.data.adjunct);
+      ensureEventHandle(event, "adjunct", event.data.adjunct);
     }
     if (event.data?.focus) {
-      ensure(event.data.focus);
+      ensureEventHandle(event, "focus", event.data.focus);
     }
     if (Array.isArray(event.data?.adjuncts)) {
       for (const adjunctId of event.data.adjuncts) {

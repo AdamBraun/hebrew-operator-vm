@@ -26,7 +26,7 @@
           "F0": "Ω",
           "C0": "C:1:1",
           "inboundFocus": "Ω",
-          "wordText": "וּ",
+          "wordText": "ון",
           "prevBoundaryMode": "hard",
           "segmentIdAfter": 1,
           "segmentReset": true,
@@ -45,17 +45,18 @@
         "tau": 2,
         "data": {
           "mode": "hard",
-          "beforeFocus": "ו:1:1",
+          "beforeFocus": "ן:1:1",
           "afterFocus": "Ω",
           "segmentIdBefore": 1
         }
       }
     ],
-    "A": ["⊥", "ו:1:1"],
+    "A": ["⊥", "ן:1:1"],
     "wordHasContent": false,
     "metaCounter": {
       "C": 1,
-      "ו": 1
+      "ו": 1,
+      "ן": 1
     }
   },
   "handles": [
@@ -95,7 +96,7 @@
         "owner": "word",
         "construct_role": "baseline",
         "payload": {},
-        "word_text": "וּ",
+        "word_text": "ון",
         "ephemeral": 1
       }
     },
@@ -133,14 +134,32 @@
         "coupling": "LINK",
         "policy": "soft"
       },
+      "meta": {}
+    },
+    {
+      "id": "ן:1:1",
+      "kind": "scope",
+      "policy": "framed_lock",
+      "anchor": 0,
+      "edge_mode": "free",
+      "envelope": {
+        "ctx_flow": "LOW",
+        "x_flow": "IMPLICIT_OK",
+        "data_flow": "LIVE",
+        "edit_flow": "OPEN",
+        "ports": [],
+        "coupling": "LINK",
+        "policy": "framed_lock"
+      },
       "meta": {
+        "succOf": "ו:1:1",
         "chunk_commit_boundary": 1
       }
     }
   ],
-  "cont": ["C:1:1->ו:1:1"],
-  "carry": [],
-  "supp": [],
+  "cont": ["C:1:1->ו:1:1", "ו:1:1->ן:1:1"],
+  "carry": ["ו:1:1->ן:1:1"],
+  "supp": ["ן:1:1->ו:1:1"],
   "head_of": [],
   "sub": [],
   "links": [],

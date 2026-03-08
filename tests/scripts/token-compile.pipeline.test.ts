@@ -83,11 +83,15 @@ describe("token compile pipeline", () => {
     const compiledText = fs.readFileSync(outPath, "utf8");
     const compiled = JSON.parse(compiledText);
 
-    expect(compiled.semantics.semver).toBe("1.1.0");
+    expect(compiled.semantics.semver).toBe("1.2.0");
     expect(compiled.tokens["2"].derived.toch).toContain("MAPIQ");
     expect(compiled.tokens["2"].derived.modes).toContain("HEH_PINNED");
     expect(compiled.tokens["3"].derived.toch).toContain("SHURUK");
-    expect(compiled.tokens["3"].derived.modes).toContain("VAV_SEEDED");
+    expect(compiled.tokens["3"].derived.modes).toEqual([]);
+    expect(compiled.tokens["3"].execution_plan).toContain("CONTINUATION");
+    expect(compiled.tokens["3"].execution_plan).not.toContain("SEED_CARRIER");
+    expect(compiled.tokens["3"].runtime.letter_mode_forced).toBeNull();
+    expect(compiled.tokens["3"].runtime.has_shuruk).toBe(true);
     expect(compiled.tokens["6"].derived.toch).toContain("DAGESH");
     expect(compiled.tokens["6"].derived.toch).not.toContain("SHURUK");
     expect(compiled.tokens["6"].runtime.has_shuruk).toBe(false);

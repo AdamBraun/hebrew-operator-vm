@@ -1,12 +1,13 @@
-import { createHandle } from "../state/handles";
+import { BOT_ID, createHandle } from "../state/handles";
+import { addCont } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
-import { selectOperands } from "../vm/select";
-import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
+import { selectCurrentFocus } from "../vm/select";
+import { Construction, LetterMeta, LetterOp, SelectOperands, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
   letter: "ו",
-  arity_req: 2,
+  arity_req: 1,
   arity_opt: 0,
   distinct_required: false,
   distinct_optional: false,
@@ -15,37 +16,21 @@ const meta: LetterMeta = {
 
 export const vavOp: LetterOp = {
   meta,
-  select: (S: State) => selectOperands(S, meta),
-  bound: (S: State, ops) => {
-    const [from, to] = ops.args;
+  select: (S: State) => selectCurrentFocus(S),
+  bound: (S: State, ops: SelectOperands) => {
+    const parent = ops.args[0];
+    const child = nextId(S, "ו");
+    S.handles.set(child, createHandle(child, "scope"));
+    addCont(S, parent, child);
     const cons: Construction = {
-      base: from,
+      base: parent,
       envelope: defaultEnvelope(),
-      meta: { from, to }
+      meta: { child }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { from, to, carrier_mode, rep_flag } = cons.meta as {
-      from: string;
-      to: string;
-      carrier_mode?: string;
-      rep_flag?: number;
-    };
-    const mode = carrier_mode ? "seeded" : "plain";
-    const linkId = nextId(S, "ו");
-    S.handles.set(
-      linkId,
-      createHandle(linkId, "structured", {
-        meta: { from, to, label: "vav", mode, carrier_mode, rep_flag }
-      })
-    );
-    S.links.push({ from, to, label: "vav" });
-    const residueId = nextId(S, "ו");
-    S.handles.set(
-      residueId,
-      createHandle(residueId, "scope", { meta: { residueOf: linkId, mode } })
-    );
-    return { S, h: linkId, r: residueId };
+    const { child } = cons.meta as { child: string };
+    return { S, h: child, r: BOT_ID };
   }
 };

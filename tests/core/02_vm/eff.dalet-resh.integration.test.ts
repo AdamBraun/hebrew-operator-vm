@@ -9,7 +9,10 @@ type HeSnapshot = {
   supp?: string[];
 };
 
-function inspectHeadQuery(word: "דבה" | "רבה"): {
+function inspectHeadQuery(
+  word: "דבה" | "רבה",
+  letter: "ד" | "ר"
+): {
   state: ReturnType<typeof runProgramWithDeepTrace>["state"];
   head: string;
   whole: string;
@@ -22,10 +25,11 @@ function inspectHeadQuery(word: "דבה" | "רבה"): {
   const result = runProgramWithDeepTrace(word, state, {
     includeStateSnapshots: true
   });
-  const heEntry = result.deepTrace.find((entry) => entry.token === "ה");
-  const snapshot = (heEntry?.phases.find((phase) => phase.phase === "token_exit")?.snapshot ??
+  const entry = result.deepTrace.find((traceEntry) => traceEntry.token === letter);
+  const snapshot = (entry?.phases.find((phase) => phase.phase === "token_exit")?.snapshot ??
     {}) as HeSnapshot;
-  const [head = "", whole = ""] = String(snapshot.head_of?.[0] ?? "->").split("->");
+  const headEdge = snapshot.head_of?.find((edge) => edge.startsWith(`${letter}:`)) ?? "->";
+  const [head = "", whole = ""] = headEdge.split("->");
 
   return {
     state: result.state,
@@ -37,8 +41,8 @@ function inspectHeadQuery(word: "דבה" | "רבה"): {
 
 describe("eff integration: dalet vs resh head exposure", () => {
   it("sees the same ambient bundle but different resolution states in {ד|ר}בה", () => {
-    const dalet = inspectHeadQuery("דבה");
-    const resh = inspectHeadQuery("רבה");
+    const dalet = inspectHeadQuery("דבה", "ד");
+    const resh = inspectHeadQuery("רבה", "ר");
 
     expect(dalet.whole).toBe("Ω");
     expect(resh.whole).toBe("Ω");

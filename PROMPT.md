@@ -32,7 +32,7 @@ Diacritics are small marks on a letter. They never stand alone; they **modify** 
 ### Inside dots (Toch / inside)
 
 - **Dagesh (ּ)**: hardens the output (stronger boundaries, tighter flow).
-- **Shuruk (וּ)**: only on ו; turns it into a “carrier” link (seeded/representative mode).
+- **Shuruk (וּ)**: only on ו; marks the host as `shuruk`. It does not create a special execution mode and does not add `carry` or `supp`.
 - **Mappiq (ּ in ה)**: forces ה to behave as a _full operator_ (not a silent/mater tail).
   - Sets `H(mode)=pinned` (HY milui): execute ה normally AND export a pinned handle.
   - Prevents the word-final “breath/mater” degradation.
@@ -226,21 +226,17 @@ Operational rule:
 
 ---
 
-# ו — Extension / channel + Connect (V primitive) (your classroom split)
+# ו — Minimal continuation (carryless spine advance)
 
-- **Select:** two targets/sets (A,B) (often “the class” and a criterion/handle), plus an optional mode `V(mode)` where `mode ∈ {plain, seeded, transport}`.
-- **Bound (internal act):** create a grouping/connection structure (bind/extend):
-  - if (A) contains multiple students, induce a partition (A \to {g_1,\dots,g_k})
-  - add links “member-of” from students to groups, and a link that ties all groups under one classroom-configuration
+Unary. `ו` only advances the spine.
 
-- **Seal:** **reify the groups as first-class objects** and switch level (\lambda:=\text{group}). After sealing, later letters can target groups as units (CSS-like specificity narrowing).
-- **External residue (explicit):** any binding/partition induces an outside remainder (who is not in the induced structure); represent via (B) and (R).
-- **Mode semantics:**
-  - `plain` (וו): pure extension with no interior pivot.
-  - `seeded` (ויו): extension through a pinned port (Y inside V).
-  - `transport` (ואו): extension mediated by alias/transport (א inside V).
-
-- **Note (latest):** this letter’s semantics also serves as the universal (V) prefix used implicitly by all letters in (f*\ell=\Delta*\ell\circ V^{v(\ell)}\circ Y^{y(\ell)}). The distinct “letter ו” is (V) plus its own (\Delta\_\text{ו}); milui selects the mode.
+- **Select:** current focus (F).
+- **Bound:**
+  1. allocate successor (`F^{+} := alloc()`).
+  2. add `cont(F, F^{+})`.
+- **Seal:** set `F := F^{+}`.
+- **Note:** `ו` is the carryless member of the continuation family: `ו = cont`; `נ = cont + carry`; `ן = cont + carry + supp`; `ז = cont + carry + supp`, but focus stays put.
+- **Non-effects:** `ו` does not create `carry`, does not create `supp`, and does not group, partition, or connect two pre-existing operands.
 
 ---
 
@@ -524,9 +520,9 @@ Unary. Orthogonal resolver: closes the nearest unresolved carry-thread.
 - **Select:** two targets (x,y).
 - **Bound:** assert (x\approx y) (treat as interchangeable for selection/rules, without identity merge).
   - **Optional (latest, qof-mode):** attach a “projection-to-action” channel (\pi\_\downarrow) (a descender) allowing the ≈-equivalence to be _realized in execution_ (think: similarity that can descend into concrete deeds/outputs).
-  - **Optional (definition):** (\pi\_\downarrow := \text{V-channel} \circ \text{closed-mouth seal}) so descent is a vav-transport followed by a final ף-style freeze.
+  - **Optional (definition):** (\pi\_\downarrow := \text{continuation step} \circ \text{closed-mouth seal}) so descent is a forward continuation followed by a final ף-style freeze.
 - **Seal:** store (\approx)-class (and if present (\pi*\downarrow)) so later selectors may pick “any representative” unless forced to distinguish; execution may use (\pi*\downarrow) when the context enables descent. Descended artifacts are sealed as `policy=final` while (\approx) remains soft.
-- **Note (milui):** קו״ף reads as ≈ plus a vav-channel and a final ף freeze; the name is the descender.
+- **Note (milui):** קו״ף reads as ≈ plus a continuation step and a final ף freeze; the name is the descender.
 
 ---
 
