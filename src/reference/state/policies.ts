@@ -23,6 +23,20 @@ export function defaultEnvelope(policy: HandlePolicy = "soft"): Envelope {
   };
 }
 
+// Structural committedness for sealed-witness style handles. This does not
+// raise policy; callers opt into a tighter envelope without policy gating.
+export function committedEnvelope(): Envelope {
+  return {
+    ctx_flow: "LOW",
+    x_flow: "EXPLICIT_ONLY",
+    data_flow: "SNAPSHOT",
+    edit_flow: "TIGHT",
+    ports: new Set(),
+    coupling: "CopyNoBacklink",
+    policy: "soft"
+  };
+}
+
 export function harden(envelope: Envelope): Envelope {
   const raisePolicy = (policy: HandlePolicy): HandlePolicy => {
     if (policy === "soft") {

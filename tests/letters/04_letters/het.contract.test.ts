@@ -15,6 +15,7 @@ describe("het contract", () => {
     const state = createInitialState();
     const { cons } = hetOp.bound(state, { args: [state.vm.F], prefs: {} });
     const { h, r } = hetOp.seal(state, cons);
+    expect(h).toBe(cons.meta.interfaceId);
     expect(state.handles.has(h)).toBe(true);
     expect(state.handles.has(r) || r === "⊥").toBe(true);
   });

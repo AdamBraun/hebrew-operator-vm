@@ -1,9 +1,10 @@
 import { BOT_ID, createHandle } from "../state/handles";
-import { addBoundary } from "../state/relations";
+import { addLink } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
 import { selectCurrentFocus } from "../vm/select";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
+import { spawnResolvedPort } from "./ports";
 
 const meta: LetterMeta = {
   letter: "ח",
@@ -21,42 +22,45 @@ export const hetOp: LetterOp = {
     const inside = ops.args[0];
     const frame = S.vm.E[S.vm.E.length - 1];
     const outside = S.vm.R !== BOT_ID ? S.vm.R : frame?.D_frame ? frame.D_frame : S.vm.D;
-    const boundaryId = nextId(S, "ח");
+    const { portId: p_in } = spawnResolvedPort(S, {
+      portOf: inside,
+      prefix: "ז",
+      exportToK: false
+    });
+    const { portId: p_out } = spawnResolvedPort(S, {
+      portOf: outside,
+      prefix: "ז",
+      exportToK: false
+    });
+    const interfaceId = nextId(S, "ח");
     S.handles.set(
-      boundaryId,
-      createHandle(boundaryId, "boundary", {
-        anchor: 1,
-        meta: { inside, outside, closedBy: "ח" }
+      interfaceId,
+      createHandle(interfaceId, "gate", {
+        meta: { inside, outside, p_in, p_out, formedBy: "ז+ז" }
       })
     );
-    addBoundary(S, boundaryId, inside, outside, 1);
-    const compartmentId = nextId(S, "ח");
-    S.handles.set(
-      compartmentId,
-      createHandle(compartmentId, "compartment", {
-        meta: { inside, outside, boundaryId }
-      })
-    );
+    addLink(S, p_in, interfaceId, "bridge");
+    addLink(S, p_out, interfaceId, "bridge");
     const cons: Construction = {
       base: inside,
       envelope: defaultEnvelope(),
-      meta: { inside, outside, boundaryId, compartmentId }
+      meta: { inside, outside, interfaceId, p_in, p_out }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { inside, outside, boundaryId, compartmentId } = cons.meta as {
+    const { inside, outside, interfaceId, p_in, p_out } = cons.meta as {
       inside: string;
       outside: string;
-      boundaryId: string;
-      compartmentId: string;
+      interfaceId: string;
+      p_in: string;
+      p_out: string;
     };
-    S.links.push({ from: inside, to: compartmentId, label: "compartment" });
     S.vm.H.push({
-      type: "compartment",
+      type: "interface",
       tau: S.vm.tau,
-      data: { id: compartmentId, inside, outside, boundaryId }
+      data: { id: interfaceId, inside, outside, p_in, p_out }
     });
-    return { S, h: compartmentId, r: BOT_ID };
+    return { S, h: interfaceId, r: BOT_ID };
   }
 };
