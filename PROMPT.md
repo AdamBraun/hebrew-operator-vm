@@ -263,11 +263,15 @@ Unary. Identical edge effect to ן, but focus does not advance.
 
 ---
 
-# ט — Covert internalization with a single exported handle
+# ט — Unary interface inversion with a single external port
 
-- **Select:** current target handle (X) and an intended internal patch/action (\pi).
-- **Bound:** apply (\pi) to the interior of (X) and mark it latent/hidden; create a single exported proxy/port (p=\mathrm{port}(X,\pi)) as the only outward handle.
-- **Seal:** commit the hidden interior patch in a non-default layer and reify (p) as the only externally reachable handle to the hidden good.
+- **Select:** current target handle (X).
+- **Bound:** restrict the envelope of (X) so default interaction is inward-facing; allocate one external port (p) as the only sanctioned external contact point.
+- **Seal:** register (p) as the only sanctioned external contact point for (X); reify (p) and set focus/output accordingly.
+- **Non-effects:**
+  - ט does **not** apply a patch.
+  - ט does **not** create a hidden rule object.
+  - ט does **not** clone or freeze the target by definition.
 
 ---
 

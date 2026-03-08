@@ -9,11 +9,12 @@ describe("tet contract", () => {
     expect(tetOp.meta.distinct_required).toBeTypeOf("boolean");
     expect(tetOp.meta.distinct_optional).toBeTypeOf("boolean");
     expect(tetOp.meta.reflexive_ok).toBeTypeOf("boolean");
+    expect(tetOp.meta.arity_req).toBe(1);
   });
 
   it("does not reference invalid handles", () => {
     const state = createInitialState();
-    const { cons } = tetOp.bound(state, { args: [state.vm.F, state.vm.D], prefs: {} });
+    const { cons } = tetOp.bound(state, { args: [state.vm.F], prefs: {} });
     const { h, r } = tetOp.seal(state, cons);
     expect(state.handles.has(h)).toBe(true);
     expect(state.handles.has(r) || r === "⊥").toBe(true);

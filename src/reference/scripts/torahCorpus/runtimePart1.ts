@@ -424,7 +424,7 @@ function summarizeEvent(type, event, traceEntry) {
     case "mem_auto_close":
       return "auto-close enclosure at boundary";
     case "covert":
-      return "covert annotation";
+      return "inward interface restriction";
     case "gate":
       return "gate target";
     case "approx":
@@ -706,8 +706,7 @@ function mapRawEventToFlow(event, traceEntry) {
         trace_source: "vm_event",
         payload: {
           id: asHandleId(data.id),
-          target: asHandleId(data.target),
-          patch: data.patch
+          target: asHandleId(data.target)
         }
       };
     case "gate":

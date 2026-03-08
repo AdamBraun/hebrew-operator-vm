@@ -193,7 +193,6 @@ export type CovertEvent = TraceEventBase<
   {
     id: HandleId;
     target: HandleId;
-    patch: unknown;
   }
 >;
 
