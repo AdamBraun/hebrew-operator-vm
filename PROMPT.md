@@ -254,11 +254,15 @@ Unary. `ו` only advances the spine.
 
 # ז — Exported resolved port (focus stays)
 
+Unary. Same materialized graph edges as ן (cont+carry+supp), but focus stays and the resolved port is exported.
+
 - **Select:** current focus (F).
-- **Bound:**
-  1. allocate port (`p := alloc()`)
-  2. emit `cont(F, p)` + `carry(F, p)` + `supp(p, F)`
-  3. export `p` to `K`
+- **Bound:** allocate port (`p := alloc()`).
+- **Graph edges emitted:**
+  1. `cont(F, p)`
+  2. `carry(F, p)`
+  3. `supp(p, F)`
+- **Other state changes:** export `p` to `K`.
 - **Seal:** keep focus unchanged (`F` stays).
 
 ---
@@ -439,15 +443,15 @@ No new graph edges are emitted in Bound.
 
 # ן — Final nun (immediately resolved continuation)
 
-Unary. Threads forward with carry resolved at birth.
+Unary. Same materialized graph edges as ז (cont+carry+supp), but focus advances and nothing is exported.
 
 - **Select:** current focus (F).
-- **Bound:**
-  1. allocate successor (`F^{+} := alloc()`).
-  2. add `cont(F, F^{+})`.
-  3. add `carry(F, F^{+})`.
-  4. add `supp(F^{+}, F)` (immediate closure).
-- **Seal:** set `policy(F^{+}) := framed_lock`; set `F := F^{+}`.
+- **Bound:** allocate successor (`F^{+} := alloc()`).
+- **Graph edges emitted:**
+  1. `cont(F, F^{+})`
+  2. `carry(F, F^{+})`
+  3. `supp(F^{+}, F)`
+- **Seal:** set `F := F^{+}`.
 
 ---
 
