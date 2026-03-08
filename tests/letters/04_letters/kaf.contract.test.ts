@@ -10,11 +10,15 @@ describe("kaf contract", () => {
     expect(kafOp.meta.distinct_required).toBeTypeOf("boolean");
     expect(kafOp.meta.distinct_optional).toBeTypeOf("boolean");
     expect(kafOp.meta.reflexive_ok).toBeTypeOf("boolean");
+    expect(kafOp.meta.arity_req).toBe(1);
+    expect(kafOp.meta.arity_opt).toBe(0);
+    expect(finalKafOp.meta.arity_req).toBe(1);
+    expect(finalKafOp.meta.arity_opt).toBe(0);
   });
 
   it("does not reference invalid handles", () => {
     const state = createInitialState();
-    const { cons } = kafOp.bound(state, { args: [state.vm.F, state.vm.R], prefs: {} });
+    const { cons } = kafOp.bound(state, { args: [state.vm.F], prefs: {} });
     const { h, r } = kafOp.seal(state, cons);
     expect(state.handles.has(h)).toBe(true);
     expect(state.handles.has(r)).toBe(true);
@@ -22,7 +26,7 @@ describe("kaf contract", () => {
 
   it("final kaf returns valid handles", () => {
     const state = createInitialState();
-    const { cons } = finalKafOp.bound(state, { args: [state.vm.F, state.vm.R], prefs: {} });
+    const { cons } = finalKafOp.bound(state, { args: [state.vm.F], prefs: {} });
     const { h, r } = finalKafOp.seal(state, cons);
     expect(state.handles.has(h)).toBe(true);
     expect(state.handles.has(r)).toBe(true);

@@ -71,6 +71,19 @@ function expectNoExtraSemantics(snapshot: TokenExitSnapshot): void {
 }
 
 describe("continuation family behavior", () => {
+  it("כ allocates a single resolved hold and ends focus on it", () => {
+    const [snapshot] = tokenExitSnapshots("כ");
+    const start = baselineId(snapshot);
+    const [holdId] = familyNodeIds(snapshot, "כ");
+
+    expect(familyNodeIds(snapshot, "כ")).toEqual(["כ:1:1"]);
+    expect(snapshot.cont ?? []).toEqual([`${start}->${holdId}`]);
+    expect(snapshot.carry ?? []).toEqual([`${start}->${holdId}`]);
+    expect(snapshot.supp ?? []).toEqual([`${holdId}->${start}`]);
+    expect(snapshot.vm?.F).toBe(holdId);
+    expectNoExtraSemantics(snapshot);
+  });
+
   it("ו allocates one fresh continuation node and advances focus with no carry or supp", () => {
     const [snapshot] = tokenExitSnapshots("ו");
     const start = baselineId(snapshot);

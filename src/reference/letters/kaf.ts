@@ -1,13 +1,14 @@
-import { createHandle } from "../state/handles";
+import { BOT_ID, createHandle } from "../state/handles";
+import { addCarry, addCont, addSupp } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
-import { selectOperands } from "../vm/select";
+import { selectCurrentFocus } from "../vm/select";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
   letter: "כ",
   arity_req: 1,
-  arity_opt: 1,
+  arity_opt: 0,
   distinct_required: false,
   distinct_optional: false,
   reflexive_ok: true
@@ -15,31 +16,28 @@ const meta: LetterMeta = {
 
 export const kafOp: LetterOp = {
   meta,
-  select: (S: State) => selectOperands(S, meta),
+  select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops) => {
-    const target = ops.args[0];
-    const template = ops.args[1];
-    const portionId = nextId(S, "כ");
-    const residueId = nextId(S, "כ");
+    const source = ops.args[0];
+    const holdId = nextId(S, "כ");
     S.handles.set(
-      portionId,
-      createHandle(portionId, "scope", {
-        meta: { portionOf: target, template, unitized: 1 }
+      holdId,
+      createHandle(holdId, "scope", {
+        meta: { heldFrom: source }
       })
     );
-    S.handles.set(
-      residueId,
-      createHandle(residueId, "scope", { meta: { residueOf: target, template } })
-    );
+    addCont(S, source, holdId);
+    addCarry(S, source, holdId);
+    addSupp(S, holdId, source);
     const cons: Construction = {
-      base: target,
+      base: source,
       envelope: defaultEnvelope(),
-      meta: { portionId, residueId }
+      meta: { source, holdId }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { portionId, residueId } = cons.meta as { portionId: string; residueId: string };
-    return { S, h: portionId, r: residueId };
+    const { holdId } = cons.meta as { holdId: string };
+    return { S, h: holdId, r: BOT_ID };
   }
 };
