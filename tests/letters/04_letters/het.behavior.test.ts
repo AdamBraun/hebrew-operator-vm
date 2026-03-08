@@ -20,14 +20,20 @@ describe("het behavior", () => {
     const pOut = String(iface?.meta.p_out ?? "");
     const inside = String(iface?.meta.inside ?? "");
     const outside = String(iface?.meta.outside ?? "");
+    const pInHandle = state.handles.get(pIn);
+    const pOutHandle = state.handles.get(pOut);
 
     expect(pIn.length).toBeGreaterThan(0);
     expect(pOut.length).toBeGreaterThan(0);
     expect(inside).toBe(target);
     expect(outside.length).toBeGreaterThan(0);
+    expect(pInHandle?.meta.portOf).toBe(inside);
+    expect(pOutHandle?.meta.portOf).toBe(outside);
 
-    expect(state.handles.get(pIn)?.edge_mode).toBe("committed");
-    expect(state.handles.get(pOut)?.edge_mode).toBe("committed");
+    expect(pInHandle?.edge_mode).toBe("committed");
+    expect(pOutHandle?.edge_mode).toBe("committed");
+    expect(pInHandle?.envelope.data_flow).toBe("SNAPSHOT");
+    expect(pOutHandle?.envelope.data_flow).toBe("SNAPSHOT");
     expect(state.carry.has(`${inside}->${pIn}`)).toBe(true);
     expect(state.supp.has(`${pIn}->${inside}`)).toBe(true);
     expect(state.carry.has(`${outside}->${pOut}`)).toBe(true);
@@ -39,6 +45,7 @@ describe("het behavior", () => {
       true
     );
 
+    expect(state.boundaries).toHaveLength(0);
     expect(Array.from(state.handles.values()).every((handle) => handle.kind !== "boundary")).toBe(
       true
     );
