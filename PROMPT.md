@@ -254,25 +254,25 @@ Unary. `ו` only advances the spine.
 
 # ז — Exported resolved port (focus stays)
 
-Unary. Same materialized graph edges as ן, but focus does not advance.
-
 - **Select:** current focus (F).
-- **Bound:** allocate port (`p := alloc()`).
-- **Graph edges emitted:**
-  1. `cont(F, p)`
-  2. `carry(F, p)`
-  3. `supp(p, F)`
-- **Other state changes:** set `policy(p) := framed_lock`; export `p` to `K`.
-- **Seal:** keep `F` unchanged.
+- **Bound:**
+  1. allocate port (`p := alloc()`)
+  2. emit `cont(F, p)` + `carry(F, p)` + `supp(p, F)`
+  3. export `p` to `K`
+- **Seal:** keep focus unchanged (`F` stays).
 
 ---
 
-# ח — Enclosure / compartment (domain with a controlled interface)
+# ח — Adjacency → interface (two committed ports bridged)
 
-- **Select:** a candidate interior handle (X) and its boundary-crossing relations (E\_{\partial}(X)).
-- **Bound:** construct a compartment (H(X)) and rewrite each crossing edge through a boundary gate (u \to v becomes u \to g_e \to v) with a default-closed policy; internal flow continues (left ו), external access is mediated (right ז).
-- **Seal:** reify (H(X)) as a selectable scope and register its interface gates as addressable handles for later cascade refinement.
-- **Note:** ח is formed from ו + ז bridged by a roof; חית suggests enclosure → pin → finalize.
+- **Select:** `inside` (the operand / current focus) and `outside` (derived from the current frame or ambient).
+- **Bound:**
+  1. create `p_in` as a committed resolved port of `inside`
+  2. create `p_out` as a committed resolved port of `outside`
+  3. allocate interface object `I`
+  4. bridge `p_in` and `p_out` through `I`, so `inside` and `outside` relate only via `I`
+- **Seal:** set `F := I`.
+- **Note:** ח is operationally two ז's bridged into a single interface object.
 
 ---
 
