@@ -259,7 +259,17 @@ Unary. `ו` only advances the spine.
 - **Graph edges emitted:**
   1. `cont(F, F^{+})`
 - **Seal:** set `F := F^{+}`.
-- **Note:** `ו` is the carryless member of the continuation family: `ו = cont`; `נ = cont + carry`; `ן = cont + carry + supp`; `ז = cont + carry + supp`, but focus stays put.
+
+Continuation-family lattice:
+
+- י = cont, focus stays
+- ו = cont, focus advances
+- נ = cont + carry, focus advances
+- ן = cont + carry + supp, focus advances
+- ז = cont + carry + supp, focus stays
+
+The ה-leg is not another family member; it is a detached adjunct whose topology strictly contains י as a subset: cont(h, ℓ) plus carry(h, ℓ) + supp(ℓ, h) + sub(h, ℓ).
+
 - **Non-effects:** `ו` does not create `carry`, does not create `supp`, and does not group, partition, or connect two pre-existing operands.
 
 ---
@@ -316,7 +326,6 @@ Unary. Same materialized graph edges as ן (cont+carry+supp), but focus stays an
 - **Seal:** keep `F` unchanged.
 
 - **Non-effects:** `י` does **not** add `carry(F, p)`, does **not** add `supp(p, F)`, and does **not** move focus.
-- **Family note:** `י` is the cont-only member of the family; `ו` is cont + focus advance; `נ` is cont + carry + focus advance; `ן` is cont + carry + supp + focus advance; `ז` is cont + carry + supp, but focus stays.
 - **Mechanical reason:** because `p` sits on the `cont` spine, backward traversal from `p` reaches `F`; because no `carry` is added, `י` creates no new carried witness-thread.
 
 ---
