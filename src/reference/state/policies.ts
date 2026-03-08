@@ -45,6 +45,31 @@ export function harden(envelope: Envelope): Envelope {
   };
 }
 
+function restrictPolicy(policy: HandlePolicy): HandlePolicy {
+  if (policy === "soft") {
+    return "framed_lock";
+  }
+  return policy;
+}
+
+// ט-style restriction: keep the same live handle, but force external access
+// through an explicit sanctioned port instead of ambient/default reachability.
+export function restrictToPortAccess(
+  envelope: Envelope,
+  ports: Iterable<string> = envelope.ports
+): Envelope {
+  return {
+    ...envelope,
+    ctx_flow: "LOW",
+    x_flow: "EXPLICIT_ONLY",
+    data_flow: "LIVE",
+    edit_flow: "TIGHT",
+    ports: new Set(ports),
+    coupling: "LINK",
+    policy: restrictPolicy(envelope.policy)
+  };
+}
+
 function cloneEnvelope(envelope: Envelope): Envelope {
   return {
     ...envelope,

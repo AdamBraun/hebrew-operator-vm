@@ -1,5 +1,5 @@
 import { BOT_ID, createHandle } from "../state/handles";
-import { applyEnvelopeToHandle } from "../state/policies";
+import { applyEnvelopeToHandle, restrictToPortAccess } from "../state/policies";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
 import { selectCurrentFocus } from "../vm/select";
@@ -21,17 +21,9 @@ export const tetOp: LetterOp = {
     const [target] = ops.args;
     const portId = nextId(S, "ט");
     const targetHandle = S.handles.get(target);
-    const restrictedEnvelope = targetHandle
-      ? {
-          ...targetHandle.envelope,
-          x_flow: "EXPLICIT_ONLY" as const,
-          ports: new Set([portId])
-        }
-      : {
-          ...defaultEnvelope(),
-          x_flow: "EXPLICIT_ONLY" as const,
-          ports: new Set([portId])
-        };
+    const restrictedEnvelope = restrictToPortAccess(targetHandle?.envelope ?? defaultEnvelope(), [
+      portId
+    ]);
     applyEnvelopeToHandle(S, target, restrictedEnvelope);
     if (targetHandle) {
       targetHandle.meta = {
