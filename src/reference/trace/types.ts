@@ -191,8 +191,8 @@ export type CovertEvent = TraceEventBase<
   "TET.COVERT",
   "vm_event",
   {
-    id: HandleId;
     target: HandleId;
+    port: HandleId;
   }
 >;
 

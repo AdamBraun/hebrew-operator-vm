@@ -53,7 +53,7 @@ export const tetOp: LetterOp = {
     S.vm.H.push({
       type: "covert",
       tau: S.vm.tau,
-      data: { id: portId, target }
+      data: { target, port: portId }
     });
     return { S, h: portId, r: BOT_ID };
   }

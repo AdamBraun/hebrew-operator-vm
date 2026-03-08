@@ -705,8 +705,8 @@ function mapRawEventToFlow(event, traceEntry) {
         params_summary: summarizeEvent(event.type, event, traceEntry),
         trace_source: "vm_event",
         payload: {
-          id: asHandleId(data.id),
-          target: asHandleId(data.target)
+          target: asHandleId(data.target),
+          port: asHandleId(data.port)
         }
       };
     case "gate":

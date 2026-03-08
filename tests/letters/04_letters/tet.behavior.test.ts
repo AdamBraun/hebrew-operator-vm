@@ -23,6 +23,6 @@ describe("tet behavior", () => {
     expect(restrictedTarget?.envelope.x_flow).toBe("EXPLICIT_ONLY");
     expect(restrictedTarget?.envelope.ports.has(h)).toBe(true);
     expect(restrictedTarget?.meta.sanctioned_port).toBe(h);
-    expect(covertEvent?.data).toEqual({ id: h, target });
+    expect(covertEvent?.data).toEqual({ target, port: h });
   });
 });
