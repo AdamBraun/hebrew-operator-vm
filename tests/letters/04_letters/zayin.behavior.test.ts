@@ -3,7 +3,7 @@ import { createInitialState } from "@ref/state/state";
 import { runProgramWithDeepTrace } from "@ref/vm/vm";
 
 describe("zayin behavior", () => {
-  it("creates a locked exported port with immediately resolved carry and keeps focus", () => {
+  it("creates a committed exported port with immediately resolved carry and keeps focus", () => {
     const { state, deepTrace } = runProgramWithDeepTrace("ז", createInitialState(), {
       includeStateSnapshots: true
     });
@@ -18,7 +18,12 @@ describe("zayin behavior", () => {
 
     expect(portId.length).toBeGreaterThan(0);
     expect(focusBefore.length).toBeGreaterThan(0);
-    expect(port?.policy).toBe("framed_lock");
+    expect(port?.edge_mode).toBe("committed");
+    expect(port?.envelope.data_flow).toBe("SNAPSHOT");
+    expect(port?.envelope.edit_flow).toBe("TIGHT");
+    expect(port?.envelope.x_flow).toBe("EXPLICIT_ONLY");
+    expect(port?.envelope.coupling).toBe("CopyNoBacklink");
+    expect(port?.policy).toBe("soft");
     expect(state.cont.has(`${focusBefore}->${portId}`)).toBe(true);
     expect(state.carry.has(`${focusBefore}->${portId}`)).toBe(true);
     expect(state.supp.has(`${portId}->${focusBefore}`)).toBe(true);
