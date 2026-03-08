@@ -244,6 +244,10 @@ Operational rule:
 - **Other state changes:** export `ℓ` as an adjunct of `h`.
 - **Seal:** set `F := h`.
 
+Note: under this graph model, ה’s leg is not mechanically identical to י.
+
+The leg contains י’s topology as a subset because it includes cont(h, ℓ), but it adds carry(h, ℓ) + supp(ℓ, h) + sub(h, ℓ). The traditional statement that the leg is a י identifies the shared attachment primitive, not full operator identity.
+
 ---
 
 # ו — Minimal continuation (carryless spine advance)
