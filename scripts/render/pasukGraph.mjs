@@ -418,17 +418,42 @@ function nodeColorsFor(handle, theme) {
   return base;
 }
 
+function semanticHandleLabel(handle) {
+  const explicit = asStringOrNull(handle?.meta?.handle_label);
+  if (explicit) {
+    return explicit;
+  }
+  if (handle?.meta?.selectable_pin === 1 && typeof handle?.meta?.pinOf === "string") {
+    return "pin";
+  }
+  if (handle?.kind === "alias") {
+    return "alias_handle";
+  }
+  if (handle?.meta?.detached_leg === 1 || handle?.meta?.detached_adjunct === 1) {
+    return "detached_adjunct_leg";
+  }
+  if (typeof handle?.meta?.portOf === "string") {
+    return "resolved_port";
+  }
+  return null;
+}
+
 function buildNodeLabel(handle, mode) {
-  if (mode === "summary") return String(handle.id);
+  const semanticLabel = semanticHandleLabel(handle);
+  if (mode === "summary") {
+    return semanticLabel ? `${handle.id}\n${semanticLabel}` : String(handle.id);
+  }
 
   if (mode === "compact") {
-    const kind = handle.kind ? `\n${handle.kind}` : "";
-    return `${handle.id}${kind}`;
+    const secondary = semanticLabel ?? handle.kind;
+    const tail = secondary ? `\n${secondary}` : "";
+    return `${handle.id}${tail}`;
   }
 
   // full
   const bits = [];
-  if (handle.kind) bits.push(handle.kind);
+  if (semanticLabel) bits.push(semanticLabel);
+  if (handle.kind && handle.kind !== semanticLabel) bits.push(handle.kind);
 
   const metaFlags = [
     ["public", handle.meta?.public],

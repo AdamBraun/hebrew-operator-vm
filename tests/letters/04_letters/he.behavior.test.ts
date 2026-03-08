@@ -46,6 +46,7 @@ describe("he behavior", () => {
     const [headOfEdge = "->"] = snapshot.head_of ?? [];
     const [, source] = headOfEdge.split("->");
     const [leg = ""] = snapshot.adjuncts?.[head] ?? [];
+    const legHandle = state.handles.get(leg);
     const headEvent = events.find((event) => event.type === "head_with_leg");
 
     expect(selectArgs).toEqual(["Ω"]);
@@ -59,6 +60,7 @@ describe("he behavior", () => {
     expect(snapshot.supp).toEqual([`${head}->Ω`, `${leg}->${head}`]);
     expect(snapshot.sub).toEqual([`${head}->${leg}`]);
     expect(snapshot.vm?.F).toBe(head);
+    expect(legHandle?.meta?.handle_label).toBe("detached_adjunct_leg");
     expect(state.rules).toEqual([]);
     expect(
       Array.from(state.handles.values()).some(
@@ -71,6 +73,7 @@ describe("he behavior", () => {
       head,
       focus: head,
       adjunct: leg,
+      adjunct_label: "detached_adjunct_leg",
       exported_adjuncts: [leg],
       resolved: true
     });
@@ -85,7 +88,7 @@ describe("he behavior", () => {
   });
 
   it("mid-word selects the current construct and still ends focus on the new head", () => {
-    const { snapshot, selectArgs, events } = heExitSnapshot("נה");
+    const { state, snapshot, selectArgs, events } = heExitSnapshot("נה");
     const head = String(snapshot.vm?.F ?? "");
     const [headOfEdge = "->"] = snapshot.head_of ?? [];
     const [, source] = headOfEdge.split("->");
@@ -100,11 +103,13 @@ describe("he behavior", () => {
     expect(snapshot.supp).toContain(`${leg}->${head}`);
     expect(snapshot.sub).toContain(`${head}->${leg}`);
     expect(snapshot.vm?.F).toBe(head);
+    expect(state.handles.get(leg)?.meta?.handle_label).toBe("detached_adjunct_leg");
     expect(headEvent?.data).toMatchObject({
       source: "נ:1:1",
       head,
       focus: head,
-      adjunct: leg
+      adjunct: leg,
+      adjunct_label: "detached_adjunct_leg"
     });
   });
 

@@ -3,6 +3,7 @@ import { finalNunOp } from "@ref/letters/finalNun";
 import type { LetterOp } from "@ref/letters/types";
 import { nunOp } from "@ref/letters/nun";
 import { vavOp } from "@ref/letters/vav";
+import { yodOp } from "@ref/letters/yod";
 import { zayinOp } from "@ref/letters/zayin";
 import { createInitialState } from "@ref/state/state";
 
@@ -21,7 +22,7 @@ type Execution = {
   edgeDelta: EdgeDelta;
 };
 
-type FamilyExecution = Record<"ו" | "נ" | "ן" | "ז", Execution>;
+type FamilyExecution = Record<"י" | "ו" | "נ" | "ן" | "ז", Execution>;
 
 function diffSet(after: Set<string>, before: Set<string>): string[] {
   return Array.from(after)
@@ -89,6 +90,7 @@ function executeUnary(op: LetterOp): Execution {
 
 function executeFamily(): FamilyExecution {
   return {
+    י: executeUnary(yodOp),
     ו: executeUnary(vavOp),
     נ: executeUnary(nunOp),
     ן: executeUnary(finalNunOp),
@@ -97,23 +99,43 @@ function executeFamily(): FamilyExecution {
 }
 
 describe("continuation family edge-delta equivalence", () => {
-  it("ו נ ן ז share the same continuation spine and only add carry/supp by family rank", () => {
+  it("י ו נ ן ז share the same continuation spine and only add carry/supp by family rank", () => {
     const family = executeFamily();
 
+    expect(family["י"].edgeDelta.cont).toEqual(["F0->N1"]);
     expect(family["ו"].edgeDelta.cont).toEqual(["F0->N1"]);
+    expect(family["י"].edgeDelta.cont).toEqual(family["ו"].edgeDelta.cont);
     expect(family["נ"].edgeDelta.cont).toEqual(family["ו"].edgeDelta.cont);
     expect(family["ן"].edgeDelta.cont).toEqual(family["ו"].edgeDelta.cont);
     expect(family["ז"].edgeDelta.cont).toEqual(family["ו"].edgeDelta.cont);
 
+    expect(family["י"].edgeDelta.carry).toEqual([]);
     expect(family["ו"].edgeDelta.carry).toEqual([]);
     expect(family["נ"].edgeDelta.carry).toEqual(["F0->N1"]);
     expect(family["ן"].edgeDelta.carry).toEqual(family["נ"].edgeDelta.carry);
     expect(family["ז"].edgeDelta.carry).toEqual(family["נ"].edgeDelta.carry);
 
+    expect(family["י"].edgeDelta.supp).toEqual([]);
     expect(family["ו"].edgeDelta.supp).toEqual([]);
     expect(family["נ"].edgeDelta.supp).toEqual([]);
     expect(family["ן"].edgeDelta.supp).toEqual(["N1->F0"]);
     expect(family["ז"].edgeDelta.supp).toEqual(family["ן"].edgeDelta.supp);
+  });
+
+  it("י and ו stay edge-equivalent while differing only in focus/export behavior", () => {
+    const family = executeFamily();
+
+    expect(family["י"].edgeDelta).toEqual(family["ו"].edgeDelta);
+
+    expect(family["י"].focusAfter).toBe(family["י"].focusBefore);
+    expect(family["ו"].focusAfter).toBe(family["ו"].nodeId);
+    expect(family["ו"].focusAfter).not.toBe(family["ו"].focusBefore);
+
+    expect(family["י"].operatorKDelta).toEqual([]);
+    expect(family["ו"].operatorKDelta).toEqual([]);
+
+    expect(family["י"].finalKDelta).toEqual([family["י"].nodeId]);
+    expect(family["ו"].finalKDelta).toEqual([family["ו"].nodeId]);
   });
 
   it("ז and ן stay edge-equivalent while differing only in focus/export behavior", () => {
@@ -134,19 +156,22 @@ describe("continuation family edge-delta equivalence", () => {
     expect(family["ן"].finalKDelta).toEqual([family["ן"].nodeId]);
   });
 
-  it("operator-specific exports exist only on ז; focus advance exists on every other continuation form", () => {
+  it("operator-specific exports exist on י and ז; focus advance exists only on ו נ ן", () => {
     const family = executeFamily();
 
+    expect(family["י"].operatorKDelta).toEqual([]);
     expect(family["ו"].operatorKDelta).toEqual([]);
     expect(family["נ"].operatorKDelta).toEqual([]);
     expect(family["ן"].operatorKDelta).toEqual([]);
     expect(family["ז"].operatorKDelta).toEqual([family["ז"].nodeId]);
 
+    expect(family["י"].focusAfter).toBe(family["י"].focusBefore);
     expect(family["ו"].focusAfter).toBe(family["ו"].nodeId);
     expect(family["נ"].focusAfter).toBe(family["נ"].nodeId);
     expect(family["ן"].focusAfter).toBe(family["ן"].nodeId);
     expect(family["ז"].focusAfter).toBe(family["ז"].focusBefore);
 
+    expect(family["י"].finalKDelta).toEqual([family["י"].nodeId]);
     expect(family["ו"].finalKDelta).toEqual([family["ו"].nodeId]);
     expect(family["נ"].finalKDelta).toEqual([family["נ"].nodeId]);
     expect(family["ן"].finalKDelta).toEqual([family["ן"].nodeId]);

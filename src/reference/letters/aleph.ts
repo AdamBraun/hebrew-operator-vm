@@ -57,7 +57,12 @@ export const alephOp: LetterOp = {
     S.handles.set(
       aliasId,
       createHandle(aliasId, "alias", {
-        meta: { left: focusAtEntry, right: constructId, transport: true }
+        meta: {
+          left: focusAtEntry,
+          right: constructId,
+          transport: true,
+          handle_label: "alias_handle"
+        }
       })
     );
     S.links.push({ from: focusAtEntry, to: constructId, label: "transport" });
@@ -65,7 +70,12 @@ export const alephOp: LetterOp = {
     S.vm.H.push({
       type: "alias",
       tau: S.vm.tau,
-      data: { left: focusAtEntry, right: constructId, id: aliasId }
+      data: {
+        left: focusAtEntry,
+        right: constructId,
+        id: aliasId,
+        handle_label: "alias_handle"
+      }
     });
     return { S, h: constructId, r: BOT_ID };
   }

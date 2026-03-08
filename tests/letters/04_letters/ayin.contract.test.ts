@@ -80,6 +80,7 @@ describe("ayin contract", () => {
     expect(exportHandle?.kind).toBe("alias");
     expect(exportHandle?.meta?.target).toBe(step.origin);
     expect(exportHandle?.meta?.export_origin).toBe(true);
+    expect(exportHandle?.meta?.handle_label).toBe("alias_handle");
   });
 
   it("samekh resolves ayin's carry without removing the exported origin handle", () => {

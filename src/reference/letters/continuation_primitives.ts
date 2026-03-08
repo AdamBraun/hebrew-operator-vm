@@ -41,6 +41,8 @@ export function spawnContinuationNode(
   S: State,
   { sourceId, idPrefix, meta = {} }: ContinuationNodeArgs
 ): { nodeId: string } {
+  // Shared cont-only substrate for the continuation family.
+  // `ו` advances focus to this node; `י` exports it while keeping focus fixed.
   const nodeId = allocateContinuationNode(S, idPrefix, { meta });
   addCont(S, sourceId, nodeId);
   return { nodeId };

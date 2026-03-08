@@ -4,8 +4,11 @@ import { runProgram } from "@ref/vm/vm";
 const base = "י";
 
 function sealedHandle(state: ReturnType<typeof runProgram>) {
-  const handleId = state.vm.A[state.vm.A.length - 1];
-  return state.handles.get(handleId);
+  const matches = Array.from(state.handles.values()).filter(
+    (handle) => Array.isArray(handle.meta?.sof_modifiers) && handle.meta.sof_modifiers.length > 0
+  );
+  expect(matches).toHaveLength(1);
+  return matches[0];
 }
 
 describe("sof modifiers", () => {

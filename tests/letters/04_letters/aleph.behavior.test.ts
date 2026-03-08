@@ -21,6 +21,7 @@ describe("aleph behavior", () => {
     expect(aliasHandle?.kind).toBe("alias");
     expect(aliasHandle?.meta.left).toBe(entryFocus);
     expect(aliasHandle?.meta.right).toBe(h);
+    expect(aliasHandle?.meta.handle_label).toBe("alias_handle");
     expect(
       state.links.some(
         (link) => link.from === entryFocus && link.to === h && link.label === "transport"

@@ -119,6 +119,14 @@ Carry resolution is **derived**:
 
 ## Letter Definitions
 
+Every letter’s topology may contain the Y/V substrate structurally; the explicit letters י and ו are the degenerate cases where one shared primitive is itself the whole operator.
+
+At the abstract topology level, every letter contains the continuation primitive.
+
+The explicit letter י is the case where that primitive alone is the entire letter-level operation: allocate a pin, emit cont(anchor, pin), export the pin as selectable, and keep focus unchanged.
+
+This note is structural, not a claim that every runtime letter execution must separately materialize an extra standalone י-node.
+
 ---
 
 # Space (\square) — Time-step / boundary
@@ -236,6 +244,10 @@ Operational rule:
 - **Other state changes:** export `ℓ` as an adjunct of `h`.
 - **Seal:** set `F := h`.
 
+Note: under this graph model, ה’s leg is not mechanically identical to י.
+
+The leg contains י’s topology as a subset because it includes cont(h, ℓ), but it adds carry(h, ℓ) + supp(ℓ, h) + sub(h, ℓ). The traditional statement that the leg is a י identifies the shared attachment primitive, not full operator identity.
+
 ---
 
 # ו — Minimal continuation (carryless spine advance)
@@ -247,7 +259,17 @@ Unary. `ו` only advances the spine.
 - **Graph edges emitted:**
   1. `cont(F, F^{+})`
 - **Seal:** set `F := F^{+}`.
-- **Note:** `ו` is the carryless member of the continuation family: `ו = cont`; `נ = cont + carry`; `ן = cont + carry + supp`; `ז = cont + carry + supp`, but focus stays put.
+
+Continuation-family lattice:
+
+- י = cont, focus stays
+- ו = cont, focus advances
+- נ = cont + carry, focus advances
+- ן = cont + carry + supp, focus advances
+- ז = cont + carry + supp, focus stays
+
+The ה-leg is not another family member; it is a detached adjunct whose topology strictly contains י as a subset: cont(h, ℓ) plus carry(h, ℓ) + supp(ℓ, h) + sub(h, ℓ).
+
 - **Non-effects:** `ו` does not create `carry`, does not create `supp`, and does not group, partition, or connect two pre-existing operands.
 
 ---
@@ -294,18 +316,17 @@ Unary. Same materialized graph edges as ן (cont+carry+supp), but focus stays an
 
 ---
 
-# י — Seed / pin / handle-initiation (Y primitive)
+# י — Pin / cont-only selectable attachment (focus stays)
 
-- **Select:** an anchor (x) (a person/object already in focus).
-- **Bound:** create the minimal _addressable seed_ on/for (x):
-  [
-  \iota(x);;=;;\text{“the pinned handle of }x\text{”}
-  ]
-  This is not a class, not an interior, not a target—just the minimal “this-exact-one” hook that other relations can attach to.
-- **Seal:** commit (\iota(x)) as stable under further refinement: subsequent letters may change what you look at _relative to_ (x), but the hook stays (x).
-  - **Interface lead (ו):** the pin includes a single exported attachment port so later letters can bind to it after focus shifts.
-  - **Head exposure (ד/ר):** later head-exposure letters reuse the focused scope; `ד` backs the carry immediately and `ר` leaves it provisional.
-- **Note (latest):** this (Y) is the universal prefix used implicitly by all letters in (f*\ell=\Delta*\ell\circ V\circ Y). “Extra yuds” from letter lore are not this base-seed; the ד/ר distinction is encoded structurally by the presence or absence of `supp`.
+- **Select:** current focus / anchor `(F)`.
+- **Bound:** allocate pin `(p := alloc())`.
+- **Graph edges emitted:**
+  1. `cont(F, p)`
+- **Other state changes:** export `p` as a selectable pin/handle.
+- **Seal:** keep `F` unchanged.
+
+- **Non-effects:** `י` does **not** add `carry(F, p)`, does **not** add `supp(p, F)`, and does **not** move focus.
+- **Mechanical reason:** because `p` sits on the `cont` spine, backward traversal from `p` reaches `F`; because no `carry` is added, `י` creates no new carried witness-thread.
 
 ---
 

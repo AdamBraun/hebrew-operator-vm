@@ -101,6 +101,7 @@ describe("ayin behavior", () => {
     expect(exportHandleId.length).toBeGreaterThan(0);
     expect(state.vm.K).toContain(exportHandleId);
     expect(exportHandle?.meta?.target).toBe(ayinStep.origin);
+    expect(exportHandle?.meta?.handle_label).toBe("alias_handle");
     expect(state.handles.has(ayinStep.origin)).toBe(true);
   });
 
@@ -134,6 +135,10 @@ describe("ayin behavior", () => {
     expect(exportedHandles.map((handle) => handle.meta?.target)).toEqual([
       first.origin,
       second.origin
+    ]);
+    expect(exportedHandles.map((handle) => handle.meta?.handle_label)).toEqual([
+      "alias_handle",
+      "alias_handle"
     ]);
     expect(state.carry.has(`${first.origin}->${first.child}`)).toBe(true);
     expect(state.carry.has(`${second.origin}->${second.child}`)).toBe(true);
