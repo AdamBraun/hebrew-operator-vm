@@ -153,7 +153,7 @@
           "D": "Ω",
           "F": "ו:1:1",
           "R": "⊥",
-          "K": ["Ω", "⊥", "ו:1:1", "ז:1:1"],
+          "K": ["Ω", "⊥", "ו:1:1", "ז:1:1", "ז:1:1"],
           "E": [],
           "W": [],
           "OStack_word": [],
@@ -278,17 +278,17 @@
           {
             "id": "ז:1:1",
             "kind": "scope",
-            "policy": "framed_lock",
+            "policy": "soft",
             "anchor": 0,
-            "edge_mode": "free",
+            "edge_mode": "committed",
             "envelope": {
               "ctx_flow": "LOW",
-              "x_flow": "IMPLICIT_OK",
-              "data_flow": "LIVE",
-              "edit_flow": "OPEN",
+              "x_flow": "EXPLICIT_ONLY",
+              "data_flow": "SNAPSHOT",
+              "edit_flow": "TIGHT",
               "ports": [],
-              "coupling": "LINK",
-              "policy": "framed_lock"
+              "coupling": "CopyNoBacklink",
+              "policy": "soft"
             },
             "meta": {
               "portOf": "ו:1:1"
@@ -449,17 +449,17 @@
       {
         "id": "ז:1:1",
         "kind": "scope",
-        "policy": "framed_lock",
+        "policy": "soft",
         "anchor": 0,
-        "edge_mode": "free",
+        "edge_mode": "committed",
         "envelope": {
           "ctx_flow": "LOW",
-          "x_flow": "IMPLICIT_OK",
-          "data_flow": "LIVE",
-          "edit_flow": "OPEN",
+          "x_flow": "EXPLICIT_ONLY",
+          "data_flow": "SNAPSHOT",
+          "edit_flow": "TIGHT",
           "ports": [],
-          "coupling": "LINK",
-          "policy": "framed_lock"
+          "coupling": "CopyNoBacklink",
+          "policy": "soft"
         },
         "meta": {
           "portOf": "ו:1:1"

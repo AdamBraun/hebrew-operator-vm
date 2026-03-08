@@ -2,7 +2,7 @@ import { BOT_ID } from "../state/handles";
 import { State } from "../state/state";
 import { selectCurrentFocus } from "../vm/select";
 import { committedEnvelope } from "../state/policies";
-import { spawnResolvedPort } from "./ports";
+import { spawnResolvedCarryNode } from "./continuation_primitives";
 import { Construction, LetterMeta, LetterOp } from "./types";
 
 const meta: LetterMeta = {
@@ -19,7 +19,13 @@ export const zayinOp: LetterOp = {
   select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops) => {
     const focus = ops.args[0];
-    const { portId } = spawnResolvedPort(S, { portOf: focus, prefix: "ז", exportToK: true });
+    const { nodeId: portId } = spawnResolvedCarryNode(S, {
+      sourceId: focus,
+      idPrefix: "ז",
+      meta: { portOf: focus },
+      setPolicyLikeZayin: true
+    });
+    S.vm.K.push(portId);
     const cons: Construction = {
       base: focus,
       envelope: committedEnvelope(),

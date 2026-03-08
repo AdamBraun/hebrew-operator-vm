@@ -141,6 +141,7 @@ describe("continuation family behavior", () => {
     const [finalNunSnapshot] = tokenExitSnapshots("ן");
     const finalNunStart = baselineId(finalNunSnapshot);
     const [finalNunNode] = familyNodeIds(finalNunSnapshot, "ן");
+    const finalNunHandle = finalNunSnapshot.handles?.find((handle) => handle.id === finalNunNode);
 
     expect(
       normalizeEdges(vavSnapshot.cont, { [baselineId(vavSnapshot)]: "F0", "ו:1:1": "F1" })
@@ -150,6 +151,11 @@ describe("continuation family behavior", () => {
     ).toEqual(["F0->F1"]);
     expect(finalNunSnapshot.carry ?? []).toEqual([`${finalNunStart}->${finalNunNode}`]);
     expect(finalNunSnapshot.supp ?? []).toEqual([`${finalNunNode}->${finalNunStart}`]);
+    expect(finalNunHandle?.edge_mode).toBe("committed");
+    expect(finalNunHandle?.envelope?.data_flow).toBe("SNAPSHOT");
+    expect(finalNunHandle?.envelope?.edit_flow).toBe("TIGHT");
+    expect(finalNunHandle?.envelope?.x_flow).toBe("EXPLICIT_ONLY");
+    expect(finalNunHandle?.envelope?.coupling).toBe("CopyNoBacklink");
     expect(finalNunSnapshot.vm?.F).toBe(finalNunNode);
     expectNoExtraSemantics(finalNunSnapshot);
   });

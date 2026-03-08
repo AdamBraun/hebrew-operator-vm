@@ -1,8 +1,5 @@
-import { committedEnvelope } from "../state/policies";
-import { createHandle } from "../state/handles";
-import { addCarry, addSupp } from "../state/relations";
 import { State } from "../state/state";
-import { nextId } from "../vm/ids";
+import { spawnResolvedCarryNode } from "./continuation_primitives";
 
 type SpawnResolvedPortArgs = {
   portOf: string;
@@ -18,17 +15,12 @@ export function spawnResolvedPort(
   S: State,
   { portOf, prefix, exportToK }: SpawnResolvedPortArgs
 ): { portId: string } {
-  const portId = nextId(S, prefix);
-  S.handles.set(
-    portId,
-    createHandle(portId, "scope", {
-      meta: { portOf },
-      edge_mode: "committed",
-      envelope: committedEnvelope()
-    })
-  );
-  addCarry(S, portOf, portId);
-  addSupp(S, portId, portOf);
+  const { nodeId: portId } = spawnResolvedCarryNode(S, {
+    sourceId: portOf,
+    idPrefix: prefix,
+    meta: { portOf },
+    setPolicyLikeZayin: true
+  });
   if (exportToK) {
     S.vm.K.push(portId);
   }

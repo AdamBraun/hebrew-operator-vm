@@ -1,8 +1,7 @@
-import { BOT_ID, createHandle } from "../state/handles";
-import { addCont } from "../state/relations";
+import { BOT_ID } from "../state/handles";
 import { State } from "../state/state";
-import { nextId } from "../vm/ids";
 import { selectCurrentFocus } from "../vm/select";
+import { spawnContinuationNode } from "./continuation_primitives";
 import { Construction, LetterMeta, LetterOp, SelectOperands, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
@@ -19,9 +18,10 @@ export const vavOp: LetterOp = {
   select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops: SelectOperands) => {
     const parent = ops.args[0];
-    const child = nextId(S, "ו");
-    S.handles.set(child, createHandle(child, "scope"));
-    addCont(S, parent, child);
+    const { nodeId: child } = spawnContinuationNode(S, {
+      sourceId: parent,
+      idPrefix: "ו"
+    });
     const cons: Construction = {
       base: parent,
       envelope: defaultEnvelope(),
