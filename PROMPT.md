@@ -33,9 +33,9 @@ Diacritics are small marks on a letter. They never stand alone; they **modify** 
 
 - **Dagesh (ּ)**: hardens the output (stronger boundaries, tighter flow).
 - **Shuruk (וּ)**: only on ו; marks the host as `shuruk`. It does not create a special execution mode and does not add `carry` or `supp`.
-- **Mappiq (ּ in ה)**: forces ה to behave as a _full operator_ (not a silent/mater tail).
-  - Sets `H(mode)=pinned` (HY milui): execute ה normally AND export a pinned handle.
-  - Prevents the word-final “breath/mater” degradation.
+- **Mappiq (ּ in ה)**: currently only classifies the inside dot as `mappiq`.
+  - It does **not** switch ה into a separate execution mode.
+  - The runtime still uses the same head-with-leg implementation for ה.
 - **Shin/Sin dots**: on ש only:
   - **שׁ** (right dot) selects external three-point attachment (tripod).
   - **שׂ** (left dot) selects internal three-point attachment (triangle).
@@ -86,11 +86,18 @@ Boundary selection for the space after a word:
 
 ## Graph Carry Model (Current)
 
-Edge types (no flags, no metadata on edges):
+Edge/record types used by the current runtime:
 
 - `cont(source, target)`: continuation spine edge.
 - `carry(source, target)`: witness-carry edge; used when context is threaded forward.
 - `supp(closer, origin)`: back-edge that closes a carry-origin into a cycle.
+- `head_of(head, whole)`: exposed-head relation.
+- `sub(parent, child)`: structural child/adjunct/fork attachment.
+- `BoundaryRecord { id, inside, outside, ... }`: enclosure topology record; this is not an edge.
+
+Helper note:
+
+- In the current runtime, `addCarry(source, target)` materializes both `cont(source, target)` and `carry(source, target)`.
 
 Carry resolution is **derived**:
 
@@ -128,7 +135,8 @@ Carry resolution is **derived**:
 - Let terminal node be current focus (T) before reset.
 - Close unresolved carries in the current chunk by adding explicit `supp(T, s)` edges.
 - Mark `T` as chunk-commit boundary (`meta.chunk_commit_boundary=1`).
-- Resolve pending `MEM_ZONE` obligations by default (silent close).
+- Silently close any open mem-enclosure `BoundaryRecord`s at the word boundary.
+- Resolve pending `BOUNDARY` obligations by default.
 - Commit chunk, clear pending join/barrier carryover, reset baseline stack/focus.
 
 `□glue` / `□glue_maqqef`:
@@ -147,8 +155,8 @@ Carry resolution is **derived**:
 - Let terminal node be current focus (T) before reset.
 - Close unresolved carries in the current chunk by adding explicit `supp(T, s)` edges.
 - Mark `T` as chunk-commit boundary (`meta.chunk_commit_boundary=1`).
-- Resolve pending obligations **strictly** for `MEM_ZONE`:
-  - unresolved `MEM_ZONE` becomes explicit spill representation.
+- Silently close any open mem-enclosure `BoundaryRecord`s at the cut.
+- Resolve pending `BOUNDARY` obligations strictly for the cut rank.
 - Clear `PendingJoin`.
 - Set `LeftContextBarrier := rank`.
 - Emit sealed constituent node and attach by rank (`CStack`):
@@ -201,28 +209,32 @@ Operational rule:
 
 # ד — Backed head / resolved head exposure
 
-- **Select:** current construct `X`. If no construct exists yet in the word, select word-entry ambient `W₀`.
-- **Bound:**
-  1. `h := alloc()`
-  2. add `head_of(h, X)`
-  3. add `carry(X, h)`
-  4. add `supp(h, X)`
+- **Select:** current construct/source `X`. On word-entry baseline, use word-entry focus `W₀`.
+- **Bound:** allocate head `h`.
+- **Graph edges emitted:**
+  1. `head_of(h, X)`
+  2. `cont(X, h)`
+  3. `carry(X, h)`
+  4. `supp(h, X)`
 - **Seal:** set `F := h`.
 
 ---
 
-# ה — Exposure / announcement
+# ה — Backed head with detached adjunct leg
 
-- **Select:** the currently focused targets/rules.
-- **Bound:** mark selected bounds as “visible/public/declared”.
-- **Seal:** commit to the public layer (like writing on the board): later rules can reference this as a named, time-stamped declaration.
-- **Mode semantics (milui):** define `H(mode)` where `mode ∈ {public, breath, pinned, alias}`
-  - `public` (default): existing behavior (declare visible/public; yields a declaration handle).
-  - `breath` (HH): word-final fallback when no mappiq; does NOT create a new declaration handle.
-    - It only applies a Sof-tail modifier to the previously sealed output (a “closing breath”).
-  - `pinned` (HY): execute `public`, then export a pinned handle (like adding a י to the result).
-    - This is what mappiq forces.
-  - `alias` (HA): execute `public`, then bind the declared thing to an identity via א-style transport/alias.
+- **Select:** current construct/source `X`. On word-entry baseline, use word-entry focus `W₀`.
+- **Bound:** allocate resolved head `h` and detached leg `ℓ`.
+- **Graph edges emitted:**
+  1. `head_of(h, X)`
+  2. `cont(X, h)`
+  3. `carry(X, h)`
+  4. `supp(h, X)`
+  5. `cont(h, ℓ)`
+  6. `carry(h, ℓ)`
+  7. `supp(ℓ, h)`
+  8. `sub(h, ℓ)`
+- **Other state changes:** export `ℓ` as an adjunct of `h`.
+- **Seal:** set `F := h`.
 
 ---
 
@@ -231,9 +243,9 @@ Operational rule:
 Unary. `ו` only advances the spine.
 
 - **Select:** current focus (F).
-- **Bound:**
-  1. allocate successor (`F^{+} := alloc()`).
-  2. add `cont(F, F^{+})`.
+- **Bound:** allocate successor (`F^{+} := alloc()`).
+- **Graph edges emitted:**
+  1. `cont(F, F^{+})`
 - **Seal:** set `F := F^{+}`.
 - **Note:** `ו` is the carryless member of the continuation family: `ו = cont`; `נ = cont + carry`; `ן = cont + carry + supp`; `ז = cont + carry + supp`, but focus stays put.
 - **Non-effects:** `ו` does not create `carry`, does not create `supp`, and does not group, partition, or connect two pre-existing operands.
@@ -242,15 +254,16 @@ Unary. `ו` only advances the spine.
 
 # ז — Exported resolved port (focus stays)
 
-Unary. Identical edge effect to ן, but focus does not advance.
+Unary. Same materialized graph edges as ן, but focus does not advance.
 
 - **Select:** current focus (F).
-- **Bound:**
-  1. allocate port (`p := alloc()`).
-  2. add `cont(F, p)`.
-  3. add `carry(F, p)`.
-  4. add `supp(p, F)` (immediately resolved carry).
-- **Seal:** set `policy(p):=framed_lock`; export `p` to `K`; keep `F` unchanged.
+- **Bound:** allocate port (`p := alloc()`).
+- **Graph edges emitted:**
+  1. `cont(F, p)`
+  2. `carry(F, p)`
+  3. `supp(p, F)`
+- **Other state changes:** set `policy(p) := framed_lock`; export `p` to `K`.
+- **Seal:** keep `F` unchanged.
 
 ---
 
@@ -267,7 +280,9 @@ Unary. Identical edge effect to ן, but focus does not advance.
 
 - **Select:** current target handle (X).
 - **Bound:** restrict the envelope of (X) so default interaction is inward-facing; allocate one external port (p) as the only sanctioned external contact point.
-- **Seal:** register (p) as the only sanctioned external contact point for (X); reify (p) and set focus/output accordingly.
+- **Graph edges emitted:** none.
+- **Other state changes:** apply the restricted envelope to `X`, mark `X` with `inward_interface=1` and `sanctioned_port=p`, and create `p` as a gate handle with sanctioned/inward metadata.
+- **Seal:** reify (p) and set focus/output accordingly.
 - **Non-effects:**
   - ט does **not** apply a patch.
   - ט does **not** create a hidden rule object.
@@ -290,7 +305,7 @@ Unary. Identical edge effect to ן, but focus does not advance.
 
 ---
 
-# ך — Capacity-cast as portioning (kaf = כף)
+# ך — Final resolved hold
 
 ## Signature
 
@@ -301,22 +316,25 @@ Unary. Identical edge effect to ן, but focus does not advance.
 
 ## Select
 
-Select target (x) and template (T) (implicit if absent).
+Select current focus `(F)`.
 
 ## Bound
 
-Compute a capacity-limited portion and residue:
+Allocate resolved hold `h`.
 
-- p := portion_T(x) (largest/canonical subpart of x that fits T)
-- r := x \ p
+Exact graph edges emitted:
+
+1. `cont(F, h)`
+2. `carry(F, h)`
+3. `supp(h, F)`
+
+Other state changes:
+
+- set `policy(h) := final`
 
 ## Seal
 
-Commit p as a unitized handle (`unitized=1`), set focus to it, and return (r_out := r).
-
-Final ך: same, but additionally closes the relevant aspect to further refinement (policy gating).
-
-Note: “as/like” is the special case where T is another object/pattern (“x-as-Y”); “capacity/measure” is the case where T is a vessel/limit.
+Set focus to `h`.
 
 ## Obligations
 
@@ -329,29 +347,28 @@ None.
 
 ---
 
-# כ / ך — Capacity-cast as portioning (kaf = כף)
+# כ / ך — Resolved hold family
 
-- **Select:** target (x) and template (T) (implicit if absent).
-- **Bound:** compute a capacity-limited portion and residue:
-  - p := portion_T(x) (largest/canonical subpart of x that fits T)
-  - r := x \ p
-
-- **Seal:** commit p as a unitized handle (`unitized=1`), set focus to it, and return (r_out := r).
-  - **Final ך:** same, but additionally closes the relevant aspect to further refinement (policy gating).
-- **Note:** “as/like” is the special case where T is another object/pattern (“x-as-Y”); “capacity/measure” is the case where T is a vessel/limit.
+- **Select:** current focus `(F)`.
+- **כ Bound:** allocate resolved hold `h`.
+- **כ Graph edges emitted:**
+  1. `cont(F, h)`
+  2. `carry(F, h)`
+  3. `supp(h, F)`
+- **כ Seal:** set `F := h`.
+- **ך:** same graph edges as `כ`, plus `policy(h) := final`.
 
 ---
 
 # ל — Hold and step past
 
 - **Select:** current focus `(F)`.
-- **Bound:**
-  1. allocate resolved hold `(h := alloc())`
-  2. allocate exterior successor `(o := alloc())`
-  3. add `cont(F, h)`
-  4. add `carry(F, h)`
-  5. add `supp(h, F)`
-  6. add `cont(h, o)`
+- **Bound:** allocate resolved hold `(h := alloc())` and exterior successor `(o := alloc())`.
+- **Graph edges emitted:**
+  1. `cont(F, h)`
+  2. `carry(F, h)`
+  3. `supp(h, F)`
+  4. `cont(h, o)`
 - **Seal:** set `F := o`.
 - **Non-effects:** do **not** add `carry(h, o)`, `supp(o, h)`, or a boundary record.
 - **Note:** ל is the “step past the resolved hold” variant of the כ-based hold family.
@@ -369,32 +386,24 @@ None.
 
 ## Select
 
-Select the current focus (F) (and implicit stack).
+Select the current focus `F`.
 
 ## Bound
 
-No new bound; closure happens in Seal.
+No new graph edges are emitted in Bound.
 
 ## Seal
 
-Deterministic:
-
-- If (top(OStack_word)) is (MEM_ZONE) with child (Z), then:
-
-  ```text
-  o := pop(OStack_word)  // must be MEM_ZONE
-  Z := o.child
-  CloseMemZone(Z)
-  Export handle h := MemHandle(Z)
-  push h to K; set F := h
-  ```
-
-- If (OStack_word) is empty: perform (מ) then (ם) immediately on the current anchor, exporting the handle.
-- If (top(OStack_word)) is not (MEM_ZONE): perform the same implicit (מ then ם) without consuming other obligations.
+- If `F` is inside the nearest open mem enclosure, allocate sealed node `s` and emit:
+  1. `cont(F, s)`
+  2. `carry(F, s)`
+  3. `supp(s, F)`
+- Then close that enclosure's `BoundaryRecord`.
+- If no open mem enclosure exists, synthesize the minimal `מ` shape first and then close it.
 
 ## Obligations
 
-- Closes: `MEM_ZONE`
+- None in current code; enclosure closure is driven by boundary lookup at seal time.
 
 ## Tests
 
@@ -402,42 +411,29 @@ Deterministic:
 
 ---
 
-# מ / ם — From-zone (MEM-open / MEM-close)
+# מ / ם — Hold plus enclosure
 
-#### מ — MEM-open (open from-zone as pending obligation)
+#### מ — open mem enclosure
 
-- **Select:** current anchor/focus handle (x) and active “from/within” relation (\in_C).
-- **Bound:** allocate a fresh zone handle (Z := MemZone(x)) representing (M(x):={y | y \in_C x}) as a soft membrane (refinable/nestable).
-- **Seal:** push obligation:
+- **Select:** current focus `F`.
+- **Bound:** allocate resolved hold `h`, interior successor `i`, and boundary record `B`.
+- **Graph edges emitted:**
+  1. `cont(F, h)`
+  2. `carry(F, h)`
+  3. `supp(h, F)`
+  4. `cont(h, i)`
+- **Other state changes:** add `BoundaryRecord(B)` with `inside=i`, `outside=h`, `kind=mem_enclosure`, `open=true`, `closed=false`.
+- **Seal:** set `F := i`.
 
-  ```text
-  push OStack_word := {
-    kind=MEM_ZONE, parent=F, child=Z, payload={anchor:x}, tau_created=τ
-  }
-  ```
+#### ם — close mem enclosure
 
-  Keep (F) unchanged (mem-open does not enter the zone).
-
-#### ם — MEM-close (commit/export the nearest pending MEM zone)
-
-- **Select:** current focus (F) (and implicit stack).
-- **Bound/Seal (deterministic):**
-  - If (top(OStack_word)) is (MEM_ZONE) with child (Z), then:
-
-    ```text
-    o := pop(OStack_word)  // must be MEM_ZONE
-    Z := o.child
-    CloseMemZone(Z)
-    Export handle h := MemHandle(Z)
-    push h to K; set F := h
-    ```
-
-  - If (OStack_word) is empty: perform (מ) then (ם) immediately on the current anchor, exporting the handle.
-  - If (top(OStack_word)) is not (MEM_ZONE): perform the same implicit (מ then ם) without consuming other obligations.
-
-#### Boundary default (space/end-of-input)
-
-Any remaining (MEM_ZONE) obligation is resolved as `CloseMemZoneSilently(Z)` and produces no exported handle.
+- **Select:** current focus `F`.
+- **Graph edges emitted on close:**
+  1. `cont(F, s)`
+  2. `carry(F, s)`
+  3. `supp(s, F)`
+- **Other state changes:** close the nearest open mem `BoundaryRecord` containing `F`; if none exists, synthesize `מ` first and then close it.
+- **Seal:** set `F := s`.
 
 ---
 
@@ -460,11 +456,12 @@ Unary. Threads forward with carry resolved at birth.
 Unary. Threads forward with an unresolved carry.
 
 - **Select:** current focus (F).
-- **Bound:**
-  1. allocate successor (`F^{+} := alloc()`).
-  2. add `cont(F, F^{+})`.
-  3. add `carry(F, F^{+})`.
+- **Bound:** allocate successor (`F^{+} := alloc()`).
+- **Graph edges emitted:**
+  1. `cont(F, F^{+})`
+  2. `carry(F, F^{+})`
 - **Seal:** set `F := F^{+}`.
+- **Note:** current code records the unresolved carry in the graph; it does not push a separate SUPPORT obligation object.
 
 ---
 
@@ -476,9 +473,8 @@ Unary. Orthogonal resolver: closes the nearest unresolved carry-thread.
   1. walk backward from `F` along `cont`.
   2. at each node `v`, inspect incoming carries `carry(s, v)` where `s` is on the same `cont*` lineage.
   3. choose the first unresolved carry (no in-lineage `supp(c, s)` yet).
-- **Bound:** add one edge: `supp(F, s)`.
-- **Seal:** default forward sealing behavior only; no extra state changes.
-- If no unresolved carry exists on the chain, `ס` is a no-op.
+- **Graph edges emitted:** if such a source `s` exists, add `supp(F, s)`; otherwise none.
+- **Seal:** keep `F` unchanged; no extra policy changes.
 
 ---
 
@@ -490,11 +486,13 @@ Unary. Continue forward under unresolved carry, exporting the point of departure
 - **Bound:**
   1. let `s := F` (snapshot origin).
   2. allocate successor (`F⁺ := alloc()`).
-  3. add `cont(s, F⁺)`.
-  4. add `carry(s, F⁺)`.
-  5. allocate origin handle (`h := handle_to(s)`).
+  3. allocate origin handle (`h := handle_to(s)`).
+- **Graph edges emitted:**
+  1. `cont(s, F⁺)`
+  2. `carry(s, F⁺)`
+- **Other state changes:** `h` is created as an alias handle targeted at `s` and exported to `K`, but no alias graph edge is recorded.
 - **Seal:** push `h` to `K`; set `F := F⁺`.
-- **Note:** edge set identical to נ; distinction is origin export. Milui עי״ן = export-origin (ע) → pin (י) → commit-lock (ן).
+- **Note:** edge set is identical to `נ`; the operator-level difference is origin export.
 
 ---
 
@@ -533,24 +531,31 @@ Unary. Continue forward under unresolved carry, exporting the point of departure
 
 ---
 
-# ק — Indistinguishability (≈) + optional descent-to-action channel
+# ק — Bare head with detached adjunct leg
 
-- **Select:** two targets (x,y).
-- **Bound:** assert (x\approx y) (treat as interchangeable for selection/rules, without identity merge).
-  - **Optional (latest, qof-mode):** attach a “projection-to-action” channel (\pi\_\downarrow) (a descender) allowing the ≈-equivalence to be _realized in execution_ (think: similarity that can descend into concrete deeds/outputs).
-  - **Optional (definition):** (\pi\_\downarrow := \text{continuation step} \circ \text{closed-mouth seal}) so descent is a forward continuation followed by a final ף-style freeze.
-- **Seal:** store (\approx)-class (and if present (\pi*\downarrow)) so later selectors may pick “any representative” unless forced to distinguish; execution may use (\pi*\downarrow) when the context enables descent. Descended artifacts are sealed as `policy=final` while (\approx) remains soft.
-- **Note (milui):** קו״ף reads as ≈ plus a continuation step and a final ף freeze; the name is the descender.
+- **Select:** current construct/source `X`. On word-entry baseline, use word-entry focus `W₀`.
+- **Bound:** allocate bare head `h` and detached leg `ℓ`.
+- **Graph edges emitted:**
+  1. `head_of(h, X)`
+  2. `cont(X, h)`
+  3. `carry(X, h)`
+  4. `cont(h, ℓ)`
+  5. `carry(h, ℓ)`
+  6. `sub(h, ℓ)`
+- **Other state changes:** export `ℓ` as an adjunct of `h`.
+- **Seal:** set `F := h`.
+- **Non-effects:** current code does **not** add `supp(h, X)` or `supp(ℓ, h)`.
 
 ---
 
 # ר — Bare head / unresolved head exposure
 
-- **Select:** current construct `X`. If no construct exists yet in the word, select word-entry ambient `W₀`.
-- **Bound:**
-  1. `h := alloc()`
-  2. add `head_of(h, X)`
-  3. add `carry(X, h)`
+- **Select:** current construct/source `X`. On word-entry baseline, use word-entry focus `W₀`.
+- **Bound:** allocate head `h`.
+- **Graph edges emitted:**
+  1. `head_of(h, X)`
+  2. `cont(X, h)`
+  3. `carry(X, h)`
 - **Seal:** set `F := h`.
 
 ---
@@ -576,6 +581,7 @@ Allocate three nodes from `F`.
   - Handle kind: `compartment`.
 
 - **Seal:** focus remains `F`. Thread forwards `F`. All three points are live. Shin does not choose among them.
+- **Non-effects:** `ש` adds no `carry` or `supp` edges in either direction.
 
 - **Dot selection:**
 - Right dot -> external (tripod)

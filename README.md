@@ -460,28 +460,36 @@ Recommended review artifacts to commit when semantics change:
 - `outputs/torah-corpus/<run>/diff.from-<prev>.json` (if comparing runs)
 - `tests/core/07_golden/torah_flow_promoted.json` (selected regression deltas)
 
-## Determinism & obligations
+## Determinism & boundary state
 
 - **Determinism:** handle IDs are allocated as `<letter>:<tau>:<counter>`; the
   same input and initial state always yield identical IDs and event logs.
-- **Obligations:** letters can push `SUPPORT` or `MEM_ZONE` obligations onto
-  `OStack_word`, plus a `BOUNDARY` obligation from `ב` closed by `ד`.
-  Discharging letters pop the top obligation.
+- **Boundary state:** the runtime still carries `OStack_word`, but the current
+  letter implementations documented here are graph-driven rather than
+  obligation-driven. Unresolved `נ`/`ע` behavior is recorded as `carry` edges,
+  open mem enclosures are tracked as `BoundaryRecord`s, and `OStack_word` is
+  only relevant for boundary-resolution machinery.
 - **Whitespace → `□`:** any whitespace in input is tokenized as `□`, so spaces
   are semantic word boundaries.
-- **Shin/Sin disambiguation:** `שׁ` and `שׂ` tokenize distinctly; `שׂ` executes as
-  composite `read=ס`, `shape=ש` (read-first, routing-only shape effect).
+- **Shin/Sin disambiguation:** `שׁ` and `שׂ` tokenize distinctly; `שׁ` executes as
+  the external tripod and `שׂ` executes as the internal triangle.
 - **He head-family:** `ה` executes as the resolved `head + detached leg` sibling of `ק`, while `ד/ר` remain the head-only resolved/unresolved pair.
 - **Mappiq and final he:** `mappiq` remains lexical classification only; current runtime routes both dotted and undotted `ה` through the same head-family path. Any future distinction must be introduced explicitly inside that model, not via declaration modes.
 - **Space boundary (`□`):** on a space token (or end-of-input), `tau` increments
-  and any remaining obligations are resolved: `SUPPORT` falls (logging a `fall`
-  event and restoring focus), and `MEM_ZONE` closes silently.
+  and the current chunk is closed: unresolved carries are resolved by adding
+  `supp` at the terminal focus, open mem `BoundaryRecord`s close silently, and
+  pending `BOUNDARY` obligations resolve if present.
 
 ### Continuation family
 
-`ו`, `נ`, `ן`, and `ז` share the same forward `cont` shape and differ on two
-independent axes: whether focus advances, and whether carry is absent,
-unresolved, or resolved. This family is structural, not grouping-based.
+`ו`, `נ`, `ן`, and `ז` form a structural continuation family:
+
+- `ו` emits `cont`
+- `נ` emits `cont + carry`
+- `ן` emits `cont + carry + supp`
+- `ז` emits `cont + carry + supp`, exports the port, and keeps focus in place
+
+This family is structural, not grouping-based.
 
 |                  | Focus advances | Focus stays |
 | ---------------- | -------------- | ----------- |
@@ -497,13 +505,15 @@ unresolved, or resolved. This family is structural, not grouping-based.
 ## Spaces Are Operators
 
 Whitespace is not just formatting: it compiles to the `□` operator. This means
-space inserts a **boundary** that can discharge obligations before the next
-letter runs.
+space inserts a **boundary** that can resolve unresolved carries and close open
+mem enclosures before the next letter runs.
 
 Examples:
 
-- `"נ ס"` inserts `□` between letters, so the `SUPPORT` from `נ` falls **before** `ס`.
-- `"נס"` keeps them in the same word, so `ס` can discharge the support.
+- `"נ ס"` inserts `□` between letters, so the unresolved carry from `נ` is
+  closed at the boundary **before** `ס` runs.
+- `"נס"` keeps them in the same word, so `ס` can add `supp` directly against
+  the nearest unresolved carry source.
 
 ## Spec & registry
 

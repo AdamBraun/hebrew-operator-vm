@@ -70,22 +70,22 @@ Execution of a token ((\ell, \delta)) (let (S_0) be the current state):
 
 **Name → invariants (from existing letter semantics)**
 
-| Name | Invariant                                                            |
-| ---- | -------------------------------------------------------------------- |
-| י    | pinned seed / handle-initiation                                      |
-| ו    | carrier/channel / propagation / grouping (V-mode)                    |
-| ח    | gated compartment / mediated crossings (default-closed)              |
-| ל    | endpoint fiber + door interface                                      |
-| מ    | from-zone membrane OPEN (collect candidates)                         |
-| ם    | from-zone membrane CLOSE (commit/export membrane handle)             |
-| ק    | ≈-interchangeability + representative selection (+ optional descent) |
-| ר    | bare head exposure with unresolved carry                             |
-| ד    | backed head exposure with immediately resolved carry                 |
-| ס    | framed_lock support hull                                             |
-| צ/ץ  | exemplar alignment / atomic aligned handle (in ץ)                    |
-| ת    | finalize-and-stamp (`policy=final`)                                  |
-| א    | alias/transport merge                                                |
-| ב    | interior frame shift (inside-of)                                     |
+| Name | Invariant                                               |
+| ---- | ------------------------------------------------------- |
+| י    | pinned seed / handle-initiation                         |
+| ו    | minimal continuation / carryless spine advance          |
+| ח    | gated compartment / mediated crossings (default-closed) |
+| ל    | resolved hold + bare step-past continuation             |
+| מ    | resolved hold + interior continuation + open enclosure  |
+| ם    | resolved interior close + sealed enclosure              |
+| ק    | bare head + detached leg                                |
+| ר    | bare head exposure / unresolved head                    |
+| ד    | backed head exposure / resolved head                    |
+| ס    | nearest unresolved carry closure                        |
+| צ/ץ  | exemplar alignment / atomic aligned handle (in ץ)       |
+| ת    | finalize-and-stamp (`policy=final`)                     |
+| א    | alias/transport merge                                   |
+| ב    | interior frame shift (inside-of)                        |
 
 - `Expand(c) := milui(c)` if declared, else `[c]`.
 - `INV(name) := inv(Expand(c1) + Expand(c2) + … + Expand(ck))`.
@@ -239,14 +239,14 @@ Require: `BC_glyph(\delta) == BC_name` and `tier` matches before acceptance.
 - If `tier=Rosh`, only Rosh rules are considered; if `tier=Toch`, only Toch rules are considered; otherwise treat the remaining rules as Sof-tier rules.
 - Rule order is fixed; first match wins.
 
-- if `tier=Toch` and INV contains “carrier/channel” → `CarrierActivation`
-- else if `tier=Rosh` and INV contains “gated compartment” (ח) and “carrier/channel” (ו) and “endpoint fiber” (ל) and “from-zone membrane CLOSE” (ם) → `HeadBiasToSealedEndpoint`
-- else if INV contains “≈-interchangeability” and “bare head exposure” (ר) and two “pinned seed” (י twice) → `RepTokenCommit`
-- else if INV contains “bare head exposure” (ר) and two “pinned seed” (י twice) and not “≈-interchangeability” → `Stabilize`
+- if `tier=Toch` and INV contains “minimal continuation” → `CarrierActivation`
+- else if `tier=Rosh` and INV contains “gated compartment” (ח) and “minimal continuation” (ו) and “resolved hold + bare step-past continuation” (ל) and “resolved interior close + sealed enclosure” (ם) → `HeadBiasToSealedEndpoint`
+- else if INV contains “bare head + detached leg” (ק) and “bare head exposure” (ר) and two “pinned seed” (י twice) → `RepTokenCommit`
+- else if INV contains “bare head exposure” (ר) and two “pinned seed” (י twice) and not “bare head + detached leg” → `Stabilize`
 - else if INV contains “alias/transport” → `CollapseToAlias`
-- else if INV contains “≈-interchangeability” and “from-zone membrane OPEN” (מ) and “atomic aligned handle” (ץ) → `CommitRepresentativeToAtomic`
-- else if INV contains “≈-interchangeability” and “atomic aligned handle” (ץ) → `Bundle`
-- else if INV contains “endpoint fiber” (ל) and “framed_lock support hull” (ס) → `ConvergeToEndpoint`
+- else if INV contains “bare head + detached leg” (ק) and “resolved hold + interior continuation + open enclosure” (מ) and “atomic aligned handle” (ץ) → `CommitRepresentativeToAtomic`
+- else if INV contains “bare head + detached leg” (ק) and “atomic aligned handle” (ץ) → `Bundle`
+- else if INV contains “resolved hold + bare step-past continuation” (ל) and “nearest unresolved carry closure” (ס) → `ConvergeToEndpoint`
 - else if INV contains “finalize-and-stamp” (ת) and “gated compartment” (ח) → `Gate`
 - else → `Unknown` (must be explicitly marked non-checksummed)
 
@@ -390,15 +390,15 @@ Each modifier may declare a **name program** (letters spelling its name). The co
 Invariant tags (excerpt):
 
 - `י`: pinned seed / handle-initiation
-- `ו`: carrier/channel / propagation
+- `ו`: minimal continuation / carryless spine advance
 - `ח`: gated compartment
-- `ל`: endpoint fiber + door interface
-- `מ`: membrane OPEN
-- `ם`: membrane CLOSE
-- `ק`: ≈ interchangeability
-- `ר`: bare head exposure
-- `ד`: backed head exposure
-- `ס`: framed_lock support hull
+- `ל`: resolved hold + bare step-past continuation
+- `מ`: resolved hold + interior continuation + open enclosure
+- `ם`: resolved interior close + sealed enclosure
+- `ק`: bare head + detached leg
+- `ר`: bare head exposure / unresolved head
+- `ד`: backed head exposure / resolved head
+- `ס`: nearest unresolved carry closure
 - `צ/ץ`: exemplar alignment / atomic aligned handle
 - `ת`: finalize-and-stamp
 - `א`: alias/transport merge

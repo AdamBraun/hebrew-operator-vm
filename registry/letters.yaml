@@ -8,7 +8,6 @@ handle_kinds:
   - EmptyHandle
 
 obligation_defaults:
-  SUPPORT: fall
   BOUNDARY: auto_close_boundary
 
 defaults:
@@ -34,35 +33,168 @@ letters:
   "א": { status: implemented, arity_req: 1 }
   "ב": { status: implemented }
   "ג": { status: implemented, arity_req: 3 }
-  "ד": { status: implemented }
-  "ה": { status: implemented }
-  "ו": { status: implemented, arity_req: 1 }
-  "ז": { status: implemented }
+  "ד":
+    status: implemented
+    graph:
+      - "head_of(head, source)"
+      - "cont(source, head)"
+      - "carry(source, head)"
+      - "supp(head, source)"
+    focus:
+      behavior: advances
+      effect: "F := head"
+  "ה":
+    status: implemented
+    graph:
+      - "head_of(head, source)"
+      - "cont(source, head)"
+      - "carry(source, head)"
+      - "supp(head, source)"
+      - "cont(head, leg)"
+      - "carry(head, leg)"
+      - "supp(leg, head)"
+      - "sub(head, leg)"
+    focus:
+      behavior: advances
+      effect: "F := head"
+    export:
+      handle: leg
+      destination: head
+  "ו":
+    status: implemented
+    arity_req: 1
+    graph:
+      - "cont(focus, child)"
+    focus:
+      behavior: advances
+      effect: "F := child"
+  "ז":
+    status: implemented
+    graph:
+      - "cont(focus, port)"
+      - "carry(focus, port)"
+      - "supp(port, focus)"
+    focus:
+      behavior: stays
+      effect: "F unchanged"
+    export:
+      handle: port
+      destination: K
+    policy: framed_lock
   "ח": { status: implemented }
-  "ט": { status: implemented, arity_req: 1 }
+  "ט":
+    status: implemented
+    arity_req: 1
+    graph: []
+    focus:
+      behavior: advances
+      effect: "F := port"
+    envelope:
+      effect: inward_only_with_single_sanctioned_port
   "י": { status: implemented }
-  "כ": { status: implemented }
-  "ך": { status: implemented }
-  "ל": { status: implemented }
-  "מ": { status: implemented }
-  "ם": { status: implemented }
-  "נ": { status: implemented, obligations: { opens: ["SUPPORT"] } }
-  "ן": { status: implemented, obligations: { opens: ["SUPPORT"], closes: ["SUPPORT"] } }
-  "ס": { id: SAMEKH, status: implemented, obligations: { closes: ["SUPPORT"] } }
+  "כ":
+    status: implemented
+    graph:
+      - "cont(focus, hold)"
+      - "carry(focus, hold)"
+      - "supp(hold, focus)"
+    focus:
+      behavior: advances
+      effect: "F := hold"
+  "ך":
+    status: implemented
+    graph:
+      - "cont(focus, hold)"
+      - "carry(focus, hold)"
+      - "supp(hold, focus)"
+    focus:
+      behavior: advances
+      effect: "F := hold"
+    policy: final
+  "ל":
+    status: implemented
+    graph:
+      - "cont(focus, hold)"
+      - "carry(focus, hold)"
+      - "supp(hold, focus)"
+      - "cont(hold, exterior)"
+    focus:
+      behavior: advances
+      effect: "F := exterior"
+  "מ":
+    status: implemented
+    graph:
+      - "cont(focus, hold)"
+      - "carry(focus, hold)"
+      - "supp(hold, focus)"
+      - "cont(hold, interior)"
+    focus:
+      behavior: advances
+      effect: "F := interior"
+    boundary_record:
+      kind: mem_enclosure
+      inside: interior
+      outside: hold
+      open: true
+      closed: false
+  "ם":
+    status: implemented
+    graph:
+      - "cont(focus, sealed)"
+      - "carry(focus, sealed)"
+      - "supp(sealed, focus)"
+    focus:
+      behavior: advances
+      effect: "F := sealed"
+    boundary_record:
+      action: close_nearest_open_mem_enclosure
+      synthesize_open_if_missing: true
+  "נ":
+    status: implemented
+    graph:
+      - "cont(focus, child)"
+      - "carry(focus, child)"
+    focus:
+      behavior: advances
+      effect: "F := child"
+    carry:
+      resolution: unresolved
+  "ן":
+    status: implemented
+    graph:
+      - "cont(focus, child)"
+      - "carry(focus, child)"
+      - "supp(child, focus)"
+    focus:
+      behavior: advances
+      effect: "F := child"
+    carry:
+      resolution: resolved
+    policy: framed_lock
+  "ס":
+    id: SAMEKH
+    status: implemented
+    graph_if_match:
+      - "supp(focus, origin)"
+    graph_if_no_match: []
+    focus:
+      behavior: stays
+      effect: "F unchanged"
   "ע":
     status: implemented
     arity_req: 1
     arity_opt: 0
-    edges: ["cont", "carry"]
+    graph:
+      - "cont(origin, child)"
+      - "carry(origin, child)"
     focus:
       behavior: advances
-      effect: "F := F⁺"
+      effect: "F := child"
     export:
       handle: origin
       destination: K
-    obligations:
-      opens: []
-      closes: []
+      handle_kind: alias
+      graph_edge: none
     carry:
       resolution: unresolved
       supp_edge: false
@@ -70,18 +202,64 @@ letters:
   "ף": { status: implemented }
   "צ": { status: implemented, arity_req: 2 }
   "ץ": { status: implemented, arity_req: 2 }
-  "ק": { status: implemented, arity_req: 2 }
-  "ר": { status: implemented }
-  "ש": { id: SHIN_BASE, status: implemented, role: fork_chassis, arity_default: 3 }
-  "שׁ": { alias_of: "ש", status: implemented, diacritic: shin_dot_right }
+  "ק":
+    status: implemented
+    arity_req: 1
+    graph:
+      - "head_of(head, source)"
+      - "cont(source, head)"
+      - "carry(source, head)"
+      - "cont(head, leg)"
+      - "carry(head, leg)"
+      - "sub(head, leg)"
+    focus:
+      behavior: advances
+      effect: "F := head"
+    export:
+      handle: leg
+      destination: head
+    carry:
+      resolution: unresolved
+      supp_edge: false
+  "ר":
+    status: implemented
+    graph:
+      - "head_of(head, source)"
+      - "cont(source, head)"
+      - "carry(source, head)"
+    focus:
+      behavior: advances
+      effect: "F := head"
+  "ש":
+    id: SHIN_BASE
+    status: implemented
+    role: fork_chassis
+    arity_req: 1
+    graph:
+      external:
+        - "cont(focus, p1)"
+        - "cont(focus, p2)"
+        - "cont(focus, p3)"
+      internal:
+        - "sub(focus, c1)"
+        - "sub(focus, c2)"
+        - "sub(focus, c3)"
+        - "sub(c1, c2)"
+        - "sub(c2, c3)"
+        - "sub(c3, c1)"
+    focus:
+      behavior: stays
+      effect: "F unchanged"
+  "שׁ":
+    alias_of: "ש"
+    status: implemented
+    diacritic: shin_dot_right
+    routing:
+      shin_direction: external
   "שׂ":
-    id: SIN_COMPOSITE
+    alias_of: "ש"
     status: implemented
     diacritic: sin_dot_left
-    composite:
-      read: "ס"
-      shape: "ש"
-    composite_policy:
-      precedence: read_first
-      shape_effect_scope: routing
+    routing:
+      shin_direction: internal
   "ת": { status: implemented }

@@ -10,17 +10,17 @@ Implementations MUST declare the highest level they satisfy and MUST pass the co
 - Space (`□`) semantics
 - No requirement to implement full letter library
 
-### Recommended obligation tests (legacy)
+### Recommended boundary/carry tests
 
 These are non-normative but useful as minimum sanity checks:
 
-- **T1 — Unresolved nun falls at boundary**: program `נ □` ⇒ event log contains `fall(child,parent,τ)`, `F` equals the pre-נ focus, and `R` equals the child created by נ.
-- **T2 — Nun stabilized by samekh does not fall**: program `נ ס □` ⇒ no `fall` event for that nun, `policy(F)` is `framed_lock` after ס, and `F` remains in the supported continuation at boundary.
-- **T3 — Final nun does not leave pending support**: program `ן □` ⇒ no `fall` event and `policy(F)` is `framed_lock`.
-- **T4 — Mem pending closes silently at boundary (no export)**: program `מ □` ⇒ no exported mem handle pushed to `K` by boundary; the internal mem zone is closed via `CloseMemZoneSilently`.
-- **T5 — Final mem exports handle**: program `מ ם □` ⇒ a stable mem handle is exported and becomes `F` before boundary; no pending `MEM_ZONE` remains at boundary.
+- **T1 — Unresolved nun is closed at boundary**: program `נ □` ⇒ the current chunk gains a boundary-time `supp` closure for the unresolved carry opened by `נ`.
+- **T2 — Samekh resolves in-word carry**: program `נ ס □` ⇒ `ס` adds `supp(F, source)` against the nearest unresolved carry source before the boundary runs.
+- **T3 — Final nun resolves at birth**: program `ן □` ⇒ the child created by `ן` already has `supp(child,parent)` before boundary handling.
+- **T4 — Mem enclosure auto-closes at boundary**: program `מ □` ⇒ the open mem `BoundaryRecord` closes silently at the boundary, with no explicit final-mem seal node created by the boundary itself.
+- **T5 — Final mem seals enclosure explicitly**: program `מ ם □` ⇒ a sealed mem node exists before boundary handling and the associated mem `BoundaryRecord` is closed.
 - **T6 — WordStart bootstrap runs once per word**: for a 3-word input, `WORD_START` appears exactly 3 times (never on intra-word marks).
-- **T7 — Glue preserves segment obligations**: with pending obligations before `□glue`, next word starts with `segmentReset=false` and non-empty segment OStack.
+- **T7 — Glue preserves segment boundary state**: with carried segment state before `□glue`, next word starts with `segmentReset=false`.
 - **T8 — Hard starts a new segment**: after `□hard`, next word starts with `segmentReset=true`, incremented segment id, and empty segment OStack.
 - **T9 — Missing WordStart baseline fails early**: if letter execution occurs without `activeConstruct`, runtime throws a clear bootstrap error.
 

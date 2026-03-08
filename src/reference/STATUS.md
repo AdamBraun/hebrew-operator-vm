@@ -13,7 +13,7 @@
 - Shin/sin directional execution: `שׁ` is external tripod attachment; `שׂ` is internal triangle attachment with a closed loop.
 - Whitespace is semantic: `"נ ס"` inserts `□`, and `glue` boundaries preserve unresolved carries.
 - Same-word `"נס"` allows samekh to close an unresolved carry via `supp`.
-- Runtime errors are thrown for illegal boundary misuse (e.g., `ד` with non-`BOUNDARY` obligation).
+- Runtime errors are thrown for illegal boundary misuse and unknown obligation kinds during space resolution.
 
 ## Stubbed / minimal
 
@@ -21,10 +21,15 @@
 - Diacritic wrappers are parsed; `dagesh` hardens the envelope and `shuruk` remains lexical-only.
 - Selection policy uses deterministic sourcing with per-bucket distinctness; type checks are still minimal.
 - `ב` creates an anchored boundary handle for “inside-of” and updates the ambient world.
-- `ד` creates an anchored boundary handle for inside/outside (using `R` or the current boundary context).
+- `ד` exposes a resolved head via `head_of`, `carry`, and `supp` (with materialized `cont`).
 - `ג` records a `bestow` link/event and creates a structured handle.
-- `ה` seals a resolved head and exports a detached adjunct leg while keeping focus on the head.
+- `ה` seals a resolved head and exports a detached adjunct leg via `sub` while keeping focus on the head.
+- `ז` creates a resolved export port via `cont`/`carry`/`supp` and keeps focus in place.
+- `ט` rewrites the target envelope around a single sanctioned port and adds no graph edges.
 - `וּ` (shuruk) does not alter `ו` semantics beyond lexical host detection.
 - `ו` no longer performs grouping; it only advances the spine via `cont`.
+- `כ`, `ל`, and `מ` implement the resolved-hold family: hold, step-past, and open enclosure.
+- `נ`, `ס`, and `ע` implement unresolved continuation, nearest carry closure, and origin-exported continuation.
 - `י` creates an `entity` handle seeded from focus.
+- `ק`, `ר`, and `ש` implement bare head-with-leg, bare head, and three-point attachment.
 - GC, rules, and extended classroom relations are placeholders.

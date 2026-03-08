@@ -580,19 +580,22 @@
         },
         "payload": {
           "type": "object",
-          "required": ["obligation_kind", "action"],
+          "required": ["action"],
           "additionalProperties": false,
           "properties": {
-            "obligation_kind": {
-              "const": "MEM_ZONE"
-            },
             "action": {
               "const": "open"
             },
-            "parent": {
+            "boundary_id": {
               "$ref": "#/$defs/HandleId"
             },
-            "zone": {
+            "hold": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "inside": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "outside": {
               "$ref": "#/$defs/HandleId"
             }
           }
@@ -620,12 +623,9 @@
         },
         "payload": {
           "type": "object",
-          "required": ["obligation_kind", "action", "mode"],
+          "required": ["action", "mode"],
           "additionalProperties": false,
           "properties": {
-            "obligation_kind": {
-              "const": "MEM_ZONE"
-            },
             "action": {
               "const": "close"
             },
@@ -633,10 +633,19 @@
               "type": "string",
               "enum": ["existing", "synthetic"]
             },
-            "zone": {
+            "boundary_id": {
               "$ref": "#/$defs/HandleId"
             },
-            "handle": {
+            "focus": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "sealed": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "inside": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "outside": {
               "$ref": "#/$defs/HandleId"
             }
           }
@@ -1124,21 +1133,23 @@
         },
         "payload": {
           "type": "object",
-          "required": ["obligation_kind", "action"],
+          "required": ["action"],
           "additionalProperties": false,
           "properties": {
-            "obligation_kind": {
-              "const": "MEM_ZONE"
-            },
             "action": {
               "const": "auto_close"
             },
-            "count": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "zone": {
+            "boundary_id": {
               "$ref": "#/$defs/HandleId"
+            },
+            "inside": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "outside": {
+              "$ref": "#/$defs/HandleId"
+            },
+            "reason": {
+              "type": "string"
             }
           }
         }
