@@ -2,18 +2,9 @@
   "name": "hebrew-operator-vm",
   "version": "0.1.1",
   "private": true,
-  "workspaces": [
-    "packages/ui"
-  ],
   "scripts": {
     "build": "npm run build:src",
     "build:src": "tsc -p tsconfig.json",
-    "ui:dev": "npm run dev --workspace @letters/ui",
-    "ui:build": "npm run build --workspace @letters/ui",
-    "ui:preview": "npm run preview --workspace @letters/ui",
-    "ui:e2e": "playwright test -c playwright.config.ts",
-    "ui:bundle": "node scripts/ui-bundle.mjs",
-    "ui:bundle:verify": "node scripts/ui-bundle.mjs verify",
     "download-torah": "node scripts/download-torah.mjs",
     "iterate-torah": "node scripts/iterate-torah.mjs",
     "pasuk-trace": "node scripts/pasuk-trace.mjs",
@@ -63,7 +54,6 @@
     "prepare": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
     "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",

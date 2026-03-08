@@ -25,7 +25,7 @@ Top-level required fields:
 
 Top-level optional helper fields:
 
-- `parashot`: UI summary blocks
+- `parashot`: consumer-facing summary blocks
 - `ranges`: consolidated segment ranges for fast lookup
 - `ref_to_segment_index`: lookup map keyed by `RefKey`
 

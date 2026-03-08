@@ -12,7 +12,7 @@ This corpus is designed for:
 
 - commit-based historical diffs of interpreter behavior,
 - deterministic artifact inspection outside the runtime,
-- direct UI consumption for verse traversal.
+- stable verse-level traversal across versioned corpus runs.
 
 ## Dataset Scope
 
@@ -207,7 +207,7 @@ Resume behavior with `--skip-existing`:
 
 ## `refs/index.json` Contract
 
-`refs/index.json` is a UI traversal index (array). Row shape:
+`refs/index.json` is a verse traversal index (array). Row shape:
 
 ```json
 {
@@ -300,7 +300,7 @@ npm run pasuk-trace-corpus -- --input=data/torah.json --continue-on-error
 
 In continue mode, failures are recorded in `manifest.json -> errors[]`.
 
-## UI Integration Pattern
+## Consumption Pattern
 
 Recommended client flow:
 
@@ -313,5 +313,5 @@ Recommended client flow:
    - fetch `trace_report` for human-readable debug view,
    - fetch `graph_dot` for Graphviz rendering.
 
-Because index paths are relative to the run directory, the same UI code works
-for any versioned run folder.
+Because index paths are relative to the run directory, the same client or
+analysis tooling can traverse any versioned run folder.

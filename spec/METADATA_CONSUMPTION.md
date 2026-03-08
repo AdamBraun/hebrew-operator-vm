@@ -12,7 +12,7 @@ Wrapper consumption of `MetadataPlan` is limited to:
 
 1. scheduling checkpoint snapshots (state serialization) at checkpoint `ordinal` boundaries,
 2. deriving deterministic output folders for parasha/aliyah packaging,
-3. building navigation indexes for lookup/UI.
+3. building navigation indexes for lookup/clients.
 
 ## Forbidden Uses (Normative)
 

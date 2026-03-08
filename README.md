@@ -74,8 +74,8 @@ Build a verse-by-verse archive with:
 - `trace.json` from `pasuk-trace` semantics (deep trace, snapshots, final dump state, post-reset state)
 - `trace.txt` human report
 - `graph.dot` Graphviz DOT generated from each trace payload
-- `refs/index.json` for UI traversal
-- `refs/books.json`, `refs/{book}/chapters.json`, and `refs/{book}/{chapter}/verses.json` for tiered UI navigation
+- `refs/index.json` for full verse index traversal
+- `refs/books.json`, `refs/{book}/chapters.json`, and `refs/{book}/{chapter}/verses.json` for tiered verse navigation
 - `manifest.json` run-level metadata and counts
 
 Integrity model:
@@ -147,7 +147,7 @@ Resume behavior with `--skip-existing`:
 - `--repair-existing` rewrites stale `trace.txt`/`graph.dot` from stored `trace.json` without rerunning the interpreter.
 - `--verify-existing` and `--repair-existing` are mutually exclusive.
 
-Detailed output contract and UI integration notes:
+Detailed output contract and index/navigation notes:
 [`docs/pasuk-trace-corpus.md`](docs/pasuk-trace-corpus.md)
 
 Operational note: `--include-snapshots` can make per-verse JSON files very large; see

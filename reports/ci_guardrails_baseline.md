@@ -1,13 +1,13 @@
 # CI Guardrails Baseline Report
 
 - mode: fail
-- generated_at_utc: 2026-03-08T16:42:48.228Z
+- generated_at_utc: 2026-03-08T17:13:04.999Z
 - touched_source: working_tree
-- touched_files: 5
+- touched_files: 9
 - thresholds.max_bytes: 30000
 - thresholds.max_complexity_score: 220
-- files_scanned: 114
-- legacy_allowlisted_violations: 10
+- files_scanned: 112
+- legacy_allowlisted_violations: 9
 - touched_legacy_violations: 0
 - new_violations: 0
 - blocking_violations: 0
@@ -17,7 +17,6 @@
 | file                                                  | touched | bytes | complexity_score | bytes_status       | complexity_status  |
 | ----------------------------------------------------- | ------- | ----: | ---------------: | ------------------ | ------------------ |
 | src/reference/scripts/pasukTraceCorpus/runtime.ts     | no      | 81631 |              323 | legacy_allowlisted | legacy_allowlisted |
-| src/reference/scripts/uiBundle/runtime.ts             | no      | 64400 |              200 | legacy_allowlisted | pass               |
 | src/reference/scripts/torahCorpus/execute.ts          | no      | 60826 |              193 | legacy_allowlisted | pass               |
 | src/reference/scripts/phraseTree/runtime.ts           | no      | 41607 |              166 | legacy_allowlisted | pass               |
 | scripts/exemplar-library.mjs                          | no      | 41222 |              168 | legacy_allowlisted | pass               |
@@ -124,7 +123,6 @@
 | scripts/iterate-torah.mjs                             | no      |   853 |                7 | pass               | pass               |
 | scripts/pasuk-trace.mjs                               | no      |   839 |                7 | pass               | pass               |
 | scripts/phrase-tree.mjs                               | no      |   839 |                7 | pass               | pass               |
-| scripts/ui-bundle.mjs                                 | no      |   825 |                7 | pass               | pass               |
 | src/reference/letters/stub.ts                         | no      |   816 |                1 | pass               | pass               |
 | src/reference/version.ts                              | no      |   553 |                1 | pass               | pass               |
 | src/reference/letters/finals.ts                       | no      |   390 |                1 | pass               | pass               |
