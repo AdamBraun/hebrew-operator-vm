@@ -4,8 +4,14 @@ import { runProgramWithDeepTrace } from "@ref/vm/vm";
 
 type SnapshotHandle = {
   id: string;
+  edge_mode?: string;
+  envelope?: {
+    data_flow?: string;
+    edit_flow?: string;
+    x_flow?: string;
+    coupling?: string;
+  };
   meta?: Record<string, any>;
-  policy?: string;
 };
 
 type TokenExitSnapshot = {
@@ -165,7 +171,10 @@ describe("continuation family behavior", () => {
     expect(zayinSnapshot.supp ?? []).toEqual([`${portId}->${start}`]);
     expect(port?.meta?.portOf).toBe(start);
     expect(port?.edge_mode).toBe("committed");
-    expect(port?.policy).toBe("soft");
+    expect(port?.envelope?.data_flow).toBe("SNAPSHOT");
+    expect(port?.envelope?.edit_flow).toBe("TIGHT");
+    expect(port?.envelope?.x_flow).toBe("EXPLICIT_ONLY");
+    expect(port?.envelope?.coupling).toBe("CopyNoBacklink");
     expect(zayinSnapshot.vm?.K).toContain(portId);
     expect(zayinSnapshot.vm?.F).toBe(start);
     expectNoExtraSemantics(zayinSnapshot);
