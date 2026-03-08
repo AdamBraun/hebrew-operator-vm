@@ -64,7 +64,8 @@ describe("carry gradient matrix", () => {
     expect(state.carry.has(`${step.parent}->${step.child}`)).toBe(true);
     expect(state.supp.has(`${step.child}->${step.parent}`)).toBe(true);
     expect(isCarryResolved(state, step.parent, step.child, { focusNodeId: step.child })).toBe(true);
-    expect(state.handles.get(step.child)?.policy).toBe("framed_lock");
+    expect(state.handles.get(step.child)?.edge_mode).toBe("committed");
+    expect(state.handles.get(step.child)?.policy).toBe("soft");
   });
 
   it("נ then ס resolves nun carry at current focus", () => {

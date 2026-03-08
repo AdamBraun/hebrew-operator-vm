@@ -19,7 +19,7 @@ export const zayinOp: LetterOp = {
   select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops) => {
     const focus = ops.args[0];
-    const { portId } = spawnResolvedPort(S, { portOf: focus, prefix: "ז", exportToK: false });
+    const { portId } = spawnResolvedPort(S, { portOf: focus, prefix: "ז", exportToK: true });
     const cons: Construction = {
       base: focus,
       envelope: committedEnvelope(),
@@ -29,6 +29,6 @@ export const zayinOp: LetterOp = {
   },
   seal: (S: State, cons: Construction) => {
     const { portId } = cons.meta as { portId: string };
-    return { S, h: portId, r: BOT_ID, advance_focus: false };
+    return { S, h: portId, r: BOT_ID, export_handle: portId, advance_focus: false };
   }
 };

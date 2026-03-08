@@ -148,7 +148,7 @@ describe("continuation family behavior", () => {
     expectNoExtraSemantics(finalNunSnapshot);
   });
 
-  it("ז exports a resolved locked port on the same forward shape but keeps focus at the source", () => {
+  it("ז exports a committed resolved port on the same forward shape but keeps focus at the source", () => {
     const [vavSnapshot] = tokenExitSnapshots("ו");
     const [zayinSnapshot] = tokenExitSnapshots("ז");
     const start = baselineId(zayinSnapshot);
@@ -164,7 +164,8 @@ describe("continuation family behavior", () => {
     expect(zayinSnapshot.carry ?? []).toEqual([`${start}->${portId}`]);
     expect(zayinSnapshot.supp ?? []).toEqual([`${portId}->${start}`]);
     expect(port?.meta?.portOf).toBe(start);
-    expect(port?.policy).toBe("framed_lock");
+    expect(port?.edge_mode).toBe("committed");
+    expect(port?.policy).toBe("soft");
     expect(zayinSnapshot.vm?.K).toContain(portId);
     expect(zayinSnapshot.vm?.F).toBe(start);
     expectNoExtraSemantics(zayinSnapshot);
