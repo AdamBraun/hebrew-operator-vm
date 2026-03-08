@@ -77,6 +77,26 @@ function expectNoExtraSemantics(snapshot: TokenExitSnapshot): void {
 }
 
 describe("continuation family behavior", () => {
+  it("י allocates one fresh continuation pin, exports it, and keeps focus at the source", () => {
+    const [vavSnapshot] = tokenExitSnapshots("ו");
+    const [yodSnapshot] = tokenExitSnapshots("י");
+    const start = baselineId(yodSnapshot);
+    const [pinId] = familyNodeIds(yodSnapshot, "י");
+    const pin = yodSnapshot.handles?.find((handle) => handle.id === pinId);
+
+    expect(
+      normalizeEdges(vavSnapshot.cont, { [baselineId(vavSnapshot)]: "F0", "ו:1:1": "F1" })
+    ).toEqual(["F0->F1"]);
+    expect(normalizeEdges(yodSnapshot.cont, { [start]: "F0", [pinId]: "F1" })).toEqual(["F0->F1"]);
+    expect(yodSnapshot.carry ?? []).toEqual([]);
+    expect(yodSnapshot.supp ?? []).toEqual([]);
+    expect(pin?.meta?.pinOf).toBe(start);
+    expect(pin?.meta?.selectable_pin).toBe(1);
+    expect(yodSnapshot.vm?.K).toContain(pinId);
+    expect(yodSnapshot.vm?.F).toBe(start);
+    expectNoExtraSemantics(yodSnapshot);
+  });
+
   it("כ allocates a single resolved hold and ends focus on it", () => {
     const [snapshot] = tokenExitSnapshots("כ");
     const start = baselineId(snapshot);

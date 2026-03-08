@@ -1,8 +1,8 @@
-import { BOT_ID, createHandle } from "../state/handles";
+import { BOT_ID } from "../state/handles";
 import { State } from "../state/state";
-import { nextId } from "../vm/ids";
 import { selectCurrentFocus } from "../vm/select";
-import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
+import { spawnContinuationNode } from "./continuation_primitives";
+import { Construction, LetterMeta, LetterOp, SelectOperands, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
   letter: "י",
@@ -16,22 +16,37 @@ const meta: LetterMeta = {
 export const yodOp: LetterOp = {
   meta,
   select: (S: State) => selectCurrentFocus(S),
-  bound: (S: State, ops) => {
-    const focus = ops.args[0];
+  bound: (S: State, ops: SelectOperands) => {
+    const anchor = ops.args[0];
+    const { nodeId: pinId } = spawnContinuationNode(S, {
+      sourceId: anchor,
+      idPrefix: "י",
+      meta: { pinOf: anchor, selectable_pin: 1 }
+    });
     const cons: Construction = {
-      base: focus,
+      base: anchor,
       envelope: defaultEnvelope(),
-      meta: { focus }
+      meta: { anchor, pinId }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const focus = cons.meta.focus as string;
-    const seedId = nextId(S, "י");
-    S.handles.set(
-      seedId,
-      createHandle(seedId, "entity", { anchor: 1, meta: { seedOf: focus, port: "interface" } })
-    );
-    return { S, h: seedId, r: BOT_ID };
+    const { anchor, pinId } = cons.meta as { anchor: string; pinId: string };
+    S.vm.H.push({
+      type: "pin",
+      tau: S.vm.tau,
+      data: {
+        letter: "י",
+        anchor,
+        pin: pinId,
+        exported: pinId,
+        focus_before: anchor,
+        focus_after: anchor,
+        focus_unchanged: true,
+        note: "focus remains unchanged",
+        edges: [{ kind: "cont", from: anchor, to: pinId }]
+      }
+    });
+    return { S, h: pinId, r: BOT_ID, export_handle: pinId, advance_focus: false };
   }
 };

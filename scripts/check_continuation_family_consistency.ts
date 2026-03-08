@@ -3,6 +3,7 @@ import { finalNunOp } from "../src/reference/letters/finalNun";
 import { nunOp } from "../src/reference/letters/nun";
 import type { LetterOp } from "../src/reference/letters/types";
 import { vavOp } from "../src/reference/letters/vav";
+import { yodOp } from "../src/reference/letters/yod";
 import { zayinOp } from "../src/reference/letters/zayin";
 import type { Handle } from "../src/reference/state/handles";
 import { createInitialState } from "../src/reference/state/state";
@@ -24,6 +25,7 @@ type Execution = {
 };
 
 type FamilyExecution = {
+  yod: Execution;
   vav: Execution;
   nun: Execution;
   finalNun: Execution;
@@ -120,6 +122,7 @@ function executeUnary(op: LetterOp): Execution {
 
 function executeFamily(): FamilyExecution {
   return {
+    yod: executeUnary(yodOp),
     vav: executeUnary(vavOp),
     nun: executeUnary(nunOp),
     finalNun: executeUnary(finalNunOp),
@@ -153,20 +156,45 @@ function snapshotHandle(handle: Handle, omitMetaKeys: string[] = []): HandleSnap
 }
 
 function verifyEdgeGradient(family: FamilyExecution): void {
+  assert.deepStrictEqual(family.yod.edgeDelta.cont, ["F0->N1"]);
   assert.deepStrictEqual(family.vav.edgeDelta.cont, ["F0->N1"]);
+  assert.deepStrictEqual(family.yod.edgeDelta.cont, family.vav.edgeDelta.cont);
   assert.deepStrictEqual(family.nun.edgeDelta.cont, family.vav.edgeDelta.cont);
   assert.deepStrictEqual(family.finalNun.edgeDelta.cont, family.vav.edgeDelta.cont);
   assert.deepStrictEqual(family.zayin.edgeDelta.cont, family.vav.edgeDelta.cont);
 
+  assert.deepStrictEqual(family.yod.edgeDelta.carry, []);
   assert.deepStrictEqual(family.vav.edgeDelta.carry, []);
   assert.deepStrictEqual(family.nun.edgeDelta.carry, ["F0->N1"]);
   assert.deepStrictEqual(family.finalNun.edgeDelta.carry, family.nun.edgeDelta.carry);
   assert.deepStrictEqual(family.zayin.edgeDelta.carry, family.nun.edgeDelta.carry);
 
+  assert.deepStrictEqual(family.yod.edgeDelta.supp, []);
   assert.deepStrictEqual(family.vav.edgeDelta.supp, []);
   assert.deepStrictEqual(family.nun.edgeDelta.supp, []);
   assert.deepStrictEqual(family.finalNun.edgeDelta.supp, ["N1->F0"]);
   assert.deepStrictEqual(family.zayin.edgeDelta.supp, family.finalNun.edgeDelta.supp);
+}
+
+function verifyYodVavEquivalence(family: FamilyExecution): void {
+  assert.deepStrictEqual(family.yod.edgeDelta, family.vav.edgeDelta);
+  assert.equal(family.yod.rawHandle.meta.pinOf, family.yod.focusBefore);
+  assert.equal(family.yod.rawHandle.meta.selectable_pin, 1);
+  assert.equal(family.vav.rawHandle.meta.pinOf, undefined);
+  assert.equal(family.vav.rawHandle.meta.selectable_pin, undefined);
+  assert.deepStrictEqual(
+    snapshotHandle(family.yod.rawHandle, ["pinOf", "selectable_pin"]),
+    snapshotHandle(family.vav.rawHandle)
+  );
+
+  assert.equal(family.yod.focusAfter, family.yod.focusBefore);
+  assert.equal(family.vav.focusAfter, family.vav.nodeId);
+  assert.notEqual(family.vav.focusAfter, family.vav.focusBefore);
+
+  assert.deepStrictEqual(family.yod.operatorKDelta, []);
+  assert.deepStrictEqual(family.vav.operatorKDelta, []);
+  assert.deepStrictEqual(family.yod.finalKDelta, [family.yod.nodeId]);
+  assert.deepStrictEqual(family.vav.finalKDelta, [family.vav.nodeId]);
 }
 
 function verifyFinalNunZayinEquivalence(family: FamilyExecution): void {
@@ -190,6 +218,10 @@ function verifyFinalNunZayinEquivalence(family: FamilyExecution): void {
 }
 
 function verifyFamilySealTiers(family: FamilyExecution): void {
+  assert.deepStrictEqual(
+    snapshotHandle(family.yod.rawHandle, ["pinOf", "selectable_pin"]),
+    snapshotHandle(family.vav.rawHandle)
+  );
   assert.equal(family.nun.rawHandle.meta.succOf, family.nun.focusBefore);
   assert.equal(family.vav.rawHandle.meta.succOf, undefined);
   assert.deepStrictEqual(
@@ -206,16 +238,19 @@ function verifyFamilySealTiers(family: FamilyExecution): void {
     snapshotHandle(family.finalNun.rawHandle)
   );
 
+  assert.deepStrictEqual(family.yod.operatorKDelta, []);
   assert.deepStrictEqual(family.vav.operatorKDelta, []);
   assert.deepStrictEqual(family.nun.operatorKDelta, []);
   assert.deepStrictEqual(family.finalNun.operatorKDelta, []);
   assert.deepStrictEqual(family.zayin.operatorKDelta, [family.zayin.nodeId]);
 
+  assert.equal(family.yod.focusAfter, family.yod.focusBefore);
   assert.equal(family.vav.focusAfter, family.vav.nodeId);
   assert.equal(family.nun.focusAfter, family.nun.nodeId);
   assert.equal(family.finalNun.focusAfter, family.finalNun.nodeId);
   assert.equal(family.zayin.focusAfter, family.zayin.focusBefore);
 
+  assert.deepStrictEqual(family.yod.finalKDelta, [family.yod.nodeId]);
   assert.deepStrictEqual(family.vav.finalKDelta, [family.vav.nodeId]);
   assert.deepStrictEqual(family.nun.finalKDelta, [family.nun.nodeId]);
   assert.deepStrictEqual(family.finalNun.finalKDelta, [family.finalNun.nodeId]);
@@ -225,6 +260,7 @@ function verifyFamilySealTiers(family: FamilyExecution): void {
 function main(): void {
   const family = executeFamily();
   verifyEdgeGradient(family);
+  verifyYodVavEquivalence(family);
   verifyFinalNunZayinEquivalence(family);
   verifyFamilySealTiers(family);
   console.log("continuation family consistency: OK");

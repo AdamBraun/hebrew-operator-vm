@@ -286,20 +286,26 @@ describe("pasuk trace runtime", () => {
       expect(entry?.taus).toEqual(expectedTaus);
     }
 
-    const seededHandle = handles.find(
+    const pinHandle = handles.find(
       (handle) =>
         typeof handle.id === "string" &&
-        typeof handle.meta?.seedOf === "string" &&
-        eventIndicesContainingHandleId(vmEvents, handle.meta.seedOf).length > 0
+        typeof handle.meta?.pinOf === "string" &&
+        eventIndicesContainingHandleId(vmEvents, handle.meta.pinOf).length > 0
     );
-    expect(seededHandle).toBeDefined();
-    const seededHandleId = String(seededHandle?.id ?? "");
-    const seedOf = String(seededHandle?.meta?.seedOf ?? "");
-    const seedEventIndices = eventIndicesContainingHandleId(vmEvents, seedOf);
-    expect(seedEventIndices.length).toBeGreaterThan(0);
-    const seededEntry = linkByHandle.get(seededHandleId);
+    expect(pinHandle).toBeDefined();
+    const pinHandleId = String(pinHandle?.id ?? "");
+    const pinOf = String(pinHandle?.meta?.pinOf ?? "");
+    const pinEventIndices = vmEvents
+      .map((event, index) =>
+        event?.type === "pin" && event?.data?.pin === pinHandleId && event?.data?.anchor === pinOf
+          ? index
+          : -1
+      )
+      .filter((index) => index >= 0);
+    expect(pinEventIndices.length).toBeGreaterThan(0);
+    const pinEntry = linkByHandle.get(pinHandleId);
     expect(
-      (seededEntry?.event_indices ?? []).some((eventIndex) => seedEventIndices.includes(eventIndex))
+      (pinEntry?.event_indices ?? []).some((eventIndex) => pinEventIndices.includes(eventIndex))
     ).toBe(true);
   });
 

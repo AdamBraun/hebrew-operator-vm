@@ -5,6 +5,7 @@ import { nunOp } from "@ref/letters/nun";
 import type { Handle } from "@ref/state/handles";
 import { createInitialState } from "@ref/state/state";
 import { vavOp } from "@ref/letters/vav";
+import { yodOp } from "@ref/letters/yod";
 import { zayinOp } from "@ref/letters/zayin";
 
 type HandleSnapshot = {
@@ -33,7 +34,7 @@ type Execution = {
   rawHandle: Handle;
 };
 
-type FamilyExecution = Record<"ו" | "נ" | "ן" | "ז", Execution>;
+type FamilyExecution = Record<"י" | "ו" | "נ" | "ן" | "ז", Execution>;
 
 function findFreshNodeId(currentIds: Iterable<string>, baselineIds: Set<string>): string {
   const freshIds = Array.from(currentIds)
@@ -75,6 +76,7 @@ function executeUnary(op: LetterOp): Execution {
 
 function executeFamily(): FamilyExecution {
   return {
+    י: executeUnary(yodOp),
     ו: executeUnary(vavOp),
     נ: executeUnary(nunOp),
     ן: executeUnary(finalNunOp),
@@ -108,6 +110,21 @@ function snapshotHandle(handle: Handle, omitMetaKeys: string[] = []): HandleSnap
 }
 
 describe("continuation family sealed-handle fields", () => {
+  it("י and ו have identical cont-only handle core fields", () => {
+    const family = executeFamily();
+    const yodHandle = snapshotHandle(family["י"].rawHandle, ["pinOf", "selectable_pin"]);
+    const vavHandle = snapshotHandle(family["ו"].rawHandle);
+
+    expect(family["י"].rawHandle.meta.pinOf).toBe(family["י"].focusBefore);
+    expect(family["י"].rawHandle.meta.selectable_pin).toBe(1);
+    expect(family["ו"].rawHandle.meta.pinOf).toBeUndefined();
+    expect(family["ו"].rawHandle.meta.selectable_pin).toBeUndefined();
+
+    expect(yodHandle).toEqual(vavHandle);
+    expect(yodHandle.edge_mode).toBe("free");
+    expect(yodHandle.policy).toBe("soft");
+  });
+
   it("ז and ן have identical sealed-handle core fields", () => {
     const family = executeFamily();
     const zayinHandle = snapshotHandle(family["ז"].rawHandle, ["portOf"]);
@@ -152,27 +169,32 @@ describe("continuation family sealed-handle fields", () => {
     });
   });
 
-  it("the entire continuation family splits cleanly into unsealed and sealed handle tiers", () => {
+  it("the entire continuation family splits cleanly into cont-only, carry, and resolved tiers", () => {
     const family = executeFamily();
+    const pinTier = snapshotHandle(family["י"].rawHandle, ["pinOf", "selectable_pin"]);
     const unsealedTier = snapshotHandle(family["ו"].rawHandle);
     const carryTier = snapshotHandle(family["נ"].rawHandle, ["succOf"]);
     const resolvedTier = snapshotHandle(family["ן"].rawHandle);
     const exportTier = snapshotHandle(family["ז"].rawHandle, ["portOf"]);
 
+    expect(pinTier).toEqual(unsealedTier);
     expect(unsealedTier).toEqual(carryTier);
     expect(resolvedTier).toEqual(exportTier);
     expect(unsealedTier).not.toEqual(resolvedTier);
 
+    expect(family["י"].operatorKDelta).toEqual([]);
     expect(family["ו"].operatorKDelta).toEqual([]);
     expect(family["נ"].operatorKDelta).toEqual([]);
     expect(family["ן"].operatorKDelta).toEqual([]);
     expect(family["ז"].operatorKDelta).toEqual([family["ז"].nodeId]);
 
+    expect(family["י"].focusAfter).toBe(family["י"].focusBefore);
     expect(family["ו"].focusAfter).toBe(family["ו"].nodeId);
     expect(family["נ"].focusAfter).toBe(family["נ"].nodeId);
     expect(family["ן"].focusAfter).toBe(family["ן"].nodeId);
     expect(family["ז"].focusAfter).toBe(family["ז"].focusBefore);
 
+    expect(family["י"].finalKDelta).toEqual([family["י"].nodeId]);
     expect(family["ו"].finalKDelta).toEqual([family["ו"].nodeId]);
     expect(family["נ"].finalKDelta).toEqual([family["נ"].nodeId]);
     expect(family["ן"].finalKDelta).toEqual([family["ן"].nodeId]);
