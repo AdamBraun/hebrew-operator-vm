@@ -3,7 +3,7 @@ import { createInitialState } from "@ref/state/state";
 import { runProgram } from "@ref/vm/vm";
 
 describe("T3 final nun", () => {
-  it("does not fall, locks focus, and creates resolved carry cycle", () => {
+  it("does not fall, advances focus, and creates a zayin-style resolved carry cycle", () => {
     const state = runProgram("ן", createInitialState());
     const falls = state.vm.H.filter((event) => event.type === "fall");
     expect(falls.length).toBe(0);
@@ -13,6 +13,11 @@ describe("T3 final nun", () => {
     expect(state.cont.has(`${parent}->${wordOut}`)).toBe(true);
     expect(state.carry.has(`${parent}->${wordOut}`)).toBe(true);
     expect(state.supp.has(`${wordOut}->${parent}`)).toBe(true);
-    expect(focus?.policy).toBe("framed_lock");
+    expect(focus?.edge_mode).toBe("committed");
+    expect(focus?.envelope.data_flow).toBe("SNAPSHOT");
+    expect(focus?.envelope.edit_flow).toBe("TIGHT");
+    expect(focus?.envelope.x_flow).toBe("EXPLICIT_ONLY");
+    expect(focus?.envelope.coupling).toBe("CopyNoBacklink");
+    expect(focus?.policy).toBe("soft");
   });
 });

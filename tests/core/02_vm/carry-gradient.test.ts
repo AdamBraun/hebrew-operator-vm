@@ -41,16 +41,22 @@ describe("carry gradient matrix", () => {
     );
   });
 
-  it("ן alone creates resolved carry with immediate supp and advances focus", () => {
+  it("ן alone creates resolved carry with zayin-style sealed handle fields and advances focus", () => {
     const state = createInitialState();
     const step = applyUnary(state, finalNunOp);
+    const handle = state.handles.get(step.child);
 
     expect(state.vm.F).toBe(step.child);
     expect(state.cont.has(`${step.parent}->${step.child}`)).toBe(true);
     expect(state.carry.has(`${step.parent}->${step.child}`)).toBe(true);
     expect(state.supp.has(`${step.child}->${step.parent}`)).toBe(true);
     expect(isCarryResolved(state, step.parent, step.child, { focusNodeId: step.child })).toBe(true);
-    expect(state.handles.get(step.child)?.policy).toBe("framed_lock");
+    expect(handle?.edge_mode).toBe("committed");
+    expect(handle?.envelope.data_flow).toBe("SNAPSHOT");
+    expect(handle?.envelope.edit_flow).toBe("TIGHT");
+    expect(handle?.envelope.x_flow).toBe("EXPLICIT_ONLY");
+    expect(handle?.envelope.coupling).toBe("CopyNoBacklink");
+    expect(handle?.policy).toBe("soft");
   });
 
   it("ז alone creates resolved carry, exports port, and keeps focus", () => {

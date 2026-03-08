@@ -1,10 +1,9 @@
-import { BOT_ID, createHandle } from "../state/handles";
-import { addCarry, addSupp } from "../state/relations";
-import { setPolicy } from "../state/policies";
+import { BOT_ID } from "../state/handles";
+import { committedEnvelope } from "../state/policies";
 import { State } from "../state/state";
-import { nextId } from "../vm/ids";
 import { selectCurrentFocus } from "../vm/select";
-import { Construction, LetterMeta, LetterOp, SelectOperands, defaultEnvelope } from "./types";
+import { spawnResolvedCarryNode } from "./continuation_primitives";
+import { Construction, LetterMeta, LetterOp, SelectOperands } from "./types";
 
 const meta: LetterMeta = {
   letter: "ן",
@@ -20,20 +19,21 @@ export const finalNunOp: LetterOp = {
   select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops: SelectOperands) => {
     const parent = ops.args[0];
-    const child = nextId(S, "ן");
-    S.handles.set(child, createHandle(child, "scope", { meta: { succOf: parent } }));
-    addCarry(S, parent, child);
-    addSupp(S, child, parent);
+    const { nodeId: child } = spawnResolvedCarryNode(S, {
+      sourceId: parent,
+      idPrefix: "ן",
+      meta: { succOf: parent },
+      setPolicyLikeZayin: true
+    });
     const cons: Construction = {
       base: parent,
-      envelope: defaultEnvelope("framed_lock"),
+      envelope: committedEnvelope(),
       meta: { parent, child }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
     const { child } = cons.meta as { child: string };
-    setPolicy(S, child, "framed_lock");
     return { S, h: child, r: BOT_ID };
   }
 };
