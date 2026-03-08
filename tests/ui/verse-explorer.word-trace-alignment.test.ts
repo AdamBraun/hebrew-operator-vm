@@ -81,8 +81,8 @@ describe("verse explorer trace alignment", () => {
       makeTrace(
         4,
         "אֱלֹהִים",
-        ["ALEPH.ALIAS", "LAMED.ENDPOINT", "HE.HEAD_WITH_LEG", "FINAL_MEM.CLOSE"],
-        "א alias ⇢ ל endpoint bind ⇢ ה backed head + detached leg ⇢ ם close mem-zone"
+        ["ALEPH.ALIAS", "LAMED.HOLD_STEP_PAST", "HE.HEAD_WITH_LEG", "FINAL_MEM.CLOSE"],
+        "א alias ⇢ ל hold+step-past ⇢ ה backed head + detached leg ⇢ ם close mem-zone"
       ),
       makeTrace(5, "אֵת", ["ALEPH.ALIAS", "TAV.FINALIZE"], "א alias ⇢ ת finalize+stamp"),
       makeTrace(
@@ -106,7 +106,7 @@ describe("verse explorer trace alignment", () => {
     expect(aligned[2].surface).toBe("אֱלֹהִים");
     expect(aligned[2].skeleton).toEqual([
       "ALEPH.ALIAS",
-      "LAMED.ENDPOINT",
+      "LAMED.HOLD_STEP_PAST",
       "HE.HEAD_WITH_LEG",
       "FINAL_MEM.CLOSE"
     ]);

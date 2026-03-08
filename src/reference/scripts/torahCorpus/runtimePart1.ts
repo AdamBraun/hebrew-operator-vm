@@ -54,7 +54,7 @@ const OP_FLOW_LABEL = {
   "ZAYIN.GATE": "ז gate",
   "HET.COMPARTMENT": "ח compartment",
   "TET.COVERT": "ט covert",
-  "LAMED.ENDPOINT": "ל endpoint bind",
+  "LAMED.HOLD_STEP_PAST": "ל hold+step-past",
   "MEM.OPEN": "מ open mem-zone",
   "NUN.SUPPORT_DEBT": "נ support debt",
   "SAMEKH.SUPPORT_DISCHARGE": "ס support discharge",
@@ -93,7 +93,7 @@ const IMPORTANT_EVENT_TYPES = new Set([
   "utter",
   "utter_close",
   "compartment",
-  "endpoint",
+  "lamed_step_past",
   "covert",
   "gate",
   "approx",
@@ -412,8 +412,8 @@ function summarizeEvent(type, event, traceEntry) {
       return "close utterance";
     case "compartment":
       return "compartmentalize";
-    case "endpoint":
-      return "pin endpoint";
+    case "lamed_step_past":
+      return "hold and step past";
     case "covert":
       return "covert annotation";
     case "gate":
@@ -635,16 +635,15 @@ function mapRawEventToFlow(event, traceEntry) {
           boundaryId: asHandleId(data.boundaryId)
         }
       };
-    case "endpoint":
+    case "lamed_step_past":
       return {
-        op_family: "LAMED.ENDPOINT",
+        op_family: "LAMED.HOLD_STEP_PAST",
         params_summary: summarizeEvent(event.type, event, traceEntry),
         trace_source: "vm_event",
         payload: {
           id: asHandleId(data.id),
-          endpoint: asHandleId(data.endpoint),
-          domain: asHandleId(data.domain),
-          boundaryId: asHandleId(data.boundaryId)
+          source: asHandleId(data.source),
+          hold: asHandleId(data.hold)
         }
       };
     case "covert":

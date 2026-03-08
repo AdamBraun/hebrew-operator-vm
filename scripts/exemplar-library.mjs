@@ -64,7 +64,7 @@ const OPERATOR_PRIORITY = [
   "ZAYIN.GATE",
   "HET.COMPARTMENT",
   "TET.COVERT",
-  "LAMED.ENDPOINT",
+  "LAMED.HOLD_STEP_PAST",
   "MEM.OPEN",
   "NUN.SUPPORT_DEBT",
   "SAMEKH.SUPPORT_DISCHARGE",
@@ -93,7 +93,7 @@ const OPERATOR_LABELS = {
   "ZAYIN.GATE": "gate routing",
   "HET.COMPARTMENT": "compartment behavior",
   "TET.COVERT": "covert behavior",
-  "LAMED.ENDPOINT": "endpoint binding",
+  "LAMED.HOLD_STEP_PAST": "hold then step past",
   "MEM.OPEN": "mem-zone open",
   "NUN.SUPPORT_DEBT": "support debt",
   "SAMEKH.SUPPORT_DISCHARGE": "support discharge",
@@ -327,8 +327,8 @@ function normalizeRow(raw, index) {
   const ref_key = String(raw?.ref_key ?? buildRefKey(ref));
   const surface = String(raw?.surface ?? "");
   const token_ids = toArray(raw?.token_ids ?? raw?.tokens).map((value) => Number(value));
-  const skeletonRaw = toArray(raw?.skeleton ?? raw?.flow_compact ?? raw?.flow_skeleton).map((value) =>
-    String(value)
+  const skeletonRaw = toArray(raw?.skeleton ?? raw?.flow_compact ?? raw?.flow_skeleton).map(
+    (value) => String(value)
   );
   const skeleton = skeletonRaw.filter(Boolean);
   const flow = String(
@@ -439,15 +439,13 @@ function createSelector() {
       return false;
     }
 
-    const entry =
-      selected.get(row.ref_key) ??
-      {
-        row,
-        categories: [],
-        tags: new Set(),
-        motifs: new Set(),
-        operators: new Set()
-      };
+    const entry = selected.get(row.ref_key) ?? {
+      row,
+      categories: [],
+      tags: new Set(),
+      motifs: new Set(),
+      operators: new Set()
+    };
 
     if (!entry.categories.includes(details.category)) {
       entry.categories.push(details.category);
@@ -507,7 +505,9 @@ function collectCoveredEvents(selectedValues) {
 function sortEventsForCoverage(eventsSet) {
   const priorityIndex = new Map(OPERATOR_PRIORITY.map((event, index) => [event, index]));
   return Array.from(eventsSet).sort((left, right) => {
-    const leftPriority = priorityIndex.has(left) ? priorityIndex.get(left) : Number.MAX_SAFE_INTEGER;
+    const leftPriority = priorityIndex.has(left)
+      ? priorityIndex.get(left)
+      : Number.MAX_SAFE_INTEGER;
     const rightPriority = priorityIndex.has(right)
       ? priorityIndex.get(right)
       : Number.MAX_SAFE_INTEGER;
@@ -519,7 +519,9 @@ function sortEventsForCoverage(eventsSet) {
 }
 
 function toSortedSetArray(inputSet) {
-  return Array.from(inputSet).sort((left, right) => left.localeCompare(right, "en", { numeric: true }));
+  return Array.from(inputSet).sort((left, right) =>
+    left.localeCompare(right, "en", { numeric: true })
+  );
 }
 
 function choosePrimaryCategory(categories) {
@@ -644,7 +646,9 @@ function buildExemplarPayload({
     );
   }
 
-  const displayCategoryIndex = new Map(CATEGORY_DEFS.map((category, index) => [category.id, index]));
+  const displayCategoryIndex = new Map(
+    CATEGORY_DEFS.map((category, index) => [category.id, index])
+  );
   const sortedEntries = selectedEntries
     .slice()
     .sort((left, right) => {
@@ -770,7 +774,9 @@ function buildRegressionPayload(exemplarPayload, opts) {
   const picked = [];
 
   const pickOne = (predicate) => {
-    const exemplar = exemplars.find((candidate) => !pickedIds.has(candidate.id) && predicate(candidate));
+    const exemplar = exemplars.find(
+      (candidate) => !pickedIds.has(candidate.id) && predicate(candidate)
+    );
     if (!exemplar) {
       return;
     }
@@ -795,15 +801,13 @@ function buildRegressionPayload(exemplarPayload, opts) {
     pickOne((candidate) => candidate.tags.includes(motifTag));
   }
 
-  const scored = exemplars
-    .slice()
-    .sort((left, right) => {
-      const scoreDelta = scoreForRegression(right) - scoreForRegression(left);
-      if (scoreDelta !== 0) {
-        return scoreDelta;
-      }
-      return left.id.localeCompare(right.id, "en", { numeric: true });
-    });
+  const scored = exemplars.slice().sort((left, right) => {
+    const scoreDelta = scoreForRegression(right) - scoreForRegression(left);
+    if (scoreDelta !== 0) {
+      return scoreDelta;
+    }
+    return left.id.localeCompare(right.id, "en", { numeric: true });
+  });
 
   for (const exemplar of scored) {
     if (picked.length >= opts.regressionLimit) {
@@ -840,7 +844,9 @@ function buildRegressionPayload(exemplarPayload, opts) {
 }
 
 function renderExemplarReadme(exemplarPayload, regressionPayload) {
-  const categoriesById = new Map(exemplarPayload.categories.map((category) => [category.id, category]));
+  const categoriesById = new Map(
+    exemplarPayload.categories.map((category) => [category.id, category])
+  );
   const grouped = new Map();
   for (const category of exemplarPayload.categories) {
     grouped.set(category.id, []);
@@ -882,9 +888,12 @@ function renderExemplarReadme(exemplarPayload, regressionPayload) {
     }
     lines.push("", `### ${categoryInfo.title}`, "", `${categoryInfo.description}`, "");
     for (const exemplar of items) {
-      const skeletonValue = exemplar.skeleton.length > 0 ? exemplar.skeleton.join(" -> ") : "(empty)";
+      const skeletonValue =
+        exemplar.skeleton.length > 0 ? exemplar.skeleton.join(" -> ") : "(empty)";
       const tokenValue =
-        exemplar.token_ids.length > 0 ? exemplar.token_ids.map((tokenId) => String(tokenId)).join(", ") : "(none)";
+        exemplar.token_ids.length > 0
+          ? exemplar.token_ids.map((tokenId) => String(tokenId)).join(", ")
+          : "(none)";
       lines.push(`#### ${exemplar.id} — ${exemplar.surface} (${toReferenceString(exemplar.ref)})`);
       lines.push(`- ref: \`${exemplar.ref_key}\``);
       lines.push(`- token_ids: \`${tokenValue}\``);
@@ -1043,7 +1052,7 @@ function runSelection(rows, indexes, countsEntries, motifPayload, opts) {
   const finalKafRow =
     pickFirstRow(
       rows,
-      (row) => /ך$/u.test(row.surface) && row.skeleton.includes("LAMED.ENDPOINT")
+      (row) => /ך$/u.test(row.surface) && row.skeleton.includes("LAMED.HOLD_STEP_PAST")
     ) ?? pickFirstRow(rows, (row) => /ך$/u.test(row.surface));
   rememberSelection(finalKafRow, {
     category: "boundary_finals",
@@ -1269,7 +1278,9 @@ async function runVerify(argv) {
 
   const regressionFailures = validateRegressionCases(existingRegression, indexes.rowByRefKey);
   if (regressionFailures.length > 0) {
-    const sample = regressionFailures.slice(0, 5).map((failure) => `${failure.key}: ${failure.reason}`);
+    const sample = regressionFailures
+      .slice(0, 5)
+      .map((failure) => `${failure.key}: ${failure.reason}`);
     throw new Error(
       `Regression case mismatch (${regressionFailures.length}): ${sample.join(" | ")}`
     );

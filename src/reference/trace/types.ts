@@ -39,7 +39,7 @@ export const TRACE_EVENT_KINDS = [
   "ZAYIN.GATE",
   "HET.COMPARTMENT",
   "TET.COVERT",
-  "LAMED.ENDPOINT",
+  "LAMED.HOLD_STEP_PAST",
   "MEM.OPEN",
   "FINAL_MEM.CLOSE",
   "NUN.SUPPORT_DEBT",
@@ -197,14 +197,13 @@ export type CovertEvent = TraceEventBase<
   }
 >;
 
-export type EndpointEvent = TraceEventBase<
-  "LAMED.ENDPOINT",
+export type LamedStepPastEvent = TraceEventBase<
+  "LAMED.HOLD_STEP_PAST",
   "vm_event",
   {
     id: HandleId;
-    endpoint: HandleId;
-    domain: HandleId;
-    boundaryId: HandleId;
+    source: HandleId;
+    hold: HandleId;
   }
 >;
 
@@ -417,7 +416,7 @@ export type TraceEvent =
   | GateEvent
   | CompartmentEvent
   | CovertEvent
-  | EndpointEvent
+  | LamedStepPastEvent
   | MemOpenEvent
   | FinalMemCloseEvent
   | NunSupportDebtEvent
