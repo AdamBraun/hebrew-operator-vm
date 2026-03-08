@@ -2,8 +2,20 @@ import { BOT_ID, createHandle } from "../state/handles";
 import { applyEnvelopeToHandle } from "../state/policies";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
-import { selectCurrentFocus } from "../vm/select";
-import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
+import { Construction, Envelope, LetterMeta, LetterOp, defaultEnvelope } from "./types";
+
+function restrictToPortAccess(envelope: Envelope, ports: Iterable<string>): Envelope {
+  return {
+    ...envelope,
+    ctx_flow: "LOW",
+    x_flow: "EXPLICIT_ONLY",
+    data_flow: "LIVE",
+    edit_flow: "TIGHT",
+    ports: new Set(ports),
+    coupling: "LINK",
+    policy: envelope.policy === "soft" ? "framed_lock" : envelope.policy
+  };
+}
 
 const meta: LetterMeta = {
   letter: "ט",
@@ -16,22 +28,14 @@ const meta: LetterMeta = {
 
 export const tetOp: LetterOp = {
   meta,
-  select: (S: State) => selectCurrentFocus(S),
+  select: (S: State) => ({ S, ops: { args: [S.vm.F], prefs: {} } }),
   bound: (S: State, ops) => {
     const [target] = ops.args;
     const portId = nextId(S, "ט");
     const targetHandle = S.handles.get(target);
-    const restrictedEnvelope = targetHandle
-      ? {
-          ...targetHandle.envelope,
-          x_flow: "EXPLICIT_ONLY" as const,
-          ports: new Set([portId])
-        }
-      : {
-          ...defaultEnvelope(),
-          x_flow: "EXPLICIT_ONLY" as const,
-          ports: new Set([portId])
-        };
+    const restrictedEnvelope = restrictToPortAccess(targetHandle?.envelope ?? defaultEnvelope(), [
+      portId
+    ]);
     applyEnvelopeToHandle(S, target, restrictedEnvelope);
     if (targetHandle) {
       targetHandle.meta = {
