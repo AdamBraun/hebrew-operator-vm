@@ -8,11 +8,13 @@ const DEFAULT_MODE = "warn";
 const DEFAULT_REPORT_PATH = path.resolve(process.cwd(), "reports", "ci_guardrails_baseline.md");
 const DEFAULT_ALLOWLIST_PATH = path.resolve(process.cwd(), "config", "guardrails-allowlist.json");
 const DEFAULT_BASE_SHA = String(process.env.GUARDRAILS_BASE_SHA ?? "").trim();
-const DEFAULT_HEAD_SHA = String(process.env.GUARDRAILS_HEAD_SHA ?? process.env.GITHUB_SHA ?? "").trim();
+const DEFAULT_HEAD_SHA = String(
+  process.env.GUARDRAILS_HEAD_SHA ?? process.env.GITHUB_SHA ?? ""
+).trim();
 const execFileAsync = util.promisify(childProcess.execFile);
 
 const SOURCE_ROOTS = [
-  path.resolve(process.cwd(), "impl", "reference", "src"),
+  path.resolve(process.cwd(), "src", "reference"),
   path.resolve(process.cwd(), "scripts")
 ];
 const ALLOWED_EXTENSIONS = new Set([".ts", ".mjs"]);
@@ -162,8 +164,21 @@ async function collectTouchedFiles(opts) {
 
   if (baseSha) {
     const rangePaths =
-      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", `${baseSha}...${headSha}`])) ??
-      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", baseSha, headSha]));
+      (await tryTouchedFromDiff([
+        "diff",
+        "--name-only",
+        "--diff-filter=ACMR",
+        "-z",
+        `${baseSha}...${headSha}`
+      ])) ??
+      (await tryTouchedFromDiff([
+        "diff",
+        "--name-only",
+        "--diff-filter=ACMR",
+        "-z",
+        baseSha,
+        headSha
+      ]));
     if (rangePaths) {
       for (const filePath of rangePaths) {
         touched.add(filePath);
@@ -175,8 +190,14 @@ async function collectTouchedFiles(opts) {
   if (source === "working_tree") {
     if (String(process.env.CI ?? "").toLowerCase() === "true") {
       const ciFallbackPaths =
-        (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", "HEAD~1", "HEAD"])) ??
-        [];
+        (await tryTouchedFromDiff([
+          "diff",
+          "--name-only",
+          "--diff-filter=ACMR",
+          "-z",
+          "HEAD~1",
+          "HEAD"
+        ])) ?? [];
       for (const filePath of ciFallbackPaths) {
         touched.add(filePath);
       }
@@ -189,8 +210,14 @@ async function collectTouchedFiles(opts) {
     }
 
     const stagedPaths =
-      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "--cached", "-z", "HEAD"])) ??
-      [];
+      (await tryTouchedFromDiff([
+        "diff",
+        "--name-only",
+        "--diff-filter=ACMR",
+        "--cached",
+        "-z",
+        "HEAD"
+      ])) ?? [];
     for (const filePath of stagedPaths) {
       touched.add(filePath);
     }
@@ -331,9 +358,7 @@ async function run() {
   const opts = parseArgs(process.argv.slice(2));
   const allowlist = await loadAllowlist(opts.allowlistPath);
 
-  const files = (
-    await Promise.all(SOURCE_ROOTS.map((root) => walkFiles(root)))
-  ).flat();
+  const files = (await Promise.all(SOURCE_ROOTS.map((root) => walkFiles(root)))).flat();
   files.sort((left, right) => left.localeCompare(right, "en", { numeric: true }));
 
   const rows = [];
@@ -399,7 +424,9 @@ async function run() {
     });
   }
 
-  rows.sort((left, right) => right.bytes - left.bytes || right.complexity_score - left.complexity_score);
+  rows.sort(
+    (left, right) => right.bytes - left.bytes || right.complexity_score - left.complexity_score
+  );
   const report = renderReport({
     opts,
     rows,

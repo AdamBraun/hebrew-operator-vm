@@ -49,7 +49,7 @@ A result may be promoted into `/spec/` only if all are true:
 
 1. The statement is expressed purely in terms of `/spec/*` and the abstract state interface.
 2. The proof assumptions are explicit and checkable.
-3. A corresponding conformance test exists in `/tests/core/` (or a static checker rule exists in `/impl/tools/`).
+3. A corresponding conformance test exists in `/tests/core/` (or a static checker rule exists in `/scripts/`).
 4. Promotion does not introduce profile-dependent semantics.
 
 ## Current research agenda
