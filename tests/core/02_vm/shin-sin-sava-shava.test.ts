@@ -64,8 +64,8 @@ describe("shin/sin pair: שָׂבָע vs שָׁבָע", () => {
     expect(outgoingCount(sinRun.state.cont, sinFocus)).toBe(0);
     expect(outgoingCount(shinRun.state.sub, shinFocus)).toBe(0);
     expect(outgoingCount(shinRun.state.cont, shinFocus)).toBe(3);
-    expect(sinRun.state.supp.size).toBe(0);
-    expect(shinRun.state.supp.size).toBe(0);
+    expect(Array.from(sinRun.state.supp).sort()).toEqual(Array.from(shinRun.state.supp).sort());
+    expect(sinRun.state.supp.size).toBe(1);
     for (const id of sinPorts) {
       expect(sinRun.state.handles.get(id)?.kind).toBe("compartment");
     }
