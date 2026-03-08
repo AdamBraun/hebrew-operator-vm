@@ -38,7 +38,7 @@ describe("finalizeVerse", () => {
     expect(Array.isArray(snapshot.state_dump.vm.H)).toBe(true);
     expect(snapshot.state_dump.vm.H.length).toBe(eventsBefore);
     expect(
-      snapshot.state_dump.vm.H.some((event: { type?: string }) => event.type === "mem_zone_flush")
+      snapshot.state_dump.vm.H.some((event: { type?: string }) => event.type === "mem_auto_close")
     ).toBe(true);
     expect(Array.isArray(snapshot.state_dump.handles)).toBe(true);
     expect(snapshot.state_dump.handles.length).toBe(handlesBefore);
@@ -208,7 +208,7 @@ describe("finalizeVerse", () => {
 
     expect(
       verseSnapshots[0].state_dump.vm.H.some(
-        (event: { type?: string }) => event.type === "mem_zone_flush"
+        (event: { type?: string }) => event.type === "mem_auto_close"
       )
     ).toBe(true);
     expect((verseSnapshots[0].state_dump.handles as Array<{ id: string }>).length).toBeGreaterThan(

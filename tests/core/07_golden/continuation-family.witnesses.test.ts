@@ -15,14 +15,10 @@ const CASES: Record<string, string> = {
 };
 
 type WitnessPack = {
-  trace: string;
-  graph: string;
-  state: string;
+  trace: Record<string, unknown>;
+  graph: Record<string, unknown>;
+  state: Record<string, unknown>;
 };
-
-function formatJson(value: unknown): string {
-  return JSON.stringify(value, null, 2) + "\n";
-}
 
 function normalizeTraceEntry(entry: DeepTraceEntry): Record<string, unknown> {
   return {
@@ -91,9 +87,9 @@ function buildWitnessPack(program: string): WitnessPack {
   };
 
   return {
-    trace: formatJson(trace),
-    graph: formatJson(graph),
-    state: formatJson(finalState)
+    trace,
+    graph,
+    state: finalState
   };
 }
 
@@ -113,9 +109,15 @@ describe("continuation family witness pack", () => {
       }
 
       const pack = buildWitnessPack(program);
-      expect(readFileSync(join(CASE_DIR, fixtureDir, "trace.json"), "utf8")).toBe(pack.trace);
-      expect(readFileSync(join(CASE_DIR, fixtureDir, "graph.json"), "utf8")).toBe(pack.graph);
-      expect(readFileSync(join(CASE_DIR, fixtureDir, "state.json"), "utf8")).toBe(pack.state);
+      expect(JSON.parse(readFileSync(join(CASE_DIR, fixtureDir, "trace.json"), "utf8"))).toEqual(
+        pack.trace
+      );
+      expect(JSON.parse(readFileSync(join(CASE_DIR, fixtureDir, "graph.json"), "utf8"))).toEqual(
+        pack.graph
+      );
+      expect(JSON.parse(readFileSync(join(CASE_DIR, fixtureDir, "state.json"), "utf8"))).toEqual(
+        pack.state
+      );
     }
   });
 });

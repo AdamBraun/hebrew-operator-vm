@@ -211,10 +211,11 @@ export type MemOpenEvent = TraceEventBase<
   "MEM.OPEN",
   "derived_obligation",
   {
-    obligation_kind: "MEM_ZONE";
     action: "open";
-    parent?: HandleId;
-    zone?: HandleId;
+    boundary_id?: HandleId;
+    hold?: HandleId;
+    inside?: HandleId;
+    outside?: HandleId;
   }
 >;
 
@@ -222,11 +223,13 @@ export type FinalMemCloseEvent = TraceEventBase<
   "FINAL_MEM.CLOSE",
   "derived_obligation",
   {
-    obligation_kind: "MEM_ZONE";
     action: "close";
     mode: "existing" | "synthetic";
-    zone?: HandleId;
-    handle?: HandleId;
+    boundary_id?: HandleId;
+    focus?: HandleId;
+    sealed?: HandleId;
+    inside?: HandleId;
+    outside?: HandleId;
   }
 >;
 
@@ -371,10 +374,11 @@ export type SpaceMemAutoCloseEvent = TraceEventBase<
   "SPACE.MEM_AUTO_CLOSE",
   "derived_boundary",
   {
-    obligation_kind: "MEM_ZONE";
     action: "auto_close";
-    count?: number;
-    zone?: HandleId;
+    boundary_id?: HandleId;
+    inside?: HandleId;
+    outside?: HandleId;
+    reason?: string;
   }
 >;
 

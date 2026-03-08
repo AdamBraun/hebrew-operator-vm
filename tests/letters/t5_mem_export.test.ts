@@ -3,25 +3,28 @@ import { createInitialState } from "@ref/state/state";
 import { runProgram } from "@ref/vm/vm";
 
 describe("T5 final mem exports handle", () => {
-  it("exports mem handle before boundary", () => {
+  it("exports the sealed successor before boundary", () => {
     const state = runProgram("מם", createInitialState());
     expect(state.vm.OStack_word.length).toBe(0);
-    const memHandles = Array.from(state.handles.entries()).filter(
-      ([, handle]) => handle.kind === "memHandle"
+    const sealed = Array.from(state.handles.entries()).filter(
+      ([, handle]) => handle.meta?.sealedFrom
     );
-    expect(memHandles.length).toBe(1);
-    const [memHandleId, memHandle] = memHandles[0];
+    expect(sealed.length).toBe(1);
+    const [sealedId, sealedHandle] = sealed[0];
     const wordOut = state.vm.A[state.vm.A.length - 1];
-    expect(wordOut).toBe(memHandleId);
-    expect(memHandle.meta.zone).toBeDefined();
+    expect(wordOut).toBe(sealedId);
+    expect(sealedHandle.meta.boundaryId).toBeDefined();
   });
 
   it("allows final mem with unrelated obligations", () => {
     const state = runProgram("נם", createInitialState());
-    const memHandles = Array.from(state.handles.values()).filter(
-      (handle) => handle.kind === "memHandle"
+    const sealed = Array.from(state.handles.values()).filter((handle) => handle.meta?.sealedFrom);
+    expect(sealed.length).toBeGreaterThan(0);
+    expect(
+      state.boundaries.some(
+        (boundary) => boundary.kind === "mem_enclosure" && boundary.close_mode === "synthetic"
+      )
     );
-    expect(memHandles.length).toBeGreaterThan(0);
     expect(state.vm.H.some((event) => event.type === "fall")).toBe(false);
   });
 });

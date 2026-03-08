@@ -11,11 +11,11 @@ describe("phrase accumulator", () => {
 
   it("exports the word output at boundary", () => {
     const state = runProgram("מם", createInitialState());
-    const memHandles = Array.from(state.handles.values()).filter(
-      (handle) => handle.kind === "memHandle"
+    const sealed = Array.from(state.handles.entries()).filter(
+      ([, handle]) => handle.meta?.sealedFrom
     );
-    expect(memHandles.length).toBe(1);
+    expect(sealed.length).toBe(1);
     const wordOut = state.vm.A[state.vm.A.length - 1];
-    expect(wordOut).toBe(memHandles[0].id);
+    expect(wordOut).toBe(sealed[0][0]);
   });
 });

@@ -1,7 +1,7 @@
 import { BOT_ID, Handle, OMEGA_ID, createHandle } from "./handles";
 import type { Envelope } from "./policies";
 
-export type ObligationKind = "MEM_ZONE" | "BOUNDARY";
+export type ObligationKind = "BOUNDARY";
 
 export type Obligation = {
   kind: ObligationKind;
@@ -45,6 +45,12 @@ export type BoundaryRecord = {
   anchor: 0 | 1;
   id: string;
   members?: string[];
+  kind?: "mem_enclosure";
+  open?: boolean;
+  closed?: boolean;
+  close_mode?: "explicit" | "synthetic" | "word_boundary";
+  closed_by?: string;
+  closed_at_tau?: number;
 };
 
 export type ConstituentNode = {

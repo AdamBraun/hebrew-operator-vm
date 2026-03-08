@@ -11,10 +11,15 @@ describe("space boundary nesting", () => {
 
   it("nested mems close in LIFO order", () => {
     const state = runProgram("ממםם", createInitialState());
-    const memHandles = Array.from(state.handles.values()).filter(
-      (handle) => handle.kind === "memHandle"
+    const sealed = Array.from(state.handles.values()).filter((handle) => handle.meta?.sealedFrom);
+    expect(sealed.length).toBe(2);
+    const closedMemBoundaries = state.boundaries.filter(
+      (boundary) => boundary.kind === "mem_enclosure" && boundary.closed
     );
-    expect(memHandles.length).toBe(2);
+    expect(closedMemBoundaries.length).toBe(2);
+    expect(closedMemBoundaries[0].closed_at_tau).toBeLessThanOrEqual(
+      closedMemBoundaries[1].closed_at_tau ?? Number.MAX_SAFE_INTEGER
+    );
     expect(state.vm.OStack_word.length).toBe(0);
   });
 });

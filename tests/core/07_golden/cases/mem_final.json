@@ -41,6 +41,29 @@
         }
       },
       {
+        "type": "mem_open",
+        "tau": 1,
+        "data": {
+          "id": "מb:1:1",
+          "source": "C:1:1",
+          "hold": "מ:1:1",
+          "inside": "מ:1:2",
+          "outside": "מ:1:1"
+        }
+      },
+      {
+        "type": "mem_close",
+        "tau": 1,
+        "data": {
+          "id": "מb:1:1",
+          "focus": "מ:1:2",
+          "sealed": "ם:1:1",
+          "inside": "מ:1:2",
+          "outside": "מ:1:1",
+          "mode": "existing"
+        }
+      },
+      {
         "type": "BOUNDARY",
         "tau": 2,
         "data": {
@@ -55,7 +78,8 @@
     "wordHasContent": false,
     "metaCounter": {
       "C": 1,
-      "מ": 1,
+      "מ": 2,
+      "מb": 1,
       "ם": 1
     }
   },
@@ -78,6 +102,29 @@
       "meta": {}
     },
     {
+      "id": "C:1:1",
+      "kind": "scope",
+      "policy": "soft",
+      "anchor": 1,
+      "edge_mode": "free",
+      "envelope": {
+        "ctx_flow": "LOW",
+        "x_flow": "IMPLICIT_OK",
+        "data_flow": "LIVE",
+        "edit_flow": "OPEN",
+        "ports": [],
+        "coupling": "LINK",
+        "policy": "soft"
+      },
+      "meta": {
+        "owner": "word",
+        "construct_role": "baseline",
+        "payload": {},
+        "word_text": "מם",
+        "ephemeral": 1
+      }
+    },
+    {
       "id": "Ω",
       "kind": "scope",
       "policy": "soft",
@@ -98,7 +145,7 @@
     },
     {
       "id": "מ:1:1",
-      "kind": "memZone",
+      "kind": "scope",
       "policy": "soft",
       "anchor": 0,
       "edge_mode": "free",
@@ -112,13 +159,12 @@
         "policy": "soft"
       },
       "meta": {
-        "anchor": "C:1:1",
-        "closed": 1
+        "heldFrom": "C:1:1"
       }
     },
     {
       "id": "ם:1:1",
-      "kind": "memHandle",
+      "kind": "scope",
       "policy": "soft",
       "anchor": 0,
       "edge_mode": "free",
@@ -132,17 +178,53 @@
         "policy": "soft"
       },
       "meta": {
-        "zone": "מ:1:1",
+        "sealedFrom": "מ:1:2",
+        "boundaryId": "מb:1:1",
+        "mode": "existing",
         "chunk_commit_boundary": 1
+      }
+    },
+    {
+      "id": "מ:1:2",
+      "kind": "scope",
+      "policy": "soft",
+      "anchor": 0,
+      "edge_mode": "free",
+      "envelope": {
+        "ctx_flow": "LOW",
+        "x_flow": "IMPLICIT_OK",
+        "data_flow": "LIVE",
+        "edit_flow": "OPEN",
+        "ports": [],
+        "coupling": "LINK",
+        "policy": "soft"
+      },
+      "meta": {
+        "interiorOf": "מ:1:1",
+        "boundaryId": "מb:1:1"
       }
     }
   ],
-  "cont": [],
-  "carry": [],
-  "supp": [],
+  "cont": ["C:1:1->מ:1:1", "מ:1:1->מ:1:2", "מ:1:2->ם:1:1"],
+  "carry": ["C:1:1->מ:1:1", "מ:1:2->ם:1:1"],
+  "supp": ["ם:1:1->מ:1:2", "מ:1:1->C:1:1"],
   "head_of": [],
   "sub": [],
   "links": [],
-  "boundaries": [],
+  "boundaries": [
+    {
+      "inside": "מ:1:2",
+      "outside": "מ:1:1",
+      "anchor": 1,
+      "id": "מb:1:1",
+      "members": ["מ:1:2"],
+      "kind": "mem_enclosure",
+      "open": false,
+      "closed": true,
+      "close_mode": "explicit",
+      "closed_by": "ם",
+      "closed_at_tau": 1
+    }
+  ],
   "rules": []
 }

@@ -359,7 +359,7 @@ function buildVerseMotifs({
 function buildPatternIndex(fullRows) {
   const explicitPatterns = {
     MEM_OPEN_TO_MEM_CLOSE: {
-      description: "MEM.OPEN ... FINAL_MEM.CLOSE (or boundary mem auto-close)",
+      description: "MEM.OPEN ... FINAL_MEM.CLOSE (or boundary enclosure auto-close)",
       occurrences: []
     },
     SUPPORT_DEBT_TO_SAMEWORD_DISCHARGE: {

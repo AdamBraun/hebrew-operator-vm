@@ -82,14 +82,14 @@ describe("verse explorer trace alignment", () => {
         4,
         "אֱלֹהִים",
         ["ALEPH.ALIAS", "LAMED.HOLD_STEP_PAST", "HE.HEAD_WITH_LEG", "FINAL_MEM.CLOSE"],
-        "א alias ⇢ ל hold+step-past ⇢ ה backed head + detached leg ⇢ ם close mem-zone"
+        "א alias ⇢ ל hold+step-past ⇢ ה backed head + detached leg ⇢ ם close enclosure"
       ),
       makeTrace(5, "אֵת", ["ALEPH.ALIAS", "TAV.FINALIZE"], "א alias ⇢ ת finalize+stamp"),
       makeTrace(
         6,
         "הַשָּׁמַיִם",
         ["HE.HEAD_WITH_LEG", "SHIN.FORK", "MEM.OPEN", "FINAL_MEM.CLOSE"],
-        "ה backed head + detached leg ⇢ ש fork route ⇢ מ open mem-zone ⇢ ם close mem-zone"
+        "ה backed head + detached leg ⇢ ש fork route ⇢ מ open enclosure ⇢ ם close enclosure"
       ),
       makeTrace(7, "וְאֵת", ["ALEPH.ALIAS", "TAV.FINALIZE"], "א alias ⇢ ת finalize+stamp"),
       makeTrace(

@@ -16,6 +16,15 @@ function normalizeWordText<T extends Record<string, any>>(value: T): T {
     }
     delete event.data.wordText;
   }
+  const handles = serialized.handles;
+  if (Array.isArray(handles)) {
+    for (const handle of handles) {
+      if (!handle?.meta || typeof handle.meta !== "object") {
+        continue;
+      }
+      delete handle.meta.word_text;
+    }
+  }
   return serialized;
 }
 

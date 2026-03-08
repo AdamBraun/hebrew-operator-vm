@@ -1,4 +1,4 @@
-import { State } from "./state";
+import { BoundaryRecord, State } from "./state";
 
 function edgeKey(source: string, target: string): string {
   return `${source}->${target}`;
@@ -149,22 +149,77 @@ export function contReachable(state: State, start: string, target: string): bool
   return false;
 }
 
-export function closeMemZoneSilently(state: State, zoneId: string): void {
-  const zone = state.handles.get(zoneId);
-  if (zone) {
-    zone.meta = { ...zone.meta, closed: 1 };
-  }
-}
-
 export function addBoundary(
   state: State,
   id: string,
   inside: string,
   outside: string,
-  anchor: 0 | 1
-): void {
+  anchor: 0 | 1,
+  extras: Partial<Omit<BoundaryRecord, "id" | "inside" | "outside" | "anchor">> = {}
+): BoundaryRecord {
   const members = [inside, ...subPorts(state, inside)];
-  state.boundaries.push({ inside, outside, anchor, id, members });
+  const boundary: BoundaryRecord = {
+    inside,
+    outside,
+    anchor,
+    id,
+    members,
+    ...extras
+  };
+  state.boundaries.push(boundary);
+  return boundary;
+}
+
+export function isBoundaryOpen(boundary: BoundaryRecord): boolean {
+  return boundary.open === true && boundary.closed !== true;
+}
+
+export function boundaryContainsFocus(
+  state: State,
+  boundary: BoundaryRecord,
+  focus: string
+): boolean {
+  return boundary.inside === focus || contReachable(state, boundary.inside, focus);
+}
+
+export function findNearestOpenBoundaryContaining(
+  state: State,
+  focus: string,
+  kind?: BoundaryRecord["kind"]
+): BoundaryRecord | undefined {
+  for (let index = state.boundaries.length - 1; index >= 0; index -= 1) {
+    const boundary = state.boundaries[index];
+    if (!isBoundaryOpen(boundary)) {
+      continue;
+    }
+    if (kind && boundary.kind !== kind) {
+      continue;
+    }
+    if (boundaryContainsFocus(state, boundary, focus)) {
+      return boundary;
+    }
+  }
+  return undefined;
+}
+
+export function closeBoundaryRecord(
+  state: State,
+  boundaryId: string,
+  extras: Pick<BoundaryRecord, "close_mode" | "closed_by"> & Partial<BoundaryRecord> = {}
+): BoundaryRecord | undefined {
+  const boundary = state.boundaries.find((entry) => entry.id === boundaryId);
+  if (!boundary) {
+    return undefined;
+  }
+  boundary.open = false;
+  boundary.closed = true;
+  boundary.close_mode = extras.close_mode ?? boundary.close_mode;
+  boundary.closed_by = extras.closed_by ?? boundary.closed_by;
+  boundary.closed_at_tau = extras.closed_at_tau ?? state.vm.tau;
+  if (extras.members) {
+    boundary.members = [...extras.members];
+  }
+  return boundary;
 }
 
 export function addLink(state: State, from: string, to: string, label: string): void {
