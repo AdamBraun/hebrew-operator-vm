@@ -73,6 +73,9 @@ export function applyEventLinks(state: State, events: readonly VMEvent[]): void 
         link(state, data.hold, data.source, "supp");
         link(state, data.hold, data.id, "cont");
         break;
+      case "covert":
+        link(state, data.port, data.target, "port_of");
+        break;
       case "boundary_open":
       case "boundary_close":
       case "boundary_auto_close":

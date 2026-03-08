@@ -34,6 +34,44 @@ function enforceDistinct(values: string[], message: string, enabled: boolean): v
   }
 }
 
+function requiresExplicitPortAccess(state: State, handleId: string): boolean {
+  const handle = state.handles.get(handleId);
+  if (!handle) {
+    return false;
+  }
+  return (
+    handle.envelope.x_flow === "EXPLICIT_ONLY" &&
+    (handle.envelope.ports.size > 0 ||
+      handle.meta?.inward_interface === 1 ||
+      typeof handle.meta?.sanctioned_port === "string")
+  );
+}
+
+function authorizedPortTarget(state: State, portId: string): string | null {
+  const port = state.handles.get(portId);
+  if (!port) {
+    return null;
+  }
+  const targetId =
+    typeof port.meta?.portOf === "string"
+      ? port.meta.portOf
+      : typeof port.meta?.target === "string"
+        ? port.meta.target
+        : null;
+  if (!targetId || !requiresExplicitPortAccess(state, targetId)) {
+    return null;
+  }
+  const target = state.handles.get(targetId);
+  if (!target) {
+    return null;
+  }
+  const portAllowed =
+    target.envelope.ports.has(portId) ||
+    target.meta?.sanctioned_port === portId ||
+    port.meta?.sanctioned === 1;
+  return portAllowed ? targetId : BOT_ID;
+}
+
 function parseEdge(edge: string): [string, string] | null {
   const pivot = edge.indexOf("->");
   if (pivot <= 0 || pivot + 2 >= edge.length) {
@@ -64,8 +102,12 @@ function subChildren(state: State, parent: string): string[] {
 }
 
 function selectionTargetsFromFocus(state: State): string[] {
-  const targets = subChildren(state, state.vm.F);
-  for (const adjunct of exportedAdjuncts(state, state.vm.F)) {
+  const focus = resolveSelectableFocus(state);
+  if (focus === BOT_ID) {
+    return [];
+  }
+  const targets = subChildren(state, focus);
+  for (const adjunct of exportedAdjuncts(state, focus)) {
     if (!targets.includes(adjunct)) {
       targets.push(adjunct);
     }
@@ -78,7 +120,8 @@ function selectionPrefs(state: State, usedFocus: boolean): Record<string, any> {
     return {};
   }
   const targets = selectionTargetsFromFocus(state);
-  const adjuncts = exportedAdjuncts(state, state.vm.F);
+  const focus = resolveSelectableFocus(state);
+  const adjuncts = focus === BOT_ID ? [] : exportedAdjuncts(state, focus);
   if (targets.length === 0 && adjuncts.length === 0) {
     return {};
   }
@@ -92,8 +135,19 @@ function selectionPrefs(state: State, usedFocus: boolean): Record<string, any> {
   return prefs;
 }
 
+export function resolveSelectableHandle(state: State, candidate: string): string {
+  const viaPort = authorizedPortTarget(state, candidate);
+  if (viaPort !== null) {
+    return viaPort;
+  }
+  if (requiresExplicitPortAccess(state, candidate)) {
+    return BOT_ID;
+  }
+  return candidate;
+}
+
 export function resolveSelectableFocus(state: State): string {
-  return state.vm.F;
+  return resolveSelectableHandle(state, state.vm.F);
 }
 
 export function resolveExportedAdjunctsOfCurrentFocus(state: State): string[] {
@@ -128,10 +182,7 @@ export function selectExportedAdjunctsOfCurrentFocus(
 }
 
 function resolveFocusCandidate(state: State, candidate: string): string {
-  if (candidate !== state.vm.F) {
-    return candidate;
-  }
-  return resolveSelectableFocus(state);
+  return resolveSelectableHandle(state, candidate);
 }
 
 export function selectCurrentFocus(state: State): { S: State; ops: SelectOperands } {
@@ -174,13 +225,13 @@ export function selectOperands(state: State, meta: LetterMeta): { S: State; ops:
 
   let requiredUsedR = false;
   if (args.length < meta.arity_req) {
-    args.push(state.vm.R);
+    args.push(resolveSelectableHandle(state, state.vm.R));
     requiredUsedR = true;
   }
 
   let requiredUsedD = false;
   if (args.length < meta.arity_req) {
-    args.push(state.vm.D);
+    args.push(resolveSelectableHandle(state, state.vm.D));
     requiredUsedD = true;
   }
 
@@ -226,18 +277,19 @@ export function selectOperands(state: State, meta: LetterMeta): { S: State; ops:
     }
 
     if (optional.length < meta.arity_opt && !requiredUsedR) {
-      optional.push(state.vm.R);
+      optional.push(resolveSelectableHandle(state, state.vm.R));
     }
 
     if (optional.length < meta.arity_opt && !requiredUsedD) {
-      optional.push(state.vm.D);
+      optional.push(resolveSelectableHandle(state, state.vm.D));
     }
 
     // optional operands are only supplied if available; no fallback duplication or BOT fill
     args.push(...optional);
   }
 
-  if (args.includes(state.vm.F)) {
+  const selectableFocus = resolveSelectableFocus(state);
+  if (selectableFocus !== BOT_ID && args.includes(selectableFocus)) {
     selectedFocus = true;
   }
 
