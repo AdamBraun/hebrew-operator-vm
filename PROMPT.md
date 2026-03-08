@@ -119,6 +119,14 @@ Carry resolution is **derived**:
 
 ## Letter Definitions
 
+Every letter’s topology may contain the Y/V substrate structurally; the explicit letters י and ו are the degenerate cases where one shared primitive is itself the whole operator.
+
+At the abstract topology level, every letter contains the continuation primitive.
+
+The explicit letter י is the case where that primitive alone is the entire letter-level operation: allocate a pin, emit cont(anchor, pin), export the pin as selectable, and keep focus unchanged.
+
+This note is structural, not a claim that every runtime letter execution must separately materialize an extra standalone י-node.
+
 ---
 
 # Space (\square) — Time-step / boundary
