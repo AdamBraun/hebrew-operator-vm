@@ -180,10 +180,12 @@ function verifyYodVavEquivalence(family: FamilyExecution): void {
   assert.deepStrictEqual(family.yod.edgeDelta, family.vav.edgeDelta);
   assert.equal(family.yod.rawHandle.meta.pinOf, family.yod.focusBefore);
   assert.equal(family.yod.rawHandle.meta.selectable_pin, 1);
+  assert.equal(family.yod.rawHandle.meta.handle_label, "pin");
   assert.equal(family.vav.rawHandle.meta.pinOf, undefined);
   assert.equal(family.vav.rawHandle.meta.selectable_pin, undefined);
+  assert.equal(family.vav.rawHandle.meta.handle_label, undefined);
   assert.deepStrictEqual(
-    snapshotHandle(family.yod.rawHandle, ["pinOf", "selectable_pin"]),
+    snapshotHandle(family.yod.rawHandle, ["pinOf", "selectable_pin", "handle_label"]),
     snapshotHandle(family.vav.rawHandle)
   );
 
@@ -201,9 +203,11 @@ function verifyFinalNunZayinEquivalence(family: FamilyExecution): void {
   assert.deepStrictEqual(family.zayin.edgeDelta, family.finalNun.edgeDelta);
 
   assert.equal(family.zayin.rawHandle.meta.portOf, family.zayin.focusBefore);
+  assert.equal(family.zayin.rawHandle.meta.handle_label, "resolved_port");
   assert.equal(family.finalNun.rawHandle.meta.portOf, undefined);
+  assert.equal(family.finalNun.rawHandle.meta.handle_label, undefined);
   assert.deepStrictEqual(
-    snapshotHandle(family.zayin.rawHandle, ["portOf"]),
+    snapshotHandle(family.zayin.rawHandle, ["portOf", "handle_label"]),
     snapshotHandle(family.finalNun.rawHandle)
   );
 
@@ -219,7 +223,7 @@ function verifyFinalNunZayinEquivalence(family: FamilyExecution): void {
 
 function verifyFamilySealTiers(family: FamilyExecution): void {
   assert.deepStrictEqual(
-    snapshotHandle(family.yod.rawHandle, ["pinOf", "selectable_pin"]),
+    snapshotHandle(family.yod.rawHandle, ["pinOf", "selectable_pin", "handle_label"]),
     snapshotHandle(family.vav.rawHandle)
   );
   assert.equal(family.nun.rawHandle.meta.succOf, family.nun.focusBefore);
@@ -231,7 +235,7 @@ function verifyFamilySealTiers(family: FamilyExecution): void {
 
   assert.deepStrictEqual(
     snapshotHandle(family.finalNun.rawHandle),
-    snapshotHandle(family.zayin.rawHandle, ["portOf"])
+    snapshotHandle(family.zayin.rawHandle, ["portOf", "handle_label"])
   );
   assert.notDeepStrictEqual(
     snapshotHandle(family.vav.rawHandle),

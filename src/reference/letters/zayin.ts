@@ -22,7 +22,7 @@ export const zayinOp: LetterOp = {
     const { nodeId: portId } = spawnResolvedCarryNode(S, {
       sourceId: focus,
       idPrefix: "ז",
-      meta: { portOf: focus },
+      meta: { portOf: focus, handle_label: "resolved_port" },
       setPolicyLikeZayin: true
     });
     S.vm.K.push(portId);

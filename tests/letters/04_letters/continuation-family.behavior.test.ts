@@ -92,6 +92,7 @@ describe("continuation family behavior", () => {
     expect(yodSnapshot.supp ?? []).toEqual([]);
     expect(pin?.meta?.pinOf).toBe(start);
     expect(pin?.meta?.selectable_pin).toBe(1);
+    expect(pin?.meta?.handle_label).toBe("pin");
     expect(yodSnapshot.vm?.K).toContain(pinId);
     expect(yodSnapshot.vm?.F).toBe(start);
     expectNoExtraSemantics(yodSnapshot);
@@ -196,6 +197,7 @@ describe("continuation family behavior", () => {
     expect(zayinSnapshot.carry ?? []).toEqual([`${start}->${portId}`]);
     expect(zayinSnapshot.supp ?? []).toEqual([`${portId}->${start}`]);
     expect(port?.meta?.portOf).toBe(start);
+    expect(port?.meta?.handle_label).toBe("resolved_port");
     expect(port?.edge_mode).toBe("committed");
     expect(port?.envelope?.data_flow).toBe("SNAPSHOT");
     expect(port?.envelope?.edit_flow).toBe("TIGHT");

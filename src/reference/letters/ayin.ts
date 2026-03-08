@@ -28,7 +28,7 @@ export const ayinOp: LetterOp = {
     S.handles.set(
       originHandleId,
       createHandle(originHandleId, "alias", {
-        meta: { target: origin, export_origin: true }
+        meta: { target: origin, export_origin: true, handle_label: "alias_handle" }
       })
     );
     const cons: Construction = {

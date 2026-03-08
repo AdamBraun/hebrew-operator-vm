@@ -52,13 +52,15 @@ describe("yod behavior", () => {
     expect(snapshot.vm?.K?.at(-1)).toBe(pinId);
     expect(state.handles.get(pinId)?.meta).toMatchObject({
       pinOf: anchor,
-      selectable_pin: 1
+      selectable_pin: 1,
+      handle_label: "pin"
     });
     expect(pinEvent?.data).toEqual({
       letter: "י",
       anchor,
       pin: pinId,
       exported: pinId,
+      handle_label: "pin",
       focus_before: anchor,
       focus_after: anchor,
       focus_unchanged: true,

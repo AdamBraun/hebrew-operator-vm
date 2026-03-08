@@ -21,7 +21,7 @@ export const yodOp: LetterOp = {
     const { nodeId: pinId } = spawnContinuationNode(S, {
       sourceId: anchor,
       idPrefix: "י",
-      meta: { pinOf: anchor, selectable_pin: 1 }
+      meta: { pinOf: anchor, selectable_pin: 1, handle_label: "pin" }
     });
     const cons: Construction = {
       base: anchor,
@@ -40,6 +40,7 @@ export const yodOp: LetterOp = {
         anchor,
         pin: pinId,
         exported: pinId,
+        handle_label: "pin",
         focus_before: anchor,
         focus_after: anchor,
         focus_unchanged: true,

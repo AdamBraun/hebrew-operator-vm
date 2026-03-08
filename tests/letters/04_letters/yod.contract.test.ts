@@ -40,7 +40,8 @@ describe("yod contract", () => {
     expect(state.handles.has(h)).toBe(true);
     expect(state.handles.get(h)?.meta).toMatchObject({
       pinOf: focusBefore,
-      selectable_pin: 1
+      selectable_pin: 1,
+      handle_label: "pin"
     });
     expect(state.vm.H.at(-1)).toMatchObject({
       type: "pin",
@@ -49,6 +50,7 @@ describe("yod contract", () => {
         anchor: focusBefore,
         pin: pinId,
         exported: pinId,
+        handle_label: "pin",
         focus_before: focusBefore,
         focus_after: focusBefore,
         focus_unchanged: true,

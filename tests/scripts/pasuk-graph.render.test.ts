@@ -189,6 +189,60 @@ describe("pasuk graph renderer", () => {
     }
   });
 
+  it("renders canonical semantic labels for pins, alias handles, resolved ports, and detached adjunct legs", async () => {
+    const { renderDotFromTraceJson } = await import("../../scripts/render/pasukGraph.mjs");
+
+    const tracePayload = {
+      ref_key: "Genesis/1/6",
+      cleaned_text: "יזעה",
+      vm: {
+        tau: 6,
+        D: "Ω",
+        F: "Ω",
+        handles: [
+          { id: "Ω", kind: "scope", meta: {} },
+          { id: "⊥", kind: "empty", meta: {} },
+          {
+            id: "י:1:1",
+            kind: "scope",
+            meta: { pinOf: "Ω", selectable_pin: 1, handle_label: "pin" }
+          },
+          {
+            id: "ע:1:1",
+            kind: "alias",
+            meta: { target: "Ω", export_origin: true, handle_label: "alias_handle" }
+          },
+          {
+            id: "ז:1:1",
+            kind: "scope",
+            meta: { portOf: "Ω", handle_label: "resolved_port" }
+          },
+          {
+            id: "ה:1:2",
+            kind: "scope",
+            meta: { detached_leg: 1, handle_label: "detached_adjunct_leg" }
+          }
+        ],
+        links: [],
+        boundaries: []
+      }
+    };
+
+    const dot = renderDotFromTraceJson(tracePayload, {
+      layout: "plain",
+      prune: "none",
+      legend: false,
+      prettyIds: false,
+      mode: "full"
+    });
+
+    expect(dot).toContain('label="י:1:1\\npin | scope"');
+    expect(dot).toContain('label="ע:1:1\\nalias_handle | alias"');
+    expect(dot).toContain('label="ז:1:1\\nresolved_port | scope"');
+    expect(dot).toContain('label="ה:1:2\\ndetached_adjunct_leg | scope"');
+    expect(dot).not.toContain('label="ה:1:2\\npin | scope"');
+  });
+
   it("clusters by origin tau from id, not mutable word metadata", async () => {
     const { renderDotFromTraceJson } = await import("../../scripts/render/pasukGraph.mjs");
 

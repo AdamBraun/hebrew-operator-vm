@@ -19,6 +19,7 @@ describe("zayin behavior", () => {
     expect(portId.length).toBeGreaterThan(0);
     expect(focusBefore.length).toBeGreaterThan(0);
     expect(port?.edge_mode).toBe("committed");
+    expect(port?.meta?.handle_label).toBe("resolved_port");
     expect(port?.envelope.data_flow).toBe("SNAPSHOT");
     expect(port?.envelope.edit_flow).toBe("TIGHT");
     expect(port?.envelope.x_flow).toBe("EXPLICIT_ONLY");

@@ -112,13 +112,19 @@ function snapshotHandle(handle: Handle, omitMetaKeys: string[] = []): HandleSnap
 describe("continuation family sealed-handle fields", () => {
   it("י and ו have identical cont-only handle core fields", () => {
     const family = executeFamily();
-    const yodHandle = snapshotHandle(family["י"].rawHandle, ["pinOf", "selectable_pin"]);
+    const yodHandle = snapshotHandle(family["י"].rawHandle, [
+      "pinOf",
+      "selectable_pin",
+      "handle_label"
+    ]);
     const vavHandle = snapshotHandle(family["ו"].rawHandle);
 
     expect(family["י"].rawHandle.meta.pinOf).toBe(family["י"].focusBefore);
     expect(family["י"].rawHandle.meta.selectable_pin).toBe(1);
+    expect(family["י"].rawHandle.meta.handle_label).toBe("pin");
     expect(family["ו"].rawHandle.meta.pinOf).toBeUndefined();
     expect(family["ו"].rawHandle.meta.selectable_pin).toBeUndefined();
+    expect(family["ו"].rawHandle.meta.handle_label).toBeUndefined();
 
     expect(yodHandle).toEqual(vavHandle);
     expect(yodHandle.edge_mode).toBe("free");
@@ -127,11 +133,13 @@ describe("continuation family sealed-handle fields", () => {
 
   it("ז and ן have identical sealed-handle core fields", () => {
     const family = executeFamily();
-    const zayinHandle = snapshotHandle(family["ז"].rawHandle, ["portOf"]);
+    const zayinHandle = snapshotHandle(family["ז"].rawHandle, ["portOf", "handle_label"]);
     const finalNunHandle = snapshotHandle(family["ן"].rawHandle);
 
     expect(family["ז"].rawHandle.meta.portOf).toBe(family["ז"].focusBefore);
+    expect(family["ז"].rawHandle.meta.handle_label).toBe("resolved_port");
     expect(family["ן"].rawHandle.meta.portOf).toBeUndefined();
+    expect(family["ן"].rawHandle.meta.handle_label).toBeUndefined();
 
     expect(zayinHandle).toEqual(finalNunHandle);
     expect(zayinHandle.edge_mode).toBe("committed");
@@ -171,11 +179,15 @@ describe("continuation family sealed-handle fields", () => {
 
   it("the entire continuation family splits cleanly into cont-only, carry, and resolved tiers", () => {
     const family = executeFamily();
-    const pinTier = snapshotHandle(family["י"].rawHandle, ["pinOf", "selectable_pin"]);
+    const pinTier = snapshotHandle(family["י"].rawHandle, [
+      "pinOf",
+      "selectable_pin",
+      "handle_label"
+    ]);
     const unsealedTier = snapshotHandle(family["ו"].rawHandle);
     const carryTier = snapshotHandle(family["נ"].rawHandle, ["succOf"]);
     const resolvedTier = snapshotHandle(family["ן"].rawHandle);
-    const exportTier = snapshotHandle(family["ז"].rawHandle, ["portOf"]);
+    const exportTier = snapshotHandle(family["ז"].rawHandle, ["portOf", "handle_label"]);
 
     expect(pinTier).toEqual(unsealedTier);
     expect(unsealedTier).toEqual(carryTier);

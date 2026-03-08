@@ -30,7 +30,7 @@ export const heOp: LetterOp = {
       headIdPrefix: "ה",
       legIdPrefix: "ה",
       headMeta: { exposedBy: "ה", headOf: source, backed_head: 1 },
-      legMeta: { exposedBy: "ה", detached_leg: 1 }
+      legMeta: { exposedBy: "ה", detached_leg: 1, handle_label: "detached_adjunct_leg" }
     });
     const headHandle = S.handles.get(head);
     if (headHandle) {
@@ -58,6 +58,7 @@ export const heOp: LetterOp = {
         head: headId,
         focus: headId,
         adjunct: legId,
+        adjunct_label: "detached_adjunct_leg",
         exported_adjuncts: [legId],
         resolved: true,
         edges: [
