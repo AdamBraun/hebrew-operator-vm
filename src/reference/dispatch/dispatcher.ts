@@ -178,6 +178,8 @@ function executeReadRail(
     sealResult.S.vm.wordLastSealedArtifact = sealed;
   }
 
+  // Dispatch commit mirrors the direct VM path: it updates focus/registers
+  // but never adds an implicit continuation step. Letters own cont emission.
   const exportHandle = sealResult.export_handle ?? sealed;
   sealResult.S.vm.K.push(exportHandle);
   sealResult.S.vm.F = sealResult.advance_focus === false ? F_before : sealed;
@@ -208,10 +210,11 @@ function executeBundle(
   }
   state.vm.wordHasContent = true;
 
-  const readOp = letterRegistry[bundle.runtime.read_letter];
+  const readOp =
+    letterRegistry[bundle.runtime.token_letter] ?? letterRegistry[bundle.runtime.read_letter];
   if (!readOp) {
     throw new Error(
-      `Missing read op '${bundle.runtime.read_letter}' for token ${bundle.token_id} (${bundle.signature})`
+      `Missing read op '${bundle.runtime.token_letter}'/'${bundle.runtime.read_letter}' for token ${bundle.token_id} (${bundle.signature})`
     );
   }
 

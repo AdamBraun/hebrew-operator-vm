@@ -59,14 +59,16 @@ describe("vav behavior", () => {
       }
     });
     const state = createInitialState();
+    const initialFocus = state.vm.F;
+    const initialHandleIds = new Set(state.handles.keys());
 
     dispatcher.apply(1, state, { isWordFinal: true });
 
     const wordOut = state.vm.F;
+    const newHandleIds = Array.from(state.handles.keys()).filter((id) => !initialHandleIds.has(id));
 
-    expect(state.vm.F).toBe(wordOut);
-    expect(state.cont.size).toBe(1);
-    expect(Array.from(state.cont)[0]?.endsWith(`->${wordOut}`)).toBe(true);
+    expect(newHandleIds).toEqual([wordOut]);
+    expect(state.cont).toEqual(new Set([`${initialFocus}->${wordOut}`]));
     expect(state.carry.size).toBe(0);
     expect(state.supp.size).toBe(0);
     expect(state.links).toEqual([]);

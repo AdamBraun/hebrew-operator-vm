@@ -408,6 +408,9 @@ function executeReadRail(
     sealResult.S.vm.wordLastSealedArtifact = sealed;
   }
 
+  // Register commit only publishes the sealed handle as the next focus.
+  // The engine does not synthesize a universal continuation edge here;
+  // letters own any cont/carry/supp emission themselves.
   const exportHandle = sealResult.export_handle ?? sealed;
   sealResult.S.vm.K.push(exportHandle);
   sealResult.S.vm.F = sealResult.advance_focus === false ? F_before : sealed;

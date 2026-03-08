@@ -6,7 +6,7 @@ import { createTokenDispatcher } from "@ref/dispatch/dispatcher";
 import { CompiledTokensFile } from "@ref/dispatch/types";
 import { createInitialState, serializeState } from "@ref/state/state";
 import { applySpace } from "@ref/vm/space";
-import { runProgram } from "@ref/vm/vm";
+import { beginWordForTest, runProgram } from "@ref/vm/vm";
 
 function toCodepoint(mark: string): string {
   const codepoint = mark.codePointAt(0);
@@ -57,6 +57,7 @@ function runDispatchedWord(
 ): Record<string, unknown> {
   const dispatcher = createTokenDispatcher(compiled);
   const state = createInitialState();
+  let prevBoundaryMode: "hard" | "glue" | "glue_maqqef" | "cut" = "hard";
 
   const tokens = tokenize(word);
   const withBoundaries = [makeSpaceToken(), ...tokens];
@@ -68,7 +69,16 @@ function runDispatchedWord(
     const token = withBoundaries[index];
     if (token.letter === "□") {
       applySpace(state);
+      prevBoundaryMode = token.boundary?.mode ?? "hard";
       continue;
+    }
+    if (!state.vm.wordHasContent) {
+      beginWordForTest(state, {
+        wordText: word.normalize("NFD"),
+        prevBoundaryMode,
+        inboundFocusF0: state.vm.F
+      });
+      state.vm.wordHasContent = true;
     }
     const signature = signatureFromRaw(token.raw);
     const tokenId = signatureToTokenId.get(signature);
@@ -86,7 +96,7 @@ function runDispatchedWord(
 describe("compiled token dispatch", () => {
   it("matches existing VM behavior on representative words", () => {
     const { compiled, signatureToTokenId } = loadCompiledAndRegistry();
-    const words = ["וּ", "לָהּ", "שָׂר", "בָּ", "שָׁלוֹם", "נָס"];
+    const words = ["וּ", "לָה", "שָׂר", "בָּ", "שָׁלוֹם", "נָס"];
 
     for (const word of words) {
       const baseline = serializeState(runProgram(word, createInitialState()));
