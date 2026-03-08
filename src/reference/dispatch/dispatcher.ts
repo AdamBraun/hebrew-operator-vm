@@ -19,10 +19,6 @@ type ExecuteContext = {
   isWordFinal: boolean;
 };
 
-function isVavMode(mode: LetterMode | null | undefined): mode is "plain" | "seeded" | "transport" {
-  return mode === "plain" || mode === "seeded" || mode === "transport";
-}
-
 function resolveLetterMode(
   runtime: CompiledTokenRuntime,
   _isWordFinal: boolean
@@ -33,20 +29,14 @@ function resolveLetterMode(
         `Legacy ה letter_mode '${String(runtime.letter_mode_forced)}' is no longer supported; ה only uses the head-family implementation`
       );
     }
-    if (runtime.token_letter !== "ו") {
+    if (runtime.token_letter === "ו") {
       throw new CompileError(
-        `Unsupported forced letter_mode '${String(runtime.letter_mode_forced)}' for '${runtime.token_letter}'; only ו supports forced modes`
+        `Legacy ו letter_mode '${String(runtime.letter_mode_forced)}' is no longer supported; ו no longer performs grouping and only advances the spine`
       );
     }
-    if (!isVavMode(runtime.letter_mode_forced)) {
-      throw new CompileError(
-        `Unsupported forced letter_mode '${String(runtime.letter_mode_forced)}' for 'ו'`
-      );
-    }
-    return runtime.letter_mode_forced;
-  }
-  if (runtime.token_letter === "ו") {
-    return undefined;
+    throw new CompileError(
+      `Legacy forced letter_mode '${String(runtime.letter_mode_forced)}' is no longer supported for '${runtime.token_letter}'`
+    );
   }
   return undefined;
 }
@@ -67,11 +57,7 @@ function applyRosh(runtime: CompiledTokenRuntime, ops: SelectOperands): SelectOp
   return ops;
 }
 
-function applyToch(
-  runtime: CompiledTokenRuntime,
-  cons: Construction,
-  letterMode?: LetterMode
-): Construction {
+function applyToch(runtime: CompiledTokenRuntime, cons: Construction): Construction {
   const meta = { ...cons.meta };
   return { ...cons, meta };
 }
@@ -157,10 +143,10 @@ function executeReadRail(
   const F_before = state.vm.F;
   const selectResult = op.select(state);
   const ops = applyRosh(bundle.runtime, selectResult.ops);
-  const letterMode = resolveLetterMode(bundle.runtime, context.isWordFinal);
+  resolveLetterMode(bundle.runtime, context.isWordFinal);
 
   const boundResult = op.bound(selectResult.S, ops);
-  const cons = applyToch(bundle.runtime, boundResult.cons, letterMode);
+  const cons = applyToch(bundle.runtime, boundResult.cons);
 
   const sealResult = op.seal(boundResult.S, cons);
   const sealed = applySof(sealResult.S, bundle.runtime, sealResult.h);

@@ -1,12 +1,25 @@
 import { CompileError, Token } from "./types";
 import { LetterRegistry } from "../letters/registry";
 
-function isVavMode(mode: unknown): mode is NonNullable<Token["letter_mode"]> {
-  return mode === "plain" || mode === "seeded" || mode === "transport";
-}
-
 function formatMode(mode: unknown): string {
   return typeof mode === "string" ? mode : JSON.stringify(mode);
+}
+
+function rejectLegacyLetterMode(letter: string, mode: unknown): never {
+  const formattedMode = formatMode(mode);
+  if (letter === "ה") {
+    throw new CompileError(
+      `Legacy ה letter_mode '${formattedMode}' is no longer supported; ה only uses the head-family implementation`
+    );
+  }
+  if (letter === "ו") {
+    throw new CompileError(
+      `Legacy ו letter_mode '${formattedMode}' is no longer supported; ו no longer performs grouping and only advances the spine`
+    );
+  }
+  throw new CompileError(
+    `Legacy letter_mode '${formattedMode}' is no longer supported for '${letter}'`
+  );
 }
 
 export function validateTokens(tokens: Token[], registry: LetterRegistry): void {
@@ -21,18 +34,6 @@ export function validateTokens(tokens: Token[], registry: LetterRegistry): void 
     if (mode === undefined) {
       continue;
     }
-    if (token.letter === "ה") {
-      throw new CompileError(
-        `Legacy ה letter_mode '${formatMode(mode)}' is no longer supported; ה only uses the head-family implementation`
-      );
-    }
-    if (token.letter !== "ו") {
-      throw new CompileError(
-        `Unsupported letter_mode '${formatMode(mode)}' for '${token.letter}'; only ו supports letter_mode`
-      );
-    }
-    if (!isVavMode(mode)) {
-      throw new CompileError(`Unsupported letter_mode '${formatMode(mode)}' for 'ו'`);
-    }
+    rejectLegacyLetterMode(token.letter, mode);
   }
 }

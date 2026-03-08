@@ -388,14 +388,12 @@ function compileTokenDescriptor(tokenId, descriptor, defs) {
     );
   }
 
-  const forcedLetterMode = dotKind === "mappiq" ? "pinned" : dotKind === "shuruk" ? "seeded" : null;
+  // ו no longer performs grouping; shuruk stays lexical and does not force a Vav mode.
+  const forcedLetterMode = dotKind === "mappiq" ? "pinned" : null;
 
   const modes = [];
   if (forcedLetterMode === "pinned") {
     modes.push("HEH_PINNED");
-  }
-  if (forcedLetterMode === "seeded") {
-    modes.push("VAV_SEEDED");
   }
 
   const eventContract = uniqPreserveOrder([
@@ -415,7 +413,6 @@ function compileTokenDescriptor(tokenId, descriptor, defs) {
       ...modifierExecutionPlan,
       selectedDef?.shape_effect_scope === "routing" ? "SHAPE_ROUTING" : null,
       dotKind === "dagesh" ? "HARDEN_HANDLE" : null,
-      dotKind === "shuruk" ? "SEED_CARRIER" : null,
       "VM_COMMIT"
     ].filter(Boolean)
   );
