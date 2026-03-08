@@ -335,12 +335,12 @@ This matches the standard linguistic description that adding the sheva component
 Treat **חטף** as a wrapper signature:
 
 - **ח** ⇒ gated interface / mediated crossings
-- **ט** ⇒ covert internalization with a single exported proxy
+- **ט** ⇒ interface inversion with a single sanctioned external port
 - **ף** ⇒ hard stop / freeze the emission channel
 
 So the checksum constraint is:
 
-**HATAF = “export only a proxy impulse, then immediately close it.”**
+**HATAF = “expose only a sanctioned external port, then immediately close it.”**
 
 That is exactly what the `Reduce(·)` rule enforces.
 
@@ -381,7 +381,7 @@ Constraint: **do not execute Δ_ℓ twice**. The “two letters” here is a _re
 - If `hataf_realization=reduced`: use `Reduce ∘ base ∘ shva`.
 - If `hataf_realization=split`: use `base ∘ shva` with `edge_duration=2` and no `Reduce`.
 - Split realization is confined to the **Sof wrapper**; it must not duplicate the hosting letter’s Select/Bound/Seal (Δ_ℓ runs once).
-- In split mode, interpret חטף as two short sealed impulses rather than one reduced impulse; both satisfy “proxy then close” at the trace level.
+- In split mode, interpret חטף as two short sealed impulses rather than one reduced impulse; both satisfy “port then close” at the trace level.
 
 ## Name checksum rule (optional, experimental)
 
@@ -403,7 +403,7 @@ Invariant tags (excerpt):
 - `ת`: finalize-and-stamp
 - `א`: alias/transport merge
 - `ב`: interior frame shift
-- `חטף`: ReduceExportToProxyAndClose (wrapper semantics)
+- `חטף`: ReduceToPortAndClose (wrapper semantics)
 
 If `BC_glyph` differs from `BC_name`, the modifier MUST be marked non-checksummed.
 
