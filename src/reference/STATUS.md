@@ -1,6 +1,7 @@
 # Semantics notes (v0)
 
 > Implementation status notes. Normative spec lives in `/spec/` and machine truth in `/registry/`.
+> Post-change review scope for unary `ו` lives in `/spec/VAV_POST_CHANGE_REVIEW.md`.
 
 ## Implemented
 
