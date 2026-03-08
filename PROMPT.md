@@ -294,18 +294,18 @@ Unary. Same materialized graph edges as ן (cont+carry+supp), but focus stays an
 
 ---
 
-# י — Seed / pin / handle-initiation (Y primitive)
+# י — Pin / cont-only selectable attachment (focus stays)
 
-- **Select:** an anchor (x) (a person/object already in focus).
-- **Bound:** create the minimal _addressable seed_ on/for (x):
-  [
-  \iota(x);;=;;\text{“the pinned handle of }x\text{”}
-  ]
-  This is not a class, not an interior, not a target—just the minimal “this-exact-one” hook that other relations can attach to.
-- **Seal:** commit (\iota(x)) as stable under further refinement: subsequent letters may change what you look at _relative to_ (x), but the hook stays (x).
-  - **Interface lead (ו):** the pin includes a single exported attachment port so later letters can bind to it after focus shifts.
-  - **Head exposure (ד/ר):** later head-exposure letters reuse the focused scope; `ד` backs the carry immediately and `ר` leaves it provisional.
-- **Note (latest):** this (Y) is the universal prefix used implicitly by all letters in (f*\ell=\Delta*\ell\circ V\circ Y). “Extra yuds” from letter lore are not this base-seed; the ד/ר distinction is encoded structurally by the presence or absence of `supp`.
+- **Select:** current focus / anchor `(F)`.
+- **Bound:** allocate pin `(p := alloc())`.
+- **Graph edges emitted:**
+  1. `cont(F, p)`
+- **Other state changes:** export `p` as a selectable pin/handle.
+- **Seal:** keep `F` unchanged.
+
+- **Non-effects:** `י` does **not** add `carry(F, p)`, does **not** add `supp(p, F)`, and does **not** move focus.
+- **Family note:** `י` is the cont-only member of the family; `ו` is cont + focus advance; `נ` is cont + carry + focus advance; `ן` is cont + carry + supp + focus advance; `ז` is cont + carry + supp, but focus stays.
+- **Mechanical reason:** because `p` sits on the `cont` spine, backward traversal from `p` reaches `F`; because no `carry` is added, `י` creates no new carried witness-thread.
 
 ---
 
