@@ -9,7 +9,9 @@ describe("T3 final nun", () => {
     expect(falls.length).toBe(0);
     const wordOut = state.vm.A[state.vm.A.length - 1];
     const focus = state.handles.get(wordOut);
-    const parent = String(focus?.meta.succOf ?? "");
+    const carryIntoFocus = Array.from(state.carry).find((edge) => edge.endsWith(`->${wordOut}`));
+    const parent = carryIntoFocus?.split("->")[0] ?? "";
+    expect(parent.length).toBeGreaterThan(0);
     expect(state.cont.has(`${parent}->${wordOut}`)).toBe(true);
     expect(state.carry.has(`${parent}->${wordOut}`)).toBe(true);
     expect(state.supp.has(`${wordOut}->${parent}`)).toBe(true);

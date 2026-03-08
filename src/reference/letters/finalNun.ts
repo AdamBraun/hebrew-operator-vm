@@ -18,22 +18,21 @@ export const finalNunOp: LetterOp = {
   meta,
   select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops: SelectOperands) => {
-    const parent = ops.args[0];
-    const { nodeId: child } = spawnResolvedCarryNode(S, {
-      sourceId: parent,
+    const focus = ops.args[0];
+    const { nodeId } = spawnResolvedCarryNode(S, {
+      sourceId: focus,
       idPrefix: "ן",
-      meta: { succOf: parent },
       setPolicyLikeZayin: true
     });
     const cons: Construction = {
-      base: parent,
+      base: focus,
       envelope: committedEnvelope(),
-      meta: { parent, child }
+      meta: { nodeId }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { child } = cons.meta as { child: string };
-    return { S, h: child, r: BOT_ID };
+    const { nodeId } = cons.meta as { nodeId: string };
+    return { S, h: nodeId, r: BOT_ID };
   }
 };
