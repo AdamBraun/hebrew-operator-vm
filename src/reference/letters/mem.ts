@@ -1,4 +1,5 @@
 import { BOT_ID, createHandle } from "../state/handles";
+import { addBoundary, addCarry, addCont, addSupp } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
 import { selectCurrentFocus } from "../vm/select";
@@ -17,25 +18,51 @@ export const memOp: LetterOp = {
   meta,
   select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops: SelectOperands) => {
-    const parent = ops.args[0];
-    const zone = nextId(S, "מ");
-    S.handles.set(zone, createHandle(zone, "memZone", { meta: { anchor: parent } }));
+    const source = ops.args[0];
+    const holdId = nextId(S, "מ");
+    const interiorId = nextId(S, "מ");
+    const boundaryId = nextId(S, "מb");
+    S.handles.set(holdId, createHandle(holdId, "scope", { meta: { heldFrom: source } }));
+    S.handles.set(
+      interiorId,
+      createHandle(interiorId, "scope", {
+        meta: { interiorOf: holdId, boundaryId }
+      })
+    );
+    addCont(S, source, holdId);
+    addCarry(S, source, holdId);
+    addSupp(S, holdId, source);
+    addCont(S, holdId, interiorId);
+    addBoundary(S, boundaryId, interiorId, holdId, 1, {
+      kind: "mem_enclosure",
+      open: true,
+      closed: false
+    });
     const cons: Construction = {
-      base: parent,
+      base: source,
       envelope: defaultEnvelope(),
-      meta: { parent, zone }
+      meta: { source, holdId, interiorId, boundaryId }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { parent, zone } = cons.meta as { parent: string; zone: string };
-    S.vm.OStack_word.push({
-      kind: "MEM_ZONE",
-      parent,
-      child: zone,
-      payload: { anchor: parent },
-      tau_created: S.vm.tau
+    const { source, holdId, interiorId, boundaryId } = cons.meta as {
+      source: string;
+      holdId: string;
+      interiorId: string;
+      boundaryId: string;
+    };
+    S.vm.H.push({
+      type: "mem_open",
+      tau: S.vm.tau,
+      data: {
+        id: boundaryId,
+        source,
+        hold: holdId,
+        inside: interiorId,
+        outside: holdId
+      }
     });
-    return { S, h: parent, r: BOT_ID };
+    return { S, h: interiorId, r: BOT_ID };
   }
 };

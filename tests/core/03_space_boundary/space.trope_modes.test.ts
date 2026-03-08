@@ -59,7 +59,7 @@ describe("trope-driven space modes", () => {
     expect(thirdWordContext?.entry_focus).toBe(thirdWordContext?.pending_join_at_entry?.left);
   });
 
-  it("cut(rank=1) resolves mem-zones strictly and closes carries via supp", () => {
+  it("cut(rank=1) closes open mem enclosures silently and still closes carries via supp", () => {
     const { state, trace } = runProgramWithTrace("מנ֖ ס", createInitialState());
     const cutBoundary = trace.find(
       (entry) => entry.token === "□" && entry.boundary_mode === "cut" && entry.rank === 1
@@ -70,8 +70,19 @@ describe("trope-driven space modes", () => {
       (event) => event.type === "BOUNDARY" && event.tau === tau && event.data?.mode === "cut"
     )?.data?.beforeFocus as string | undefined;
 
-    expect(state.vm.H.some((event) => event.type === "mem_spill" && event.tau === tau)).toBe(true);
+    expect(state.vm.H.some((event) => event.type === "mem_auto_close" && event.tau === tau)).toBe(
+      true
+    );
     expect(state.vm.H.some((event) => event.type === "fall" && event.tau === tau)).toBe(false);
+    expect(
+      state.boundaries.some(
+        (boundary) =>
+          boundary.kind === "mem_enclosure" &&
+          boundary.closed === true &&
+          boundary.close_mode === "word_boundary" &&
+          boundary.closed_by === "cut"
+      )
+    ).toBe(true);
     expect(typeof closedByCut).toBe("string");
     if (closedByCut) {
       const source = String(state.handles.get(closedByCut)?.meta?.succOf ?? "");
@@ -122,7 +133,7 @@ describe("trope-driven space modes", () => {
     ).toBe(true);
   });
 
-  it("sof pasuq flushes mem-zone spill state from earlier cuts", () => {
+  it("sof pasuq leaves previously closed mem enclosures closed without stack residue", () => {
     const { state, trace } = runProgramWithTrace("מ֖ א׃", createInitialState());
     const rankOneCut = trace.find(
       (entry) => entry.token === "□" && entry.boundary_mode === "cut" && entry.rank === 1
@@ -137,29 +148,23 @@ describe("trope-driven space modes", () => {
     const rankOneTau = rankOneCut?.tauAfter ?? -1;
     const sofTau = sofPasuqCut?.tauAfter ?? -1;
 
-    expect(state.vm.H.some((event) => event.type === "mem_spill" && event.tau === rankOneTau)).toBe(
-      true
+    const autoCloseEvents = state.vm.H.filter(
+      (event) => event.type === "mem_auto_close" && event.tau === rankOneTau
     );
-    expect(state.vm.H.some((event) => event.type === "mem_spill" && event.tau === sofTau)).toBe(
-      false
-    );
-
-    const flushEvents = state.vm.H.filter(
-      (event) => event.type === "mem_zone_flush" && event.tau === sofTau
-    );
-    expect(flushEvents.length).toBeGreaterThan(0);
-    expect(flushEvents[0].data.reason).toBe("sof_pasuk");
-    expect(typeof flushEvents[0].data.zoneId).toBe("string");
-
-    expect(state.vm.OStack_word.some((obligation) => obligation.kind === "MEM_ZONE")).toBe(false);
-
-    const liveMemZoneHandles = Array.from(state.handles.values()).filter(
-      (handle) => handle.kind === "memZone" || handle.meta?.obligation === "MEM_ZONE"
-    );
-    expect(liveMemZoneHandles.length).toBe(0);
+    expect(autoCloseEvents.length).toBeGreaterThan(0);
+    expect(autoCloseEvents[0].data.reason).toBe("cut");
+    expect(
+      state.vm.H.some((event) => event.type === "mem_auto_close" && event.tau === sofTau)
+    ).toBe(false);
+    expect(state.vm.OStack_word).toEqual([]);
+    expect(
+      state.boundaries.every(
+        (boundary) => boundary.kind !== "mem_enclosure" || boundary.open !== true
+      )
+    ).toBe(true);
   });
 
-  it("state snapshots after sof pasuq do not keep mem-zone handles active", () => {
+  it("state snapshots after sof pasuq do not keep open mem enclosures active", () => {
     const { deepTrace } = runProgramWithDeepTrace("מ֖ א׃", createInitialState(), {
       includeStateSnapshots: true
     });
@@ -175,11 +180,14 @@ describe("trope-driven space modes", () => {
 
     const stack = exitSnapshot?.vm?.OStack_word as Array<{ kind?: string }>;
     expect(Array.isArray(stack)).toBe(true);
-    expect(stack.some((obligation) => obligation.kind === "MEM_ZONE")).toBe(false);
+    expect(stack).toEqual([]);
 
-    const handles = exitSnapshot?.handles as Array<{ kind?: string; meta?: Record<string, any> }>;
+    const boundaries = exitSnapshot?.boundaries as Array<{
+      kind?: string;
+      open?: boolean;
+    }>;
     expect(
-      handles.some((handle) => handle.kind === "memZone" || handle.meta?.obligation === "MEM_ZONE")
+      boundaries.some((boundary) => boundary.kind === "mem_enclosure" && boundary.open === true)
     ).toBe(false);
   });
 

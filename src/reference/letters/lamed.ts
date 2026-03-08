@@ -1,14 +1,14 @@
 import { BOT_ID, createHandle } from "../state/handles";
-import { addBoundary } from "../state/relations";
+import { addCarry, addCont, addSupp } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
-import { selectOperands } from "../vm/select";
-import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
+import { selectCurrentFocus } from "../vm/select";
+import { Construction, LetterMeta, LetterOp, SelectOperands, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
   letter: "ל",
   arity_req: 1,
-  arity_opt: 1,
+  arity_opt: 0,
   distinct_required: false,
   distinct_optional: false,
   reflexive_ok: true
@@ -16,49 +16,34 @@ const meta: LetterMeta = {
 
 export const lamedOp: LetterOp = {
   meta,
-  select: (S: State) => selectOperands(S, meta),
-  bound: (S: State, ops) => {
-    const endpoint = ops.args[0];
-    const suggestedDomain = ops.args[1];
-    const frame = S.vm.E[S.vm.E.length - 1];
-    const domain =
-      suggestedDomain ?? (S.vm.R !== BOT_ID ? S.vm.R : frame?.D_frame ? frame.D_frame : S.vm.D);
-    const boundaryId = nextId(S, "ל");
-    S.handles.set(
-      boundaryId,
-      createHandle(boundaryId, "boundary", {
-        anchor: 1,
-        meta: { inside: endpoint, outside: domain, closedBy: "ל" }
-      })
-    );
-    addBoundary(S, boundaryId, endpoint, domain, 1);
-    const endpointId = nextId(S, "ל");
-    S.handles.set(
-      endpointId,
-      createHandle(endpointId, "endpoint", {
-        meta: { endpoint, domain, boundaryId }
-      })
-    );
+  select: (S: State) => selectCurrentFocus(S),
+  bound: (S: State, ops: SelectOperands) => {
+    const source = ops.args[0];
+    const holdId = nextId(S, "ל");
+    const exteriorId = nextId(S, "ל");
+    S.handles.set(holdId, createHandle(holdId, "scope"));
+    S.handles.set(exteriorId, createHandle(exteriorId, "scope"));
+    addCarry(S, source, holdId);
+    addSupp(S, holdId, source);
+    addCont(S, holdId, exteriorId);
     const cons: Construction = {
-      base: endpoint,
+      base: source,
       envelope: defaultEnvelope(),
-      meta: { endpointId, endpoint, domain, boundaryId }
+      meta: { source, holdId, exteriorId }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { endpointId, endpoint, domain, boundaryId } = cons.meta as {
-      endpointId: string;
-      endpoint: string;
-      domain: string;
-      boundaryId: string;
+    const { source, holdId, exteriorId } = cons.meta as {
+      source: string;
+      holdId: string;
+      exteriorId: string;
     };
-    S.links.push({ from: endpoint, to: endpointId, label: "endpoint" });
     S.vm.H.push({
-      type: "endpoint",
+      type: "lamed_step_past",
       tau: S.vm.tau,
-      data: { id: endpointId, endpoint, domain, boundaryId }
+      data: { id: exteriorId, source, hold: holdId }
     });
-    return { S, h: endpointId, r: BOT_ID };
+    return { S, h: exteriorId, r: BOT_ID };
   }
 };

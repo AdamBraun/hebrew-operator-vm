@@ -12,7 +12,7 @@ describe("vm event links", () => {
 
     const events: VMEvent[] = [
       { type: "alias", tau: 1, data: { left: "a", right: "b" } },
-      { type: "endpoint", tau: 1, data: { endpoint: "c", id: "d" } },
+      { type: "lamed_step_past", tau: 1, data: { source: "c", hold: "d", id: "e" } },
       { type: "declare", tau: 1, data: { target: "e", id: "f" } },
       { type: "declare_pin", tau: 1, data: { declaration: "e", pin: "g" } },
       { type: "declare_alias", tau: 1, data: { declaration: "e", referent: "a" } }
@@ -23,7 +23,10 @@ describe("vm event links", () => {
     expect(state.links).toEqual([
       { from: "a", to: "b", label: "transport" },
       { from: "b", to: "a", label: "transport" },
-      { from: "c", to: "d", label: "endpoint" }
+      { from: "c", to: "d", label: "cont" },
+      { from: "c", to: "d", label: "carry" },
+      { from: "d", to: "c", label: "supp" },
+      { from: "d", to: "e", label: "cont" }
     ]);
   });
 });

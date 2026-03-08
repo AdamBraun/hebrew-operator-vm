@@ -8,6 +8,7 @@ const HANDLE_PAYLOAD_KEYS = new Set<string>([
   "active",
   "adjunct",
   "alias",
+  "boundary_id",
   "boundaryId",
   "child",
   "declaration",
@@ -18,6 +19,7 @@ const HANDLE_PAYLOAD_KEYS = new Set<string>([
   "from",
   "handle",
   "head",
+  "hold",
   "id",
   "inside",
   "left",
@@ -27,6 +29,7 @@ const HANDLE_PAYLOAD_KEYS = new Set<string>([
   "referent",
   "residueId",
   "right",
+  "sealed",
   "source",
   "spine",
   "target",
@@ -52,14 +55,14 @@ const OBLIGATION_POLICY_BY_EVENT: Record<TraceEventKind, ObligationPolicy | null
   "ZAYIN.GATE": null,
   "HET.COMPARTMENT": null,
   "TET.COVERT": null,
-  "LAMED.ENDPOINT": null,
+  "LAMED.HOLD_STEP_PAST": null,
   "MEM.OPEN": {
     kind: "memory-zone",
-    keyFields: ["zone", "handle", "parent"]
+    keyFields: ["boundary_id", "hold", "inside", "outside"]
   },
   "FINAL_MEM.CLOSE": {
     kind: "memory-zone",
-    keyFields: ["zone", "handle", "parent"]
+    keyFields: ["boundary_id", "focus", "sealed", "inside", "outside"]
   },
   "NUN.SUPPORT_DEBT": {
     kind: "support",
@@ -92,7 +95,7 @@ const OBLIGATION_POLICY_BY_EVENT: Record<TraceEventKind, ObligationPolicy | null
   "SPACE.BOUNDARY_AUTO_CLOSE": null,
   "SPACE.MEM_AUTO_CLOSE": {
     kind: "memory-zone",
-    keyFields: ["zone", "handle", "parent", "count"]
+    keyFields: ["boundary_id", "inside", "outside", "reason"]
   },
   "ERROR.RUNTIME": null,
   "ERROR.UNKNOWN_SIGNATURE": null,

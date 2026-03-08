@@ -116,7 +116,7 @@ describe("torah corpus regress pipeline", () => {
         surface: "ם",
         token_ids: [5],
         skeleton: ["FINAL_MEM.CLOSE"],
-        flow: "ם close mem-zone",
+        flow: "ם close enclosure",
         semantic_version: "1.0.0"
       }
     ];

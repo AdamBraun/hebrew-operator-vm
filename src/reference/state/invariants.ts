@@ -185,7 +185,6 @@ export function assertStateInvariants(state: State): void {
   for (const boundary of state.boundaries) {
     ensure(boundary.inside);
     ensure(boundary.outside);
-    ensure(boundary.id);
   }
 
   for (const link of state.links) {

@@ -6,7 +6,7 @@ import { beginWordForTest } from "@ref/vm/vm";
 
 function someObligation(): Obligation {
   return {
-    kind: "MEM_ZONE",
+    kind: "BOUNDARY",
     parent: OMEGA_ID,
     child: BOT_ID,
     payload: { tag: "SomeObligation" },

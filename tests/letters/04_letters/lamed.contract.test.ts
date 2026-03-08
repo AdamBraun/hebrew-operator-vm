@@ -9,6 +9,7 @@ describe("lamed contract", () => {
     expect(lamedOp.meta.distinct_required).toBeTypeOf("boolean");
     expect(lamedOp.meta.distinct_optional).toBeTypeOf("boolean");
     expect(lamedOp.meta.reflexive_ok).toBeTypeOf("boolean");
+    expect(lamedOp.meta.arity_opt).toBe(0);
   });
 
   it("does not reference invalid handles", () => {

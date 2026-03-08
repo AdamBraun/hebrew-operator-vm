@@ -1,7 +1,13 @@
 import { BOT_ID, createHandle } from "../state/handles";
-import { closeMemZoneSilently } from "../state/relations";
+import {
+  addBoundary,
+  addCarry,
+  addCont,
+  addSupp,
+  closeBoundaryRecord,
+  findNearestOpenBoundaryContaining
+} from "../state/relations";
 import { State } from "../state/state";
-import { RuntimeError } from "../vm/errors";
 import { nextId } from "../vm/ids";
 import { selectCurrentFocus } from "../vm/select";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
@@ -28,27 +34,73 @@ export const finalMemOp: LetterOp = {
   },
   seal: (S: State, cons: Construction) => {
     const focus = cons.meta.focus as string;
-    if (S.vm.OStack_word.length > 0) {
-      const top = S.vm.OStack_word[S.vm.OStack_word.length - 1];
-      if (top.kind === "MEM_ZONE") {
-        const obligation = S.vm.OStack_word.pop();
-        if (!obligation) {
-          throw new RuntimeError("Final mem obligation missing");
+
+    let boundary = findNearestOpenBoundaryContaining(S, focus, "mem_enclosure");
+    let closeSource = focus;
+    let mode: "existing" | "synthetic" = "existing";
+
+    if (!boundary) {
+      const holdId = nextId(S, "מ");
+      const interiorId = nextId(S, "מ");
+      const boundaryId = nextId(S, "מb");
+      S.handles.set(holdId, createHandle(holdId, "scope", { meta: { heldFrom: focus } }));
+      S.handles.set(
+        interiorId,
+        createHandle(interiorId, "scope", {
+          meta: { interiorOf: holdId, boundaryId }
+        })
+      );
+      addCont(S, focus, holdId);
+      addCarry(S, focus, holdId);
+      addSupp(S, holdId, focus);
+      addCont(S, holdId, interiorId);
+      boundary = addBoundary(S, boundaryId, interiorId, holdId, 1, {
+        kind: "mem_enclosure",
+        open: true,
+        closed: false
+      });
+      closeSource = interiorId;
+      mode = "synthetic";
+      S.vm.H.push({
+        type: "mem_open",
+        tau: S.vm.tau,
+        data: {
+          id: boundaryId,
+          source: focus,
+          hold: holdId,
+          inside: interiorId,
+          outside: holdId,
+          synthetic: true
         }
-        closeMemZoneSilently(S, obligation.child);
-        const memHandle = nextId(S, "ם");
-        S.handles.set(
-          memHandle,
-          createHandle(memHandle, "memHandle", { meta: { zone: obligation.child } })
-        );
-        return { S, h: memHandle, r: BOT_ID };
-      }
+      });
     }
 
-    const zone = nextId(S, "מ");
-    S.handles.set(zone, createHandle(zone, "memZone", { meta: { anchor: focus, closed: 1 } }));
-    const memHandle = nextId(S, "ם");
-    S.handles.set(memHandle, createHandle(memHandle, "memHandle", { meta: { zone } }));
-    return { S, h: memHandle, r: BOT_ID };
+    const sealedId = nextId(S, "ם");
+    S.handles.set(
+      sealedId,
+      createHandle(sealedId, "scope", {
+        meta: { sealedFrom: closeSource, boundaryId: boundary.id, mode }
+      })
+    );
+    addCont(S, closeSource, sealedId);
+    addCarry(S, closeSource, sealedId);
+    addSupp(S, sealedId, closeSource);
+    closeBoundaryRecord(S, boundary.id, {
+      close_mode: mode === "synthetic" ? "synthetic" : "explicit",
+      closed_by: "ם"
+    });
+    S.vm.H.push({
+      type: "mem_close",
+      tau: S.vm.tau,
+      data: {
+        id: boundary.id,
+        focus: closeSource,
+        sealed: sealedId,
+        inside: boundary.inside,
+        outside: boundary.outside,
+        mode
+      }
+    });
+    return { S, h: sealedId, r: BOT_ID };
   }
 };

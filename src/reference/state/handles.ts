@@ -9,8 +9,6 @@ export type HandleKind =
   | "alias"
   | "rule"
   | "artifact"
-  | "memZone"
-  | "memHandle"
   | "endpoint"
   | "watch"
   | "gate"

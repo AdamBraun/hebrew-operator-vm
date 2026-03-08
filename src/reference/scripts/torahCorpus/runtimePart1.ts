@@ -54,8 +54,8 @@ const OP_FLOW_LABEL = {
   "ZAYIN.GATE": "ז gate",
   "HET.COMPARTMENT": "ח compartment",
   "TET.COVERT": "ט covert",
-  "LAMED.ENDPOINT": "ל endpoint bind",
-  "MEM.OPEN": "מ open mem-zone",
+  "LAMED.HOLD_STEP_PAST": "ל hold+step-past",
+  "MEM.OPEN": "מ open enclosure",
   "NUN.SUPPORT_DEBT": "נ support debt",
   "SAMEKH.SUPPORT_DISCHARGE": "ס support discharge",
   "AYIN.SELECT": "ע witness/select",
@@ -67,14 +67,14 @@ const OP_FLOW_LABEL = {
   "SHIN.FORK": "ש fork route",
   "TAV.FINALIZE": "ת finalize+stamp",
   "FINAL_KAF.FINALIZE": "ך final kaf seal",
-  "FINAL_MEM.CLOSE": "ם close mem-zone",
+  "FINAL_MEM.CLOSE": "ם close enclosure",
   "FINAL_NUN.SUPPORT_DEBT": "ן support debt",
   "FINAL_NUN.SUPPORT_DISCHARGE": "ן same-word discharge",
   "FINAL_PE.UTTER_CLOSE": "ף close utterance",
   "FINAL_TSADI.ALIGN_FINAL": "ץ final align",
   "SPACE.SUPPORT_DISCHARGE": "□ boundary support discharge",
   "SPACE.BOUNDARY_AUTO_CLOSE": "□ boundary auto-close",
-  "SPACE.MEM_AUTO_CLOSE": "□ mem auto-close"
+  "SPACE.MEM_AUTO_CLOSE": "□ enclosure auto-close"
 };
 
 const IMPORTANT_EVENT_TYPES = new Set([
@@ -93,7 +93,10 @@ const IMPORTANT_EVENT_TYPES = new Set([
   "utter",
   "utter_close",
   "compartment",
-  "endpoint",
+  "lamed_step_past",
+  "mem_open",
+  "mem_close",
+  "mem_auto_close",
   "covert",
   "gate",
   "approx",
@@ -412,8 +415,14 @@ function summarizeEvent(type, event, traceEntry) {
       return "close utterance";
     case "compartment":
       return "compartmentalize";
-    case "endpoint":
-      return "pin endpoint";
+    case "lamed_step_past":
+      return "hold and step past";
+    case "mem_open":
+      return "open enclosure";
+    case "mem_close":
+      return "close enclosure";
+    case "mem_auto_close":
+      return "auto-close enclosure at boundary";
     case "covert":
       return "covert annotation";
     case "gate":
@@ -521,6 +530,50 @@ function mapRawEventToFlow(event, traceEntry) {
           id: asHandleId(data.id),
           inside: asHandleId(data.inside),
           outside: asHandleId(data.outside)
+        }
+      };
+    case "mem_open":
+      if (traceEntry.read_op !== "מ") {
+        return null;
+      }
+      return {
+        op_family: "MEM.OPEN",
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "derived_obligation",
+        payload: {
+          action: "open",
+          boundary_id: asHandleId(data.id),
+          hold: asHandleId(data.hold),
+          inside: asHandleId(data.inside),
+          outside: asHandleId(data.outside)
+        }
+      };
+    case "mem_close":
+      return {
+        op_family: "FINAL_MEM.CLOSE",
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "derived_obligation",
+        payload: {
+          action: "close",
+          mode: data.mode === "synthetic" ? "synthetic" : "existing",
+          boundary_id: asHandleId(data.id),
+          focus: asHandleId(data.focus),
+          sealed: asHandleId(data.sealed),
+          inside: asHandleId(data.inside),
+          outside: asHandleId(data.outside)
+        }
+      };
+    case "mem_auto_close":
+      return {
+        op_family: "SPACE.MEM_AUTO_CLOSE",
+        params_summary: summarizeEvent(event.type, event, traceEntry),
+        trace_source: "derived_boundary",
+        payload: {
+          action: "auto_close",
+          boundary_id: asHandleId(data.id),
+          inside: asHandleId(data.inside),
+          outside: asHandleId(data.outside),
+          reason: String(data.reason ?? "boundary")
         }
       };
     case "boundary_close": {
@@ -635,16 +688,15 @@ function mapRawEventToFlow(event, traceEntry) {
           boundaryId: asHandleId(data.boundaryId)
         }
       };
-    case "endpoint":
+    case "lamed_step_past":
       return {
-        op_family: "LAMED.ENDPOINT",
+        op_family: "LAMED.HOLD_STEP_PAST",
         params_summary: summarizeEvent(event.type, event, traceEntry),
         trace_source: "vm_event",
         payload: {
           id: asHandleId(data.id),
-          endpoint: asHandleId(data.endpoint),
-          domain: asHandleId(data.domain),
-          boundaryId: asHandleId(data.boundaryId)
+          source: asHandleId(data.source),
+          hold: asHandleId(data.hold)
         }
       };
     case "covert":
@@ -745,8 +797,6 @@ function extractWordFlow(trace) {
   const flow_compact = [];
   const trace_events = [];
 
-  let prevOStackLength = 0;
-
   const addFlow = (op_family, params_summary, source, traceEvent = null) => {
     events.push({ type: op_family, source, params_summary });
     flow_skeleton.push([op_family, params_summary]);
@@ -763,35 +813,7 @@ function extractWordFlow(trace) {
   };
 
   for (const traceEntry of trace) {
-    const delta = traceEntry.OStackLength - prevOStackLength;
-    prevOStackLength = traceEntry.OStackLength;
-
-    if (traceEntry.read_op === "מ" && delta > 0) {
-      addFlow("MEM.OPEN", "open mem zone debt", "derived", {
-        tau: traceEntry.tauAfter,
-        source: "derived_obligation",
-        payload: {
-          obligation_kind: "MEM_ZONE",
-          action: "open"
-        }
-      });
-    }
-    if (traceEntry.read_op === "ם") {
-      addFlow(
-        "FINAL_MEM.CLOSE",
-        delta < 0 ? "close existing mem zone" : "close/synthesize mem zone",
-        "derived",
-        {
-          tau: traceEntry.tauAfter,
-          source: "derived_obligation",
-          payload: {
-            obligation_kind: "MEM_ZONE",
-            action: "close",
-            mode: delta < 0 ? "existing" : "synthetic"
-          }
-        }
-      );
-    }
+    const delta = traceEntry.OStackLength;
     if (traceEntry.read_op === "נ" && delta > 0) {
       addFlow("NUN.SUPPORT_DEBT", "open support debt", "derived", {
         tau: traceEntry.tauAfter,
@@ -835,27 +857,6 @@ function extractWordFlow(trace) {
         source: mapped.trace_source,
         payload: mapped.payload
       });
-    }
-
-    if (traceEntry.token === SPACE_TOKEN && delta < 0) {
-      const supportFalls = (traceEntry.events ?? []).filter(
-        (event) => event.type === "fall"
-      ).length;
-      const boundaryAuto = (traceEntry.events ?? []).filter(
-        (event) => event.type === "boundary_auto_close"
-      ).length;
-      const memAutoClose = Math.max(0, -delta - supportFalls - boundaryAuto);
-      for (let i = 0; i < memAutoClose; i += 1) {
-        addFlow("SPACE.MEM_AUTO_CLOSE", "auto-close mem zone at boundary", "derived", {
-          tau: traceEntry.tauAfter,
-          source: "derived_boundary",
-          payload: {
-            obligation_kind: "MEM_ZONE",
-            action: "auto_close",
-            count: 1
-          }
-        });
-      }
     }
   }
 

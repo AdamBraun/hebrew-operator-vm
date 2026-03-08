@@ -39,7 +39,7 @@ export const TRACE_EVENT_KINDS = [
   "ZAYIN.GATE",
   "HET.COMPARTMENT",
   "TET.COVERT",
-  "LAMED.ENDPOINT",
+  "LAMED.HOLD_STEP_PAST",
   "MEM.OPEN",
   "FINAL_MEM.CLOSE",
   "NUN.SUPPORT_DEBT",
@@ -197,14 +197,13 @@ export type CovertEvent = TraceEventBase<
   }
 >;
 
-export type EndpointEvent = TraceEventBase<
-  "LAMED.ENDPOINT",
+export type LamedStepPastEvent = TraceEventBase<
+  "LAMED.HOLD_STEP_PAST",
   "vm_event",
   {
     id: HandleId;
-    endpoint: HandleId;
-    domain: HandleId;
-    boundaryId: HandleId;
+    source: HandleId;
+    hold: HandleId;
   }
 >;
 
@@ -212,10 +211,11 @@ export type MemOpenEvent = TraceEventBase<
   "MEM.OPEN",
   "derived_obligation",
   {
-    obligation_kind: "MEM_ZONE";
     action: "open";
-    parent?: HandleId;
-    zone?: HandleId;
+    boundary_id?: HandleId;
+    hold?: HandleId;
+    inside?: HandleId;
+    outside?: HandleId;
   }
 >;
 
@@ -223,11 +223,13 @@ export type FinalMemCloseEvent = TraceEventBase<
   "FINAL_MEM.CLOSE",
   "derived_obligation",
   {
-    obligation_kind: "MEM_ZONE";
     action: "close";
     mode: "existing" | "synthetic";
-    zone?: HandleId;
-    handle?: HandleId;
+    boundary_id?: HandleId;
+    focus?: HandleId;
+    sealed?: HandleId;
+    inside?: HandleId;
+    outside?: HandleId;
   }
 >;
 
@@ -372,10 +374,11 @@ export type SpaceMemAutoCloseEvent = TraceEventBase<
   "SPACE.MEM_AUTO_CLOSE",
   "derived_boundary",
   {
-    obligation_kind: "MEM_ZONE";
     action: "auto_close";
-    count?: number;
-    zone?: HandleId;
+    boundary_id?: HandleId;
+    inside?: HandleId;
+    outside?: HandleId;
+    reason?: string;
   }
 >;
 
@@ -417,7 +420,7 @@ export type TraceEvent =
   | GateEvent
   | CompartmentEvent
   | CovertEvent
-  | EndpointEvent
+  | LamedStepPastEvent
   | MemOpenEvent
   | FinalMemCloseEvent
   | NunSupportDebtEvent
