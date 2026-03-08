@@ -5,7 +5,7 @@ Canonical, deterministic exemplars for publication and regression validation.
 ## Summary
 
 - source_trace: `corpus/word_traces.jsonl`
-- trace_sha256: `18a2fa338f22883f0571cf70989f966a1757c95dc842e9c8367dbc095caacd06`
+- trace_sha256: `9d598a1982f69187cd78062f7c5da33a15a97cd1f0979d59ca78d8cba3bfb7dc`
 - semantic_versions: 1.1.0
 - exemplars: 30
 - regression_cases: 18
@@ -75,8 +75,8 @@ Top recurring skeletons; baseline references for broad stability checks.
 
 - ref: `Deuteronomy/1/3/17`
 - token_ids: `282, 154, 183, 136`
-- flow: `ה backed head + detached leg ⇢ ה backed head + detached leg`
-- skeleton: `HE.HEAD_WITH_LEG -> HE.HEAD_WITH_LEG`
+- flow: `ה declare(public) ⇢ ה breath tail`
+- skeleton: `HE.DECLARE -> HE.DECLARE_BREATH`
 - tags: `high_frequency, skeleton_rank:3`
 - explanation: High-frequency baseline skeleton used as a broad regression anchor.
 
@@ -124,8 +124,8 @@ Mappiq, shin/sin dots, and dagesh-sensitive words.
 
 - ref: `Deuteronomy/1/1/1`
 - token_ids: `11, 378, 136`
-- flow: `א alias ⇢ ל endpoint bind ⇢ ה backed head + detached leg`
-- skeleton: `ALEPH.ALIAS -> LAMED.ENDPOINT -> HE.HEAD_WITH_LEG`
+- flow: `א alias ⇢ ל endpoint bind ⇢ ה breath tail`
+- skeleton: `ALEPH.ALIAS -> LAMED.ENDPOINT -> HE.DECLARE_BREATH`
 - tags: `mark:dagesh`
 - explanation: Contains dagesh (U+05BC), checking hardened-mark tokenization without trace drift.
 
@@ -151,10 +151,10 @@ Mappiq, shin/sin dots, and dagesh-sensitive words.
 
 - ref: `Deuteronomy/1/22/19`
 - token_ids: `52, 157`
-- flow: `ה backed head + detached leg`
-- skeleton: `HE.HEAD_WITH_LEG`
+- flow: `ה declare(public) ⇢ ה pin export`
+- skeleton: `HE.DECLARE -> HE.DECLARE_PIN`
 - tags: `mark:mappiq`
-- explanation: Contains mappiq (הּ); current docs treat it as the same head-family `ה` path, not as a pinned/declaration variant.
+- explanation: Contains mappiq (הּ), so the trace must include HE.DECLARE_PIN in a stable place.
 
 ### Operator-family exemplars
 
@@ -173,8 +173,8 @@ Coverage-oriented picks that ensure every observed operator remains represented.
 
 - ref: `Deuteronomy/1/1/22`
 - token_ids: `216, 152, 30`
-- flow: `ז gate ⇢ ה backed head + detached leg`
-- skeleton: `ZAYIN.GATE -> HE.HEAD_WITH_LEG`
+- flow: `ז gate ⇢ ה declare(public)`
+- skeleton: `ZAYIN.GATE -> HE.DECLARE`
 - tags: `operator_family, operator:ZAYIN.GATE`
 - explanation: Representative operator-family case for ZAYIN.GATE (gate routing).
 
@@ -182,10 +182,10 @@ Coverage-oriented picks that ensure every observed operator remains represented.
 
 - ref: `Deuteronomy/1/2/9`
 - token_ids: `623, 110, 720`
-- flow: `ק bare head + detached leg ⇢ ד boundary close ⇢ ש fork route`
-- skeleton: `QOF.HEAD_WITH_LEG -> DALET.BOUNDARY_CLOSE -> SHIN.FORK`
-- tags: `operator_family, operator:QOF.HEAD_WITH_LEG`
-- explanation: Representative operator-family case for QOF.HEAD_WITH_LEG (unresolved head + detached leg).
+- flow: `ק approximate ⇢ ד boundary close ⇢ ש fork route`
+- skeleton: `QOF.APPROX -> DALET.BOUNDARY_CLOSE -> SHIN.FORK`
+- tags: `operator_family, operator:QOF.APPROX`
+- explanation: Representative operator-family case for QOF.APPROX (approximation).
 
 #### ex-018 — טָרְחֲכֶם (Deuteronomy 1:12#4)
 
@@ -213,8 +213,8 @@ Word-edge behavior, auto-discharge/auto-close behavior, and final-letter form se
 
 - ref: `Deuteronomy/1/1/2`
 - token_ids: `149, 104, 51, 642, 280, 400`
-- flow: `ה backed head + detached leg ⇢ ד boundary close ⇢ ר boundary close ⇢ ם close mem-zone`
-- skeleton: `HE.HEAD_WITH_LEG -> DALET.BOUNDARY_CLOSE -> RESH.BOUNDARY_CLOSE -> FINAL_MEM.CLOSE`
+- flow: `ה declare(public) ⇢ ד boundary close ⇢ ר boundary close ⇢ ם close mem-zone`
+- skeleton: `HE.DECLARE -> DALET.BOUNDARY_CLOSE -> RESH.BOUNDARY_CLOSE -> FINAL_MEM.CLOSE`
 - tags: `final:mem`
 - explanation: Representative final-mem close behavior; word-final closure should stay deterministic.
 
@@ -222,8 +222,8 @@ Word-edge behavior, auto-discharge/auto-close behavior, and final-letter form se
 
 - ref: `Deuteronomy/1/1/5`
 - token_ids: `426, 687, 136`
-- flow: `מ open mem-zone ⇢ ש fork route ⇢ ה backed head + detached leg ⇢ □ mem auto-close`
-- skeleton: `MEM.OPEN -> SHIN.FORK -> HE.HEAD_WITH_LEG -> SPACE.MEM_AUTO_CLOSE`
+- flow: `מ open mem-zone ⇢ ש fork route ⇢ ה breath tail ⇢ □ mem auto-close`
+- skeleton: `MEM.OPEN -> SHIN.FORK -> HE.DECLARE_BREATH -> SPACE.MEM_AUTO_CLOSE`
 - tags: `boundary:mem_auto_close`
 - explanation: Shows boundary-triggered mem auto-close (SPACE.MEM_AUTO_CLOSE) at word end.
 
@@ -231,8 +231,8 @@ Word-edge behavior, auto-discharge/auto-close behavior, and final-letter form se
 
 - ref: `Deuteronomy/1/1/10`
 - token_ids: `149, 299, 640, 111, 439`
-- flow: `ה backed head + detached leg ⇢ ר boundary close ⇢ ד boundary close ⇢ ן support debt ⇢ ן same-word discharge`
-- skeleton: `HE.HEAD_WITH_LEG -> RESH.BOUNDARY_CLOSE -> DALET.BOUNDARY_CLOSE -> FINAL_NUN.SUPPORT_DEBT -> FINAL_NUN.SUPPORT_DISCHARGE`
+- flow: `ה declare(public) ⇢ ר boundary close ⇢ ד boundary close ⇢ ן support debt ⇢ ן same-word discharge`
+- skeleton: `HE.DECLARE -> RESH.BOUNDARY_CLOSE -> DALET.BOUNDARY_CLOSE -> FINAL_NUN.SUPPORT_DEBT -> FINAL_NUN.SUPPORT_DISCHARGE`
 - tags: `final:nun`
 - explanation: Representative final-nun discharge pair; both debt and discharge must remain coupled.
 
@@ -263,12 +263,12 @@ Word-edge behavior, auto-discharge/auto-close behavior, and final-letter form se
 - tags: `final:tsadi`
 - explanation: Representative final-tsadi align-final behavior at word end.
 
-#### ex-026 — לך (Numbers 23:13#4)
+#### ex-026 — בסמך (Genesis 5:1#5)
 
-- ref: `Numbers/23/13/4`
-- token_ids: `364, 319`
-- flow: `ל endpoint bind`
-- skeleton: `LAMED.ENDPOINT`
+- ref: `Genesis/5/1/5`
+- token_ids: `30, 480, 401, 319`
+- flow: `מ open mem-zone ⇢ □ mem auto-close`
+- skeleton: `MEM.OPEN -> SPACE.MEM_AUTO_CLOSE`
 - tags: `final:kaf_surface`
 - explanation: Surface ends with final kaf (ך), preserving final-form boundary behavior.
 

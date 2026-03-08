@@ -18,6 +18,7 @@ const HANDLE_PAYLOAD_KEYS = new Set<string>([
   "from",
   "handle",
   "head",
+  "hold",
   "id",
   "inside",
   "left",
@@ -52,7 +53,7 @@ const OBLIGATION_POLICY_BY_EVENT: Record<TraceEventKind, ObligationPolicy | null
   "ZAYIN.GATE": null,
   "HET.COMPARTMENT": null,
   "TET.COVERT": null,
-  "LAMED.ENDPOINT": null,
+  "LAMED.HOLD_STEP_PAST": null,
   "MEM.OPEN": {
     kind: "memory-zone",
     keyFields: ["zone", "handle", "parent"]

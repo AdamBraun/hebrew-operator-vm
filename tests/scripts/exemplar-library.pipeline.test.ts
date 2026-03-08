@@ -75,8 +75,8 @@ describe("exemplar library build + verify pipeline", () => {
         ref_key: "Genesis/1/1/3",
         surface: "אֱלֹהִים",
         token_ids: [31, 32, 33],
-        skeleton: ["ALEPH.ALIAS", "LAMED.ENDPOINT", "HE.DECLARE", "FINAL_MEM.CLOSE"],
-        flow: "א alias ⇢ ל endpoint bind ⇢ ה declare(public) ⇢ ם close mem-zone",
+        skeleton: ["ALEPH.ALIAS", "LAMED.HOLD_STEP_PAST", "HE.DECLARE", "FINAL_MEM.CLOSE"],
+        flow: "א alias ⇢ ל hold+step-past ⇢ ה declare(public) ⇢ ם close mem-zone",
         semantic_version: "1.0.0"
       },
       {
@@ -137,7 +137,7 @@ describe("exemplar library build + verify pipeline", () => {
         surface: "לְמִינָהּ",
         token_ids: [91, 92, 93],
         skeleton: [
-          "LAMED.ENDPOINT",
+          "LAMED.HOLD_STEP_PAST",
           "MEM.OPEN",
           "NUN.SUPPORT_DEBT",
           "HE.DECLARE",
@@ -145,7 +145,7 @@ describe("exemplar library build + verify pipeline", () => {
           "SPACE.SUPPORT_DISCHARGE",
           "SPACE.MEM_AUTO_CLOSE"
         ],
-        flow: "ל endpoint bind ⇢ מ open mem-zone ⇢ נ support debt ⇢ ה declare(public) ⇢ ה pin export ⇢ □ boundary support discharge ⇢ □ mem auto-close",
+        flow: "ל hold+step-past ⇢ מ open mem-zone ⇢ נ support debt ⇢ ה declare(public) ⇢ ה pin export ⇢ □ boundary support discharge ⇢ □ mem auto-close",
         semantic_version: "1.0.0"
       },
       {
@@ -189,8 +189,8 @@ describe("exemplar library build + verify pipeline", () => {
         ref_key: "Genesis/1/2/11",
         surface: "וַיַּבְדֵּל",
         token_ids: [141, 142],
-        skeleton: ["DALET.BOUNDARY_CLOSE", "LAMED.ENDPOINT"],
-        flow: "ד backed head expose ⇢ ל endpoint bind",
+        skeleton: ["DALET.BOUNDARY_CLOSE", "LAMED.HOLD_STEP_PAST"],
+        flow: "ד backed head expose ⇢ ל hold+step-past",
         semantic_version: "1.0.0"
       },
       {
@@ -202,10 +202,10 @@ describe("exemplar library build + verify pipeline", () => {
           "HE.DECLARE",
           "GIMEL.BESTOW",
           "DALET.BOUNDARY_CLOSE",
-          "LAMED.ENDPOINT",
+          "LAMED.HOLD_STEP_PAST",
           "FINAL_MEM.CLOSE"
         ],
-        flow: "ה declare(public) ⇢ ג bestowal ⇢ ד backed head expose ⇢ ל endpoint bind ⇢ ם close mem-zone",
+        flow: "ה declare(public) ⇢ ג bestowal ⇢ ד backed head expose ⇢ ל hold+step-past ⇢ ם close mem-zone",
         semantic_version: "1.0.0"
       },
       {
@@ -222,8 +222,8 @@ describe("exemplar library build + verify pipeline", () => {
         ref_key: "Genesis/1/2/14",
         surface: "לך",
         token_ids: [171],
-        skeleton: ["LAMED.ENDPOINT"],
-        flow: "ל endpoint bind",
+        skeleton: ["LAMED.HOLD_STEP_PAST"],
+        flow: "ל hold+step-past",
         semantic_version: "1.0.0"
       },
       {
@@ -268,7 +268,7 @@ describe("exemplar library build + verify pipeline", () => {
         CONTAINS_BESTOW_THEN_SEAL: {
           name: "CONTAINS_BESTOW_THEN_SEAL",
           matching_skeleton_keys: [
-            "HE.DECLARE|GIMEL.BESTOW|DALET.BOUNDARY_CLOSE|LAMED.ENDPOINT|FINAL_MEM.CLOSE"
+            "HE.DECLARE|GIMEL.BESTOW|DALET.BOUNDARY_CLOSE|LAMED.HOLD_STEP_PAST|FINAL_MEM.CLOSE"
           ]
         }
       }

@@ -94,7 +94,7 @@
         "ZAYIN.GATE",
         "HET.COMPARTMENT",
         "TET.COVERT",
-        "LAMED.ENDPOINT",
+        "LAMED.HOLD_STEP_PAST",
         "MEM.OPEN",
         "FINAL_MEM.CLOSE",
         "NUN.SUPPORT_DEBT",
@@ -127,7 +127,7 @@
         "ZAYIN.GATE",
         "HET.COMPARTMENT",
         "TET.COVERT",
-        "LAMED.ENDPOINT",
+        "LAMED.HOLD_STEP_PAST",
         "MEM.OPEN",
         "FINAL_MEM.CLOSE",
         "NUN.SUPPORT_DEBT",
@@ -180,7 +180,7 @@
           "$ref": "#/$defs/CovertEvent"
         },
         {
-          "$ref": "#/$defs/EndpointEvent"
+          "$ref": "#/$defs/LamedStepPastEvent"
         },
         {
           "$ref": "#/$defs/MemOpenEvent"
@@ -523,13 +523,13 @@
         }
       }
     },
-    "EndpointEvent": {
+    "LamedStepPastEvent": {
       "type": "object",
       "required": ["kind", "index", "tau", "source", "payload"],
       "additionalProperties": false,
       "properties": {
         "kind": {
-          "const": "LAMED.ENDPOINT"
+          "const": "LAMED.HOLD_STEP_PAST"
         },
         "index": {
           "type": "integer",
@@ -544,19 +544,16 @@
         },
         "payload": {
           "type": "object",
-          "required": ["id", "endpoint", "domain", "boundaryId"],
+          "required": ["id", "source", "hold"],
           "additionalProperties": false,
           "properties": {
             "id": {
               "$ref": "#/$defs/HandleId"
             },
-            "endpoint": {
+            "source": {
               "$ref": "#/$defs/HandleId"
             },
-            "domain": {
-              "$ref": "#/$defs/HandleId"
-            },
-            "boundaryId": {
+            "hold": {
               "$ref": "#/$defs/HandleId"
             }
           }
