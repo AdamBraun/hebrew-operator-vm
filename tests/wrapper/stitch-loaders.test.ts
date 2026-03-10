@@ -476,6 +476,32 @@ describe("stitch loaders", () => {
     ]);
   });
 
+  it("loads metadata plan from a single-row jsonl file", async () => {
+    const tmp = makeTmpDir("stitch-loaders-metadata-jsonl-");
+    const metadataPath = path.join(tmp, "metadata.plan.jsonl");
+    writeJsonl(metadataPath, [
+      {
+        version: 1,
+        notes: "metadata jsonl",
+        checkpoints: [
+          {
+            ref_end: "Numbers/1/1",
+            label: "jsonl-only"
+          }
+        ]
+      }
+    ]);
+
+    const metadata = await loadMetadataPlan(metadataPath);
+    expect(metadata.metadataPlan.notes).toBe("metadata jsonl");
+    expect(metadata.checkpointByRefEnd.get("Numbers/1/1")).toEqual([
+      {
+        ref_end: "Numbers/1/1",
+        label: "jsonl-only"
+      }
+    ]);
+  });
+
   it("rejects metadata checkpoints that are not canonical RefKey values", async () => {
     const tmp = makeTmpDir("stitch-loaders-metadata-invalid-refkey-");
     const metadataPath = path.join(tmp, "metadata.plan.json");

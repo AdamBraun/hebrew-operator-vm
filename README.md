@@ -423,9 +423,9 @@ npm run artifacts:repair -- --full
 
 Hook/CI behavior:
 
-- `.githooks/pre-commit` runs `artifacts:verify` only when staged paths touch configured engine inputs.
-- `.githooks/pre-push` always runs `artifacts:verify:deep` and blocks push on any drift.
-- CI always runs `npm run artifacts:verify:deep` on push/PR.
+- `.githooks/pre-commit` reformats staged paths, reruns only the directly changed `src/` layers, refreshes the canonical latest tracked layer outputs under `outputs/runs/latest/*.jsonl`, and reruns stitch as a transient validation step before the commit is created.
+- `.githooks/pre-push` verifies LFS policy for tracked outputs, rebuilds only the impacted orthogonal layers for the push range, and fails if the committed canonical latest `jsonl` outputs drift or transient stitch validation fails.
+- CI runs `npm run src-artifacts:verify:push` on push/PR to enforce the same rebuild-and-compare contract server-side.
 
 Run-to-run diff + regression (single command):
 

@@ -54,24 +54,26 @@ export const CANONICAL_PATHS = Object.freeze({
   torahJson: "data/torah.json",
   layoutDataset: "src/layers/layout/datasets/torah_layout_breaks.v1.json",
   metadataDataset: "src/layers/metadata/datasets/torah_1y_plan.v1.json",
-  stitchedDir: "outputs/runs/latest/stitched",
-  stitchedProgramPath: "outputs/runs/latest/stitched/ProgramIR.jsonl",
-  stitchedManifestPath: "outputs/runs/latest/stitched/program.manifest.json",
-  stitchedMetaPath: "outputs/runs/latest/stitched/program.meta.json",
-  stitchedMetadataPlanPath: "outputs/runs/latest/stitched/MetadataPlan.json"
+  latestDir: "outputs/runs/latest",
+  spineJsonlPath: "outputs/runs/latest/spine.jsonl",
+  lettersIrPath: "outputs/runs/latest/letters.ir.jsonl",
+  niqqudIrPath: "outputs/runs/latest/niqqud.ir.jsonl",
+  cantillationIrPath: "outputs/runs/latest/cantillation.ir.jsonl",
+  layoutIrPath: "outputs/runs/latest/layout.ir.jsonl",
+  metadataPlanJsonlPath: "outputs/runs/latest/metadata.plan.jsonl"
 });
 
 export const LAYER_REQUIRED_TRACKED_ARTIFACTS = Object.freeze({
-  spine: Object.freeze(["outputs/runs/latest/manifests/spine.json"]),
-  letters: Object.freeze(["outputs/runs/latest/manifests/letters.json"]),
-  niqqud: Object.freeze([]),
-  cantillation: Object.freeze(["outputs/runs/latest/manifests/cantillation.json"]),
-  layout: Object.freeze(["outputs/runs/latest/manifests/layout.json"]),
-  metadata: Object.freeze([CANONICAL_PATHS.stitchedMetadataPlanPath]),
-  stitch: Object.freeze([CANONICAL_PATHS.stitchedManifestPath, CANONICAL_PATHS.stitchedMetaPath])
+  spine: Object.freeze([CANONICAL_PATHS.spineJsonlPath]),
+  letters: Object.freeze([CANONICAL_PATHS.lettersIrPath]),
+  niqqud: Object.freeze([CANONICAL_PATHS.niqqudIrPath]),
+  cantillation: Object.freeze([CANONICAL_PATHS.cantillationIrPath]),
+  layout: Object.freeze([CANONICAL_PATHS.layoutIrPath]),
+  metadata: Object.freeze([CANONICAL_PATHS.metadataPlanJsonlPath]),
+  stitch: Object.freeze([])
 });
 
-export const TRACKED_ARTIFACT_SCOPES = Object.freeze(["outputs/runs"]);
+export const TRACKED_ARTIFACT_SCOPES = Object.freeze([CANONICAL_PATHS.latestDir]);
 
 export const SOURCE_RELEVANT_PATHS = Object.freeze(
   Array.from(new Set(DIRECT_LAYER_RULES.map((rule) => rule.spec))).sort((left, right) =>

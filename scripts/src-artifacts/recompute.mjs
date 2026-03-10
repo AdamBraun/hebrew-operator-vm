@@ -3,17 +3,21 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import fsRaw from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { createRequire } from "node:module";
 import {
   ensureKnownFlags,
   listChangedFiles,
   listStagedFiles,
+  listWorkingTreeChanges,
   runCommand
 } from "../artifacts/lib.mjs";
 import {
   CANONICAL_PATHS,
   LAYERS,
+  SOURCE_RELEVANT_PATHS,
+  TRACKED_ARTIFACT_SCOPES,
   expandImpactedLayers,
   forceLayerRebuild,
   requiredTrackedArtifactsForLayers,
@@ -22,9 +26,25 @@ import {
 
 const CWD = process.cwd();
 const GIT_OUTPUT_MAX_BUFFER = 64 * 1024 * 1024;
+const PUSH_DIFF_FILTER = "ACDMRT";
+const STITCH_INPUT_LAYERS = Object.freeze(["spine", "letters", "niqqud", "cantillation", "layout"]);
+const LEGACY_LATEST_PATHS = Object.freeze([
+  "outputs/runs/latest/manifests",
+  "outputs/runs/latest/stitched"
+]);
 
 function toPosixPath(value) {
   return String(value).replace(/\\/g, "/");
+}
+
+function uniqueSorted(values) {
+  return [
+    ...new Set((values ?? []).map((entry) => toPosixPath(String(entry).trim())).filter(Boolean))
+  ].sort((left, right) => left.localeCompare(right, "en"));
+}
+
+function parseNewlineOutput(value) {
+  return uniqueSorted(String(value ?? "").split(/\r?\n/u));
 }
 
 function toAbs(relOrAbsPath) {
@@ -59,6 +79,10 @@ async function sha256File(filePath) {
   return hash.digest("hex");
 }
 
+function sha256Text(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
 function runGit(args, { allowFailure = false } = {}) {
   try {
     return execFileSync("git", args, {
@@ -79,64 +103,88 @@ function runGit(args, { allowFailure = false } = {}) {
   }
 }
 
-async function readJsonSafe(filePath) {
-  try {
-    const raw = await fs.readFile(filePath, "utf8");
-    return JSON.parse(raw);
-  } catch {
+function isGitObjectName(value) {
+  return /^[a-f0-9]{7,64}$/iu.test(String(value ?? "").trim());
+}
+
+function resolveDiffRangeFromEnv() {
+  const baseSha = String(process.env.GUARDRAILS_BASE_SHA ?? "").trim();
+  const headSha = String(process.env.GUARDRAILS_HEAD_SHA ?? "").trim();
+  if (!isGitObjectName(baseSha) || !isGitObjectName(headSha)) {
     return null;
+  }
+  return `${baseSha}..${headSha}`;
+}
+
+function resolvePushDiffFiles() {
+  const envRange = resolveDiffRangeFromEnv();
+  if (envRange) {
+    return parseNewlineOutput(
+      runGit(["diff", "--name-only", `--diff-filter=${PUSH_DIFF_FILTER}`, envRange], {
+        allowFailure: true
+      })
+    );
+  }
+
+  const upstreamRef = runGit(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"], {
+    allowFailure: true
+  }).trim();
+  if (upstreamRef.length > 0) {
+    return parseNewlineOutput(
+      runGit(
+        ["diff", "--name-only", `--diff-filter=${PUSH_DIFF_FILTER}`, `${upstreamRef}...HEAD`],
+        {
+          allowFailure: true
+        }
+      )
+    );
+  }
+
+  const fallback = parseNewlineOutput(
+    runGit(["diff", "--name-only", `--diff-filter=${PUSH_DIFF_FILTER}`, "HEAD~1..HEAD"], {
+      allowFailure: true
+    })
+  );
+  if (fallback.length > 0) {
+    return fallback;
+  }
+
+  return parseNewlineOutput(
+    runGit(
+      ["show", "--pretty=format:", "--name-only", `--diff-filter=${PUSH_DIFF_FILTER}`, "HEAD"],
+      {
+        allowFailure: true
+      }
+    )
+  );
+}
+
+function canonicalPathForLayer(layer) {
+  switch (layer) {
+    case "spine":
+      return CANONICAL_PATHS.spineJsonlPath;
+    case "letters":
+      return CANONICAL_PATHS.lettersIrPath;
+    case "niqqud":
+      return CANONICAL_PATHS.niqqudIrPath;
+    case "cantillation":
+      return CANONICAL_PATHS.cantillationIrPath;
+    case "layout":
+      return CANONICAL_PATHS.layoutIrPath;
+    case "metadata":
+      return CANONICAL_PATHS.metadataPlanJsonlPath;
+    default:
+      return null;
   }
 }
 
-async function resolveFromAlias(aliasRelPath, key) {
-  const aliasPath = toAbs(aliasRelPath);
-  const parsed = await readJsonSafe(aliasPath);
-  if (!parsed || typeof parsed !== "object") {
+async function resolveExistingTrackedArtifact(layer) {
+  const relPath = canonicalPathForLayer(layer);
+  if (!relPath) {
     return null;
   }
-  const value = parsed[key];
-  if (typeof value !== "string" || value.length === 0) {
-    return null;
-  }
-  const resolved = toAbs(value);
-  return (await pathExists(resolved)) ? resolved : null;
-}
-
-async function resolveFromCacheByContentHash(cacheRelDir, fileName, targetSha256) {
-  if (typeof targetSha256 !== "string" || !/^[a-f0-9]{64}$/.test(targetSha256)) {
-    return null;
-  }
-
-  const cacheDir = toAbs(cacheRelDir);
-  let entries;
-  try {
-    entries = await fs.readdir(cacheDir, { withFileTypes: true });
-  } catch {
-    return null;
-  }
-
-  const matches = [];
-  for (const entry of entries) {
-    if (!entry.isDirectory()) {
-      continue;
-    }
-    const candidate = path.join(cacheDir, entry.name, fileName);
-    if (!(await pathExists(candidate))) {
-      continue;
-    }
-    const digest = await sha256File(candidate);
-    if (digest !== targetSha256) {
-      continue;
-    }
-    const stat = await fs.stat(candidate);
-    matches.push({ candidate, mtimeMs: stat.mtimeMs });
-  }
-
-  if (matches.length === 0) {
-    return null;
-  }
-  matches.sort((left, right) => right.mtimeMs - left.mtimeMs);
-  return matches[0].candidate;
+  const absPath = toAbs(relPath);
+  return (await pathExists(absPath)) ? absPath : null;
 }
 
 async function maybeCopyFile(srcPath, dstPath) {
@@ -161,139 +209,120 @@ async function maybeCopyFile(srcPath, dstPath) {
   return true;
 }
 
-async function readProgramMeta() {
-  const metaPath = toAbs(CANONICAL_PATHS.stitchedMetaPath);
-  const parsed = await readJsonSafe(metaPath);
-  if (!parsed || typeof parsed !== "object") {
-    return null;
+async function maybeWriteTextFile(dstPath, text) {
+  const absDst = toAbs(dstPath);
+  let existing = null;
+  try {
+    existing = await fs.readFile(absDst, "utf8");
+  } catch {}
+
+  if (existing === text) {
+    return false;
+  }
+
+  await fs.mkdir(path.dirname(absDst), { recursive: true });
+  await fs.writeFile(absDst, text, "utf8");
+  return true;
+}
+
+async function readJsonObject(filePath) {
+  const raw = await fs.readFile(filePath, "utf8");
+  const parsed = JSON.parse(raw);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error(`Expected JSON object at ${toRepoRel(filePath)}`);
   }
   return parsed;
 }
 
-async function resolveExistingLayerPath(layer, programMeta) {
-  if (layer === "spine") {
-    const fromMeta = await resolveFromCacheByContentHash(
-      "outputs/cache/spine",
-      "spine.jsonl",
-      programMeta?.spineDigest
-    );
-    if (fromMeta) {
-      return fromMeta;
-    }
-    return resolveFromAlias("outputs/runs/latest/manifests/spine.json", "spine_jsonl_path");
-  }
-
-  if (layer === "letters") {
-    const fromMeta = await resolveFromCacheByContentHash(
-      "outputs/cache/letters",
-      "letters.ir.jsonl",
-      programMeta?.lettersDigest
-    );
-    if (fromMeta) {
-      return fromMeta;
-    }
-    return resolveFromAlias("outputs/runs/latest/manifests/letters.json", "letters_ir_jsonl_path");
-  }
-
-  if (layer === "niqqud") {
-    return resolveFromCacheByContentHash(
-      "outputs/cache/niqqud",
-      "niqqud.ir.jsonl",
-      programMeta?.niqqudDigest
-    );
-  }
-
-  if (layer === "cantillation") {
-    const fromMeta = await resolveFromCacheByContentHash(
-      "outputs/cache/cantillation",
-      "cantillation.ir.jsonl",
-      programMeta?.cantDigest
-    );
-    if (fromMeta) {
-      return fromMeta;
-    }
-    return resolveFromAlias(
-      "outputs/runs/latest/manifests/cantillation.json",
-      "cantillation_ir_jsonl_path"
-    );
-  }
-
-  if (layer === "layout") {
-    const fromMeta = await resolveFromCacheByContentHash(
-      "outputs/cache/layout",
-      "layout.ir.jsonl",
-      programMeta?.layoutDigest
-    );
-    if (fromMeta) {
-      return fromMeta;
-    }
-    return resolveFromAlias("outputs/runs/latest/manifests/layout.json", "layout_ir_jsonl_path");
-  }
-
-  return null;
+async function renderMetadataPlanJsonlText(filePath) {
+  const parsed = await readJsonObject(filePath);
+  return `${JSON.stringify(parsed)}\n`;
 }
 
-async function resolveMetadataPath(programMeta) {
-  const canonicalPath = toAbs(CANONICAL_PATHS.stitchedMetadataPlanPath);
-  if (await pathExists(canonicalPath)) {
-    if (typeof programMeta?.metadataDigest !== "string") {
-      return canonicalPath;
-    }
-    const digest = await sha256File(canonicalPath);
-    if (digest === programMeta.metadataDigest) {
-      return canonicalPath;
-    }
+async function compareCanonicalFile(layer, expectedFilePath) {
+  const canonicalRelPath = canonicalPathForLayer(layer);
+  if (!canonicalRelPath) {
+    return null;
+  }
+  const canonicalAbsPath = toAbs(canonicalRelPath);
+  if (!(await pathExists(canonicalAbsPath))) {
+    return `Missing canonical tracked artifact: ${canonicalRelPath}`;
   }
 
-  const fromCache = await resolveFromCacheByContentHash(
-    "outputs/cache/metadata",
-    "metadata.plan.json",
-    programMeta?.metadataDigest
+  const [expectedDigest, actualDigest] = await Promise.all([
+    sha256File(expectedFilePath),
+    sha256File(canonicalAbsPath)
+  ]);
+  if (expectedDigest === actualDigest) {
+    return null;
+  }
+
+  return (
+    `Stale canonical tracked artifact: ${canonicalRelPath} ` +
+    `(expected sha256=${expectedDigest}, actual sha256=${actualDigest})`
   );
-  if (fromCache) {
-    return fromCache;
-  }
-
-  return (await pathExists(canonicalPath)) ? canonicalPath : null;
 }
 
-function addStagePath(stageSet, filePath) {
-  if (!filePath) {
-    return;
+async function compareCanonicalText(layer, expectedText) {
+  const canonicalRelPath = canonicalPathForLayer(layer);
+  if (!canonicalRelPath) {
+    return null;
   }
-  stageSet.add(toAbs(filePath));
-}
-
-function addRunManifestPath(stageSet, layer, digest) {
-  if (layer !== "letters" && layer !== "cantillation") {
-    return;
+  const canonicalAbsPath = toAbs(canonicalRelPath);
+  if (!(await pathExists(canonicalAbsPath))) {
+    return `Missing canonical tracked artifact: ${canonicalRelPath}`;
   }
-  if (typeof digest !== "string" || !/^[a-f0-9]{64}$/.test(digest)) {
-    return;
+
+  const actualText = await fs.readFile(canonicalAbsPath, "utf8");
+  const expectedDigest = sha256Text(expectedText);
+  const actualDigest = sha256Text(actualText);
+  if (expectedDigest === actualDigest) {
+    return null;
   }
-  const fileName = layer === "letters" ? "letters.json" : "cantillation.json";
-  const runManifestPath = path.resolve(CWD, "outputs", "runs", digest, "manifests", fileName);
-  stageSet.add(runManifestPath);
-}
 
-function uniqueSorted(paths) {
-  return [
-    ...new Set((paths ?? []).map((entry) => toPosixPath(String(entry)).trim()).filter(Boolean))
-  ].sort((left, right) => left.localeCompare(right, "en"));
-}
-
-async function stageArtifacts(pathsToStage) {
-  const relPaths = uniqueSorted(
-    [...pathsToStage].map((absPath) => {
-      const relative = path.relative(CWD, absPath);
-      return relative.startsWith("..") ? "" : relative;
-    })
+  return (
+    `Stale canonical tracked artifact: ${canonicalRelPath} ` +
+    `(expected sha256=${expectedDigest}, actual sha256=${actualDigest})`
   );
-  if (relPaths.length === 0) {
+}
+
+async function writeCanonicalFile(layer, sourcePath) {
+  const relPath = canonicalPathForLayer(layer);
+  if (!relPath) {
+    return false;
+  }
+  return maybeCopyFile(sourcePath, relPath);
+}
+
+async function writeCanonicalText(layer, text) {
+  const relPath = canonicalPathForLayer(layer);
+  if (!relPath) {
+    return false;
+  }
+  return maybeWriteTextFile(relPath, text);
+}
+
+async function pruneLegacyLatestArtifacts() {
+  for (const relPath of LEGACY_LATEST_PATHS) {
+    const absPath = toAbs(relPath);
+    if (!(await pathExists(absPath))) {
+      continue;
+    }
+    await fs.rm(absPath, { recursive: true, force: true });
+  }
+}
+
+async function stageLatestArtifacts() {
+  const latestAbs = toAbs(CANONICAL_PATHS.latestDir);
+  if (!(await pathExists(latestAbs))) {
     return 0;
   }
-  runGit(["add", "-A", "--", ...relPaths]);
-  return relPaths.length;
+  runGit(["add", "-A", "--", CANONICAL_PATHS.latestDir]);
+  return parseNewlineOutput(
+    runGit(["diff", "--cached", "--name-only", "--", CANONICAL_PATHS.latestDir], {
+      allowFailure: true
+    })
+  ).length;
 }
 
 async function assertRequiredArtifactsPresent(requiredArtifactPaths) {
@@ -303,33 +332,100 @@ async function assertRequiredArtifactsPresent(requiredArtifactPaths) {
       missing.push(relPath);
     }
   }
-  if (missing.length > 0) {
-    throw new Error(
-      [
-        "Missing required tracked artifacts after recompute:",
-        ...missing.map((filePath) => `- ${filePath}`)
-      ].join("\n")
-    );
+  if (missing.length === 0) {
+    return;
   }
+  throw new Error(
+    [
+      "Missing required canonical tracked artifacts:",
+      ...missing.map((filePath) => `- ${filePath}`)
+    ].join("\n")
+  );
+}
+
+async function validateTransientStitch({ resolved, stitchForce, runStitchProgram }) {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "src-artifacts-stitch-"));
+  try {
+    await runStitchProgram([
+      "--spine",
+      resolved.spine,
+      "--letters",
+      resolved.letters,
+      "--niqqud",
+      resolved.niqqud,
+      "--cant",
+      resolved.cantillation,
+      "--layout",
+      resolved.layout,
+      "--metadata",
+      resolved.metadata,
+      "--out",
+      tempDir,
+      ...(stitchForce ? ["--force=true"] : [])
+    ]);
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  }
+}
+
+function summarizeLayers(layers) {
+  return [...layers].sort((left, right) => left.localeCompare(right, "en")).join(",");
+}
+
+function assertCleanWorkingTree() {
+  const dirty = listWorkingTreeChanges([...SOURCE_RELEVANT_PATHS, ...TRACKED_ARTIFACT_SCOPES]);
+  if (dirty.length === 0) {
+    return;
+  }
+
+  throw new Error(
+    [
+      "src-artifacts:recompute --check requires committed state for src/artifact paths.",
+      ...dirty.map((filePath) => `- ${filePath}`),
+      "Commit or stash these changes before running push-range verification."
+    ].join("\n")
+  );
 }
 
 async function main() {
   const args = process.argv.slice(2);
-  const knownFlags = new Set(["--changed-only", "--full", "--staged", "--verbose", "--no-stage"]);
+  const knownFlags = new Set([
+    "--changed-only",
+    "--full",
+    "--staged",
+    "--push-range",
+    "--check",
+    "--verbose",
+    "--no-stage"
+  ]);
   ensureKnownFlags(args, knownFlags);
 
   const changedOnly = args.includes("--changed-only");
   const full = args.includes("--full");
   const stagedOnly = args.includes("--staged");
+  const pushRangeOnly = args.includes("--push-range");
+  const checkOnly = args.includes("--check");
   const verbose = args.includes("--verbose");
-  const stageOutputs = stagedOnly && !args.includes("--no-stage");
+  const stageOutputs = stagedOnly && !checkOnly && !args.includes("--no-stage");
 
   if (changedOnly && full) {
     throw new Error("--full and --changed-only cannot be used together.");
   }
+  if (stagedOnly && pushRangeOnly) {
+    throw new Error("Pass at most one selector: --staged or --push-range");
+  }
+  if (checkOnly && !stagedOnly) {
+    assertCleanWorkingTree();
+  }
 
   const runFull = full || !changedOnly;
-  const changedFiles = runFull ? [] : stagedOnly ? listStagedFiles() : listChangedFiles();
+  const changedFiles = runFull
+    ? []
+    : stagedOnly
+      ? listStagedFiles()
+      : pushRangeOnly
+        ? resolvePushDiffFiles()
+        : listChangedFiles();
   const directLayers = runFull ? new Set(LAYERS) : selectDirectLayers(changedFiles);
 
   if (!runFull && directLayers.size === 0) {
@@ -342,9 +438,11 @@ async function main() {
   const impactedLayers = expandImpactedLayers(directLayers);
   const requiredTrackedArtifacts = requiredTrackedArtifactsForLayers(impactedLayers);
   console.log(
-    `src-artifacts:recompute impacted_layers=${[...impactedLayers]
-      .sort((left, right) => left.localeCompare(right, "en"))
-      .join(",")}`
+    [
+      "src-artifacts:recompute",
+      `mode=${checkOnly ? "check" : "apply"}`,
+      `impacted_layers=${summarizeLayers(impactedLayers)}`
+    ].join(" ")
   );
   if (verbose && changedFiles.length > 0) {
     console.log(`src-artifacts:recompute changed_files=${changedFiles.length}`);
@@ -363,8 +461,7 @@ async function main() {
   const { runBuildLayerMetadata } = require(path.join(cliBase, "build-layer-metadata.js"));
   const { runStitchProgram } = require(path.join(cliBase, "stitch-program.js"));
 
-  const outputsToStage = new Set();
-  const programMeta = await readProgramMeta();
+  const driftMessages = [];
   const resolved = {
     spine: null,
     letters: null,
@@ -376,7 +473,7 @@ async function main() {
 
   if (impactedLayers.has("metadata")) {
     const metadataForce = forceLayerRebuild("metadata", directLayers);
-    const metadataArgs = [
+    const metadataResult = await runBuildLayerMetadata([
       "--dataset",
       CANONICAL_PATHS.metadataDataset,
       "--torah-json",
@@ -384,44 +481,55 @@ async function main() {
       "--out",
       "outputs/cache/metadata",
       ...(metadataForce ? ["--force=true"] : [])
-    ];
-    const metadataResult = await runBuildLayerMetadata(metadataArgs);
-    await maybeCopyFile(metadataResult.metadataPlanPath, CANONICAL_PATHS.stitchedMetadataPlanPath);
-    resolved.metadata = toAbs(CANONICAL_PATHS.stitchedMetadataPlanPath);
-    addStagePath(outputsToStage, resolved.metadata);
+    ]);
+    const metadataJsonlText = await renderMetadataPlanJsonlText(metadataResult.metadataPlanPath);
+    resolved.metadata = metadataResult.metadataPlanPath;
+    if (checkOnly) {
+      const drift = await compareCanonicalText("metadata", metadataJsonlText);
+      if (drift) {
+        driftMessages.push(drift);
+      }
+    } else {
+      await writeCanonicalText("metadata", metadataJsonlText);
+    }
+  } else {
+    resolved.metadata = await resolveExistingTrackedArtifact("metadata");
   }
 
-  const needsSpine = ["spine", "letters", "niqqud", "cantillation", "layout", "stitch"].some(
-    (layer) => impactedLayers.has(layer)
-  );
-
+  const needsSpine = [...STITCH_INPUT_LAYERS, "stitch"].some((layer) => impactedLayers.has(layer));
   if (needsSpine) {
     if (impactedLayers.has("spine")) {
       const spineForce = forceLayerRebuild("spine", directLayers);
-      const spineArgs = [
+      const spineResult = await runBuildSpine([
         "--input",
         CANONICAL_PATHS.torahJson,
         "--out",
         "outputs",
         ...(spineForce ? ["--force=true"] : [])
-      ];
-      const spineResult = await runBuildSpine(spineArgs);
+      ]);
       resolved.spine = spineResult.spinePath;
-      addStagePath(outputsToStage, spineResult.aliasPath);
+      if (checkOnly) {
+        const drift = await compareCanonicalFile("spine", spineResult.spinePath);
+        if (drift) {
+          driftMessages.push(drift);
+        }
+      } else {
+        await writeCanonicalFile("spine", spineResult.spinePath);
+      }
     } else {
-      resolved.spine = await resolveExistingLayerPath("spine", programMeta);
+      resolved.spine = await resolveExistingTrackedArtifact("spine");
     }
 
     if (!resolved.spine) {
       throw new Error(
-        "Unable to resolve spine input. Run a full recompute: npm run src-artifacts:recompute -- --full"
+        "Unable to resolve spine input. Run a full apply: npm run src-artifacts:recompute -- --full"
       );
     }
   }
 
   if (impactedLayers.has("letters")) {
     const lettersForce = forceLayerRebuild("letters", directLayers);
-    const lettersArgs = [
+    const lettersResult = await runBuildLayer([
       "--layer",
       "letters",
       "--spine",
@@ -429,32 +537,48 @@ async function main() {
       "--out",
       "outputs/cache/letters",
       ...(lettersForce ? ["--force=true"] : [])
-    ];
-    const lettersResult = await runBuildLayer(lettersArgs);
+    ]);
     if (!lettersResult || lettersResult.layer !== "letters") {
       throw new Error("build-layer did not return a letters result");
     }
     resolved.letters = lettersResult.lettersIrPath;
-    addStagePath(outputsToStage, lettersResult.aliasPath);
-    addRunManifestPath(outputsToStage, "letters", lettersResult.digest);
+    if (checkOnly) {
+      const drift = await compareCanonicalFile("letters", lettersResult.lettersIrPath);
+      if (drift) {
+        driftMessages.push(drift);
+      }
+    } else {
+      await writeCanonicalFile("letters", lettersResult.lettersIrPath);
+    }
+  } else {
+    resolved.letters = await resolveExistingTrackedArtifact("letters");
   }
 
   if (impactedLayers.has("niqqud")) {
     const niqqudForce = forceLayerRebuild("niqqud", directLayers);
-    const niqqudArgs = [
+    const niqqudResult = await runBuildLayerNiqqud([
       "--spine",
       resolved.spine,
       "--out",
       "outputs/cache/niqqud",
       ...(niqqudForce ? ["--force=true"] : [])
-    ];
-    const niqqudResult = await runBuildLayerNiqqud(niqqudArgs);
+    ]);
     resolved.niqqud = niqqudResult.niqqudIrPath;
+    if (checkOnly) {
+      const drift = await compareCanonicalFile("niqqud", niqqudResult.niqqudIrPath);
+      if (drift) {
+        driftMessages.push(drift);
+      }
+    } else {
+      await writeCanonicalFile("niqqud", niqqudResult.niqqudIrPath);
+    }
+  } else {
+    resolved.niqqud = await resolveExistingTrackedArtifact("niqqud");
   }
 
   if (impactedLayers.has("cantillation")) {
     const cantillationForce = forceLayerRebuild("cantillation", directLayers);
-    const cantillationArgs = [
+    const cantillationResult = await runBuildLayer([
       "--layer",
       "cantillation",
       "--spine",
@@ -462,19 +586,29 @@ async function main() {
       "--out",
       "outputs/cache/cantillation",
       ...(cantillationForce ? ["--force=true"] : [])
-    ];
-    const cantillationResult = await runBuildLayer(cantillationArgs);
+    ]);
     if (!cantillationResult || cantillationResult.layer !== "cantillation") {
       throw new Error("build-layer did not return a cantillation result");
     }
     resolved.cantillation = cantillationResult.cantillationIrPath;
-    addStagePath(outputsToStage, cantillationResult.aliasPath);
-    addRunManifestPath(outputsToStage, "cantillation", cantillationResult.digest);
+    if (checkOnly) {
+      const drift = await compareCanonicalFile(
+        "cantillation",
+        cantillationResult.cantillationIrPath
+      );
+      if (drift) {
+        driftMessages.push(drift);
+      }
+    } else {
+      await writeCanonicalFile("cantillation", cantillationResult.cantillationIrPath);
+    }
+  } else {
+    resolved.cantillation = await resolveExistingTrackedArtifact("cantillation");
   }
 
   if (impactedLayers.has("layout")) {
     const layoutForce = forceLayerRebuild("layout", directLayers);
-    const layoutArgs = [
+    const layoutResult = await runBuildLayer([
       "--layer",
       "layout",
       "--spine",
@@ -484,23 +618,24 @@ async function main() {
       "--out",
       "outputs/cache/layout",
       ...(layoutForce ? ["--force=true"] : [])
-    ];
-    const layoutResult = await runBuildLayer(layoutArgs);
+    ]);
     if (!layoutResult || layoutResult.layer !== "layout") {
       throw new Error("build-layer did not return a layout result");
     }
     resolved.layout = layoutResult.layoutIrPath;
-    addStagePath(outputsToStage, layoutResult.aliasPath);
+    if (checkOnly) {
+      const drift = await compareCanonicalFile("layout", layoutResult.layoutIrPath);
+      if (drift) {
+        driftMessages.push(drift);
+      }
+    } else {
+      await writeCanonicalFile("layout", layoutResult.layoutIrPath);
+    }
+  } else {
+    resolved.layout = await resolveExistingTrackedArtifact("layout");
   }
 
   if (impactedLayers.has("stitch")) {
-    resolved.letters = resolved.letters ?? (await resolveExistingLayerPath("letters", programMeta));
-    resolved.niqqud = resolved.niqqud ?? (await resolveExistingLayerPath("niqqud", programMeta));
-    resolved.cantillation =
-      resolved.cantillation ?? (await resolveExistingLayerPath("cantillation", programMeta));
-    resolved.layout = resolved.layout ?? (await resolveExistingLayerPath("layout", programMeta));
-    resolved.metadata = resolved.metadata ?? (await resolveMetadataPath(programMeta));
-
     const missing = [];
     if (!resolved.spine) {
       missing.push("spine");
@@ -522,53 +657,56 @@ async function main() {
     }
     if (missing.length > 0) {
       throw new Error(
-        `Unable to resolve stitch inputs for: ${missing.join(", ")}. Run a full recompute first.`
+        `Unable to resolve stitch inputs for: ${missing.join(", ")}. Run a full apply first.`
       );
     }
 
-    const stitchForce = forceLayerRebuild("stitch", directLayers);
-    const stitchArgs = [
-      "--spine",
-      resolved.spine,
-      "--letters",
-      resolved.letters,
-      "--niqqud",
-      resolved.niqqud,
-      "--cant",
-      resolved.cantillation,
-      "--layout",
-      resolved.layout,
-      "--metadata",
-      resolved.metadata,
-      "--out",
-      CANONICAL_PATHS.stitchedDir,
-      ...(stitchForce ? ["--force=true"] : [])
-    ];
-    const stitchResult = await runStitchProgram(stitchArgs);
-    addStagePath(outputsToStage, stitchResult.programPath);
-    addStagePath(outputsToStage, stitchResult.metaPath);
-    addStagePath(outputsToStage, stitchResult.manifestPath);
-    if (resolved.metadata === toAbs(CANONICAL_PATHS.stitchedMetadataPlanPath)) {
-      addStagePath(outputsToStage, resolved.metadata);
-    }
+    await validateTransientStitch({
+      resolved,
+      stitchForce: forceLayerRebuild("stitch", directLayers),
+      runStitchProgram
+    });
   }
 
-  for (const relPath of requiredTrackedArtifacts) {
-    addStagePath(outputsToStage, relPath);
+  if (checkOnly) {
+    if (driftMessages.length > 0) {
+      throw new Error(
+        [
+          "Canonical latest jsonl outputs are stale or missing.",
+          "Re-run `npm run src-artifacts:recompute -- --changed-only --staged` and commit the updated outputs.",
+          ...driftMessages.map((message) => `- ${message}`)
+        ].join("\n")
+      );
+    }
+
+    console.log(
+      [
+        "src-artifacts:recompute ok",
+        "mode=check",
+        `layers=${summarizeLayers(impactedLayers)}`,
+        `required_artifacts=${requiredTrackedArtifacts.length}`,
+        `validated_stitch=${impactedLayers.has("stitch") ? "true" : "false"}`
+      ].join(" ")
+    );
+    return;
   }
+
+  await pruneLegacyLatestArtifacts();
   await assertRequiredArtifactsPresent(requiredTrackedArtifacts);
 
   let stagedCount = 0;
   if (stageOutputs) {
-    stagedCount = await stageArtifacts(outputsToStage);
+    stagedCount = await stageLatestArtifacts();
   }
 
   console.log(
     [
       "src-artifacts:recompute ok",
-      `layers=${[...impactedLayers].sort((left, right) => left.localeCompare(right, "en")).join(",")}`,
+      "mode=apply",
+      `layers=${summarizeLayers(impactedLayers)}`,
       `required_artifacts=${requiredTrackedArtifacts.length}`,
-      `staged=${stagedCount}`
+      `staged=${stagedCount}`,
+      `validated_stitch=${impactedLayers.has("stitch") ? "true" : "false"}`
     ].join(" ")
   );
 }

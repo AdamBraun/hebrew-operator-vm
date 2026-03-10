@@ -2,10 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import {
-  formatCantillationIRJsonl,
-  parseCantillationIRJsonl
-} from "../layers/cantillation/schema";
+import { formatCantillationIRJsonl, parseCantillationIRJsonl } from "../layers/cantillation/schema";
 import { formatLayoutIRJsonl, parseLayoutIRJsonl } from "../layers/layout/schema";
 import { formatLettersIRJsonl, parseLettersIRJsonl } from "../layers/letters/schema";
 import { formatNiqqudIRJsonl, parseNiqqudIRJsonl } from "../layers/niqqud/schema";
@@ -112,7 +109,14 @@ const INPUT_FILE_CANDIDATES = {
   niqqud: ["NiqqudIR.jsonl", "niqqud.ir.jsonl"],
   cant: ["CantillationIR.jsonl", "cantillation.ir.jsonl"],
   layout: ["LayoutIR.jsonl", "layout.ir.jsonl"],
-  metadata: ["MetadataPlan.json", "metadata_plan.json", "metadata.plan.json"]
+  metadata: [
+    "MetadataPlan.jsonl",
+    "metadata_plan.jsonl",
+    "metadata.plan.jsonl",
+    "MetadataPlan.json",
+    "metadata_plan.json",
+    "metadata.plan.json"
+  ]
 } as const;
 
 const SHA256_HEX = /^[a-f0-9]{64}$/;
@@ -432,7 +436,9 @@ async function computeCanonicalInputDigests(paths: {
   const normalizedSpine = formatSpineJsonl(parseSpineJsonl(spineText));
   const normalizedLetters = formatLettersIRJsonl(parseLettersIRJsonl(lettersText));
   const normalizedNiqqud = formatNiqqudIRJsonl(parseNiqqudIRJsonl(niqqudText));
-  const normalizedCantillation = formatCantillationIRJsonl(parseCantillationIRJsonl(cantillationText));
+  const normalizedCantillation = formatCantillationIRJsonl(
+    parseCantillationIRJsonl(cantillationText)
+  );
   const normalizedLayout = formatLayoutIRJsonl(parseLayoutIRJsonl(layoutText));
   const normalizedMetadataPlan = canonicalStringify(parseMetadataPlanJson(metadataPlanText));
 

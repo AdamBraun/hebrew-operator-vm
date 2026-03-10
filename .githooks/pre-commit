@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-if [ -z "$(git diff --cached --name-only --diff-filter=ACMR)" ]; then
+if [ -z "$(git diff --cached --name-only --diff-filter=ACDMRT)" ]; then
   exit 0
 fi
 
@@ -9,10 +9,10 @@ fi
 staged_list_file="$(mktemp)"
 format_list_file="$(mktemp)"
 trap 'rm -f "$staged_list_file" "$format_list_file"' EXIT INT TERM
-git diff --cached --name-only --diff-filter=ACMR -z > "$staged_list_file"
+git diff --cached --name-only --diff-filter=ACDMRT -z > "$staged_list_file"
 
 while IFS= read -r -d '' staged_path; do
-  if [ ! -L "$staged_path" ]; then
+  if [ -e "$staged_path" ] && [ ! -L "$staged_path" ]; then
     printf '%s\0' "$staged_path" >> "$format_list_file"
   fi
 done < "$staged_list_file"

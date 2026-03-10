@@ -328,13 +328,31 @@ export async function loadMetadataPlan(filePath: string): Promise<{
   metadataPlan: MetadataPlanDocument;
   checkpointByRefEnd: Map<RefKey, Checkpoint[]>;
 }> {
-  const text = await fs.promises.readFile(filePath, "utf8");
   let parsed: unknown;
-  try {
-    parsed = JSON.parse(text) as unknown;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`stitch loaders: ${filePath} invalid JSON (${message})`);
+  if (filePath.toLowerCase().endsWith(".jsonl")) {
+    const rows: unknown[] = [];
+    for await (const { value } of readJsonlValues(filePath)) {
+      rows.push(value);
+    }
+    if (rows.length === 0) {
+      throw new Error(
+        `stitch loaders: ${filePath} metadata plan JSONL must contain one object row`
+      );
+    }
+    if (rows.length > 1) {
+      throw new Error(
+        `stitch loaders: ${filePath} metadata plan JSONL must contain exactly one object row`
+      );
+    }
+    parsed = rows[0];
+  } else {
+    const text = await fs.promises.readFile(filePath, "utf8");
+    try {
+      parsed = JSON.parse(text) as unknown;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`stitch loaders: ${filePath} invalid JSON (${message})`);
+    }
   }
 
   assertMetadataPlanDocument(parsed, filePath);

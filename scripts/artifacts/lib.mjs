@@ -5,6 +5,7 @@ import path from "node:path";
 
 export const REPO_ROOT = process.cwd();
 const GIT_OUTPUT_MAX_BUFFER = 128 * 1024 * 1024;
+const CHANGE_DIFF_FILTER = "ACDMRT";
 
 function errorFromCommandFailure(error, commandLabel) {
   const stderrRaw = error && typeof error === "object" ? error.stderr : "";
@@ -97,13 +98,20 @@ export function filterPathsBySpecs(paths, specs) {
 
 export function listStagedFiles(pathSpecs) {
   return parseNewlineOutput(
-    runGit(appendPathSpecs(["diff", "--cached", "--name-only", "--diff-filter=ACMR"], pathSpecs))
+    runGit(
+      appendPathSpecs(
+        ["diff", "--cached", "--name-only", `--diff-filter=${CHANGE_DIFF_FILTER}`],
+        pathSpecs
+      )
+    )
   );
 }
 
 export function listUnstagedFiles(pathSpecs) {
   return parseNewlineOutput(
-    runGit(appendPathSpecs(["diff", "--name-only", "--diff-filter=ACMR"], pathSpecs))
+    runGit(
+      appendPathSpecs(["diff", "--name-only", `--diff-filter=${CHANGE_DIFF_FILTER}`], pathSpecs)
+    )
   );
 }
 
@@ -115,10 +123,17 @@ export function listUntrackedFiles(pathSpecs) {
 
 export function listChangedFiles(pathSpecs) {
   const staged = parseNewlineOutput(
-    runGit(appendPathSpecs(["diff", "--cached", "--name-only", "--diff-filter=ACMR"], pathSpecs))
+    runGit(
+      appendPathSpecs(
+        ["diff", "--cached", "--name-only", `--diff-filter=${CHANGE_DIFF_FILTER}`],
+        pathSpecs
+      )
+    )
   );
   const unstaged = parseNewlineOutput(
-    runGit(appendPathSpecs(["diff", "--name-only", "--diff-filter=ACMR"], pathSpecs))
+    runGit(
+      appendPathSpecs(["diff", "--name-only", `--diff-filter=${CHANGE_DIFF_FILTER}`], pathSpecs)
+    )
   );
   const untracked = parseNewlineOutput(
     runGit(appendPathSpecs(["ls-files", "--others", "--exclude-standard"], pathSpecs))
