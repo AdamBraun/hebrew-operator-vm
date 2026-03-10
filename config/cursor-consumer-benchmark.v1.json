@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "suite_name": "cursor-consumer-benchmark.v1",
+  "policy_path": "config/cursor-audit-allowlist.json",
+  "required_roles": [
+    "demonstrative_zeh",
+    "demonstrative_zu",
+    "demonstrative_zot",
+    "demonstrative_eleh",
+    "demonstrative_hazeh",
+    "samekh_control_nes",
+    "ayin_without_samekh",
+    "contains_lamed",
+    "contains_he"
+  ],
+  "cases": [
+    {
+      "id": "zeh_genesis_31_38",
+      "token": "זה",
+      "isolated_text": "זה",
+      "surface": "זֶה֩",
+      "ref": "Genesis/31/38",
+      "word_index": 1,
+      "status": "stable",
+      "include_in_stable_inference": true,
+      "roles": ["demonstrative_zeh"],
+      "notes": "First-word contextual anchor for the stable demonstrative accompaniment baseline."
+    },
+    {
+      "id": "zu_exodus_15_13",
+      "token": "זו",
+      "isolated_text": "זו",
+      "surface": "ז֣וּ",
+      "ref": "Exodus/15/13",
+      "word_index": 4,
+      "status": "stable",
+      "include_in_stable_inference": true,
+      "roles": ["demonstrative_zu"],
+      "notes": "Only exact זו occurrence in the audited family; keep the verse anchor but use isolated text for stable regression runs."
+    },
+    {
+      "id": "zot_genesis_17_10",
+      "token": "זאת",
+      "isolated_text": "זאת",
+      "surface": "זֹ֣את",
+      "ref": "Genesis/17/10",
+      "word_index": 1,
+      "status": "contaminated",
+      "include_in_stable_inference": false,
+      "roles": ["demonstrative_zot", "contamination_control"],
+      "contamination_reason": "Contains excluded stale glyphs א and ת."
+    },
+    {
+      "id": "eleh_genesis_6_9",
+      "token": "אלה",
+      "isolated_text": "אלה",
+      "surface": "אֵ֚לֶּה",
+      "ref": "Genesis/6/9",
+      "word_index": 1,
+      "status": "contaminated",
+      "include_in_stable_inference": false,
+      "roles": ["demonstrative_eleh", "contamination_control"],
+      "contamination_reason": "Contains excluded stale glyph א."
+    },
+    {
+      "id": "hazeh_exodus_12_2",
+      "token": "הזה",
+      "isolated_text": "הזה",
+      "surface": "הַזֶּ֛ה",
+      "ref": "Exodus/12/2",
+      "word_index": 2,
+      "status": "stable",
+      "include_in_stable_inference": true,
+      "roles": ["demonstrative_hazeh"],
+      "notes": "Low-prefix contextual anchor with only one prior stable word before the target."
+    },
+    {
+      "id": "nes_numbers_21_8",
+      "token": "נס",
+      "isolated_text": "נס",
+      "surface": "נֵ֑ס",
+      "ref": "Numbers/21/8",
+      "word_index": 11,
+      "status": "stable",
+      "include_in_stable_inference": true,
+      "roles": ["samekh_control_nes"],
+      "notes": "Control word for explicit backward-anchor consumption by ס."
+    },
+    {
+      "id": "haetz_genesis_3_3",
+      "token": "העץ",
+      "isolated_text": "העץ",
+      "surface": "הָעֵץ֮",
+      "ref": "Genesis/3/3",
+      "word_index": 2,
+      "status": "stable",
+      "include_in_stable_inference": true,
+      "roles": ["ayin_without_samekh"],
+      "notes": "Stable anti-samekh consumer benchmark where ע exports a non-F handle used later by ץ."
+    },
+    {
+      "id": "lekh_exodus_3_16",
+      "token": "לך",
+      "isolated_text": "לך",
+      "surface": "לֵ֣ךְ",
+      "ref": "Exodus/3/16",
+      "word_index": 1,
+      "status": "stable",
+      "include_in_stable_inference": true,
+      "roles": ["contains_lamed"],
+      "notes": "Dedicated stable ל case with no prior verse-state contamination."
+    },
+    {
+      "id": "hen_deuteronomy_10_14",
+      "token": "הן",
+      "isolated_text": "הן",
+      "surface": "הֵ֚ן",
+      "ref": "Deuteronomy/10/14",
+      "word_index": 1,
+      "status": "stable",
+      "include_in_stable_inference": true,
+      "roles": ["contains_he"],
+      "notes": "Dedicated stable ה case with word-initial contextual anchor."
+    }
+  ]
+}
