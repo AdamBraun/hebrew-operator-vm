@@ -86,6 +86,18 @@ Status precedence:
 Use the printed header at the top of each audit report so the dataset status is
 explicit before any consumer-extension conclusion is drawn.
 
+Measure stable-suite export liveness with:
+
+```bash
+npm run build
+npm run cursor-export-deadness -- --no-print-report
+```
+
+Default outputs:
+
+- JSON: `.tmp/axis/stable-cursor-export-deadness.json`
+- report: `reports/stable_cursor_export_deadness_audit.md`
+
 ## Torah Corpus (Optional)
 
 The repo includes helper scripts to download the Torah and iterate it through the interpreter.
