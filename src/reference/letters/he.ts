@@ -1,6 +1,6 @@
 import { BOT_ID } from "../state/handles";
 import { State } from "../state/state";
-import { resolveSelectableFocus, selectCurrentFocus } from "../vm/select";
+import { resolveSelectableFocus, resolveSelectableHandle, selectCurrentFocus } from "../vm/select";
 import { exposeHeadWithLeg } from "./headAdjunct";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
 
@@ -88,7 +88,43 @@ function isWordEntryBaseline(state: State): boolean {
   return baselineFocus && state.vm.R === BOT_ID && stackMatches;
 }
 
+function experimentalHeConsumesNonFocusExports(): boolean {
+  return process.env.HE_CONSUME_NON_F_EXPORTS === "1";
+}
+
+function mostRecentLiveNonFocusExport(state: State): string | null {
+  const focus = resolveSelectableFocus(state);
+  const pools = [state.vm.K, state.vm.W];
+
+  for (const pool of pools) {
+    for (let index = pool.length - 1; index >= 0; index -= 1) {
+      const raw = pool[index];
+      if (typeof raw !== "string" || raw.length === 0) {
+        continue;
+      }
+      const candidate = resolveSelectableHandle(state, raw);
+      if (
+        candidate === BOT_ID ||
+        candidate === "Ω" ||
+        candidate === focus ||
+        !state.handles.has(candidate)
+      ) {
+        continue;
+      }
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
 function selectHeSource(state: State): string {
+  if (experimentalHeConsumesNonFocusExports()) {
+    const exported = mostRecentLiveNonFocusExport(state);
+    if (exported) {
+      return exported;
+    }
+  }
   if (isWordEntryBaseline(state)) {
     return state.vm.wordEntryFocus ?? resolveSelectableFocus(state);
   }
