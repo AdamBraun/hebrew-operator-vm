@@ -202,7 +202,7 @@ describe("pasuk trace corpus runtime", () => {
     const dotProv = parseDotProvenance(dotText);
     const reportProv = parseReportProvenance(traceTxt);
 
-    expect(tracePayload.schema_version).toBe(2);
+    expect(tracePayload.schema_version).toBe(3);
     expect(Array.isArray(tracePayload.link_index)).toBe(true);
     const linkRows = Array.isArray(tracePayload.link_index) ? tracePayload.link_index : [];
     const finalHandleIds = Array.isArray(tracePayload.final_state?.handles)

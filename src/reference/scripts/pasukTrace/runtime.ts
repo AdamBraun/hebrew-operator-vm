@@ -84,7 +84,7 @@ export type PasukTraceRunResult = {
 
 const DEFAULT_INPUT = path.resolve(process.cwd(), "data", "torah.json");
 const DEFAULT_OUT_DIR = path.resolve(process.cwd(), ".tmp", "pasuk-trace");
-const TRACE_DUMP_SCHEMA = 2;
+const TRACE_DUMP_SCHEMA = 3;
 
 function printHelp(): void {
   console.log("Usage:");
@@ -935,6 +935,7 @@ export function formatDeepTraceReport(args: {
         })}`
       );
       lines.push(`    │ Sof    : ${formatFullJson(sof?.sof_diacritics ?? [])}`);
+      lines.push(`    │ Tags   : ${formatFullJson(entry.cursor_tags ?? [])}`);
       lines.push(
         `    │ State  : ${formatFullJson({
           KLength: entry.KLength,

@@ -33,8 +33,17 @@ export type TraceEntry = {
   pending_join_created?: string;
   pending_join_consumed?: string;
   barrier?: number | null;
+  cursor_tags: CursorTraceTag[];
   events: Array<{ type: string; tau: number; data: any }>;
 };
+
+export type CursorTraceTag =
+  | "focus_move_only"
+  | "cursor_create"
+  | "cursor_consume"
+  | "cursor_accompany"
+  | "head_reassign_only"
+  | "seal_only";
 
 export type TracePhaseName =
   | "token_enter"
@@ -143,6 +152,28 @@ type LetterExecutionContext = {
   isWordFinal: boolean;
   wordText: string;
   prevBoundaryMode: SpaceBoundaryMode;
+};
+
+type LetterExecutionSummary = {
+  operativeFocusBefore: string;
+  selectOperands: SelectOperands;
+  construction: Construction;
+  sealedHandle: string;
+  exportHandle: string;
+  postFocus: string;
+  preHandleIds: string[];
+  preK: string[];
+  postK: string[];
+  preW: string[];
+  postW: string[];
+  preCarryEdges: string[];
+  createdHandleIds: string[];
+  addedCarryEdges: string[];
+  preSuppEdges: string[];
+  addedSuppEdges: string[];
+  addedHeadOfEdges: string[];
+  createdBoundaryIds: string[];
+  cursorTags: CursorTraceTag[];
 };
 
 function shouldFinalizeAtBoundary(
@@ -327,15 +358,218 @@ function applySofWrappers(state: State, token: Token, handleId: string): string 
   return handleId;
 }
 
+function uniqueStrings(values: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const value of values) {
+    if (value.length === 0 || seen.has(value)) {
+      continue;
+    }
+    seen.add(value);
+    out.push(value);
+  }
+  return out;
+}
+
+function diffSetValues(after: Set<string>, before: Set<string>): string[] {
+  return Array.from(after)
+    .filter((value) => !before.has(value))
+    .sort((left, right) => left.localeCompare(right));
+}
+
+function boundaryIdSet(state: State): Set<string> {
+  return new Set(
+    state.boundaries
+      .map((boundary) => boundary.id)
+      .filter((id): id is string => typeof id === "string" && id.length > 0)
+  );
+}
+
+function parseTraceEdge(edge: string): [string, string] | null {
+  const pivot = edge.indexOf("->");
+  if (pivot <= 0 || pivot + 2 >= edge.length) {
+    return null;
+  }
+  const source = edge.slice(0, pivot);
+  const target = edge.slice(pivot + 2);
+  if (!source || !target) {
+    return null;
+  }
+  return [source, target];
+}
+
+function addressableNonFocusHandles(
+  values: string[],
+  focus: string,
+  knownHandleIds: Set<string>
+): string[] {
+  return uniqueStrings(
+    values.filter(
+      (value) => value !== focus && value !== BOT_ID && value !== "Ω" && knownHandleIds.has(value)
+    )
+  );
+}
+
+function pushMetaRef(refs: string[], value: unknown): void {
+  if (typeof value === "string" && value.length > 0) {
+    refs.push(value);
+  }
+}
+
+function extractHandleReferents(state: State, handleId: string): string[] {
+  const handle = state.handles.get(handleId);
+  if (!handle) {
+    return [handleId];
+  }
+  const refs: string[] = [];
+  pushMetaRef(refs, handle.meta?.portOf);
+  pushMetaRef(refs, handle.meta?.pinOf);
+  pushMetaRef(refs, handle.meta?.target);
+  pushMetaRef(refs, handle.meta?.right);
+  pushMetaRef(refs, handle.meta?.referent);
+  pushMetaRef(refs, handle.meta?.whole);
+  pushMetaRef(refs, handle.meta?.focus);
+  return refs.length > 0 ? uniqueStrings(refs) : [handleId];
+}
+
+function extractConstructionReferents(construction: Construction): string[] {
+  const refs: string[] = [];
+  pushMetaRef(refs, construction.base);
+  pushMetaRef(refs, construction.meta?.source);
+  pushMetaRef(refs, construction.meta?.target);
+  pushMetaRef(refs, construction.meta?.focus);
+  pushMetaRef(refs, construction.meta?.whole);
+  pushMetaRef(refs, construction.meta?.constructId);
+  pushMetaRef(refs, construction.meta?.origin);
+  pushMetaRef(refs, construction.meta?.referent);
+  return uniqueStrings(refs);
+}
+
+function constructionBuildsHead(
+  state: State,
+  summary: Omit<LetterExecutionSummary, "cursorTags">
+): boolean {
+  if (summary.addedHeadOfEdges.length > 0) {
+    return true;
+  }
+  return summary.createdHandleIds.some((handleId) => {
+    const handle = state.handles.get(handleId);
+    if (!handle) {
+      return false;
+    }
+    return (
+      handle.meta?.bare_head === 1 ||
+      handle.meta?.backed_head === 1 ||
+      typeof handle.meta?.headOf === "string" ||
+      typeof handle.meta?.exposedBy === "string"
+    );
+  });
+}
+
+function constructionSeals(
+  state: State,
+  summary: Omit<LetterExecutionSummary, "cursorTags">
+): boolean {
+  if (summary.construction.envelope.policy === "final") {
+    return true;
+  }
+  if (summary.createdBoundaryIds.length > 0) {
+    return true;
+  }
+  return summary.createdHandleIds.some((handleId) => {
+    const handle = state.handles.get(handleId);
+    return handle?.kind === "boundary" || handle?.kind === "artifact";
+  });
+}
+
+function classifyCursorTags(
+  state: State,
+  summary: Omit<LetterExecutionSummary, "cursorTags">
+): CursorTraceTag[] {
+  const preHandleIds = new Set(summary.preHandleIds);
+  const preAddressable = uniqueStrings([
+    ...addressableNonFocusHandles(summary.preK, summary.operativeFocusBefore, preHandleIds),
+    ...addressableNonFocusHandles(summary.preW, summary.operativeFocusBefore, preHandleIds)
+  ]);
+  const postHandleIds = new Set(state.handles.keys());
+  const postAddressable = new Set(
+    uniqueStrings([
+      ...addressableNonFocusHandles(summary.postK, summary.postFocus, postHandleIds),
+      ...addressableNonFocusHandles(summary.postW, summary.postFocus, postHandleIds)
+    ])
+  );
+  const createdIndependentNonFocus = summary.createdHandleIds.filter(
+    (handleId) => handleId !== summary.postFocus && postAddressable.has(handleId)
+  );
+  const usedSelectedNonFocus = summary.selectOperands.args.some(
+    (arg) => arg !== summary.operativeFocusBefore && preAddressable.includes(arg)
+  );
+  const preCarryEdges = new Set(summary.preCarryEdges);
+  const resolvedCarryConsumption = summary.addedSuppEdges.some((edge) => {
+    const parsed = parseTraceEdge(edge);
+    if (!parsed) {
+      return false;
+    }
+    const [closer, origin] = parsed;
+    return preCarryEdges.has(`${origin}->${closer}`);
+  });
+  const stepReferents = new Set(extractConstructionReferents(summary.construction));
+  const survivingPrePoints = preAddressable.filter((handleId) => postAddressable.has(handleId));
+  const buildsStructure =
+    summary.createdHandleIds.length > 0 ||
+    summary.addedCarryEdges.length > 0 ||
+    summary.addedHeadOfEdges.length > 0 ||
+    summary.createdBoundaryIds.length > 0;
+  const cursorAccompany =
+    buildsStructure &&
+    stepReferents.size > 0 &&
+    survivingPrePoints.some((handleId) =>
+      extractHandleReferents(state, handleId).some((referent) => stepReferents.has(referent))
+    );
+
+  const tags: CursorTraceTag[] = [];
+  if (createdIndependentNonFocus.length > 0) {
+    tags.push("cursor_create");
+  }
+  if (usedSelectedNonFocus || resolvedCarryConsumption) {
+    tags.push("cursor_consume");
+  }
+  if (cursorAccompany) {
+    tags.push("cursor_accompany");
+  }
+
+  const focusChanged = summary.postFocus !== summary.operativeFocusBefore;
+  const isHeadReassign = constructionBuildsHead(state, summary);
+  const isSeal = constructionSeals(state, summary);
+  if (tags.length === 0) {
+    if (focusChanged && isHeadReassign) {
+      tags.push("head_reassign_only");
+    } else if (isSeal) {
+      tags.push("seal_only");
+    } else if (focusChanged) {
+      tags.push("focus_move_only");
+    }
+  }
+
+  return tags;
+}
+
 function executeReadRail(
   state: State,
   token: Token,
   op: LetterOp,
   context: { isWordFinal: boolean },
   recorder?: PhaseRecorder
-): void {
+): LetterExecutionSummary {
   const D_before = state.vm.D;
   const F_before = state.vm.F;
+  const preK = [...state.vm.K];
+  const preW = [...state.vm.W];
+  const preHandleIds = new Set(state.handles.keys());
+  const preCarryEdges = new Set(state.carry);
+  const preSuppEdges = new Set(state.supp);
+  const preHeadOfEdges = new Set(state.head_of);
+  const preBoundaryIds = boundaryIdSet(state);
   const selectResult = op.select(state);
   recorder?.record("select", {
     read_op: op.meta.letter,
@@ -413,6 +647,42 @@ function executeReadRail(
     before: D_before,
     operator: op.meta.letter
   });
+
+  const createdHandleIds = Array.from(sealResult.S.handles.keys())
+    .filter((handleId) => !preHandleIds.has(handleId))
+    .sort((left, right) => left.localeCompare(right));
+  const addedCarryEdges = diffSetValues(sealResult.S.carry, preCarryEdges);
+  const addedSuppEdges = diffSetValues(sealResult.S.supp, preSuppEdges);
+  const addedHeadOfEdges = diffSetValues(sealResult.S.head_of, preHeadOfEdges);
+  const createdBoundaryIds = Array.from(boundaryIdSet(sealResult.S))
+    .filter((boundaryId) => !preBoundaryIds.has(boundaryId))
+    .sort((left, right) => left.localeCompare(right));
+
+  const summaryBase: Omit<LetterExecutionSummary, "cursorTags"> = {
+    operativeFocusBefore: F_before,
+    selectOperands: selectResult.ops,
+    construction: cons,
+    sealedHandle: sealed,
+    exportHandle,
+    postFocus: sealResult.S.vm.F,
+    preHandleIds: Array.from(preHandleIds).sort((left, right) => left.localeCompare(right)),
+    preK,
+    postK: [...sealResult.S.vm.K],
+    preW,
+    postW: [...sealResult.S.vm.W],
+    preCarryEdges: Array.from(preCarryEdges).sort((left, right) => left.localeCompare(right)),
+    createdHandleIds,
+    addedCarryEdges,
+    preSuppEdges: Array.from(preSuppEdges).sort((left, right) => left.localeCompare(right)),
+    addedSuppEdges,
+    addedHeadOfEdges,
+    createdBoundaryIds
+  };
+
+  return {
+    ...summaryBase,
+    cursorTags: classifyCursorTags(sealResult.S, summaryBase)
+  };
 }
 
 function applyShapeModifier(state: State, shapeOp: string): void {
@@ -536,7 +806,7 @@ function executeLetter(
   token: Token,
   context: LetterExecutionContext,
   recorder?: PhaseRecorder
-): { read_op: string; shape_op: string | null } {
+): { read_op: string; shape_op: string | null; cursor_tags: CursorTraceTag[] } {
   const barrierAtEntry = !state.vm.wordHasContent ? state.vm.LeftContextBarrier : null;
   const pendingJoinAtEntry = state.vm.PendingJoin
     ? {
@@ -618,7 +888,7 @@ function executeLetter(
     if (!readOp) {
       throw new Error(`Missing read op '${composite.read}' for composite '${token.letter}'`);
     }
-    executeReadRail(state, token, readOp, context, recorder);
+    const readSummary = executeReadRail(state, token, readOp, context, recorder);
 
     if (composite.composite_policy.shape_effect_scope === "routing") {
       applyShapeModifier(state, composite.shape);
@@ -629,15 +899,19 @@ function executeLetter(
         route_arity: state.vm.route_arity ?? null
       });
     }
-    return { read_op: readOp.meta.letter, shape_op: composite.shape };
+    return {
+      read_op: readOp.meta.letter,
+      shape_op: composite.shape,
+      cursor_tags: readSummary.cursorTags
+    };
   }
 
   const op = letterRegistry[token.letter];
   if (!op) {
     throw new Error(`Missing letter op for ${token.letter}`);
   }
-  executeReadRail(state, token, op, context, recorder);
-  return { read_op: op.meta.letter, shape_op: null };
+  const readSummary = executeReadRail(state, token, op, context, recorder);
+  return { read_op: op.meta.letter, shape_op: null, cursor_tags: readSummary.cursorTags };
 }
 
 function prepareTokens(input: string): Token[] {
@@ -763,6 +1037,7 @@ function runProgramWithTraceInternal(
       : undefined;
     let readOp: string | null = null;
     let shapeOp: string | null = null;
+    let cursorTags: CursorTraceTag[] = [];
     let boundaryMode: SpaceBoundaryMode | undefined;
     let boundaryRank: number | null | undefined;
     let continuation: boolean | undefined;
@@ -804,6 +1079,7 @@ function runProgramWithTraceInternal(
       );
       readOp = execution.read_op;
       shapeOp = execution.shape_op;
+      cursorTags = execution.cursor_tags;
     }
     const eventEnd = state.vm.H.length;
     applyEventLinks(state, state.vm.H.slice(eventStart, eventEnd));
@@ -814,6 +1090,7 @@ function runProgramWithTraceInternal(
       KLength: state.vm.K.length,
       OStackLength: state.vm.OStack_word.length,
       barrier: state.vm.LeftContextBarrier,
+      cursor_tags: cursorTags,
       pending_join_created: pendingJoinCreated ?? null,
       pending_join_consumed: state.vm.lastPendingJoinConsumedId ?? null
     });
@@ -837,6 +1114,7 @@ function runProgramWithTraceInternal(
       pending_join_created: pendingJoinCreated,
       pending_join_consumed: state.vm.lastPendingJoinConsumedId,
       barrier: state.vm.LeftContextBarrier,
+      cursor_tags: cursorTags,
       events: state.vm.H.slice(eventStart, eventEnd)
     };
     trace.push(entry);

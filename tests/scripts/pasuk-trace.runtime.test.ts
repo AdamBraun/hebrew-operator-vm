@@ -101,6 +101,7 @@ describe("pasuk trace runtime", () => {
     expect(result.report_text).toContain("Select");
     expect(result.report_text).toContain("Rosh");
     expect(result.report_text).toContain("Toch");
+    expect(result.report_text).toContain("Tags");
     expect(
       result.trace.some((entry) => entry.phases.some((phase) => phase.phase === "select"))
     ).toBe(true);
@@ -456,6 +457,50 @@ describe("pasuk trace runtime", () => {
     expect(result.report_text.includes("POST-RESET RUNTIME STATE")).toBe(false);
   });
 
+  it("emits strict cursor tags for the baseline words", async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-cursor-tags-"));
+
+    const runManual = async (text: string) =>
+      runPasukTrace({
+        input: path.join(tmpDir, "unused.json"),
+        ref: "Genesis/1/1",
+        text,
+        lang: "he",
+        normalizeFinals: false,
+        keepTeamim: false,
+        allowRuntimeErrors: false,
+        includeSnapshots: false,
+        outJson: path.join(tmpDir, `${text}.json`),
+        outReport: path.join(tmpDir, `${text}.txt`),
+        printReport: false
+      });
+
+    const vav = await runManual("ו");
+    expect(vav.trace[1]?.cursor_tags).toEqual(["focus_move_only"]);
+
+    const nun = await runManual("נ");
+    expect(nun.trace[1]?.cursor_tags).toEqual(["focus_move_only"]);
+    expect(nun.trace[1]?.cursor_tags).not.toContain("cursor_create");
+
+    const ayin = await runManual("ע");
+    expect(ayin.trace[1]?.cursor_tags).toEqual(["cursor_create"]);
+
+    const zayin = await runManual("ז");
+    expect(zayin.trace[1]?.cursor_tags).toEqual(["cursor_create"]);
+
+    const nes = await runManual("נס");
+    const nesSection = nes.word_sections.find((section) => section.surface === "נס");
+    expect(nesSection?.op_entries[0]?.cursor_tags).toEqual(["focus_move_only"]);
+    expect(nesSection?.op_entries[1]?.cursor_tags).toEqual(["cursor_consume"]);
+
+    const zeh = await runManual("זה");
+    const zehSection = zeh.word_sections.find((section) => section.surface === "זה");
+    expect(zehSection?.op_entries[0]?.cursor_tags).toEqual(["cursor_create"]);
+    expect(zehSection?.op_entries[1]?.cursor_tags).toEqual(["cursor_accompany"]);
+    expect(zeh.report_text).toContain('Tags   : ["cursor_create"]');
+    expect(zeh.report_text).toContain('Tags   : ["cursor_accompany"]');
+  });
+
   it("writes json and report outputs from main", async () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-main-"));
     const inputPath = path.join(tmpDir, "torah.json");
@@ -492,12 +537,13 @@ describe("pasuk trace runtime", () => {
     const reportText = await fs.readFile(outReportPath, "utf8");
     const parsed = JSON.parse(jsonText);
 
-    expect(parsed.schema_version).toBe(2);
+    expect(parsed.schema_version).toBe(3);
     expect(parsed.ref_key).toBe("Genesis/1/1");
     expect(Array.isArray(parsed.deep_trace)).toBe(true);
     expect(Array.isArray(parsed.verse_snapshots)).toBe(true);
     expect(Array.isArray(parsed.link_index)).toBe(true);
     expect(parsed.options.show_post_reset).toBe(true);
+    expect(Array.isArray(parsed.deep_trace[1]?.cursor_tags)).toBe(true);
     expect(parsed.final_dump_state).toEqual(parsed.final_state);
     expect(Array.isArray(parsed.post_reset_state.handles)).toBe(true);
     expect(

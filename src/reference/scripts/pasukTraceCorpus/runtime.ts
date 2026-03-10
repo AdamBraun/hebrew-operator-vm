@@ -299,8 +299,13 @@ const DEFAULT_CONCURRENCY = 50;
 const DEFAULT_PROGRESS_EVERY = 25;
 const OMEGA_HANDLE_ID = "Ω";
 const LEGACY_TRACE_DUMP_SCHEMA = 1;
-const TRACE_DUMP_SCHEMA = 2;
-const SUPPORTED_TRACE_DUMP_SCHEMAS = new Set<number>([LEGACY_TRACE_DUMP_SCHEMA, TRACE_DUMP_SCHEMA]);
+const POINTER_TRACE_DUMP_SCHEMA = 2;
+const TRACE_DUMP_SCHEMA = 3;
+const SUPPORTED_TRACE_DUMP_SCHEMAS = new Set<number>([
+  LEGACY_TRACE_DUMP_SCHEMA,
+  POINTER_TRACE_DUMP_SCHEMA,
+  TRACE_DUMP_SCHEMA
+]);
 const DOT_SCHEMA = 2;
 const REPORT_SCHEMA = 2;
 const SUPPORTED_DOT_SCHEMAS = new Set<number>([DOT_SCHEMA]);
@@ -763,14 +768,14 @@ function hasWordSectionPointerFields(section: Record<string, unknown>): boolean 
   );
 }
 
-function assertSchema2Pointers(args: {
+function assertSchemaPointerFields(args: {
   schemaVersion: number;
   wordSections: unknown[];
   finalDumpStateRaw: unknown;
   postResetStateRaw: unknown;
 }): void {
   const { schemaVersion, wordSections, finalDumpStateRaw, postResetStateRaw } = args;
-  if (schemaVersion !== TRACE_DUMP_SCHEMA) {
+  if (schemaVersion < POINTER_TRACE_DUMP_SCHEMA) {
     return;
   }
 
@@ -823,7 +828,7 @@ function normalizeTracePayloadForDerivedArtifacts(
     "post_reset_state"
   );
 
-  assertSchema2Pointers({
+  assertSchemaPointerFields({
     schemaVersion,
     wordSections: wordSectionsRaw,
     finalDumpStateRaw: tracePayload.final_dump_state,
