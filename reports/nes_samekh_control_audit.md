@@ -1,5 +1,12 @@
 # Nes Samekh Control Audit
 
+## Cursor Audit Scope
+
+- dataset_status: `stable-only`
+- stable allowlist: `ד ה ו ז ח י כ ל מ נ ס ע צ ק ר ש ך ם ן ץ`
+- stale exclusions: families `א ב ג פ ת`; affected glyphs `א ב ג פ ף ת`
+- graph-incomplete exclusions: families `ט`; affected glyphs `ט`
+
 ## Goal
 
 Confirm that the known backward-anchor consumer behaves correctly, so any failure in other tests is not due to missing trace instrumentation.

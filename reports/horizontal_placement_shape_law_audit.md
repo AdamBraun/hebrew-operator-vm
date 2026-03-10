@@ -1,5 +1,12 @@
 # Horizontal Placement Shape Law Audit
 
+## Cursor Audit Scope
+
+- dataset_status: `stable-only`
+- stable allowlist: `ד ה ו ז ח י כ ל מ נ ס ע צ ק ר ש ך ם ן ץ`
+- stale exclusions: families `א ב ג פ ת`; affected glyphs `א ב ג פ ף ת`
+- graph-incomplete exclusions: families `ט`; affected glyphs `ט`
+
 ## Goal
 
 Test whether the position of a lateral addition predicts the type of non-spine behavior:

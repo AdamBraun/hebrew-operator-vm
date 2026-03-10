@@ -49,6 +49,42 @@ Policy allowlists:
 
 - `config/guardrails-allowlist.json`
 - `config/mjs-policy-allowlist.json`
+- `config/cursor-audit-allowlist.json`
+
+## Cursor Audit Scope
+
+Cursor-consumer audit reports should start with a scope header derived from the
+single-source policy file:
+
+- `config/cursor-audit-allowlist.json`
+
+Current policy:
+
+- stale exclusions for consumer-extension conclusions: `א ב ג פ ת`
+- affected stale glyphs: `א ב ג פ ף ת`
+- graph-incomplete exclusion for topology conclusions: `ט`
+
+Generate a report header with:
+
+```bash
+npm run build
+npm run cursor-audit:scope -- --word='העץ'
+```
+
+Or over a whole verse snippet:
+
+```bash
+npm run cursor-audit:scope -- --text='ומפרי העץ אשר בתוך הגן'
+```
+
+Status precedence:
+
+- `blocked by ט`
+- `stale-contaminated`
+- `stable-only`
+
+Use the printed header at the top of each audit report so the dataset status is
+explicit before any consumer-extension conclusion is drawn.
 
 ## Torah Corpus (Optional)
 

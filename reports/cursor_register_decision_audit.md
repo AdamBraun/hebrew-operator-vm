@@ -1,5 +1,13 @@
 # Cursor Register Decision Audit
 
+## Cursor Audit Scope
+
+- dataset_status: `stale-contaminated`
+- stable allowlist: `ד ה ו ז ח י כ ל מ נ ס ע צ ק ר ש ך ם ן ץ`
+- stale exclusions: families `א ב ג פ ת`; affected glyphs `א ב ג פ ף ת`
+- graph-incomplete exclusions: families `ט`; affected glyphs `ט`
+- contamination note: this decision review incorporates the short verse-set audit, so the aggregate decision input is not stable-only
+
 ## Goal
 
 Decide whether distributed cursor material is sufficient, or whether the VM likely needs an explicit cursor register distinct from `F`.

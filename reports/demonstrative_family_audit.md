@@ -1,5 +1,13 @@
 # Demonstrative Family Audit
 
+## Cursor Audit Scope
+
+- dataset_status: `stale-contaminated`
+- stable allowlist: `ד ה ו ז ח י כ ל מ נ ס ע צ ק ר ש ך ם ן ץ`
+- stale exclusions: families `א ב ג פ ת`; affected glyphs `א ב ג פ ף ת`
+- graph-incomplete exclusions: families `ט`; affected glyphs `ט`
+- contamination note: the comparison set includes `זאת` and `אלה`, so consumer-extension conclusions from this family audit are stale-contaminated
+
 ## Goal
 
 Stress-test the refined `זה` result across nearby forms:

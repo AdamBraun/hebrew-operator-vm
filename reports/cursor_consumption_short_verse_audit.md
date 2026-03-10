@@ -1,5 +1,13 @@
 # Cursor Consumption Short-Verse Audit
 
+## Cursor Audit Scope
+
+- dataset_status: `stale-contaminated`
+- stable allowlist: `ד ה ו ז ח י כ ל מ נ ס ע צ ק ר ש ך ם ן ץ`
+- stale exclusions: families `א ב ג פ ת`; affected glyphs `א ב ג פ ף ת`
+- graph-incomplete exclusions: families `ט`; affected glyphs `ט`
+- contamination note: the five-verse set includes words containing excluded stale letters, so this report is not a stable-only inference base
+
 ## Goal
 
 Measure whether cursor-bearing structures are created much more often than they are consumed.
