@@ -89,7 +89,7 @@ describe("edge types", () => {
     expect(state.sub.size).toBe(0);
   });
 
-  it("distinguishes ד from ר by exactly one supp edge", () => {
+  it("distinguishes ד from ר by removing carry and adding supp", () => {
     const resh = runProgram("ר", createInitialState());
     const dalet = runProgram("ד", createInitialState());
     const reshHead = String(Array.from(resh.head_of)[0] ?? "").split("->")[0] ?? "";
@@ -100,10 +100,10 @@ describe("edge types", () => {
     expect(reshEdges.has("head_of:h->Ω")).toBe(true);
     expect(daletEdges.has("head_of:h->Ω")).toBe(true);
     expect(reshEdges.has("carry:Ω->h")).toBe(true);
-    expect(daletEdges.has("carry:Ω->h")).toBe(true);
+    expect(daletEdges.has("carry:Ω->h")).toBe(false);
     expect(reshEdges.has("cont:Ω->h")).toBe(true);
     expect(daletEdges.has("cont:Ω->h")).toBe(true);
 
-    expect(symmetricDifference(reshEdges, daletEdges)).toEqual(["supp:h->Ω"]);
+    expect(symmetricDifference(reshEdges, daletEdges)).toEqual(["carry:Ω->h", "supp:h->Ω"]);
   });
 });

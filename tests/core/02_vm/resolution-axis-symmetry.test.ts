@@ -33,7 +33,7 @@ function inspectResolution(word: string, token: string): ResolutionShape {
 }
 
 describe("resolved/unresolved symmetry across nun/final-nun and resh/dalet", () => {
-  it("uses the same carry-plus-supp mechanism in both pairs", () => {
+  it("keeps nun/final-nun on the carry axis while dalet switches to direct support", () => {
     const matrix = {
       נ: inspectResolution("קנ", "נ"),
       ן: inspectResolution("קן", "ן"),
@@ -48,11 +48,10 @@ describe("resolved/unresolved symmetry across nun/final-nun and resh/dalet", () 
     expect(matrix["נ"]).toMatchObject({ carry: true, supp: false });
     expect(matrix["ן"]).toMatchObject({ carry: true, supp: true });
     expect(matrix["ר"]).toMatchObject({ carry: true, supp: false });
-    expect(matrix["ד"]).toMatchObject({ carry: true, supp: true });
+    expect(matrix["ד"]).toMatchObject({ carry: false, supp: true });
 
-    expect(matrix["נ"].carry && matrix["ן"].carry && matrix["ר"].carry && matrix["ד"].carry).toBe(
-      true
-    );
+    expect(matrix["נ"].carry && matrix["ן"].carry && matrix["ר"].carry).toBe(true);
+    expect(matrix["ד"].carry).toBe(false);
     expect(matrix["ן"].supp && matrix["ד"].supp).toBe(true);
     expect(matrix["נ"].supp || matrix["ר"].supp).toBe(false);
   });

@@ -1,5 +1,5 @@
 import { BOT_ID, createHandle } from "../state/handles";
-import { addCarry, addHeadOf, addSupp } from "../state/relations";
+import { addCont, addHeadOf, addSupp } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
 import { resolveSelectableFocus, selectCurrentFocus } from "../vm/select";
@@ -34,7 +34,7 @@ export const daletOp: LetterOp = {
       })
     );
     addHeadOf(S, headId, whole);
-    addCarry(S, whole, headId);
+    addCont(S, whole, headId);
     addSupp(S, headId, whole);
     const cons: Construction = {
       base: whole,

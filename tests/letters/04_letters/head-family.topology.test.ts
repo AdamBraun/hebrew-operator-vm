@@ -150,7 +150,7 @@ describe("head-family topology", () => {
     expect(family["ד"]).toEqual({
       focus: "h",
       head_of: ["h->X"],
-      carry: ["X->h"],
+      carry: [],
       cont: ["X->h"],
       supp: ["h->X"],
       sub: [],

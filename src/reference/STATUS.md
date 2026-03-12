@@ -21,7 +21,7 @@
 - Diacritic wrappers are parsed; `dagesh` hardens the envelope and `shuruk` remains lexical-only.
 - Selection policy uses deterministic sourcing with per-bucket distinctness; type checks are still minimal.
 - `ב` creates an anchored boundary handle for “inside-of” and updates the ambient world.
-- `ד` exposes a resolved head via `head_of`, `carry`, and `supp` (with materialized `cont`).
+- `ד` exposes a supported head via `head_of`, `cont`, and `supp` (without `carry`).
 - `ג` emits a shoulder continuation: `cont(F, M)`, `carry(F, M)`, `cont(M, F⁺)`.
 - `ה` seals a resolved head and exports a detached adjunct leg via `sub` while keeping focus on the head.
 - `ז` creates a resolved export port via `cont`/`carry`/`supp` and keeps focus in place.
