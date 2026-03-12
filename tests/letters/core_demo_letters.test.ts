@@ -2,6 +2,26 @@ import { describe, expect, it } from "vitest";
 import { createInitialState } from "@ref/state/state";
 import { runProgram } from "@ref/vm/vm";
 
+function expectGimelShoulderShape(state: ReturnType<typeof createInitialState>): void {
+  const wordOut = String(state.vm.A[state.vm.A.length - 1] ?? "");
+  expect(wordOut.length).toBeGreaterThan(0);
+
+  const incomingCont = Array.from(state.cont).filter((edge) => edge.endsWith(`->${wordOut}`));
+  expect(incomingCont).toHaveLength(1);
+  const shoulder = incomingCont[0]?.split("->")[0] ?? "";
+
+  const incomingCarry = Array.from(state.carry).filter((edge) => edge.endsWith(`->${shoulder}`));
+  expect(incomingCarry).toHaveLength(1);
+  const parent = incomingCarry[0]?.split("->")[0] ?? "";
+
+  expect(state.cont.has(`${parent}->${shoulder}`)).toBe(true);
+  expect(state.carry.has(`${parent}->${shoulder}`)).toBe(true);
+  expect(state.cont.has(`${shoulder}->${wordOut}`)).toBe(true);
+  expect(state.carry.has(`${shoulder}->${wordOut}`)).toBe(false);
+  expect(state.links.filter((link) => link.label === "bestow")).toEqual([]);
+  expect(state.vm.H.some((event) => event.type === "bestow")).toBe(false);
+}
+
 describe("core demo letters", () => {
   it("bet can be first", () => {
     const state = runProgram("בד", createInitialState());
@@ -44,26 +64,12 @@ describe("core demo letters", () => {
 
   it("gimel can be first", () => {
     const state = runProgram("גא", createInitialState());
-    const bestowLinks = state.links.filter((link) => link.label === "bestow");
-    expect(bestowLinks.length).toBe(1);
-    const linkHandle = Array.from(state.handles.values()).find(
-      (handle) => handle.meta?.label === "gimel"
-    );
-    expect(linkHandle?.kind).toBe("structured");
-    const bestow = state.vm.H.find((event) => event.type === "bestow");
-    expect(bestow).toBeDefined();
+    expectGimelShoulderShape(state);
   });
 
   it("gimel can be last", () => {
     const state = runProgram("אג", createInitialState());
-    const bestowLinks = state.links.filter((link) => link.label === "bestow");
-    expect(bestowLinks.length).toBe(1);
-    const linkHandle = Array.from(state.handles.values()).find(
-      (handle) => handle.meta?.label === "gimel"
-    );
-    expect(linkHandle?.kind).toBe("structured");
-    const bestow = state.vm.H.find((event) => event.type === "bestow");
-    expect(bestow).toBeDefined();
+    expectGimelShoulderShape(state);
   });
 
   it("he can be first", () => {

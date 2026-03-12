@@ -22,7 +22,7 @@
 - Selection policy uses deterministic sourcing with per-bucket distinctness; type checks are still minimal.
 - `ב` creates an anchored boundary handle for “inside-of” and updates the ambient world.
 - `ד` exposes a resolved head via `head_of`, `carry`, and `supp` (with materialized `cont`).
-- `ג` records a `bestow` link/event and creates a structured handle.
+- `ג` emits a shoulder continuation: `cont(F, M)`, `carry(F, M)`, `cont(M, F⁺)`.
 - `ה` seals a resolved head and exports a detached adjunct leg via `sub` while keeping focus on the head.
 - `ז` creates a resolved export port via `cont`/`carry`/`supp` and keeps focus in place.
 - `ט` rewrites the target envelope around a single sanctioned port and adds no graph edges.
