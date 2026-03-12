@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { addCarry, addHeadOf, addSub, addSupp } from "@ref/state/relations";
 import { createInitialState } from "@ref/state/state";
-import { runProgram } from "@ref/vm/vm";
+import { runProgram, runProgramWithDeepTrace } from "@ref/vm/vm";
 
 type EdgeKind = "carry" | "cont" | "head_of" | "sub" | "supp";
 
@@ -47,6 +47,32 @@ function symmetricDifference(left: Set<string>, right: Set<string>): string[] {
   }
 
   return diff.sort();
+}
+
+function tokenExitEdges(word: string): {
+  cont: string[];
+  carry: string[];
+  supp: string[];
+} {
+  const result = runProgramWithDeepTrace(word, createInitialState(), {
+    includeStateSnapshots: true
+  });
+  const entry = result.deepTrace.find((row) => row.token_raw === word);
+  const snapshot = entry?.phases.find((phase) => phase.phase === "token_exit")?.snapshot as
+    | {
+        cont?: string[];
+        carry?: string[];
+        supp?: string[];
+      }
+    | undefined;
+  if (!snapshot) {
+    throw new Error(`Missing token_exit snapshot for '${word}'`);
+  }
+  return {
+    cont: snapshot.cont ?? [],
+    carry: snapshot.carry ?? [],
+    supp: snapshot.supp ?? []
+  };
 }
 
 describe("edge types", () => {
@@ -105,5 +131,23 @@ describe("edge types", () => {
     expect(daletEdges.has("cont:Ω->h")).toBe(true);
 
     expect(symmetricDifference(reshEdges, daletEdges)).toEqual(["carry:Ω->h", "supp:h->Ω"]);
+  });
+
+  it("treats carry as live transferred burden, not as a synonym for local support", () => {
+    const nun = tokenExitEdges("נ");
+    const finalNun = tokenExitEdges("ן");
+    const kaf = tokenExitEdges("כ");
+
+    expect(nun.carry).toHaveLength(1);
+    expect(nun.carry[0]?.endsWith("->נ:1:1")).toBe(true);
+    expect(nun.supp).toEqual([]);
+
+    expect(finalNun.carry).toEqual([]);
+    expect(finalNun.supp).toHaveLength(1);
+    expect(finalNun.supp[0]?.startsWith("ן:1:1->")).toBe(true);
+
+    expect(kaf.carry).toEqual([]);
+    expect(kaf.supp).toHaveLength(1);
+    expect(kaf.supp[0]?.startsWith("כ:1:1->")).toBe(true);
   });
 });

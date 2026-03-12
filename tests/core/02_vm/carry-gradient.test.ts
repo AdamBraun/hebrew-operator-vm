@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { ayinOp } from "@ref/letters/ayin";
+import { daletOp } from "@ref/letters/dalet";
 import { finalNunOp } from "@ref/letters/finalNun";
+import { kafOp } from "@ref/letters/kaf";
 import { nunOp } from "@ref/letters/nun";
 import { qofOp } from "@ref/letters/qof";
 import { reshOp } from "@ref/letters/resh";
@@ -36,6 +38,34 @@ function reverseEdge(edge: string): string {
 }
 
 describe("carry gradient matrix", () => {
+  it("keeps directly supported letters off the live carry ledger", () => {
+    const cases = [
+      {
+        letter: "ד",
+        op: daletOp,
+        expectedSupp: ["ד:0:1->Ω"]
+      },
+      {
+        letter: "ן",
+        op: finalNunOp,
+        expectedSupp: ["ן:0:1->Ω"]
+      },
+      {
+        letter: "כ",
+        op: kafOp,
+        expectedSupp: ["כ:0:1->Ω"]
+      }
+    ] as const;
+
+    for (const testCase of cases) {
+      const state = createInitialState();
+      applyUnary(state, testCase.op);
+
+      expect(Array.from(state.carry), testCase.letter).toEqual([]);
+      expect(Array.from(state.supp).sort(), testCase.letter).toEqual(testCase.expectedSupp);
+    }
+  });
+
   it("keeps live-carry letters as positive controls with no same-step self-closing supp", () => {
     const cases = [
       {
