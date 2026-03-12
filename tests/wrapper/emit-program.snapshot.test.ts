@@ -64,7 +64,9 @@ describe("emit program snapshot", () => {
       (emittedManifest as { input_digests?: Record<string, string> }).input_digests
         ?.spine_sha256 as string
     ).toMatch(/^[a-f0-9]{64}$/);
-    expect((emittedManifest as { programSchemaVersion?: string }).programSchemaVersion).toBe("1.0.0");
+    expect((emittedManifest as { programSchemaVersion?: string }).programSchemaVersion).toBe(
+      "1.0.0"
+    );
     expect((emittedManifest as { stitchConfigDigest?: string }).stitchConfigDigest).toMatch(
       /^[a-f0-9]{64}$/
     );
