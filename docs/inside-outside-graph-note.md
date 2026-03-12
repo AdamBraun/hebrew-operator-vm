@@ -58,12 +58,6 @@ F0 -> h -> o
 F0 -> h -> i
 ```
 
-if you ignore `מ`'s extra carry:
-
-```text
-supp(h, F0)
-```
-
 Nothing in `cont`, `carry`, or `supp` marks one successor of `h` as interior and the other as exterior.
 
 Therefore `inside` cannot be recovered from continuation topology alone. It requires one additional positive fact:
@@ -109,12 +103,6 @@ Both letters share the same forward hold path:
 allocate h
 add cont(F0, h)
 add supp(h, F0)
-```
-
-`מ` additionally retains:
-
-```text
-add carry(F0, h)
 ```
 
 Both also allocate one successor of the hold:

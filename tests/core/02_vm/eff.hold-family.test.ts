@@ -226,7 +226,7 @@ describe("eff hold family", () => {
     expect(contSuccessors(state, holdId)).toEqual([]);
   });
 
-  it("distinguishes kaf from lamed by focus/topology only, while mem still differs by carry-ledger participation", () => {
+  it("distinguishes kaf, lamed, and mem by focus/topology while mem no longer differs by carry-ledger participation", () => {
     const kafState = createHarnessState();
     const kafResult = executeLetterOp(kafState, kafOp);
     const kafMeta = kafResult.cons.meta as { holdId: string };
@@ -269,25 +269,17 @@ describe("eff hold family", () => {
     expect(lamedProfile.contributions).toEqual(kafProfile.contributions);
     expect(lamedProfile.visited).not.toEqual(kafProfile.visited);
 
-    expect(memProfile.bundle).toEqual(FOCUS_WITNESS);
+    expect(memProfile.bundle).toEqual({});
     expect(memProfile.visited).toEqual([
       { nodeId: memMeta.interiorId, distance: 0 },
       { nodeId: memMeta.holdId, distance: 1 },
       { nodeId: FOCUS_ID, distance: 2 },
       { nodeId: PRE_FOCUS_ID, distance: 3 }
     ]);
-    expect(memProfile.contributions).toEqual([
-      {
-        source: FOCUS_ID,
-        target: memMeta.holdId,
-        targetDistance: 1,
-        resolution: "resolved",
-        closer: memMeta.holdId,
-        witness: FOCUS_WITNESS
-      }
-    ]);
+    expect(memProfile.contributions).toEqual([]);
     expect(memProfile.bundle).not.toHaveProperty("fromH");
-    expect(memProfile.bundle).not.toEqual(lamedProfile.bundle);
+    expect(memProfile.bundle).toEqual(lamedProfile.bundle);
+    expect(memProfile.contributions).toEqual(lamedProfile.contributions);
     expect(memState.boundaries).toEqual([
       expect.objectContaining({
         id: memMeta.boundaryId,
@@ -316,10 +308,7 @@ describe("eff hold family", () => {
     const profile = effProfile(state, sealedId);
 
     expect(state.vm.F).toBe(sealedId);
-    expect(profile.bundle).toEqual({
-      ...INTERIOR_WITNESS,
-      ...FOCUS_WITNESS
-    });
+    expect(profile.bundle).toEqual(INTERIOR_WITNESS);
     expect(profile.visited).toEqual([
       { nodeId: sealedId, distance: 0 },
       { nodeId: interiorId, distance: 1 },
@@ -335,14 +324,6 @@ describe("eff hold family", () => {
         resolution: "resolved",
         closer: sealedId,
         witness: INTERIOR_WITNESS
-      },
-      {
-        source: FOCUS_ID,
-        target: holdId,
-        targetDistance: 2,
-        resolution: "resolved",
-        closer: holdId,
-        witness: FOCUS_WITNESS
       }
     ]);
     expect(profile.bundle).not.toHaveProperty("fromH");

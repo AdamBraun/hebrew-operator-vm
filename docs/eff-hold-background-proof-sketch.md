@@ -127,7 +127,6 @@ Use the current `מ` candidate from the topology note:
 
 ```text
 cont(F0, h)
-carry(F0, h)
 supp(h, F0)
 cont(h, i)
 F := i
@@ -144,17 +143,17 @@ Backward `cont` walk from `i` visits:
 Incoming carries on visited nodes:
 
 - at `i`: none, under the current candidate
-- at `h`: `carry(F0, h)`
+- at `h`: none, under the current candidate
 - at `F0`: any earlier carries into `F0`
 
 So `eff(i)` includes:
 
-- `W(F0)` ranked at distance `1`, `resolved`
-- plus earlier upstream witness bundles, unlike current `eff(o)` for `ל`
+- no immediate witness bundle from `F0`
+- only earlier upstream witness bundles already entering the backward cone, just like current `eff(o)` for `ל`
 
 Important consequence:
 
-- under the current contract, `eff(i)` and `eff(o)` are no longer the same, because `מ` keeps `carry(F0, h)` and `ל` does not
+- under the current contract, `eff(i)` and `eff(o)` are the same in carry/witness terms, because neither `מ` nor `ל` keeps `carry(F0, h)`
 - `eff()` still does not inspect interior/exterior enclosure topology directly, except for chunk-boundary stopping rules
 
 ## 5. Conclusion
@@ -178,7 +177,7 @@ Backward visibility alone does **not** prove any of the following:
 - that `h` itself is returned by `eff()`
 - that later letters can directly select `h` as an operand
 - that hold-local state stored on `h` is visible, unless that state is exported through some carry-source witness bundle
-- that the difference between `ל` and `מ` is explained by topology alone rather than by `מ`'s extra hold carry
+- that the difference between `ל` and `מ` is carried by `eff()`; the current distinction is topological rather than carry-ledger based
 
 ### Final verdict
 
@@ -189,4 +188,4 @@ Backward visibility alone does **not** prove any of the following:
 
 If the intended claim is only that the resolved hold stays on the backward continuation chain, the claim is proved.
 
-If the intended claim is that `eff()` carries inherited witness context through current `ל`, the claim is disproved.
+If the intended claim is that `eff()` distinguishes current `ל` from current `מ`, the claim is disproved.

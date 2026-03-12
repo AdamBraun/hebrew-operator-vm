@@ -35,16 +35,15 @@ add supp(H, F0)
 add cont(H, X)
 ```
 
-A carry-backed resolved hold, still used by `מ`, is:
+The open-enclosure variant used by `מ` shares the same direct supported hold base:
 
 ```text
 allocate H
 add cont(F0, H)
-add carry(F0, H)
 add supp(H, F0)
 ```
 
-`H` is the held node. Topologically, both forms are resolved successors of `F0`: the line advances to `H` and is stabilized there. The difference is whether the hold also enters the carry ledger.
+`H` is the held node. Topologically, both forms are resolved successors of `F0`: the line advances to `H` and is stabilized there. `מ` differs from `כ` and `ל` by what continuation it opens relative to that hold, not by adding a local carry edge.
 
 ## Letter definitions
 
@@ -115,7 +114,6 @@ Allocate:
 Edges added:
 
 - `cont(F0, H)`
-- `carry(F0, H)`
 - `supp(H, F0)`
 - `cont(H, I)`
 
@@ -136,9 +134,8 @@ Focus ends:
 
 Topological shape:
 
-- `מ` still differs from `ל` by enclosure placement, but it now also keeps `carry(F0, H)` while `ל` does not.
-- So the difference is not only placement:
-  `X` in `ל` is outside the hold and carryless, while `I` in `מ` is inside an open enclosure and still inherits the source witness through the hold.
+- `מ` differs from `ל` by enclosure placement alone:
+  `X` in `ל` is outside the hold, while `I` in `מ` is inside an open enclosure rooted at that same hold.
 
 ### ם
 
@@ -188,7 +185,7 @@ Topological shape:
 
 - Also a plain forward successor of the resolved hold.
 - Path shape: `F0 -> H -> I`, but `I` lies inside an open enclosure.
-- The difference from `ל` is no longer only topological placement: `מ` also keeps the hold carry that `ל` omits.
+- The difference from `ל` is topological placement: `I` is marked as interior by the enclosure record.
 
 ### Sealed continuation in ם
 
@@ -204,7 +201,7 @@ Topological shape:
 - the minimal “continue beyond the hold” form (`ל`)
 - the sealing step that turns an open interior into a resolved result (`ם`)
 
-`cont/carry/supp` plus boundary state now distinguish `ל` from `מ`: even before boundary inspection, `מ` retains a hold carry that `ל` no longer emits.
+Boundary state distinguishes `ל` from `מ`: the graph edges can match while the enclosure record places `מ`'s successor on the interior side of the hold.
 
 So the current model does **not** need a new edge type, but it **does** need one existing enclosure-level distinction:
 

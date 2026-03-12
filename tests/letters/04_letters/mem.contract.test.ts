@@ -26,5 +26,9 @@ describe("mem contract", () => {
     const { h, r } = memOp.seal(state, cons);
     expect(state.handles.has(h)).toBe(true);
     expect(state.handles.has(r) || r === "⊥").toBe(true);
+    expect(state.cont.size).toBe(2);
+    expect(state.carry.size).toBe(0);
+    expect(state.supp.size).toBe(1);
+    expect(state.boundaries).toHaveLength(1);
   });
 });

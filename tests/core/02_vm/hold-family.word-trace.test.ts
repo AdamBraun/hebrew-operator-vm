@@ -470,14 +470,6 @@ describe("hold family word traces", () => {
         resolution: "resolved",
         closer: sealedId,
         witness: EXTERIOR_WITNESS
-      },
-      {
-        source: baseline,
-        target: memBoundary.outside,
-        targetDistance: 4,
-        resolution: "resolved",
-        closer: memBoundary.outside,
-        witness: AMBIENT_WITNESS
       }
     ]);
   });

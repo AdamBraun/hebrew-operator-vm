@@ -76,7 +76,7 @@ describe("mem behavior", () => {
     expect(state.vm.F).toBe(interiorId);
     expect(state.vm.F).not.toBe(holdId);
     expect(state.cont).toEqual(new Set([`${source}->${holdId}`, `${holdId}->${interiorId}`]));
-    expect(state.carry).toEqual(new Set([`${source}->${holdId}`]));
+    expect(state.carry).toEqual(new Set());
     expect(state.supp).toEqual(new Set([`${holdId}->${source}`]));
     expect(boundary).toMatchObject({
       id: boundaryId,
@@ -89,7 +89,7 @@ describe("mem behavior", () => {
     expect(state.vm.OStack_word).toHaveLength(0);
   });
 
-  it("eff at the interior sees the source witness through a resolved carry", () => {
+  it("eff at the interior does not inherit source witness without a carry edge", () => {
     const state = createInitialState();
     const omega = state.handles.get(OMEGA_ID);
     omega!.meta = { ...(omega?.meta ?? {}), witness: { ambient: 1 } };
@@ -104,10 +104,10 @@ describe("mem behavior", () => {
     hold!.meta = { ...(hold?.meta ?? {}), witness: { holdSelf: 1 } };
 
     expect(resolveCarry(state, source, holdId, { focusNodeId: interiorId })).toEqual({
-      status: "resolved",
-      closer: holdId
+      status: "unresolved",
+      closer: null
     });
-    expect(eff(state, interiorId, { focusNodeId: interiorId })).toEqual({ ambient: 1 });
+    expect(eff(state, interiorId, { focusNodeId: interiorId })).toEqual({});
   });
 
   it("ם closes the current enclosure and lands on a sealed resolved successor", () => {
@@ -178,7 +178,7 @@ describe("mem behavior", () => {
     });
   });
 
-  it("מ keeps the same forward path as ל, but adds both boundary state and a hold carry", () => {
+  it("מ keeps the same forward path as ל, but differs only by boundary state and focus landing", () => {
     const memSnapshot = tokenExitSnapshot("מ");
     const lamedSnapshot = tokenExitSnapshot("ל");
     const memBoundary = memSnapshot.boundaries?.[0];
@@ -208,7 +208,7 @@ describe("mem behavior", () => {
         [memStart]: "F0",
         [memHold]: "H"
       })
-    ).toEqual(["F0->H"]);
+    ).toEqual([]);
     expect(
       normalizeEdges(lamedSnapshot.carry, {
         [lamedStart]: "F0",
