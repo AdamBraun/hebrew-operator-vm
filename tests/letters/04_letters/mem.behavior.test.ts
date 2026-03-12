@@ -178,7 +178,7 @@ describe("mem behavior", () => {
     });
   });
 
-  it("מ differs from ל only by the enclosure boundary record", () => {
+  it("מ keeps the same forward path as ל, but adds both boundary state and a hold carry", () => {
     const memSnapshot = tokenExitSnapshot("מ");
     const lamedSnapshot = tokenExitSnapshot("ל");
     const memBoundary = memSnapshot.boundaries?.[0];
@@ -214,7 +214,7 @@ describe("mem behavior", () => {
         [lamedStart]: "F0",
         [lamedHold]: "H"
       })
-    ).toEqual(["F0->H"]);
+    ).toEqual([]);
     expect(
       normalizeEdges(memSnapshot.supp, {
         [memHold]: "H",

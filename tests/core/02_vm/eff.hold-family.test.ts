@@ -226,7 +226,7 @@ describe("eff hold family", () => {
     expect(contSuccessors(state, holdId)).toEqual([]);
   });
 
-  it("distinguishes kaf from lamed and mem by carry-ledger participation, while leaving lamed and mem bundle-identical", () => {
+  it("distinguishes kaf from lamed by focus/topology only, while mem still differs by carry-ledger participation", () => {
     const kafState = createHarnessState();
     const kafResult = executeLetterOp(kafState, kafOp);
     const kafMeta = kafResult.cons.meta as { holdId: string };
@@ -254,25 +254,20 @@ describe("eff hold family", () => {
     expect(kafProfile.bundle).toEqual({});
     expect(kafProfile.contributions).toEqual([]);
 
-    expect(lamedProfile.bundle).toEqual(FOCUS_WITNESS);
+    expect(lamedProfile.bundle).toEqual({});
     expect(lamedProfile.visited).toEqual([
       { nodeId: lamedMeta.exteriorId, distance: 0 },
       { nodeId: lamedMeta.holdId, distance: 1 },
       { nodeId: FOCUS_ID, distance: 2 },
       { nodeId: PRE_FOCUS_ID, distance: 3 }
     ]);
-    expect(lamedProfile.contributions).toEqual([
-      {
-        source: FOCUS_ID,
-        target: lamedMeta.holdId,
-        targetDistance: 1,
-        resolution: "resolved",
-        closer: lamedMeta.holdId,
-        witness: FOCUS_WITNESS
-      }
-    ]);
+    expect(lamedProfile.contributions).toEqual([]);
     expect(lamedProfile.bundle).not.toHaveProperty("fromH");
     expect(lamedState.boundaries).toEqual([]);
+
+    expect(lamedProfile.bundle).toEqual(kafProfile.bundle);
+    expect(lamedProfile.contributions).toEqual(kafProfile.contributions);
+    expect(lamedProfile.visited).not.toEqual(kafProfile.visited);
 
     expect(memProfile.bundle).toEqual(FOCUS_WITNESS);
     expect(memProfile.visited).toEqual([
@@ -292,7 +287,7 @@ describe("eff hold family", () => {
       }
     ]);
     expect(memProfile.bundle).not.toHaveProperty("fromH");
-    expect(memProfile.bundle).toEqual(lamedProfile.bundle);
+    expect(memProfile.bundle).not.toEqual(lamedProfile.bundle);
     expect(memState.boundaries).toEqual([
       expect.objectContaining({
         id: memMeta.boundaryId,

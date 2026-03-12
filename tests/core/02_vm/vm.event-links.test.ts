@@ -25,7 +25,6 @@ describe("vm event links", () => {
       { from: "a", to: "b", label: "transport" },
       { from: "b", to: "a", label: "transport" },
       { from: "c", to: "d", label: "cont" },
-      { from: "c", to: "d", label: "carry" },
       { from: "d", to: "c", label: "supp" },
       { from: "d", to: "e", label: "cont" },
       { from: "p", to: "t", label: "port_of" }

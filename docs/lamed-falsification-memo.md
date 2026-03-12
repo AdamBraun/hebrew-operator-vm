@@ -22,7 +22,6 @@ Lamed candidate:
 ```text
 allocate H
 add cont(F0, H)
-add carry(F0, H)
 add supp(H, F0)
 allocate X
 add cont(H, X)
@@ -68,7 +67,6 @@ supp(N, F0)
 
 ```text
 F0 -> H -> X
-carry(F0, H)
 supp(H, F0)
 ```
 
@@ -97,12 +95,12 @@ Those stronger edges would change the shape:
 
 The current lamed proposal needs neither. Its claim is only that execution continues beyond the resolved hold.
 
-The `eff()` code makes this testable. `eff(nodeId)` walks backward through `cont` predecessors, then gathers witness contributions from incoming `carry` edges on the visited nodes ([src/reference/state/eff.ts](/Users/adambraun/projects/letters/src/reference/state/eff.ts#L223), [src/reference/state/eff.ts](/Users/adambraun/projects/letters/src/reference/state/eff.ts#L323)). Therefore:
+The `eff()` code still makes the topology testable. `eff(nodeId)` walks backward through `cont` predecessors, then gathers witness contributions from incoming `carry` edges on the visited nodes ([src/reference/state/eff.ts](/Users/adambraun/projects/letters/src/reference/state/eff.ts#L223), [src/reference/state/eff.ts](/Users/adambraun/projects/letters/src/reference/state/eff.ts#L323)). Therefore:
 
 - from focus `X`, `eff()` can still visit `H` if and only if `cont(H, X)` exists
-- once `H` is visited, the existing `carry(F0, H)` remains visible through the ordinary graph walk
+- but no source witness is inherited through `ל` unless some other carry already lands on that backward cone
 
-So the backward visibility claim does not need hidden metadata, but it **does** need the explicit continuation edge from `H` to `X`.
+So the backward visibility claim does not need hidden metadata, but it **does** need the explicit continuation edge from `H` to `X`. What changed is the witness-flow claim: current `ל` no longer proves that through `eff()`.
 
 ### 4. Is the proposal acceptable without new metadata?
 
@@ -121,10 +119,10 @@ It is recoverable from plain graph structure plus focus.
 But the proposal is only minimally sufficient. It is acceptable as a letter-level graph pattern, not as a new irreducible graph relation. Mechanically it factors as:
 
 ```text
-ל = carry-backed resolved hold followed by bare continuation
+ל = direct-supported hold followed by bare continuation
 ```
 
-Equivalently, at the topology level it is `carry-backed resolved hold + cont`, not literally the current direct-supported `כ`.
+Equivalently, at the topology level it is `direct-supported hold + cont`, which now matches current `כ` on hold edges and differs only by the extra successor and focus landing.
 
 That means:
 

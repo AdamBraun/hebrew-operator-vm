@@ -69,7 +69,6 @@ export function applyEventLinks(state: State, events: readonly VMEvent[]): void 
         break;
       case "lamed_step_past":
         link(state, data.source, data.hold, "cont");
-        link(state, data.source, data.hold, "carry");
         link(state, data.hold, data.source, "supp");
         link(state, data.hold, data.id, "cont");
         break;

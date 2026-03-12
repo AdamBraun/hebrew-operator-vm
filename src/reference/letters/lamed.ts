@@ -1,5 +1,5 @@
 import { BOT_ID, createHandle } from "../state/handles";
-import { addCarry, addCont, addSupp } from "../state/relations";
+import { addCont, addSupp } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
 import { selectCurrentFocus } from "../vm/select";
@@ -23,7 +23,7 @@ export const lamedOp: LetterOp = {
     const exteriorId = nextId(S, "ל");
     S.handles.set(holdId, createHandle(holdId, "scope"));
     S.handles.set(exteriorId, createHandle(exteriorId, "scope"));
-    addCarry(S, source, holdId);
+    addCont(S, source, holdId);
     addSupp(S, holdId, source);
     addCont(S, holdId, exteriorId);
     const cons: Construction = {

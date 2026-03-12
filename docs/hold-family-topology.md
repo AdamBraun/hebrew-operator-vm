@@ -26,7 +26,16 @@ add cont(F0, H)
 add supp(H, F0)
 ```
 
-A carry-backed resolved hold, still used by `ל` and `מ`, is:
+A direct supported overstep hold, now used by `ל`, is:
+
+```text
+allocate H
+add cont(F0, H)
+add supp(H, F0)
+add cont(H, X)
+```
+
+A carry-backed resolved hold, still used by `מ`, is:
 
 ```text
 allocate H
@@ -70,7 +79,6 @@ Allocate:
 Edges added:
 
 - `cont(F0, H)`
-- `carry(F0, H)`
 - `supp(H, F0)`
 - `cont(H, X)`
 
@@ -85,7 +93,7 @@ Focus ends:
 
 Topological shape:
 
-- `ל` is a resolved hold with one additional forward ray leaving the hold.
+- `ל` is a direct supported hold with one additional forward ray leaving the hold.
 - `X` is beyond the hold, not another resolved version of it.
 - The held node remains behind the focus as the immediately previous resolved site.
 
@@ -128,10 +136,9 @@ Focus ends:
 
 Topological shape:
 
-- At the level of `cont/carry/supp` alone, `מ` looks the same as `ל`: both are `F0 -> H -> successor`.
-- The actual difference is not a different continuation edge. The difference is placement:
-  `X` in `ל` is outside the hold, while `I` in `מ` is inside an open enclosure.
-- Therefore `מ` requires an enclosure/boundary distinction somewhere in the state model. Without that, `ל` and `מ` are graph-isomorphic and cannot be told apart.
+- `מ` still differs from `ל` by enclosure placement, but it now also keeps `carry(F0, H)` while `ל` does not.
+- So the difference is not only placement:
+  `X` in `ל` is outside the hold and carryless, while `I` in `מ` is inside an open enclosure and still inherits the source witness through the hold.
 
 ### ם
 
@@ -181,7 +188,7 @@ Topological shape:
 
 - Also a plain forward successor of the resolved hold.
 - Path shape: `F0 -> H -> I`, but `I` lies inside an open enclosure.
-- The difference from `ל` is topological placement, not a different edge label.
+- The difference from `ל` is no longer only topological placement: `מ` also keeps the hold carry that `ל` omits.
 
 ### Sealed continuation in ם
 
@@ -197,7 +204,7 @@ Topological shape:
 - the minimal “continue beyond the hold” form (`ל`)
 - the sealing step that turns an open interior into a resolved result (`ם`)
 
-`cont/carry/supp` are not sufficient by themselves to distinguish `ל` from `מ`, because both reduce to the same directed path if inside/outside is not represented.
+`cont/carry/supp` plus boundary state now distinguish `ל` from `מ`: even before boundary inspection, `מ` retains a hold carry that `ל` no longer emits.
 
 So the current model does **not** need a new edge type, but it **does** need one existing enclosure-level distinction:
 

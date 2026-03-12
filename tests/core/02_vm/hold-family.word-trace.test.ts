@@ -364,7 +364,7 @@ describe("hold family word traces", () => {
     }
   });
 
-  it("traces כָּל as a supported hold followed by a carry-backed hold stepped past by ל", () => {
+  it("traces כָּל as a supported hold followed by a carryless overstep by ל", () => {
     const run = runWord("כָּל");
     const [kaf, lamed] = run.tokens;
     const baseline = baselineId(kaf.snapshot);
@@ -384,24 +384,15 @@ describe("hold family word traces", () => {
       `${kafHold}->${lamedHold}`,
       `${lamedHold}->${exterior}`
     ]);
-    expect(lamed.snapshot.carry).toEqual([`${kafHold}->${lamedHold}`]);
+    expect(lamed.snapshot.carry).toEqual([]);
     expect(lamed.snapshot.supp).toEqual([`${kafHold}->${baseline}`, `${lamedHold}->${kafHold}`]);
 
     seedWitness(run.state, baseline, AMBIENT_WITNESS);
     seedWitness(run.state, kafHold, FIRST_HOLD_WITNESS);
-    expect(effProfile(run.state, exterior).contributions).toEqual([
-      {
-        source: kafHold,
-        target: lamedHold,
-        targetDistance: 1,
-        resolution: "resolved",
-        closer: lamedHold,
-        witness: FIRST_HOLD_WITNESS
-      }
-    ]);
+    expect(effProfile(run.state, exterior).contributions).toEqual([]);
   });
 
-  it("distinguishes לב from כב by the node that ב houses, while bare כ leaves no ambient carry background", () => {
+  it("distinguishes לב from כב by the node that ב houses, while neither input leaves ambient carry background", () => {
     const lev = runWord("לֵב");
     const kev = runWord("כב");
 
@@ -420,16 +411,7 @@ describe("hold family word traces", () => {
 
     seedWitness(lev.state, levBaseline, AMBIENT_WITNESS);
     seedWitness(kev.state, baselineIdFromState(kev.state), AMBIENT_WITNESS);
-    expect(effProfile(lev.state, levBoundary.inside).contributions).toEqual([
-      {
-        source: levBaseline,
-        target: String(levLamedEvent.data.hold),
-        targetDistance: 1,
-        resolution: "resolved",
-        closer: String(levLamedEvent.data.hold),
-        witness: AMBIENT_WITNESS
-      }
-    ]);
+    expect(effProfile(lev.state, levBoundary.inside).contributions).toEqual([]);
     expect(effProfile(kev.state, kevBoundary.inside).contributions).toEqual([]);
   });
 
