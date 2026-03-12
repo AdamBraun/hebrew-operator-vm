@@ -21,6 +21,7 @@
 - `tests/letters/04_letters/gimel.behavior.test.ts`
 - `tests/letters/04_letters/gimel-vs-nun.regression.test.ts`
 - `tests/letters/04_letters/gimel.resolution.test.ts`
+- `tests/letters/04_letters/gimel.unresolved.test.ts`
 
 ## Kaf / Final Kaf
 
