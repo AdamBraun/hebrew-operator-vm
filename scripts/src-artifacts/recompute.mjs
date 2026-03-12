@@ -239,6 +239,24 @@ async function renderMetadataPlanJsonlText(filePath) {
   return `${JSON.stringify(parsed)}\n`;
 }
 
+async function readCanonicalMetadataGeneratedAt() {
+  const canonicalAbsPath = toAbs(CANONICAL_PATHS.metadataPlanJsonlPath);
+  if (!(await pathExists(canonicalAbsPath))) {
+    return null;
+  }
+
+  try {
+    const parsed = await readJsonObject(canonicalAbsPath);
+    const generatedAt = parsed.generated_at;
+    if (typeof generatedAt !== "string" || Number.isNaN(Date.parse(generatedAt))) {
+      return null;
+    }
+    return new Date(generatedAt).toISOString();
+  } catch {
+    return null;
+  }
+}
+
 async function compareCanonicalFile(layer, expectedFilePath) {
   const canonicalRelPath = canonicalPathForLayer(layer);
   if (!canonicalRelPath) {
@@ -473,6 +491,7 @@ async function main() {
 
   if (impactedLayers.has("metadata")) {
     const metadataForce = forceLayerRebuild("metadata", directLayers);
+    const metadataCreatedAt = await readCanonicalMetadataGeneratedAt();
     const metadataResult = await runBuildLayerMetadata([
       "--dataset",
       CANONICAL_PATHS.metadataDataset,
@@ -480,6 +499,7 @@ async function main() {
       CANONICAL_PATHS.torahJson,
       "--out",
       "outputs/cache/metadata",
+      ...(metadataCreatedAt ? ["--created-at", metadataCreatedAt] : []),
       ...(metadataForce ? ["--force=true"] : [])
     ]);
     const metadataJsonlText = await renderMetadataPlanJsonlText(metadataResult.metadataPlanPath);
