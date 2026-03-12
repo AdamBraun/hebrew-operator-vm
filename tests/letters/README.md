@@ -20,6 +20,7 @@
 - `tests/letters/04_letters/gimel.contract.test.ts`
 - `tests/letters/04_letters/gimel.behavior.test.ts`
 - `tests/letters/04_letters/gimel.integration.test.ts`
+- `tests/letters/04_letters/gimel.invariant.test.ts`
 - `tests/letters/04_letters/gimel-vs-nun.regression.test.ts`
 - `tests/letters/04_letters/gimel.resolution.test.ts`
 - `tests/letters/04_letters/gimel.unresolved.test.ts`
