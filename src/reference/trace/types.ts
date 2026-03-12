@@ -96,7 +96,11 @@ export type AliasEvent = TraceEventBase<
   }
 >;
 
-export type GimelShoulderEvent = TraceEventBase<"GIMEL.SHOULDER", "derived_operator", {}>;
+export type GimelShoulderEvent = TraceEventBase<
+  "GIMEL.SHOULDER",
+  "derived_operator",
+  Record<string, never>
+>;
 
 export type BoundaryCloseEvent = TraceEventBase<
   "DALET.BOUNDARY_CLOSE" | "RESH.BOUNDARY_CLOSE",
