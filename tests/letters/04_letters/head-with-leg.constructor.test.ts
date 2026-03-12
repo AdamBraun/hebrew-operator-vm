@@ -36,6 +36,24 @@ describe("exposeHeadWithLeg", () => {
     expect(state.vm.F).not.toBe(leg);
   });
 
+  it("can keep a resolved head direct-backed without adding head-side carry", () => {
+    const state = seedSourceState();
+    const { head, leg } = exposeHeadWithLeg(state, {
+      source: "X",
+      resolved: true,
+      headUsesCarry: false
+    });
+
+    expect(head).not.toBe(leg);
+    expect(state.head_of).toEqual(new Set([`${head}->X`]));
+    expect(state.carry).toEqual(new Set([`${head}->${leg}`]));
+    expect(state.cont).toEqual(new Set([`X->${head}`, `${head}->${leg}`]));
+    expect(state.supp).toEqual(new Set([`${head}->X`, `${leg}->${head}`]));
+    expect(state.sub).toEqual(new Set([`${head}->${leg}`]));
+    expect(state.adjuncts).toEqual({ [head]: [leg] });
+    expect(state.carry.has(`X->${head}`)).toBe(false);
+  });
+
   it("builds the unresolved head-plus-leg topology without supp edges", () => {
     const state = seedSourceState();
     const focusBefore = state.vm.F;

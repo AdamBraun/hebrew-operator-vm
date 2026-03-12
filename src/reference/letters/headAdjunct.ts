@@ -10,6 +10,7 @@ type HeadAdjunctSpec = {
 export type ExposeHeadWithLegArgs = {
   source: string;
   resolved: boolean;
+  headUsesCarry?: boolean;
   headIdPrefix?: string;
   legIdPrefix?: string;
   headKind?: HandleKind;
@@ -92,7 +93,11 @@ export function exposeHeadWithLeg(
     })
   );
   addHeadOf(state, headId, args.source);
-  addCarry(state, args.source, headId);
+  if (args.headUsesCarry === false) {
+    addCont(state, args.source, headId);
+  } else {
+    addCarry(state, args.source, headId);
+  }
   if (args.resolved) {
     addSupp(state, headId, args.source);
   }

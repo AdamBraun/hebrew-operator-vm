@@ -57,7 +57,7 @@ describe("resolved/unresolved symmetry across nun/final-nun and resh/dalet", () 
     expect(matrix["נ"].supp || matrix["ר"].supp).toBe(false);
   });
 
-  it("uses the same carry-plus-supp distinction in the detached-leg pair", () => {
+  it("keeps the resolved head side direct-backed while the detached leg stays carry-backed", () => {
     const matrix = {
       ק: inspectResolution("רק", "ק"),
       ה: inspectResolution("רה", "ה")
@@ -68,6 +68,6 @@ describe("resolved/unresolved symmetry across nun/final-nun and resh/dalet", () 
     );
 
     expect(matrix["ק"]).toMatchObject({ carry: true, supp: false });
-    expect(matrix["ה"]).toMatchObject({ carry: true, supp: true });
+    expect(matrix["ה"]).toMatchObject({ carry: false, supp: true });
   });
 });

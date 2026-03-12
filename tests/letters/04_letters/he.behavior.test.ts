@@ -53,8 +53,7 @@ describe("he behavior", () => {
     expect(source).toBe("Ω");
     expect(leg.length).toBeGreaterThan(0);
     expect(snapshot.head_of).toEqual([`${head}->Ω`]);
-    expect(snapshot.carry).toContain(`Ω->${head}`);
-    expect(snapshot.carry).toContain(`${head}->${leg}`);
+    expect(snapshot.carry).toEqual([`${head}->${leg}`]);
     expect(snapshot.cont).toContain(`Ω->${head}`);
     expect(snapshot.cont).toContain(`${head}->${leg}`);
     expect(snapshot.supp).toEqual([`${head}->Ω`, `${leg}->${head}`]);
@@ -79,7 +78,7 @@ describe("he behavior", () => {
     });
     expect(headEvent?.data?.edges).toEqual([
       { kind: "head_of", from: head, to: "Ω" },
-      { kind: "carry", from: "Ω", to: head },
+      { kind: "cont", from: "Ω", to: head },
       { kind: "supp", from: head, to: "Ω" },
       { kind: "cont", from: head, to: leg },
       { kind: "carry", from: head, to: leg },
@@ -97,8 +96,9 @@ describe("he behavior", () => {
 
     expect(selectArgs).toEqual(["נ:1:1"]);
     expect(source).toBe("נ:1:1");
-    expect(snapshot.carry).toContain(`נ:1:1->${head}`);
     expect(snapshot.carry).toContain(`${head}->${leg}`);
+    expect(snapshot.carry).not.toContain(`נ:1:1->${head}`);
+    expect(snapshot.cont).toContain(`נ:1:1->${head}`);
     expect(snapshot.supp).toContain(`${head}->נ:1:1`);
     expect(snapshot.supp).toContain(`${leg}->${head}`);
     expect(snapshot.sub).toContain(`${head}->${leg}`);

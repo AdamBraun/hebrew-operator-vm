@@ -27,6 +27,7 @@ export const heOp: LetterOp = {
     const { head, leg } = exposeHeadWithLeg(S, {
       source,
       resolved: true,
+      headUsesCarry: false,
       headIdPrefix: "ה",
       legIdPrefix: "ה",
       headMeta: { exposedBy: "ה", headOf: source, backed_head: 1 },
@@ -63,7 +64,7 @@ export const heOp: LetterOp = {
         resolved: true,
         edges: [
           { kind: "head_of", from: headId, to: source },
-          { kind: "carry", from: source, to: headId },
+          { kind: "cont", from: source, to: headId },
           { kind: "supp", from: headId, to: source },
           { kind: "cont", from: headId, to: legId },
           { kind: "carry", from: headId, to: legId },

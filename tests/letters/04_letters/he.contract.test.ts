@@ -18,7 +18,7 @@ describe("he contract", () => {
     expect(state.handles.has(h)).toBe(true);
     expect(state.handles.has(r) || r === "⊥").toBe(true);
     expect(state.head_of.size).toBe(1);
-    expect(state.carry.size).toBe(2);
+    expect(state.carry.size).toBe(1);
     expect(state.cont.size).toBe(2);
     expect(state.supp.size).toBe(2);
     expect(state.sub.size).toBe(1);
