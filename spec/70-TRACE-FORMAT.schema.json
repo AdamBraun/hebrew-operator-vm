@@ -87,7 +87,7 @@
       "type": "string",
       "enum": [
         "ALEPH.ALIAS",
-        "GIMEL.BESTOW",
+        "GIMEL.SHOULDER",
         "DALET.BOUNDARY_CLOSE",
         "RESH.BOUNDARY_CLOSE",
         "HE.HEAD_WITH_LEG",
@@ -120,7 +120,7 @@
       "type": "string",
       "enum": [
         "ALEPH.ALIAS",
-        "GIMEL.BESTOW",
+        "GIMEL.SHOULDER",
         "DALET.BOUNDARY_CLOSE",
         "RESH.BOUNDARY_CLOSE",
         "HE.HEAD_WITH_LEG",
@@ -162,7 +162,7 @@
           "$ref": "#/$defs/AliasEvent"
         },
         {
-          "$ref": "#/$defs/BestowEvent"
+          "$ref": "#/$defs/GimelShoulderEvent"
         },
         {
           "$ref": "#/$defs/BoundaryCloseEvent"
@@ -275,13 +275,13 @@
         }
       }
     },
-    "BestowEvent": {
+    "GimelShoulderEvent": {
       "type": "object",
       "required": ["kind", "index", "tau", "source", "payload"],
       "additionalProperties": false,
       "properties": {
         "kind": {
-          "const": "GIMEL.BESTOW"
+          "const": "GIMEL.SHOULDER"
         },
         "index": {
           "type": "integer",
@@ -292,21 +292,11 @@
           "minimum": 0
         },
         "source": {
-          "const": "vm_event"
+          "const": "derived_operator"
         },
         "payload": {
           "type": "object",
-          "required": ["from", "to", "payload"],
-          "additionalProperties": false,
-          "properties": {
-            "from": {
-              "$ref": "#/$defs/HandleId"
-            },
-            "to": {
-              "$ref": "#/$defs/HandleId"
-            },
-            "payload": {}
-          }
+          "additionalProperties": false
         }
       }
     },

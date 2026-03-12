@@ -200,12 +200,12 @@ describe("exemplar library build + verify pipeline", () => {
         token_ids: [151, 152],
         skeleton: [
           "HE.DECLARE",
-          "GIMEL.BESTOW",
+          "GIMEL.SHOULDER",
           "DALET.BOUNDARY_CLOSE",
           "LAMED.HOLD_STEP_PAST",
           "FINAL_MEM.CLOSE"
         ],
-        flow: "ה declare(public) ⇢ ג bestowal ⇢ ד backed head expose ⇢ ל hold+step-past ⇢ ם close enclosure",
+        flow: "ה declare(public) ⇢ ג shoulder continuation ⇢ ד backed head expose ⇢ ל hold+step-past ⇢ ם close enclosure",
         semantic_version: "1.0.0"
       },
       {
@@ -265,10 +265,10 @@ describe("exemplar library build + verify pipeline", () => {
           name: "ENDS_WITH_FINALIZE",
           matching_skeleton_keys: ["ALEPH.ALIAS|TAV.FINALIZE"]
         },
-        CONTAINS_BESTOW_THEN_SEAL: {
-          name: "CONTAINS_BESTOW_THEN_SEAL",
+        CONTAINS_SHOULDER_THEN_SEAL: {
+          name: "CONTAINS_SHOULDER_THEN_SEAL",
           matching_skeleton_keys: [
-            "HE.DECLARE|GIMEL.BESTOW|DALET.BOUNDARY_CLOSE|LAMED.HOLD_STEP_PAST|FINAL_MEM.CLOSE"
+            "HE.DECLARE|GIMEL.SHOULDER|DALET.BOUNDARY_CLOSE|LAMED.HOLD_STEP_PAST|FINAL_MEM.CLOSE"
           ]
         }
       }

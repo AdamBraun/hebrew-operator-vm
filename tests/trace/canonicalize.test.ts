@@ -53,7 +53,7 @@ describe("trace canonicalizer", () => {
           if (!includeSkeleton) {
             delete word.skeleton;
           } else {
-            word.skeleton = ["GIMEL.BESTOW", "ALEPH.ALIAS"];
+            word.skeleton = ["GIMEL.SHOULDER", "ALEPH.ALIAS"];
           }
           if (!includeFlow) {
             delete word.flow;

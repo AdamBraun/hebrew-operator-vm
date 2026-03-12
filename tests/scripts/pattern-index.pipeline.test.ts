@@ -56,16 +56,16 @@ describe("pattern index build + query pipeline", () => {
         ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 2 },
         ref_key: "Genesis/1/1/2",
         surface: "גת",
-        skeleton: ["GIMEL.BESTOW", "TAV.FINALIZE"],
-        flow: "ג bestow -> ת finalize",
+        skeleton: ["GIMEL.SHOULDER", "TAV.FINALIZE"],
+        flow: "ג shoulder continuation -> ת finalize",
         semantic_version: "1.0.0"
       },
       {
         ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 3 },
         ref_key: "Genesis/1/1/3",
         surface: "גסת",
-        skeleton: ["GIMEL.BESTOW", "SAMEKH.SUPPORT_DISCHARGE", "TAV.FINALIZE"],
-        flow: "ג bestow -> ס support discharge -> ת finalize",
+        skeleton: ["GIMEL.SHOULDER", "SAMEKH.SUPPORT_DISCHARGE", "TAV.FINALIZE"],
+        flow: "ג shoulder continuation -> ס support discharge -> ת finalize",
         semantic_version: "1.0.0"
       },
       {
@@ -80,16 +80,16 @@ describe("pattern index build + query pipeline", () => {
         ref: { book: "Genesis", chapter: 1, verse: 2, token_index: 1 },
         ref_key: "Genesis/1/2/1",
         surface: "הגם",
-        skeleton: ["HE.DECLARE", "GIMEL.BESTOW", "FINAL_MEM.CLOSE"],
-        flow: "ה declare -> ג bestow -> ם close",
+        skeleton: ["HE.DECLARE", "GIMEL.SHOULDER", "FINAL_MEM.CLOSE"],
+        flow: "ה declare -> ג shoulder continuation -> ם close",
         semantics_version: "1.1.0"
       },
       {
         ref: { book: "Genesis", chapter: 1, verse: 2, token_index: 2 },
         ref_key: "Genesis/1/2/2",
         surface: "גת",
-        skeleton: ["GIMEL.BESTOW", "TAV.FINALIZE"],
-        flow: "ג bestow -> ת finalize",
+        skeleton: ["GIMEL.SHOULDER", "TAV.FINALIZE"],
+        flow: "ג shoulder continuation -> ת finalize",
         semantic_version: "1.0.0"
       }
     ];
@@ -122,11 +122,11 @@ describe("pattern index build + query pipeline", () => {
     expect(countsPayload.unique_skeletons).toBe(5);
     expect(countsPayload.total_occurrences).toBe(6);
     expect(countsPayload.semantic_versions).toEqual(["1.0.0", "1.1.0"]);
-    expect(countsPayload.skeleton_counts["GIMEL.BESTOW|TAV.FINALIZE"]).toBe(2);
+    expect(countsPayload.skeleton_counts["GIMEL.SHOULDER|TAV.FINALIZE"]).toBe(2);
 
     const motifPayload = JSON.parse(fs.readFileSync(motifIndexPath, "utf8"));
     expect(motifPayload.motifs.ENDS_WITH_FINALIZE.occurrence_count).toBe(4);
-    expect(motifPayload.motifs.CONTAINS_BESTOW_THEN_SEAL.occurrence_count).toBe(3);
+    expect(motifPayload.motifs.CONTAINS_SHOULDER_THEN_SEAL.occurrence_count).toBe(3);
 
     const secondBuildOut = runNode([
       SCRIPT,
@@ -140,23 +140,23 @@ describe("pattern index build + query pipeline", () => {
     const secondCountsPayload = JSON.parse(fs.readFileSync(countsPath, "utf8"));
     expect(secondCountsPayload.skeleton_counts_sha256).toBe(firstChecksum);
 
-    const exact = runQuery(indexDir, ["skeleton", "GIMEL.BESTOW|TAV.FINALIZE"]);
+    const exact = runQuery(indexDir, ["skeleton", "GIMEL.SHOULDER|TAV.FINALIZE"]);
     expect(exact.mode).toBe("skeleton");
     expect(exact.matched_skeletons).toBe(1);
     expect(exact.total_occurrences).toBe(2);
     expect(exact.results).toHaveLength(2);
 
-    const subsequence = runQuery(indexDir, ["subsequence", "GIMEL.BESTOW|TAV.FINALIZE"]);
+    const subsequence = runQuery(indexDir, ["subsequence", "GIMEL.SHOULDER|TAV.FINALIZE"]);
     expect(subsequence.matched_skeletons).toBe(2);
     expect(subsequence.total_occurrences).toBe(3);
 
-    const prefix = runQuery(indexDir, ["prefix", "GIMEL.BESTOW"]);
+    const prefix = runQuery(indexDir, ["prefix", "GIMEL.SHOULDER"]);
     expect(prefix.total_occurrences).toBe(3);
 
     const suffix = runQuery(indexDir, ["suffix", "*.FINALIZE"]);
     expect(suffix.total_occurrences).toBe(4);
 
-    const containsThen = runQuery(indexDir, ["contains", "BESTOW", "--then=SEAL"]);
+    const containsThen = runQuery(indexDir, ["contains", "SHOULDER", "--then=SEAL"]);
     expect(containsThen.total_occurrences).toBe(4);
 
     const motif = runQuery(indexDir, ["motif", "ENDS_WITH_FINALIZE"]);

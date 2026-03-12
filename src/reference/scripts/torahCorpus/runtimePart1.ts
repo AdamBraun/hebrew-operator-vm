@@ -47,7 +47,7 @@ const DIACRITIC_KIND_MAP = {
 
 const OP_FLOW_LABEL = {
   "ALEPH.ALIAS": "א alias",
-  "GIMEL.BESTOW": "ג bestowal",
+  "GIMEL.SHOULDER": "ג shoulder continuation",
   "DALET.BOUNDARY_CLOSE": "ד backed head expose",
   "HE.HEAD_WITH_LEG": "ה backed head + detached leg",
   "VAV.CONTINUATION": "ו continuation",
@@ -79,7 +79,6 @@ const OP_FLOW_LABEL = {
 
 const IMPORTANT_EVENT_TYPES = new Set([
   "alias",
-  "bestow",
   "finalize",
   "support",
   "fall",
@@ -383,8 +382,6 @@ function dedupeConsecutive(values) {
 
 function summarizeEvent(type, event, traceEntry) {
   switch (type) {
-    case "bestow":
-      return "directed transfer";
     case "finalize":
       return "hard finalize + stamp";
     case "align":
@@ -477,17 +474,6 @@ function mapRawEventToFlow(event, traceEntry) {
           outside: asHandleId(data.outside),
           boundaryId: asHandleId(data.boundaryId),
           residueId: asHandleId(data.residueId)
-        }
-      };
-    case "bestow":
-      return {
-        op_family: "GIMEL.BESTOW",
-        params_summary: summarizeEvent(event.type, event, traceEntry),
-        trace_source: "vm_event",
-        payload: {
-          from: asHandleId(data.from),
-          to: asHandleId(data.to),
-          payload: data.payload
         }
       };
     case "alias":
@@ -813,6 +799,13 @@ function extractWordFlow(trace) {
 
   for (const traceEntry of trace) {
     const delta = traceEntry.OStackLength;
+    if (traceEntry.read_op === "ג") {
+      addFlow("GIMEL.SHOULDER", "shoulder continuation", "derived", {
+        tau: traceEntry.tauAfter,
+        source: "derived_operator",
+        payload: {}
+      });
+    }
     if (traceEntry.read_op === "נ" && delta > 0) {
       addFlow("NUN.SUPPORT_DEBT", "open support debt", "derived", {
         tau: traceEntry.tauAfter,

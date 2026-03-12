@@ -44,7 +44,7 @@ type ObligationPolicy = {
 
 const OBLIGATION_POLICY_BY_EVENT: Record<TraceEventKind, ObligationPolicy | null> = {
   "ALEPH.ALIAS": null,
-  "GIMEL.BESTOW": null,
+  "GIMEL.SHOULDER": null,
   "DALET.BOUNDARY_CLOSE": null,
   "RESH.BOUNDARY_CLOSE": null,
   "HE.HEAD_WITH_LEG": null,

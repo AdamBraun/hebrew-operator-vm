@@ -352,10 +352,10 @@ Core artifacts:
 Query examples:
 
 ```bash
-npm run pattern-query -- skeleton "GIMEL.BESTOW|TAV.FINALIZE" --index-dir index
-npm run pattern-query -- subsequence "GIMEL.BESTOW|TAV.FINALIZE" --index-dir index
+npm run pattern-query -- skeleton "GIMEL.SHOULDER|TAV.FINALIZE" --index-dir index
+npm run pattern-query -- subsequence "GIMEL.SHOULDER|TAV.FINALIZE" --index-dir index
 npm run pattern-query -- suffix "*.FINALIZE" --index-dir index
-npm run pattern-query -- contains "BESTOW" --then "SEAL" --index-dir index
+npm run pattern-query -- contains "SHOULDER" --then "SEAL" --index-dir index
 npm run pattern-query -- motif ENDS_WITH_FINALIZE --index-dir index
 ```
 

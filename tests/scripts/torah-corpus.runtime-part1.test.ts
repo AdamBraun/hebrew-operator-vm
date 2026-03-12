@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { deriveSignatureNotes, mapRawEventToFlow } from "@ref/scripts/torahCorpus/runtimePart1";
+import {
+  deriveSignatureNotes,
+  extractWordFlow,
+  mapRawEventToFlow
+} from "@ref/scripts/torahCorpus/runtimePart1";
 
 describe("torah corpus runtimePart1", () => {
   it("does not infer pinned he modes from mappiq signatures", () => {
@@ -11,6 +15,29 @@ describe("torah corpus runtimePart1", () => {
         sof: []
       })
     ).toEqual([]);
+  });
+
+  it("derives gimel as a shoulder operator without a transfer vm event", () => {
+    const flow = extractWordFlow([
+      {
+        read_op: "ג",
+        OStackLength: 0,
+        tauAfter: 7,
+        events: []
+      }
+    ]);
+
+    expect(flow.flow_compact).toEqual(["GIMEL.SHOULDER"]);
+    expect(flow.trace_events).toEqual([
+      {
+        kind: "GIMEL.SHOULDER",
+        index: 0,
+        tau: 7,
+        source: "derived_operator",
+        payload: {}
+      }
+    ]);
+    expect(flow.one_liner).toBe("ג shoulder continuation");
   });
 
   it("maps head_with_leg events for he without legacy mode payloads", () => {

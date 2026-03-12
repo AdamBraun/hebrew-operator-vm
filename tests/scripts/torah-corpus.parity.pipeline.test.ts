@@ -123,8 +123,8 @@ describe("torah corpus CLI parity checksums", () => {
 
     expect(runTwo).toEqual(runOne);
     expect(runOne).toEqual({
-      traces: "7bcc684677f662d7e437553e62590c8942950ce687d0ada804bfe20478a67a0c",
-      flows: "8226aa552425212560b163d0777a8f4d852d0a696f8cef9fb8abf62f93534f5d",
+      traces: "da0cead2f23d1055e200ea2a04f7b226b1685236302721d0e4320a3605779e0e",
+      flows: "dfee57f87b18bfd718cf19a72eb2b32812d28975261534b190b7728293444688",
       verseTraces: "b09fcbd50dbe9fb1c8e84717f9c89fd65784250228661c4568afa52cb663d713",
       verseMotifIndex: "bd1448a281cd727267dc19e95d310dd46bdbb759850aa05ba52dc0e97f5f05c5"
     });
@@ -152,8 +152,8 @@ describe("torah corpus CLI parity checksums", () => {
         ref_key: "Genesis/1/1/2",
         surface: "גד",
         tokens: [2],
-        events: ["GIMEL.BESTOW"],
-        flow_skeleton: ["GIMEL.BESTOW"],
+        events: ["GIMEL.SHOULDER"],
+        flow_skeleton: ["GIMEL.SHOULDER"],
         one_liner: "b"
       }
     ];

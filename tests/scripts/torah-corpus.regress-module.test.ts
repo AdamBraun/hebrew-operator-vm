@@ -209,7 +209,7 @@ describe("torah corpus regress module", () => {
               ref: { book: "Genesis", chapter: 1, verse: 1, token_index: 2 },
               surface: "גד",
               flow: "c",
-              skeleton: ["GIMEL.BESTOW"],
+              skeleton: ["GIMEL.SHOULDER"],
               semantics_version: "1.1.0"
             }
           ]
@@ -244,7 +244,7 @@ describe("torah corpus regress module", () => {
         {
           key: "Genesis/1/1/2",
           surface: "גד",
-          expected_skeleton: ["GIMEL.BESTOW"]
+          expected_skeleton: ["GIMEL.SHOULDER"]
         }
       ],
       runBMap: new Map([

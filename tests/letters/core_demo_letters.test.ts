@@ -18,8 +18,13 @@ function expectGimelShoulderShape(state: ReturnType<typeof createInitialState>):
   expect(state.carry.has(`${parent}->${shoulder}`)).toBe(true);
   expect(state.cont.has(`${shoulder}->${wordOut}`)).toBe(true);
   expect(state.carry.has(`${shoulder}->${wordOut}`)).toBe(false);
-  expect(state.links.filter((link) => link.label === "bestow")).toEqual([]);
-  expect(state.vm.H.some((event) => event.type === "bestow")).toBe(false);
+  expect(state.links.every((link) => link.label === "transport")).toBe(true);
+  expect(state.vm.H.map((event) => event.type)).toEqual([
+    "BOUNDARY",
+    "WORD_START",
+    "alias",
+    "BOUNDARY"
+  ]);
 }
 
 describe("core demo letters", () => {

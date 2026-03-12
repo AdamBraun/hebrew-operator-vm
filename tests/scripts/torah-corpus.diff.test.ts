@@ -19,8 +19,8 @@ describe("torah corpus diff payload builder", () => {
           ref_key: "Genesis/1/1/2",
           surface: "גד",
           tokens: [2],
-          events: ["GIMEL.BESTOW"],
-          flow_skeleton: ["GIMEL.BESTOW"],
+          events: ["GIMEL.SHOULDER"],
+          flow_skeleton: ["GIMEL.SHOULDER"],
           one_liner: "b"
         }
       ],
