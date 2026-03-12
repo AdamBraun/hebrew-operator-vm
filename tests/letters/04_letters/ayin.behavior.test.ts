@@ -61,6 +61,9 @@ describe("ayin behavior", () => {
 
     const step = executeUnary(state, ayinOp);
 
+    // Positive control: ע is meant to keep this carry live until an external closer resolves it.
+    expect(state.carry.has(`${step.origin}->${step.child}`)).toBe(true);
+    expect(state.supp.has(`${step.child}->${step.origin}`)).toBe(false);
     expect(resolveCarry(state, step.origin, step.child, { focusNodeId: step.child })).toEqual({
       status: "unresolved",
       closer: null

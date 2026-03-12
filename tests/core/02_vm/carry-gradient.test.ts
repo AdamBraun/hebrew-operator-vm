@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { ayinOp } from "@ref/letters/ayin";
 import { finalNunOp } from "@ref/letters/finalNun";
 import { nunOp } from "@ref/letters/nun";
+import { qofOp } from "@ref/letters/qof";
+import { reshOp } from "@ref/letters/resh";
 import { samekhOp } from "@ref/letters/samekh";
 import type { LetterOp } from "@ref/letters/types";
 import { zayinOp } from "@ref/letters/zayin";
@@ -27,7 +30,50 @@ function applyUnary(state: ReturnType<typeof createInitialState>, op: LetterOp):
   return { parent, child: sealed.h };
 }
 
+function reverseEdge(edge: string): string {
+  const [source = "", target = ""] = edge.split("->");
+  return `${target}->${source}`;
+}
+
 describe("carry gradient matrix", () => {
+  it("keeps live-carry letters as positive controls with no same-step self-closing supp", () => {
+    const cases = [
+      {
+        letter: "נ",
+        op: nunOp,
+        expectedCarry: ["Ω->נ:0:1"]
+      },
+      {
+        letter: "ע",
+        op: ayinOp,
+        expectedCarry: ["Ω->ע:0:1"]
+      },
+      {
+        letter: "ר",
+        op: reshOp,
+        expectedCarry: ["Ω->ר:0:1"]
+      },
+      {
+        letter: "ק",
+        op: qofOp,
+        expectedCarry: ["Ω->ק:0:1", "ק:0:1->ק:0:2"]
+      }
+    ] as const;
+
+    for (const testCase of cases) {
+      const state = createInitialState();
+      applyUnary(state, testCase.op);
+
+      // Positive controls: these letters are supposed to keep live carry debt.
+      expect(Array.from(state.carry).sort(), testCase.letter).toEqual(testCase.expectedCarry);
+      for (const carryEdge of testCase.expectedCarry) {
+        expect(state.supp.has(reverseEdge(carryEdge)), `${testCase.letter}:${carryEdge}`).toBe(
+          false
+        );
+      }
+    }
+  });
+
   it("נ alone creates unresolved carry and advances focus", () => {
     const state = createInitialState();
     const step = applyUnary(state, nunOp);

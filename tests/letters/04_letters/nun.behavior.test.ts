@@ -1,18 +1,32 @@
 import { describe, expect, it } from "vitest";
 import { createInitialState } from "@ref/state/state";
-import { runProgram } from "@ref/vm/vm";
+import { runProgram, runProgramWithDeepTrace } from "@ref/vm/vm";
+
+type TokenExitSnapshot = {
+  cont?: string[];
+  carry?: string[];
+  supp?: string[];
+};
 
 describe("nun behavior", () => {
   it("נ creates succ handle with matching cont/carry edges and no fall", () => {
-    const state = runProgram("נ", createInitialState());
+    const result = runProgramWithDeepTrace("נ", createInitialState(), {
+      includeStateSnapshots: true
+    });
+    const state = result.state;
+    const snapshot = (result.deepTrace
+      .find((entry) => entry.token === "נ")
+      ?.phases.find((phase) => phase.phase === "token_exit")?.snapshot ?? {}) as TokenExitSnapshot;
     const falls = state.vm.H.filter((event) => event.type === "fall");
     expect(falls.length).toBe(0);
     const succ = String(state.vm.A[state.vm.A.length - 1] ?? "");
     const handle = state.handles.get(succ);
     const parent = String(handle?.meta.succOf ?? "");
     expect(parent.length).toBeGreaterThan(0);
-    expect(state.cont.has(`${parent}->${succ}`)).toBe(true);
-    expect(state.carry.has(`${parent}->${succ}`)).toBe(true);
+    // Positive control: נ is meant to keep this carry live until another operator closes it.
+    expect(snapshot.cont ?? []).toContain(`${parent}->${succ}`);
+    expect(snapshot.carry ?? []).toContain(`${parent}->${succ}`);
+    expect(snapshot.supp ?? []).not.toContain(`${succ}->${parent}`);
     expect(state.vm.OStack_word.length).toBe(0);
   });
 

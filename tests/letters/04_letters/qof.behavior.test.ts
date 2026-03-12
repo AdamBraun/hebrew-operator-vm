@@ -51,12 +51,15 @@ describe("qof behavior", () => {
     expect(selectArgs).toEqual(["Ω"]);
     expect(source).toBe("Ω");
     expect(leg.length).toBeGreaterThan(0);
+    // Positive control: ק is meant to keep both carries live until another resolver acts.
     expect(snapshot.head_of).toEqual([`${head}->Ω`]);
     expect(snapshot.carry).toContain(`Ω->${head}`);
     expect(snapshot.carry).toContain(`${head}->${leg}`);
     expect(snapshot.cont).toContain(`Ω->${head}`);
     expect(snapshot.cont).toContain(`${head}->${leg}`);
     expect(snapshot.supp ?? []).toEqual([]);
+    expect((snapshot.supp ?? []).includes(`${head}->Ω`)).toBe(false);
+    expect((snapshot.supp ?? []).includes(`${leg}->${head}`)).toBe(false);
     expect(snapshot.sub).toEqual([`${head}->${leg}`]);
     expect(snapshot.vm?.F).toBe(head);
     expect(state.links.some((link) => link.label === "approx")).toBe(false);
