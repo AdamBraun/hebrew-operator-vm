@@ -16,17 +16,17 @@ describe("nun behavior", () => {
     expect(state.vm.OStack_word.length).toBe(0);
   });
 
-  it("ן creates an immediately resolved carry cycle with zayin-style sealed handle fields", () => {
+  it("ן creates a directly supported committed successor without opening carry", () => {
     const state = runProgram("ן", createInitialState());
     const falls = state.vm.H.filter((event) => event.type === "fall");
     expect(falls.length).toBe(0);
     const wordOut = state.vm.A[state.vm.A.length - 1];
     const focus = state.handles.get(wordOut);
-    const carryIntoFocus = Array.from(state.carry).find((edge) => edge.endsWith(`->${wordOut}`));
-    const parent = carryIntoFocus?.split("->")[0] ?? "";
+    const contIntoFocus = Array.from(state.cont).find((edge) => edge.endsWith(`->${wordOut}`));
+    const parent = contIntoFocus?.split("->")[0] ?? "";
     expect(parent.length).toBeGreaterThan(0);
     expect(state.cont.has(`${parent}->${wordOut}`)).toBe(true);
-    expect(state.carry.has(`${parent}->${wordOut}`)).toBe(true);
+    expect(state.carry.has(`${parent}->${wordOut}`)).toBe(false);
     expect(state.supp.has(`${wordOut}->${parent}`)).toBe(true);
     expect(state.vm.OStack_word.length).toBe(0);
     expect(focus?.edge_mode).toBe("committed");

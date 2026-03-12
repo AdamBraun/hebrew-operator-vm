@@ -17,8 +17,8 @@ type SpawnResolvedCarryNodeArgs = ContinuationNodeArgs & {
 
 type HandleOverrides = Parameters<typeof createHandle>[2];
 
-// Keep zayin-style sealing in one place so final nun inherits the same handle
-// fields whenever zayin's committed node shape changes.
+// Keep committed continuation sealing in one place so ז and ן can share the
+// same sealed handle fields even when their edge emissions differ.
 const ZAYIN_POLICY: HandlePolicy | null = null;
 
 function allocateContinuationNode(
@@ -68,6 +68,21 @@ export function spawnResolvedCarryNode(
   });
   applyZayinSealedHandleFields(S, nodeId, setPolicyLikeZayin);
   addCarry(S, sourceId, nodeId);
+  addSupp(S, nodeId, sourceId);
+  return { nodeId };
+}
+
+export function spawnSupportedContinuationNode(
+  S: State,
+  { sourceId, idPrefix, meta = {}, setPolicyLikeZayin }: SpawnResolvedCarryNodeArgs
+): { nodeId: string } {
+  const nodeId = allocateContinuationNode(S, idPrefix, {
+    meta,
+    edge_mode: "committed",
+    envelope: committedEnvelope()
+  });
+  applyZayinSealedHandleFields(S, nodeId, setPolicyLikeZayin);
+  addCont(S, sourceId, nodeId);
   addSupp(S, nodeId, sourceId);
   return { nodeId };
 }

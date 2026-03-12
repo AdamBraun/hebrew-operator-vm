@@ -3,17 +3,17 @@ import { createInitialState } from "@ref/state/state";
 import { runProgram } from "@ref/vm/vm";
 
 describe("T3 final nun", () => {
-  it("does not fall, advances focus, and creates a zayin-style resolved carry cycle", () => {
+  it("does not fall, advances focus, and creates direct support without carry", () => {
     const state = runProgram("ן", createInitialState());
     const falls = state.vm.H.filter((event) => event.type === "fall");
     expect(falls.length).toBe(0);
     const wordOut = state.vm.A[state.vm.A.length - 1];
     const focus = state.handles.get(wordOut);
-    const carryIntoFocus = Array.from(state.carry).find((edge) => edge.endsWith(`->${wordOut}`));
-    const parent = carryIntoFocus?.split("->")[0] ?? "";
+    const contIntoFocus = Array.from(state.cont).find((edge) => edge.endsWith(`->${wordOut}`));
+    const parent = contIntoFocus?.split("->")[0] ?? "";
     expect(parent.length).toBeGreaterThan(0);
     expect(state.cont.has(`${parent}->${wordOut}`)).toBe(true);
-    expect(state.carry.has(`${parent}->${wordOut}`)).toBe(true);
+    expect(state.carry.has(`${parent}->${wordOut}`)).toBe(false);
     expect(state.supp.has(`${wordOut}->${parent}`)).toBe(true);
     expect(focus?.edge_mode).toBe("committed");
     expect(focus?.envelope.data_flow).toBe("SNAPSHOT");

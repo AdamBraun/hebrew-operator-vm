@@ -2,7 +2,7 @@ import { BOT_ID } from "../state/handles";
 import { committedEnvelope } from "../state/policies";
 import { State } from "../state/state";
 import { selectCurrentFocus } from "../vm/select";
-import { spawnResolvedCarryNode } from "./continuation_primitives";
+import { spawnSupportedContinuationNode } from "./continuation_primitives";
 import { Construction, LetterMeta, LetterOp, SelectOperands } from "./types";
 
 const meta: LetterMeta = {
@@ -19,7 +19,7 @@ export const finalNunOp: LetterOp = {
   select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops: SelectOperands) => {
     const focus = ops.args[0];
-    const { nodeId } = spawnResolvedCarryNode(S, {
+    const { nodeId } = spawnSupportedContinuationNode(S, {
       sourceId: focus,
       idPrefix: "ן",
       setPolicyLikeZayin: true

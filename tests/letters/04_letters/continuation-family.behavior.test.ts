@@ -196,7 +196,7 @@ describe("continuation family behavior", () => {
     expectNoExtraSemantics(snapshot);
   });
 
-  it("ן keeps the same forward continuation shape as ו and adds both carry and supp", () => {
+  it("ן keeps the same forward continuation shape as ו, adds supp, and emits no carry", () => {
     const [vavSnapshot] = tokenExitSnapshots("ו");
     const [finalNunSnapshot] = tokenExitSnapshots("ן");
     const finalNunStart = baselineId(finalNunSnapshot);
@@ -209,7 +209,7 @@ describe("continuation family behavior", () => {
     expect(
       normalizeEdges(finalNunSnapshot.cont, { [finalNunStart]: "F0", [finalNunNode]: "F1" })
     ).toEqual(["F0->F1"]);
-    expect(finalNunSnapshot.carry ?? []).toEqual([`${finalNunStart}->${finalNunNode}`]);
+    expect(finalNunSnapshot.carry ?? []).toEqual([]);
     expect(finalNunSnapshot.supp ?? []).toEqual([`${finalNunNode}->${finalNunStart}`]);
     expect(finalNunHandle?.edge_mode).toBe("committed");
     expect(finalNunHandle?.envelope?.data_flow).toBe("SNAPSHOT");

@@ -35,12 +35,11 @@ Final nun (`ן`, topology only):
 ```text
 allocate N
 add cont(F0, N)
-add carry(F0, N)
 add supp(N, F0)
 F := N
 ```
 
-The reference runtime confirms that `addCarry(source, target)` already inserts the corresponding `cont(source, target)` edge, while `ן` adds `carry` and `supp` to a single child and then only hardens policy afterward; the policy step is not a new graph relation ([src/reference/state/relations.ts](/Users/adambraun/projects/letters/src/reference/state/relations.ts#L63), [src/reference/letters/finalNun.ts](/Users/adambraun/projects/letters/src/reference/letters/finalNun.ts#L21), [src/reference/state/policies.ts](/Users/adambraun/projects/letters/src/reference/state/policies.ts#L54)).
+The reference runtime now gives `ן` a directly supported successor: it emits `cont` plus `supp` on a single child and then hardens policy afterward; the policy step is not a new graph relation ([src/reference/state/relations.ts](/Users/adambraun/projects/letters/src/reference/state/relations.ts#L48), [src/reference/letters/finalNun.ts](/Users/adambraun/projects/letters/src/reference/letters/finalNun.ts#L21), [src/reference/state/policies.ts](/Users/adambraun/projects/letters/src/reference/state/policies.ts#L54)).
 
 ## Result
 
@@ -63,7 +62,6 @@ Yes, topologically.
 
 ```text
 F0 -> N
-carry(F0, N)
 supp(N, F0)
 ```
 

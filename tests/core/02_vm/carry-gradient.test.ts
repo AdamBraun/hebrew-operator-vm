@@ -41,16 +41,15 @@ describe("carry gradient matrix", () => {
     );
   });
 
-  it("ן alone creates resolved carry with zayin-style sealed handle fields and advances focus", () => {
+  it("ן alone creates direct support without carry and advances focus", () => {
     const state = createInitialState();
     const step = applyUnary(state, finalNunOp);
     const handle = state.handles.get(step.child);
 
     expect(state.vm.F).toBe(step.child);
     expect(state.cont.has(`${step.parent}->${step.child}`)).toBe(true);
-    expect(state.carry.has(`${step.parent}->${step.child}`)).toBe(true);
+    expect(state.carry.has(`${step.parent}->${step.child}`)).toBe(false);
     expect(state.supp.has(`${step.child}->${step.parent}`)).toBe(true);
-    expect(isCarryResolved(state, step.parent, step.child, { focusNodeId: step.child })).toBe(true);
     expect(handle?.edge_mode).toBe("committed");
     expect(handle?.envelope.data_flow).toBe("SNAPSHOT");
     expect(handle?.envelope.edit_flow).toBe("TIGHT");
@@ -72,6 +71,27 @@ describe("carry gradient matrix", () => {
     expect(isCarryResolved(state, step.parent, step.child, { focusNodeId: step.child })).toBe(true);
     expect(state.handles.get(step.child)?.edge_mode).toBe("committed");
     expect(state.handles.get(step.child)?.policy).toBe("soft");
+  });
+
+  it("נ then ן leaves the nun-opened carry unresolved until some other closer resolves it", () => {
+    const state = createInitialState();
+    const nunStep = applyUnary(state, nunOp);
+    const finalNunStep = applyUnary(state, finalNunOp);
+
+    expect(state.vm.F).toBe(finalNunStep.child);
+    expect(state.cont.has(`${finalNunStep.parent}->${finalNunStep.child}`)).toBe(true);
+    expect(state.carry.has(`${finalNunStep.parent}->${finalNunStep.child}`)).toBe(false);
+    expect(state.supp.has(`${finalNunStep.child}->${finalNunStep.parent}`)).toBe(true);
+    expect(
+      isCarryUnresolved(state, nunStep.parent, nunStep.child, { focusNodeId: finalNunStep.child })
+    ).toBe(true);
+
+    const samekhStep = applyUnary(state, samekhOp);
+    expect(samekhStep.child).toBe(finalNunStep.child);
+    expect(state.supp.has(`${samekhStep.child}->${nunStep.parent}`)).toBe(true);
+    expect(
+      isCarryResolved(state, nunStep.parent, nunStep.child, { focusNodeId: samekhStep.child })
+    ).toBe(true);
   });
 
   it("נ then ס resolves nun carry at current focus", () => {
