@@ -1,0 +1,64 @@
+{
+  "scenario": "same_word_open_then_close",
+  "graphs": {
+    "מ": {
+      "focus": "I",
+      "edges": {
+        "cont": ["F0->H", "H->I"],
+        "carry": [],
+        "supp": ["H->F0"],
+        "head_of": [],
+        "sub": []
+      },
+      "boundary": {
+        "id": "B",
+        "inside": "I",
+        "outside": "H",
+        "kind": "mem_enclosure",
+        "open": true,
+        "closed": false
+      },
+      "event": {
+        "type": "mem_open",
+        "data": {
+          "hold": "H",
+          "id": "B",
+          "inside": "I",
+          "outside": "H",
+          "source": "F0"
+        }
+      }
+    },
+    "ם": {
+      "focus": "S",
+      "edges": {
+        "cont": ["F0->H", "H->I", "I->S"],
+        "carry": [],
+        "supp": ["H->F0", "S->I"],
+        "head_of": [],
+        "sub": []
+      },
+      "boundary": {
+        "id": "B",
+        "inside": "I",
+        "outside": "H",
+        "kind": "mem_enclosure",
+        "open": false,
+        "closed": true,
+        "close_mode": "explicit",
+        "closed_by": "ם"
+      },
+      "event": {
+        "type": "mem_close",
+        "data": {
+          "focus": "I",
+          "id": "B",
+          "inside": "I",
+          "mode": "existing",
+          "outside": "H",
+          "sealed": "S"
+        }
+      }
+    }
+  }
+}

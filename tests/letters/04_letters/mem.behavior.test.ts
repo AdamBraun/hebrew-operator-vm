@@ -113,7 +113,9 @@ describe("mem behavior", () => {
   it("ם closes the current enclosure and lands on a sealed resolved successor", () => {
     const state = createInitialState();
     const open = executeLetterOp(state, memOp);
-    const { interiorId, boundaryId } = open.cons.meta as {
+    const { source, holdId, interiorId, boundaryId } = open.cons.meta as {
+      source: string;
+      holdId: string;
       interiorId: string;
       boundaryId: string;
     };
@@ -123,9 +125,11 @@ describe("mem behavior", () => {
     const boundary = state.boundaries.find((entry) => entry.id === boundaryId);
 
     expect(state.vm.F).toBe(sealedId);
-    expect(state.cont.has(`${interiorId}->${sealedId}`)).toBe(true);
-    expect(state.carry.has(`${interiorId}->${sealedId}`)).toBe(true);
-    expect(state.supp.has(`${sealedId}->${interiorId}`)).toBe(true);
+    expect(state.cont).toEqual(
+      new Set([`${source}->${holdId}`, `${holdId}->${interiorId}`, `${interiorId}->${sealedId}`])
+    );
+    expect(state.carry).toEqual(new Set());
+    expect(state.supp).toEqual(new Set([`${holdId}->${source}`, `${sealedId}->${interiorId}`]));
     expect(boundary?.open).toBe(false);
     expect(boundary?.closed).toBe(true);
     expect(boundary?.close_mode).toBe("explicit");
@@ -139,9 +143,24 @@ describe("mem behavior", () => {
     const { h } = executeLetterOp(state, finalMemOp);
     const newHandles = [...state.handles.keys()].filter((id) => !handlesBefore.has(id)).sort();
     const boundary = state.boundaries[0];
+    const [holdId = ""] =
+      Array.from(state.handles.entries()).find(
+        ([, handle]) => handle.meta?.heldFrom === OMEGA_ID
+      ) ?? [];
+    const [interiorId = ""] =
+      Array.from(state.handles.entries()).find(
+        ([, handle]) => handle.meta?.interiorOf === holdId
+      ) ?? [];
 
     expect(newHandles).toHaveLength(3);
     expect(state.vm.F).toBe(h);
+    expect(holdId).not.toBe("");
+    expect(interiorId).not.toBe("");
+    expect(state.cont).toEqual(
+      new Set([`${OMEGA_ID}->${holdId}`, `${holdId}->${interiorId}`, `${interiorId}->${h}`])
+    );
+    expect(state.carry).toEqual(new Set());
+    expect(state.supp).toEqual(new Set([`${holdId}->${OMEGA_ID}`, `${h}->${interiorId}`]));
     expect(boundary).toMatchObject({
       kind: "mem_enclosure",
       open: false,

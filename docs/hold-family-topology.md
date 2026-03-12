@@ -150,8 +150,11 @@ Allocate:
 Edges added:
 
 - `cont(I, S)`
-- `carry(I, S)`
 - `supp(S, I)`
+
+Edges not added in the current candidate:
+
+- no `carry(I, S)`
 
 Additional topological update:
 

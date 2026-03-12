@@ -149,7 +149,7 @@ Sources:
 
 Mapping:
 
-- `ם` is the resolved successor of interior work: `i -> s` with `carry(i, s)` and `supp(s, i)`.
+- `ם` is the resolved successor of interior work: `i -> s` with `cont(i, s)` and `supp(s, i)`.
 - Closing the `BoundaryRecord` is the graph-topology correlate of the sealed final mem form.
 - The `מ"ם וסמ"ך` remark fits a genuinely enclosed topology better than a mere open continuation.
 
@@ -236,7 +236,7 @@ Intentionally absent:
 ### `ם` — resolved seal of the interior
 
 ```text
-i --cont,carry--> s
+i --cont-------> s
 i <--supp------- s
 BoundaryRecord(open) -> BoundaryRecord(closed)
 focus = s
@@ -245,18 +245,18 @@ focus = s
 Present:
 
 - `cont(i, s)`
-- `carry(i, s)`
 - `supp(s, i)`
 - boundary closure
 
 Intentionally absent:
 
+- no `carry(i, s)`
 - no new inner node after `s`
 - no second boundary for the same enclosure
 
 `eff()` from focus:
 
-- `eff(s)` sees `W(i)` at target distance `0`, resolved.
+- `eff(s)` adds no immediate carry-ledger contribution from `i`, because `ם` emits no `carry(i, s)`.
 - Earlier carries remain visible farther back along the same chain.
 
 Implementation note:

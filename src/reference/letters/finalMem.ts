@@ -1,7 +1,6 @@
 import { BOT_ID, createHandle } from "../state/handles";
 import {
   addBoundary,
-  addCarry,
   addCont,
   addSupp,
   closeBoundaryRecord,
@@ -51,7 +50,6 @@ export const finalMemOp: LetterOp = {
         })
       );
       addCont(S, focus, holdId);
-      addCarry(S, focus, holdId);
       addSupp(S, holdId, focus);
       addCont(S, holdId, interiorId);
       boundary = addBoundary(S, boundaryId, interiorId, holdId, 1, {
@@ -83,7 +81,6 @@ export const finalMemOp: LetterOp = {
       })
     );
     addCont(S, closeSource, sealedId);
-    addCarry(S, closeSource, sealedId);
     addSupp(S, sealedId, closeSource);
     closeBoundaryRecord(S, boundary.id, {
       close_mode: mode === "synthetic" ? "synthetic" : "explicit",

@@ -292,7 +292,7 @@ describe("eff hold family", () => {
     ]);
   });
 
-  it("makes sealed interior work directly visible only after mem closes", () => {
+  it("closes mem without adding a carry-ledger contribution for the sealed successor", () => {
     const state = createHarnessState();
     const open = executeLetterOp(state, memOp);
     const { holdId, interiorId, boundaryId } = open.cons.meta as {
@@ -308,7 +308,7 @@ describe("eff hold family", () => {
     const profile = effProfile(state, sealedId);
 
     expect(state.vm.F).toBe(sealedId);
-    expect(profile.bundle).toEqual(INTERIOR_WITNESS);
+    expect(profile.bundle).toEqual({});
     expect(profile.visited).toEqual([
       { nodeId: sealedId, distance: 0 },
       { nodeId: interiorId, distance: 1 },
@@ -316,16 +316,7 @@ describe("eff hold family", () => {
       { nodeId: FOCUS_ID, distance: 3 },
       { nodeId: PRE_FOCUS_ID, distance: 4 }
     ]);
-    expect(profile.contributions).toEqual([
-      {
-        source: interiorId,
-        target: sealedId,
-        targetDistance: 0,
-        resolution: "resolved",
-        closer: sealedId,
-        witness: INTERIOR_WITNESS
-      }
-    ]);
+    expect(profile.contributions).toEqual([]);
     expect(profile.bundle).not.toHaveProperty("fromH");
     expect(state.boundaries).toEqual([
       expect.objectContaining({
