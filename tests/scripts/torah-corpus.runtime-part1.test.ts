@@ -56,7 +56,6 @@ describe("torah corpus runtimePart1", () => {
             { kind: "cont", from: "X", to: "h" },
             { kind: "supp", from: "h", to: "X" },
             { kind: "cont", from: "h", to: "leg" },
-            { kind: "carry", from: "h", to: "leg" },
             { kind: "supp", from: "leg", to: "h" }
           ],
           resolved: true
@@ -80,7 +79,6 @@ describe("torah corpus runtimePart1", () => {
           { kind: "cont", from: "X", to: "h" },
           { kind: "supp", from: "h", to: "X" },
           { kind: "cont", from: "h", to: "leg" },
-          { kind: "carry", from: "h", to: "leg" },
           { kind: "supp", from: "leg", to: "h" }
         ],
         resolved: true

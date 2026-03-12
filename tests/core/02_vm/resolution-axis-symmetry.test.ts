@@ -57,7 +57,7 @@ describe("resolved/unresolved symmetry across nun/final-nun and resh/dalet", () 
     expect(matrix["נ"].supp || matrix["ר"].supp).toBe(false);
   });
 
-  it("keeps the resolved head side direct-backed while the detached leg stays carry-backed", () => {
+  it("keeps the resolved head side direct-backed across the detached-leg pair", () => {
     const matrix = {
       ק: inspectResolution("רק", "ק"),
       ה: inspectResolution("רה", "ה")

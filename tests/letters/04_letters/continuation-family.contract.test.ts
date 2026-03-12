@@ -178,7 +178,7 @@ describe("continuation family contract distinctions", () => {
     });
   });
 
-  it("Case E: ה-leg has cont+carry+supp+sub and is not identical to explicit י", () => {
+  it("Case E: ה-leg has cont+supp+sub without carry and is not identical to explicit י", () => {
     const heLeg = heLegEffect().effect;
     const explicitYod = continuationEffect("י").effect;
     const normalizedYod: LegEffect = {
@@ -190,7 +190,7 @@ describe("continuation family contract distinctions", () => {
 
     expect(heLeg).toEqual({
       cont: ["S->T"],
-      carry: ["S->T"],
+      carry: [],
       supp: ["T->S"],
       sub: ["S->T"]
     });

@@ -11,6 +11,7 @@ export type ExposeHeadWithLegArgs = {
   source: string;
   resolved: boolean;
   headUsesCarry?: boolean;
+  legUsesCarry?: boolean;
   headIdPrefix?: string;
   legIdPrefix?: string;
   headKind?: HandleKind;
@@ -109,8 +110,11 @@ export function exposeHeadWithLeg(
       meta: { ...(args.legMeta ?? {}) }
     })
   );
-  addCont(state, headId, legId);
-  addCarry(state, headId, legId);
+  if (args.legUsesCarry === false) {
+    addCont(state, headId, legId);
+  } else {
+    addCarry(state, headId, legId);
+  }
   if (args.resolved) {
     addSupp(state, legId, headId);
   }

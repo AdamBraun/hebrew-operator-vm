@@ -28,6 +28,7 @@ export const heOp: LetterOp = {
       source,
       resolved: true,
       headUsesCarry: false,
+      legUsesCarry: false,
       headIdPrefix: "ה",
       legIdPrefix: "ה",
       headMeta: { exposedBy: "ה", headOf: source, backed_head: 1 },
@@ -67,7 +68,6 @@ export const heOp: LetterOp = {
           { kind: "cont", from: source, to: headId },
           { kind: "supp", from: headId, to: source },
           { kind: "cont", from: headId, to: legId },
-          { kind: "carry", from: headId, to: legId },
           { kind: "supp", from: legId, to: headId }
         ]
       }
