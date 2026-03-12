@@ -5,6 +5,7 @@
   "scripts": {
     "build": "npm run build:src",
     "build:src": "tsc -p tsconfig.json",
+    "audit:self-supporting-letters": "npm run build:src && node dist/scripts/audit-self-supporting-letters.js",
     "check:continuation-family": "npm run build:src && node dist/scripts/check_continuation_family_consistency.js",
     "download-torah": "node scripts/download-torah.mjs",
     "iterate-torah": "node scripts/iterate-torah.mjs",
