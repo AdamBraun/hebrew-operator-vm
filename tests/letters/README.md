@@ -20,6 +20,7 @@
 - `tests/letters/04_letters/gimel.contract.test.ts`
 - `tests/letters/04_letters/gimel.behavior.test.ts`
 - `tests/letters/04_letters/gimel-vs-nun.regression.test.ts`
+- `tests/letters/04_letters/gimel.resolution.test.ts`
 
 ## Kaf / Final Kaf
 
