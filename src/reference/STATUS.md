@@ -24,7 +24,7 @@
 - `ד` exposes a supported head via `head_of`, `cont`, and `supp` (without `carry`).
 - `ג` emits a shoulder continuation: `cont(F, M)`, `carry(F, M)`, `cont(M, F⁺)`.
 - `ה` seals a resolved head and exports a detached adjunct leg via `sub` while keeping focus on the head.
-- `ז` creates a resolved export port via `cont`/`carry`/`supp` and keeps focus in place.
+- `ז` creates an exported supported projection via `cont`/`supp` and keeps focus in place.
 - `ט` rewrites the target envelope around a single sanctioned port and adds no graph edges.
 - `וּ` (shuruk) does not alter `ו` semantics beyond lexical host detection.
 - `ו` no longer performs grouping; it only advances the spine via `cont`.

@@ -113,7 +113,7 @@ describe("continuation family edge-delta equivalence", () => {
     expect(family["ו"].edgeDelta.carry).toEqual([]);
     expect(family["נ"].edgeDelta.carry).toEqual(["F0->N1"]);
     expect(family["ן"].edgeDelta.carry).toEqual([]);
-    expect(family["ז"].edgeDelta.carry).toEqual(family["נ"].edgeDelta.carry);
+    expect(family["ז"].edgeDelta.carry).toEqual([]);
 
     expect(family["י"].edgeDelta.supp).toEqual([]);
     expect(family["ו"].edgeDelta.supp).toEqual([]);
@@ -138,12 +138,12 @@ describe("continuation family edge-delta equivalence", () => {
     expect(family["ו"].finalKDelta).toEqual([family["ו"].nodeId]);
   });
 
-  it("ז and ן share the same direct support edge while differing on carry and focus/export behavior", () => {
+  it("ז and ן stay edge-equivalent while differing only in focus/export behavior", () => {
     const family = executeFamily();
 
     expect(family["ז"].edgeDelta.cont).toEqual(family["ן"].edgeDelta.cont);
     expect(family["ז"].edgeDelta.supp).toEqual(family["ן"].edgeDelta.supp);
-    expect(family["ז"].edgeDelta.carry).toEqual(["F0->N1"]);
+    expect(family["ז"].edgeDelta.carry).toEqual([]);
     expect(family["ן"].edgeDelta.carry).toEqual([]);
 
     expect(family["ז"].focusAfter).toBe(family["ז"].focusBefore);

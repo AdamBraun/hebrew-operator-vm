@@ -7,10 +7,10 @@ type SpawnResolvedPortArgs = {
   exportToK: boolean;
 };
 
-// Shared ז-style port primitive: committed handle plus resolved carry edges.
-// Standard letters usually leave `exportToK` false because the VM publishes the
-// sealed handle during register commit. Internal callers can keep the same
-// structure without exposing the port on K.
+// Shared internal resolved-port primitive: committed handle plus resolved carry
+// edges. Standard letters usually leave `exportToK` false because the VM
+// publishes the sealed handle during register commit. Internal callers can keep
+// the same structure without exposing the port on K.
 export function spawnResolvedPort(
   S: State,
   { portOf, prefix, exportToK }: SpawnResolvedPortArgs

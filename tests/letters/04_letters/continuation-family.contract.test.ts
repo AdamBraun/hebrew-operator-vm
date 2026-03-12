@@ -165,13 +165,13 @@ describe("continuation family contract distinctions", () => {
     });
   });
 
-  it("Case D: ז adds carry+supp on the same continuation step and keeps focus unchanged", () => {
+  it("Case D: ז adds supp on the same continuation step, exports the node, and keeps focus unchanged", () => {
     const { effect } = continuationEffect("ז");
 
     expect(effect).toEqual({
       nodeCount: 1,
       cont: ["F->P"],
-      carry: ["F->P"],
+      carry: [],
       supp: ["P->F"],
       focus: "F",
       exportedTop: "P"
