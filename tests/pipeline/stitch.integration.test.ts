@@ -45,6 +45,23 @@ function expectGolden(filePath: string, actual: string): void {
   expect(actual).toBe(expected);
 }
 
+const MANIFEST_DIGEST_PLACEHOLDER = "__MANIFEST_DIGEST__";
+
+function normalizeProgramMetaGolden(content: string): string {
+  const parsed = JSON.parse(content) as Record<string, unknown>;
+  if (typeof parsed.manifestDigest === "string") {
+    parsed.manifestDigest = MANIFEST_DIGEST_PLACEHOLDER;
+  }
+  return `${JSON.stringify(parsed, null, 2)}\n`;
+}
+
+function expectProgramMetaGolden(filePath: string, actual: string): void {
+  const normalizedActual = normalizeProgramMetaGolden(actual);
+  writeGoldenIfRequested(filePath, normalizedActual);
+  const expected = fs.readFileSync(filePath, "utf8");
+  expect(normalizedActual).toBe(expected);
+}
+
 function findBoundary(
   rows: ReturnType<typeof parseProgramIRJsonl>,
   gapid: string
@@ -152,10 +169,12 @@ describe("pipeline stitch integration", () => {
     expect(stitchedA.programDigest).toBe(programHashA);
 
     const metaText = fs.readFileSync(stitchedA.metaPath, "utf8");
+    const manifestText = fs.readFileSync(stitchedA.manifestPath, "utf8");
     const meta = JSON.parse(metaText) as {
       counts: { ops: number; boundaries: number; checkpoints: number };
       programDigest: string;
       cacheDigest: string;
+      manifestDigest: string;
     };
     expect(meta.counts).toEqual({
       ops: 3,
@@ -164,6 +183,7 @@ describe("pipeline stitch integration", () => {
     });
     expect(meta.programDigest).toBe(programHashA);
     expect(meta.cacheDigest).toMatch(/^[a-f0-9]{64}$/);
+    expect(meta.manifestDigest).toBe(sha256Hex(manifestText));
 
     const lettersRows = parseLettersIRJsonl(fs.readFileSync(letters.lettersIrPath, "utf8"));
     const programRows = parseProgramIRJsonl(programTextA);
@@ -196,6 +216,6 @@ describe("pipeline stitch integration", () => {
     ]);
 
     expectGolden(fixturePath("ProgramIR.expected.jsonl"), programTextA);
-    expectGolden(fixturePath("program.meta.expected.json"), metaText);
+    expectProgramMetaGolden(fixturePath("program.meta.expected.json"), metaText);
   });
 });
