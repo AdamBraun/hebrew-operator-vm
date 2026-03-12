@@ -14,6 +14,12 @@ const meta: LetterMeta = {
   reflexive_ok: true
 };
 
+// ג uses an intermediate shoulder node M.
+// The reason is structural: its attached component connects to the body of the
+// trunk, not to the trunk endpoint, so a single cont(F, F+) is topologically
+// insufficient.
+// The carry therefore lands on M, not on F+.
+// This shoulder placement is what distinguishes ג from נ in the runtime.
 export const gimelOp: LetterOp = {
   meta,
   select: (S: State) => selectCurrentFocus(S),
