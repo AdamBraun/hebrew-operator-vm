@@ -83,7 +83,7 @@ describe("token compile pipeline", () => {
     const compiledText = fs.readFileSync(outPath, "utf8");
     const compiled = JSON.parse(compiledText);
 
-    expect(compiled.semantics.semver).toBe("1.2.0");
+    expect(compiled.semantics.semver).toBe("1.2.1");
     expect(compiled.tokens["2"].derived.toch).toContain("MAPIQ");
     expect(compiled.tokens["2"].derived.modes).toContain("HEH_PINNED");
     expect(compiled.tokens["3"].derived.toch).toContain("SHURUK");

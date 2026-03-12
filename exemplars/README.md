@@ -5,7 +5,7 @@ Canonical, deterministic exemplars for publication and regression validation.
 ## Summary
 
 - source_trace: `corpus/word_traces.jsonl`
-- trace_sha256: `9d598a1982f69187cd78062f7c5da33a15a97cd1f0979d59ca78d8cba3bfb7dc`
+- trace_sha256: `ab4bb39cdc84a20a800a1cb98f66a7d8368e3238d41467fdbd741e5f0d9cd7ae`
 - semantic_versions: 1.1.0
 - exemplars: 30
 - regression_cases: 18
@@ -14,11 +14,11 @@ Canonical, deterministic exemplars for publication and regression validation.
 
 ## Categories
 
-- **High-frequency skeleton exemplars** (10): Top recurring skeletons; baseline references for broad stability checks.
+- **High-frequency skeleton exemplars** (11): Top recurring skeletons; baseline references for broad stability checks.
 - **Special mark exemplars** (4): Mappiq, shin/sin dots, and dagesh-sensitive words.
-- **Operator-family exemplars** (5): Coverage-oriented picks that ensure every observed operator remains represented.
+- **Operator-family exemplars** (6): Coverage-oriented picks that ensure every observed operator remains represented.
 - **Boundary and final-form exemplars** (7): Word-edge behavior, auto-discharge/auto-close behavior, and final-letter form semantics.
-- **Motif-driven exemplars** (4): Representative examples selected from the motif index.
+- **Motif-driven exemplars** (2): Representative examples selected from the motif index.
 
 ## Exemplars
 
@@ -116,11 +116,20 @@ Top recurring skeletons; baseline references for broad stability checks.
 - tags: `high_frequency, skeleton_rank:6`
 - explanation: High-frequency baseline skeleton used as a broad regression anchor.
 
+#### ex-011 — וָאֹמַר (Deuteronomy 1:20#1)
+
+- ref: `Deuteronomy/1/20/1`
+- token_ids: `183, 22, 418, 639`
+- flow: `א alias ⇢ מ open mem-zone ⇢ ר boundary close ⇢ □ mem auto-close`
+- skeleton: `ALEPH.ALIAS -> MEM.OPEN -> RESH.BOUNDARY_CLOSE -> SPACE.MEM_AUTO_CLOSE`
+- tags: `coverage_fill, high_frequency`
+- explanation: High-frequency baseline skeleton used as a broad regression anchor.
+
 ### Special mark exemplars
 
 Mappiq, shin/sin dots, and dagesh-sensitive words.
 
-#### ex-011 — אֵלֶּה (Deuteronomy 1:1#1)
+#### ex-012 — אֵלֶּה (Deuteronomy 1:1#1)
 
 - ref: `Deuteronomy/1/1/1`
 - token_ids: `11, 378, 136`
@@ -129,7 +138,7 @@ Mappiq, shin/sin dots, and dagesh-sensitive words.
 - tags: `mark:dagesh`
 - explanation: Contains dagesh (U+05BC), checking hardened-mark tokenization without trace drift.
 
-#### ex-012 — אֲשֶׁר (Deuteronomy 1:1#3)
+#### ex-013 — אֲשֶׁר (Deuteronomy 1:1#3)
 
 - ref: `Deuteronomy/1/1/3`
 - token_ids: `6, 687, 639`
@@ -138,7 +147,7 @@ Mappiq, shin/sin dots, and dagesh-sensitive words.
 - tags: `high_frequency, mark:shin_dot, skeleton_rank:4`
 - explanation: Contains shin-dot (U+05C1), validating right-dot fork routing semantics.
 
-#### ex-013 — יִשְׂרָאֵל (Deuteronomy 1:1#8)
+#### ex-014 — יִשְׂרָאֵל (Deuteronomy 1:1#8)
 
 - ref: `Deuteronomy/1/1/8`
 - token_ids: `285, 665, 650, 11, 364`
@@ -147,7 +156,7 @@ Mappiq, shin/sin dots, and dagesh-sensitive words.
 - tags: `mark:sin_dot`
 - explanation: Contains sin-dot (U+05C2), validating left-dot shin/sin disambiguation.
 
-#### ex-014 — בָּהּ (Deuteronomy 1:22#19)
+#### ex-015 — בָּהּ (Deuteronomy 1:22#19)
 
 - ref: `Deuteronomy/1/22/19`
 - token_ids: `52, 157`
@@ -160,7 +169,7 @@ Mappiq, shin/sin dots, and dagesh-sensitive words.
 
 Coverage-oriented picks that ensure every observed operator remains represented.
 
-#### ex-015 — פָּארָן (Deuteronomy 1:1#16)
+#### ex-016 — פָּארָן (Deuteronomy 1:1#16)
 
 - ref: `Deuteronomy/1/1/16`
 - token_ids: `554, 1, 650, 439`
@@ -169,7 +178,7 @@ Coverage-oriented picks that ensure every observed operator remains represented.
 - tags: `operator_family, operator:PE.UTTER`
 - explanation: Representative operator-family case for PE.UTTER (utterance).
 
-#### ex-016 — זָהָב (Deuteronomy 1:1#22)
+#### ex-017 — זָהָב (Deuteronomy 1:1#22)
 
 - ref: `Deuteronomy/1/1/22`
 - token_ids: `216, 152, 30`
@@ -178,7 +187,7 @@ Coverage-oriented picks that ensure every observed operator remains represented.
 - tags: `operator_family, operator:ZAYIN.GATE`
 - explanation: Representative operator-family case for ZAYIN.GATE (gate routing).
 
-#### ex-017 — קָדֵשׁ (Deuteronomy 1:2#9)
+#### ex-018 — קָדֵשׁ (Deuteronomy 1:2#9)
 
 - ref: `Deuteronomy/1/2/9`
 - token_ids: `623, 110, 720`
@@ -187,7 +196,16 @@ Coverage-oriented picks that ensure every observed operator remains represented.
 - tags: `operator_family, operator:QOF.APPROX`
 - explanation: Representative operator-family case for QOF.APPROX (approximation).
 
-#### ex-018 — טָרְחֲכֶם (Deuteronomy 1:12#4)
+#### ex-019 — עוֹג (Deuteronomy 1:4#11)
+
+- ref: `Deuteronomy/1/4/11`
+- token_ids: `510, 187, 68`
+- flow: `ג shoulder continuation`
+- skeleton: `GIMEL.SHOULDER`
+- tags: `operator_family, operator:GIMEL.SHOULDER`
+- explanation: Representative operator-family case for GIMEL.SHOULDER (shoulder continuation).
+
+#### ex-020 — טָרְחֲכֶם (Deuteronomy 1:12#4)
 
 - ref: `Deuteronomy/1/12/4`
 - token_ids: `266, 640, 231, 338, 400`
@@ -196,7 +214,7 @@ Coverage-oriented picks that ensure every observed operator remains represented.
 - tags: `operator_family, operator:TET.COVERT`
 - explanation: Representative operator-family case for TET.COVERT (covert behavior).
 
-#### ex-019 — וַנִּסַּע (Deuteronomy 1:19#1)
+#### ex-021 — וַנִּסַּע (Deuteronomy 1:19#1)
 
 - ref: `Deuteronomy/1/19/1`
 - token_ids: `179, 447, 494, 510`
@@ -209,7 +227,7 @@ Coverage-oriented picks that ensure every observed operator remains represented.
 
 Word-edge behavior, auto-discharge/auto-close behavior, and final-letter form semantics.
 
-#### ex-020 — הַדְּבָרִים (Deuteronomy 1:1#2)
+#### ex-022 — הַדְּבָרִים (Deuteronomy 1:1#2)
 
 - ref: `Deuteronomy/1/1/2`
 - token_ids: `149, 104, 51, 642, 280, 400`
@@ -218,7 +236,7 @@ Word-edge behavior, auto-discharge/auto-close behavior, and final-letter form se
 - tags: `final:mem`
 - explanation: Representative final-mem close behavior; word-final closure should stay deterministic.
 
-#### ex-021 — מֹשֶׁה (Deuteronomy 1:1#5)
+#### ex-023 — מֹשֶׁה (Deuteronomy 1:1#5)
 
 - ref: `Deuteronomy/1/1/5`
 - token_ids: `426, 687, 136`
@@ -227,7 +245,7 @@ Word-edge behavior, auto-discharge/auto-close behavior, and final-letter form se
 - tags: `boundary:mem_auto_close`
 - explanation: Shows boundary-triggered mem auto-close (SPACE.MEM_AUTO_CLOSE) at word end.
 
-#### ex-022 — הַיַּרְדֵּן (Deuteronomy 1:1#10)
+#### ex-024 — הַיַּרְדֵּן (Deuteronomy 1:1#10)
 
 - ref: `Deuteronomy/1/1/10`
 - token_ids: `149, 299, 640, 111, 439`
@@ -236,7 +254,7 @@ Word-edge behavior, auto-discharge/auto-close behavior, and final-letter form se
 - tags: `final:nun`
 - explanation: Representative final-nun discharge pair; both debt and discharge must remain coupled.
 
-#### ex-023 — סוּף (Deuteronomy 1:1#14)
+#### ex-025 — סוּף (Deuteronomy 1:1#14)
 
 - ref: `Deuteronomy/1/1/14`
 - token_ids: `480, 193, 532`
@@ -245,7 +263,7 @@ Word-edge behavior, auto-discharge/auto-close behavior, and final-letter form se
 - tags: `final:pe`
 - explanation: Representative final-pe utterance close behavior at word boundary.
 
-#### ex-024 — בַּרְנֵעַ (Deuteronomy 1:2#10)
+#### ex-026 — בַּרְנֵעַ (Deuteronomy 1:2#10)
 
 - ref: `Deuteronomy/1/2/10`
 - token_ids: `48, 640, 450, 521`
@@ -254,7 +272,7 @@ Word-edge behavior, auto-discharge/auto-close behavior, and final-letter form se
 - tags: `boundary:support_discharge`
 - explanation: Shows support debt resolved at boundary via SPACE.SUPPORT_DISCHARGE.
 
-#### ex-025 — בְּאֶרֶץ (Deuteronomy 1:5#3)
+#### ex-027 — בְּאֶרֶץ (Deuteronomy 1:5#3)
 
 - ref: `Deuteronomy/1/5/3`
 - token_ids: `32, 14, 646, 569`
@@ -263,7 +281,7 @@ Word-edge behavior, auto-discharge/auto-close behavior, and final-letter form se
 - tags: `final:tsadi`
 - explanation: Representative final-tsadi align-final behavior at word end.
 
-#### ex-026 — בסמך (Genesis 5:1#5)
+#### ex-028 — בסמך (Genesis 5:1#5)
 
 - ref: `Genesis/5/1/5`
 - token_ids: `30, 480, 401, 319`
@@ -276,7 +294,7 @@ Word-edge behavior, auto-discharge/auto-close behavior, and final-letter form se
 
 Representative examples selected from the motif index.
 
-#### ex-027 — וַחֲצֵרֹת (Deuteronomy 1:1#20)
+#### ex-029 — וַחֲצֵרֹת (Deuteronomy 1:1#20)
 
 - ref: `Deuteronomy/1/1/20`
 - token_ids: `179, 231, 579, 652, 724`
@@ -285,7 +303,7 @@ Representative examples selected from the motif index.
 - tags: `motif, motif:ENDS_WITH_FINALIZE`
 - explanation: Representative motif case (ENDS_WITH_FINALIZE) chosen for stable motif-level validation.
 
-#### ex-028 — בְּעַשְׁתֵּי (Deuteronomy 1:3#4)
+#### ex-030 — בְּעַשְׁתֵּי (Deuteronomy 1:3#4)
 
 - ref: `Deuteronomy/1/3/4`
 - token_ids: `32, 521, 664, 736, 280`
@@ -293,24 +311,6 @@ Representative examples selected from the motif index.
 - skeleton: `SHIN.FORK -> TAV.FINALIZE`
 - tags: `motif, motif:ENDS_WITH_FINALIZE`
 - explanation: Representative motif case (ENDS_WITH_FINALIZE) chosen for stable motif-level validation.
-
-#### ex-029 — גְּדֹלֹת (Deuteronomy 1:28#14)
-
-- ref: `Deuteronomy/1/28/14`
-- token_ids: `70, 125, 390, 724`
-- flow: `ג bestowal ⇢ ד boundary close ⇢ ל endpoint bind ⇢ ת finalize+stamp`
-- skeleton: `GIMEL.BESTOW -> DALET.BOUNDARY_CLOSE -> LAMED.ENDPOINT -> TAV.FINALIZE`
-- tags: `motif, motif:CONTAINS_BESTOW_THEN_SEAL`
-- explanation: Representative motif case (CONTAINS_BESTOW_THEN_SEAL) chosen for stable motif-level validation.
-
-#### ex-030 — וְכִגְבוּרֹתֶךָ (Deuteronomy 3:24#21)
-
-- ref: `Deuteronomy/3/24/21`
-- token_ids: `163, 330, 69, 30, 193, 652, 739, 323`
-- flow: `ג bestowal ⇢ ר boundary close ⇢ ת finalize+stamp`
-- skeleton: `GIMEL.BESTOW -> RESH.BOUNDARY_CLOSE -> TAV.FINALIZE`
-- tags: `motif, motif:CONTAINS_BESTOW_THEN_SEAL`
-- explanation: Representative motif case (CONTAINS_BESTOW_THEN_SEAL) chosen for stable motif-level validation.
 
 ## Maintenance Rule
 

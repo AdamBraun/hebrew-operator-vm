@@ -120,7 +120,7 @@ Execution of a token ((\ell, \delta)) (let (S_0) be the current state):
 - **MicroGraph:** `Y(L)+Y(R)+Y(C)`
 - **Tier:** `Sof`
 - **Semantics:** `ConvergeToEndpoint` (`edge_mode=convergent`, `commit_node=C`, optional `endpoint_bias=true`)
-- **NameSignature:** framed_lock + bestowal (י–מ–ל) + channel + endpoint.
+- **NameSignature:** framed_lock + shoulderized continuation (י–מ–ל) + channel + endpoint.
 
 #### Kamatz (ָ) — span + commit (Sof)
 
@@ -173,7 +173,7 @@ Execution of a token ((\ell, \delta)) (let (S_0) be the current state):
 | patach (ַ)  | Sof (below)   | `V(L,R)`                   | `Gate` (controlled gate)                                                    | utterance-export + finalize-stamp + gated-compartment ⇒ controlled gate | none                   |
 | tzere (ֵ)   | Sof (below)   | `Y(L)+Y(R)`                | `Stabilize` (`edge_mode=stabilized`, `head_hint=bare`)                      | exemplar-align + pin + bare-head + pin                                  | none                   |
 | hiriq (ִ)   | Sof (below)   | `Y((sof, C))`              | `RepTokenCommit` (compressed pin-pair, `edge_mode=committed`)               | gated + pin + bare head + pin + ≈                                       | none                   |
-| segol (ֶ)   | Sof (below)   | `Y(L)+Y(R)+Y(C)`           | `ConvergeToEndpoint` (`edge_mode=convergent`)                               | framed_lock + bestowal (י–מ–ל) + channel + endpoint                     | none                   |
+| segol (ֶ)   | Sof (below)   | `Y(L)+Y(R)+Y(C)`           | `ConvergeToEndpoint` (`edge_mode=convergent`)                               | framed_lock + shoulderized continuation (י–מ–ל) + channel + endpoint    | none                   |
 | kamatz (ָ)  | Sof (below)   | `V(L,R)+Y(C)`              | `CommitRepresentativeToAtomic` (`edge_mode=committed`, declared `out_type`) | ≈ + membrane-open + atomic finalize                                     | none                   |
 | shva (ְ)    | Sof (below)   | `Y(C₁)+Y(C₂)`              | `CollapseToAlias` (`edge_mode=collapsed`)                                   | branch + channel + alias                                                | none                   |
 | kubutz (ֻ)  | Sof (below)   | `Seq[Y(p1), Y(p2), Y(p3)]` | `Bundle` (`edge_mode=bundled`)                                              | ≈ + channel + interiorize + channel + atomic                            | none                   |

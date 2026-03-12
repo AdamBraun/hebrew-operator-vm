@@ -1,45 +1,46 @@
 import { BOT_ID, createHandle } from "../state/handles";
+import { addCarry, addCont } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
-import { selectOperands } from "../vm/select";
+import { selectCurrentFocus } from "../vm/select";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
 
 const meta: LetterMeta = {
   letter: "ג",
-  arity_req: 3,
+  arity_req: 1,
   arity_opt: 0,
   distinct_required: false,
   distinct_optional: false,
   reflexive_ok: true
 };
 
+// ג uses an intermediate shoulder node M.
+// The reason is structural: its attached component connects to the body of the
+// trunk, not to the trunk endpoint, so a single cont(F, F+) is topologically
+// insufficient.
+// The carry therefore lands on M, not on F+.
+// This shoulder placement is what distinguishes ג from נ in the runtime.
 export const gimelOp: LetterOp = {
   meta,
-  select: (S: State) => selectOperands(S, meta),
+  select: (S: State) => selectCurrentFocus(S),
   bound: (S: State, ops) => {
-    const [from, to, payload] = ops.args;
+    const source = ops.args[0];
+    const shoulderId = nextId(S, "ג");
+    const successorId = nextId(S, "ג");
+    S.handles.set(shoulderId, createHandle(shoulderId, "scope"));
+    S.handles.set(successorId, createHandle(successorId, "scope"));
+    addCont(S, source, shoulderId);
+    addCarry(S, source, shoulderId);
+    addCont(S, shoulderId, successorId);
     const cons: Construction = {
-      base: from,
+      base: source,
       envelope: defaultEnvelope(),
-      meta: { from, to, payload }
+      meta: { source, shoulderId, successorId }
     };
     return { S, cons };
   },
   seal: (S: State, cons: Construction) => {
-    const { from, to, payload } = cons.meta as { from: string; to: string; payload: string };
-    const linkId = nextId(S, "ג");
-    S.handles.set(
-      linkId,
-      createHandle(linkId, "structured", {
-        meta: { from, to, payload, label: "gimel" }
-      })
-    );
-    S.links.push({ from, to, label: "bestow" });
-    S.vm.H.push({
-      type: "bestow",
-      tau: S.vm.tau,
-      data: { from, to, payload }
-    });
-    return { S, h: linkId, r: BOT_ID };
+    const { successorId } = cons.meta as { successorId: string };
+    return { S, h: successorId, r: BOT_ID };
   }
 };

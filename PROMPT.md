@@ -204,14 +204,13 @@ Operational rule:
 
 ---
 
-# ג — Directed bestowal (flow landing on a point)
+# ג — Shoulderized continuation
 
-- **Select:** source (x), recipient (y), and payload (p) with (p\in M(x)).
-- **Bound:** add a directed bestowal (x \xrightarrow{\text{bestow }p} y) and re-key the payload as endpointed to the recipient (p \to \iota(y)) (the internal ל stage).
-- **Seal:** log (\text{bestow}(x,p,y)) at (\tau), reify the transfer as a selectable handle, and shift focus toward the recipient (or union with it).
-- **Internal factorization (milui):** ג = sealed pipeline of **י–מ–ל**: pin recipient (\iota(y)), extract payload from source (p\in M(x)), bind payload to recipient (p\in L(\iota(y))).
-- **Note:** the shape reads as ו + י (flow terminating in a point), matching the directed landing semantics.
-- **Optional (privacy):** the event may seal into a non-public layer when a discreet transfer is intended.
+- **Select:** current focus (F).
+- **Bound:** allocate an on-spine shoulder node (M) and successor (F^+), then add `cont(F, M)`, `carry(F, M)`, `cont(M, F^+)`.
+- **Seal:** set focus to (F^+).
+- **Structural note:** the attached component meets the trunk at the shoulder node (M), not at the terminal point (F^+), so a single-step continuation is insufficient.
+- **Contrast:** this is what distinguishes ג from נ, which uses `carry(F, F^+)` on a one-node continuation.
 
 ---
 

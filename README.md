@@ -50,6 +50,9 @@ Policy allowlists:
 - `config/guardrails-allowlist.json`
 - `config/mjs-policy-allowlist.json`
 
+Touched-legacy exceptions, when unavoidable, must stay path-scoped and carry an
+explicit rationale in the allowlist config.
+
 ## Torah Corpus (Optional)
 
 The repo includes helper scripts to download the Torah and iterate it through the interpreter.
@@ -352,10 +355,10 @@ Core artifacts:
 Query examples:
 
 ```bash
-npm run pattern-query -- skeleton "GIMEL.BESTOW|TAV.FINALIZE" --index-dir index
-npm run pattern-query -- subsequence "GIMEL.BESTOW|TAV.FINALIZE" --index-dir index
+npm run pattern-query -- skeleton "GIMEL.SHOULDER|TAV.FINALIZE" --index-dir index
+npm run pattern-query -- subsequence "GIMEL.SHOULDER|TAV.FINALIZE" --index-dir index
 npm run pattern-query -- suffix "*.FINALIZE" --index-dir index
-npm run pattern-query -- contains "BESTOW" --then "SEAL" --index-dir index
+npm run pattern-query -- contains "SHOULDER" --then "SEAL" --index-dir index
 npm run pattern-query -- motif ENDS_WITH_FINALIZE --index-dir index
 ```
 

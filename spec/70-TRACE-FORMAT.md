@@ -58,6 +58,7 @@ Common required fields for all events:
 - `tau`: VM logical time at emission/derivation.
 - `source`: one of:
   - `vm_event`
+  - `derived_operator`
   - `derived_obligation`
   - `derived_boundary`
   - `error`
@@ -69,7 +70,6 @@ Common required fields for all events:
 VM-origin event kinds:
 
 - `ALEPH.ALIAS`
-- `GIMEL.BESTOW`
 - `DALET.BOUNDARY_CLOSE`
 - `RESH.BOUNDARY_CLOSE`
 - `HE.HEAD_WITH_LEG`
@@ -98,14 +98,17 @@ VM-origin event kinds:
 - `edges`
 - `resolved`
 
-Derived (obligation/boundary) kinds:
+Derived (operator/obligation/boundary) kinds:
 
+- `GIMEL.SHOULDER`
 - `MEM.OPEN`
 - `FINAL_MEM.CLOSE`
 - `NUN.SUPPORT_DEBT`
 - `FINAL_NUN.SUPPORT_DEBT`
 - `FINAL_NUN.SUPPORT_DISCHARGE`
 - `SPACE.MEM_AUTO_CLOSE`
+
+`GIMEL.SHOULDER` is emitted as a derived operator event with `source = "derived_operator"` and an empty object payload. It records that `ג` contributed the shoulderized `cont -> carry -> cont` continuation step without reintroducing transfer-specific runtime objects.
 
 Error kinds:
 

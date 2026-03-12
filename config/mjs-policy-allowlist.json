@@ -1,16 +1,39 @@
 {
   "legacy_business_logic": [
     "scripts/compile-token-operators.mjs",
+    "scripts/artifacts/config.mjs",
+    "scripts/artifacts/lib.mjs",
+    "scripts/artifacts/needs-update.mjs",
+    "scripts/artifacts/repair.mjs",
+    "scripts/artifacts/verify-deep.mjs",
+    "scripts/artifacts/verify-pasuk-corpus.mjs",
+    "scripts/artifacts/verify.mjs",
     "scripts/exemplar-library.mjs",
-    "scripts/pattern-index.mjs"
+    "scripts/pasuk-trace-corpus.mjs",
+    "scripts/pattern-index.mjs",
+    "scripts/render-pasuk-graph.mjs",
+    "scripts/render/pasukGraph.mjs",
+    "scripts/smoke-nav-integrity.mjs",
+    "scripts/split-index.mjs",
+    "scripts/src-artifacts/config.mjs",
+    "scripts/src-artifacts/recompute.mjs",
+    "scripts/src-artifacts/verify-lfs-outputs.mjs",
+    "scripts/validate-split-index.mjs"
   ],
   "wrapper_allowlist": [
     "scripts/download-torah.mjs",
     "scripts/extract-token-registry.mjs",
     "scripts/iterate-torah.mjs",
     "scripts/normalize-torah.mjs",
+    "scripts/pasuk-trace.mjs",
     "scripts/phrase-tree.mjs",
+    "scripts/src-artifacts/verify-push.mjs",
     "scripts/teamim-registry.mjs",
     "scripts/torah-corpus.mjs"
-  ]
+  ],
+  "touched_legacy_exceptions": {
+    "scripts/exemplar-library.mjs": "Gimel shoulder semantics required a label update in this legacy .mjs entrypoint; full TypeScript extraction is deferred.",
+    "scripts/pattern-index.mjs": "Gimel shoulder semantics required a motif rename in this legacy .mjs entrypoint; full TypeScript extraction is deferred.",
+    "scripts/src-artifacts/recompute.mjs": "Layered source artifact verification needed a determinism fix in this legacy .mjs entrypoint; full TypeScript extraction is deferred."
+  }
 }

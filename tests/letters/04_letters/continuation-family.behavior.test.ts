@@ -157,6 +157,45 @@ describe("continuation family behavior", () => {
     expectNoExtraSemantics(nunSnapshot);
   });
 
+  it("ג snapshot shows the shoulder node as a visible midpoint on the continuation path", () => {
+    const [snapshot] = tokenExitSnapshots("ג");
+    const start = baselineId(snapshot);
+    const [shoulderId, focusId] = familyNodeIds(snapshot, "ג");
+    const names = {
+      [start]: "F0",
+      [shoulderId]: "M",
+      [focusId]: "F1"
+    };
+    const artifact = {
+      nodes: [names[shoulderId], names[focusId]],
+      cont: normalizeEdges(snapshot.cont, names),
+      carry: normalizeEdges(snapshot.carry, names),
+      supp: normalizeEdges(snapshot.supp, names),
+      focus: names[snapshot.vm?.F ?? ""] ?? snapshot.vm?.F ?? ""
+    };
+
+    expect(artifact).toMatchInlineSnapshot(`
+      {
+        "carry": [
+          "F0->M",
+        ],
+        "cont": [
+          "F0->M",
+          "M->F1",
+        ],
+        "focus": "F1",
+        "nodes": [
+          "M",
+          "F1",
+        ],
+        "supp": [],
+      }
+    `);
+    expect(snapshot.carry ?? []).not.toContain(`${start}->${focusId}`);
+    expect(snapshot.vm?.F).toBe(focusId);
+    expectNoExtraSemantics(snapshot);
+  });
+
   it("ן keeps the same forward continuation shape as ו and adds both carry and supp", () => {
     const [vavSnapshot] = tokenExitSnapshots("ו");
     const [finalNunSnapshot] = tokenExitSnapshots("ן");

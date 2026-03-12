@@ -946,12 +946,7 @@ function phraseGroupForRole(role: string): string | null {
   return null;
 }
 
-const VERSE_LEDGER_EXPORT_OPS = new Set([
-  "GIMEL.BESTOW",
-  "HE.HEAD_WITH_LEG",
-  "PE.UTTER",
-  "QOF.HEAD_WITH_LEG"
-]);
+const VERSE_LEDGER_EXPORT_OPS = new Set(["HE.HEAD_WITH_LEG", "PE.UTTER", "QOF.HEAD_WITH_LEG"]);
 
 const VERSE_LEDGER_SEAL_OPS = new Set([
   "DALET.BOUNDARY_CLOSE",

@@ -17,6 +17,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Hydrate Canonical Layer Artifacts
+        run: git lfs pull --include="outputs/runs/latest/*.jsonl" --exclude=""
       - name: Use Node.js ${{ matrix.node }}
         uses: actions/setup-node@v4
         with:

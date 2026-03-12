@@ -18,6 +18,7 @@ export type VerseTraceRef = {
 
 export const TRACE_EVENT_SOURCES = [
   "vm_event",
+  "derived_operator",
   "derived_obligation",
   "derived_boundary",
   "error",
@@ -28,7 +29,7 @@ export type TraceEventSource = (typeof TRACE_EVENT_SOURCES)[number];
 
 export const TRACE_EVENT_KINDS = [
   "ALEPH.ALIAS",
-  "GIMEL.BESTOW",
+  "GIMEL.SHOULDER",
   "DALET.BOUNDARY_CLOSE",
   "RESH.BOUNDARY_CLOSE",
   "HE.HEAD_WITH_LEG",
@@ -95,14 +96,10 @@ export type AliasEvent = TraceEventBase<
   }
 >;
 
-export type BestowEvent = TraceEventBase<
-  "GIMEL.BESTOW",
-  "vm_event",
-  {
-    from: HandleId;
-    to: HandleId;
-    payload: unknown;
-  }
+export type GimelShoulderEvent = TraceEventBase<
+  "GIMEL.SHOULDER",
+  "derived_operator",
+  Record<string, never>
 >;
 
 export type BoundaryCloseEvent = TraceEventBase<
@@ -409,7 +406,7 @@ export type ExtensionEvent = TraceEventBase<
 
 export type TraceEvent =
   | AliasEvent
-  | BestowEvent
+  | GimelShoulderEvent
   | BoundaryCloseEvent
   | HeadWithLegEvent
   | DeclareEvent
@@ -541,10 +538,11 @@ export type TraceRecord = WordTraceRecord | VerseTraceRecord;
 
 export const TRACE_EVENT_SOURCE_ORDER: Record<TraceEventSource, number> = {
   vm_event: 0,
-  derived_obligation: 1,
-  derived_boundary: 2,
-  error: 3,
-  extension: 4
+  derived_operator: 1,
+  derived_obligation: 2,
+  derived_boundary: 3,
+  error: 4,
+  extension: 5
 };
 
 export function compareTraceEvents(left: TraceEvent, right: TraceEvent): number {

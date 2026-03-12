@@ -23,10 +23,10 @@ const DEFAULT_MOTIFS = [
     description: "Words whose skeleton ends with a finalize operator."
   },
   {
-    name: "CONTAINS_BESTOW_THEN_SEAL",
+    name: "CONTAINS_SHOULDER_THEN_SEAL",
     type: "subsequence",
-    pattern_events: ["*.BESTOW", "*.FINALIZE"],
-    description: "Words containing BESTOW followed by a sealing/finalize operator."
+    pattern_events: ["*.SHOULDER", "*.FINALIZE"],
+    description: "Words containing SHOULDER followed by a sealing/finalize operator."
   }
 ];
 
@@ -53,7 +53,7 @@ function printHelp() {
     '  node scripts/pattern-index.mjs query suffix "*.FINALIZE" [--index-dir=path] [--limit=N]'
   );
   console.log(
-    '  node scripts/pattern-index.mjs query contains "BESTOW" [--then=SEAL] [--index-dir=path] [--limit=N]'
+    '  node scripts/pattern-index.mjs query contains "SHOULDER" [--then=SEAL] [--index-dir=path] [--limit=N]'
   );
   console.log(
     "  node scripts/pattern-index.mjs query motif ENDS_WITH_FINALIZE [--index-dir=path] [--limit=N]"

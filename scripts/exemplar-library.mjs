@@ -56,7 +56,7 @@ const PRIMARY_CATEGORY_ORDER = [
 
 const OPERATOR_PRIORITY = [
   "ALEPH.ALIAS",
-  "GIMEL.BESTOW",
+  "GIMEL.SHOULDER",
   "DALET.BOUNDARY_CLOSE",
   "HE.DECLARE",
   "HE.DECLARE_BREATH",
@@ -85,7 +85,7 @@ const OPERATOR_PRIORITY = [
 
 const OPERATOR_LABELS = {
   "ALEPH.ALIAS": "alias remap",
-  "GIMEL.BESTOW": "bestowal",
+  "GIMEL.SHOULDER": "shoulder continuation",
   "DALET.BOUNDARY_CLOSE": "boundary close",
   "HE.DECLARE": "public declaration",
   "HE.DECLARE_BREATH": "breath-tail declaration",
