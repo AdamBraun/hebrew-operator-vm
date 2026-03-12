@@ -102,7 +102,7 @@ describe("kaf behavior", () => {
     );
   });
 
-  it("final kaf seals the resolved hold with final policy", () => {
+  it("final kaf seals the resolved hold with final policy and no carry", () => {
     const state = createInitialState();
 
     const { cons, h, r } = executeLetterOp(state, finalKafOp);
@@ -115,7 +115,23 @@ describe("kaf behavior", () => {
     expect(hold?.policy).toBe("final");
     expect(hold?.meta.final).toBe(1);
     expect(state.cont).toEqual(new Set([`${source}->${holdId}`]));
-    expect(state.carry).toEqual(new Set([`${source}->${holdId}`]));
+    expect(state.carry).toEqual(new Set());
     expect(state.supp).toEqual(new Set([`${holdId}->${source}`]));
+  });
+
+  it("final kaf does not add the final hold to the carry ledger", () => {
+    const state = createInitialState();
+    const omega = state.handles.get(OMEGA_ID);
+    omega!.meta = { ...(omega?.meta ?? {}), witness: { ambient: 1 } };
+
+    const { cons } = executeLetterOp(state, finalKafOp);
+    const { source, holdId } = cons.meta as { source: string; holdId: string };
+
+    expect(state.carry.has(`${source}->${holdId}`)).toBe(false);
+    expect(resolveCarry(state, source, holdId, { focusNodeId: holdId })).toEqual({
+      status: "unresolved",
+      closer: null
+    });
+    expect(eff(state, holdId, { focusNodeId: holdId })).toEqual({});
   });
 });

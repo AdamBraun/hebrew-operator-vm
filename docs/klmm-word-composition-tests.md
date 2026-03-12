@@ -30,7 +30,7 @@ The goal is narrow: test what the **next letter receives** after an initial `כ`
 - `H` = ה exposure/announcement
 - `V` = ו minimal continuation
 - `Y` = י pin
-- `ך` = current old final-kaf/capacity spec
+- `ך` = final resolved hold with `policy(h) := final`
 
 Verdict meanings:
 
@@ -48,7 +48,7 @@ Verdict meanings:
 | `כֵּלִי` | `כֵּ = δtze(δdag(K(F0))) -> לִ = δhir(L(...)) -> י = Y(...)` | `ל` receives a hardened, stabilized hold                            | `supports`   | later `hiriq + י` may be stale or over-strong, but the `כ -> ל` transition is still mechanically clean                                               |
 | `כֶּלֶב` | `כֶּ = δseg(δdag(K(F0))) -> לֶ = δseg(L(...)) -> ב = B(...)` | `ל` receives a hardened, convergent hold                            | `supports`   | later `ב` deepening is independent contamination, not a `כ/ל` failure                                                                                |
 | `כֶּלֶא` | `כֶּ = δseg(δdag(K(F0))) -> לֶ = δseg(L(...)) -> א = A(...)` | `ל` receives a hardened, convergent hold                            | `supports`   | any awkwardness comes from `segol` or `א`, not from the updated `כ` primitive                                                                        |
-| `מֶלֶךְ` | `מֶ = δseg(M(F0)) -> לֶ = δseg(L(...)) -> ךְ = δshv(ך(...))` | `ל` receives a convergent interior continuation                     | `supports`   | strong contamination from stale final-`ך` and final `shva`; the direct `מ -> ל` handoff still works                                                  |
+| `מֶלֶךְ` | `מֶ = δseg(M(F0)) -> לֶ = δseg(L(...)) -> ךְ = δshv(ך(...))` | `ל` receives a convergent interior continuation                     | `supports`   | the direct `מ -> ל` handoff still works; remaining contamination is mainly from final `shva`, not from `ך`                                           |
 | `לֵב`    | `לֵ = δtze(L(F0)) -> ב = B(...)`                             | `ב` receives a stabilized exterior continuation                     | `supports`   | later `ב` semantics may be stale, but they do not undermine `ל` as exterior continuation                                                             |
 | `לֹא`    | `לֹ = δhol(L(F0)) -> א = A(...)`                             | `א` receives an exterior continuation under cholam endpoint-bias    | `weakens`    | again this looks like stale `cholam`, not a direct failure of `ל`; the rosh modifier still assumes endpoint-oriented selection                       |
 | `לוֹ`    | `ל = L(F0) -> וֹ = δhol(V(...))`                             | `ו` receives a plain exterior continuation                          | `supports`   | this is one of the cleanest tests: `ל` hands off to a plain continuation operator without needing extra metadata; only the `holam` on `ו` is suspect |
@@ -64,7 +64,7 @@ Verdict meanings:
 
 - `לוֹ`: `ל` handing off to plain `ו` strongly supports `ל` as exterior continuation.
 - `מָל`: `מ` handing off directly to `ל` strongly supports `מ` as interior continuation that still yields a workable next focus.
-- `מֶלֶךְ`: despite stale ending layers, the `מ -> ל` transition itself is structurally fine.
+- `מֶלֶךְ`: the `מ -> ל` transition is structurally fine, and final `ך` now seals that exterior hold directly.
 
 ### Main weakening cases
 

@@ -415,7 +415,7 @@ describe("hold family word traces", () => {
     expect(effProfile(kev.state, kevBoundary.inside).contributions).toEqual([]);
   });
 
-  it("traces מֶלֶךְ with a mem enclosure, an interior ל step-past chain, and final ך sealing the exterior", () => {
+  it("traces מֶלֶךְ with a mem enclosure, an interior ל step-past chain, and direct-supported final ך", () => {
     const run = runWord("מֶלֶךְ");
     const [mem, lamed, finalKaf] = run.tokens;
     const baseline = baselineIdFromState(run.state);
@@ -435,8 +435,8 @@ describe("hold family word traces", () => {
 
     expect(sealedHandle.policy).toBe("final");
     expect(sealedHandle.meta?.heldFrom).toBe(lamedExterior);
-    expect(finalKaf.snapshot.carry).toContain(`${lamedExterior}->${sealedId}`);
-    expect(finalKaf.snapshot.carry).not.toContain(`${memInterior}->${sealedId}`);
+    expect(finalKaf.snapshot.carry).toEqual([]);
+    expect(finalKaf.snapshot.supp).toContain(`${sealedId}->${lamedExterior}`);
     expect(finalKaf.snapshot.boundaries).toEqual([
       expect.objectContaining({
         id: "מb:1:1",
@@ -462,16 +462,7 @@ describe("hold family word traces", () => {
 
     seedWitness(run.state, baseline, AMBIENT_WITNESS);
     seedWitness(run.state, lamedExterior, EXTERIOR_WITNESS);
-    expect(effProfile(run.state, sealedId).contributions).toEqual([
-      {
-        source: lamedExterior,
-        target: sealedId,
-        targetDistance: 0,
-        resolution: "resolved",
-        closer: sealedId,
-        witness: EXTERIOR_WITNESS
-      }
-    ]);
+    expect(effProfile(run.state, sealedId).contributions).toEqual([]);
   });
 
   it("locks the ל exterior with א in both מָלֵא and כלא, while only מָלֵא preserves mem enclosure ancestry", () => {
