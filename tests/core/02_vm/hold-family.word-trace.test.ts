@@ -364,7 +364,7 @@ describe("hold family word traces", () => {
     }
   });
 
-  it("traces כָּל as a resolved hold followed by a second resolved hold stepped past by ל", () => {
+  it("traces כָּל as a supported hold followed by a carry-backed hold stepped past by ל", () => {
     const run = runWord("כָּל");
     const [kaf, lamed] = run.tokens;
     const baseline = baselineId(kaf.snapshot);
@@ -374,7 +374,7 @@ describe("hold family word traces", () => {
     const exterior = String(lamedEvent.data.id);
 
     expect(kaf.snapshot.cont).toEqual([`${baseline}->${kafHold}`]);
-    expect(kaf.snapshot.carry).toEqual([`${baseline}->${kafHold}`]);
+    expect(kaf.snapshot.carry).toEqual([]);
     expect(kaf.snapshot.supp).toEqual([`${kafHold}->${baseline}`]);
 
     expect(lamedEvent.data.source).toBe(kafHold);
@@ -384,7 +384,7 @@ describe("hold family word traces", () => {
       `${kafHold}->${lamedHold}`,
       `${lamedHold}->${exterior}`
     ]);
-    expect(lamed.snapshot.carry).toEqual([`${baseline}->${kafHold}`, `${kafHold}->${lamedHold}`]);
+    expect(lamed.snapshot.carry).toEqual([`${kafHold}->${lamedHold}`]);
     expect(lamed.snapshot.supp).toEqual([`${kafHold}->${baseline}`, `${lamedHold}->${kafHold}`]);
 
     seedWitness(run.state, baseline, AMBIENT_WITNESS);
@@ -397,19 +397,11 @@ describe("hold family word traces", () => {
         resolution: "resolved",
         closer: lamedHold,
         witness: FIRST_HOLD_WITNESS
-      },
-      {
-        source: baseline,
-        target: kafHold,
-        targetDistance: 2,
-        resolution: "resolved",
-        closer: kafHold,
-        witness: AMBIENT_WITNESS
       }
     ]);
   });
 
-  it("distinguishes לב from כב by the node that ב houses, while preserving ambient visibility on that input", () => {
+  it("distinguishes לב from כב by the node that ב houses, while bare כ leaves no ambient carry background", () => {
     const lev = runWord("לֵב");
     const kev = runWord("כב");
 
@@ -418,7 +410,6 @@ describe("hold family word traces", () => {
     const levBetEvent = lastEvent(lev.tokens[1].snapshot, "boundary_open");
     const levBoundary = boundaryById(lev.tokens[1].snapshot, String(levBetEvent.data.id));
 
-    const kevBaseline = baselineIdFromState(kev.state);
     const kevKafHold = String(kev.tokens[0].snapshot.vm?.F);
     const kevBetEvent = lastEvent(kev.tokens[1].snapshot, "boundary_open");
     const kevBoundary = boundaryById(kev.tokens[1].snapshot, String(kevBetEvent.data.id));
@@ -428,7 +419,7 @@ describe("hold family word traces", () => {
     expect(kevBoundary.inside).toBe(kevKafHold);
 
     seedWitness(lev.state, levBaseline, AMBIENT_WITNESS);
-    seedWitness(kev.state, kevBaseline, AMBIENT_WITNESS);
+    seedWitness(kev.state, baselineIdFromState(kev.state), AMBIENT_WITNESS);
     expect(effProfile(lev.state, levBoundary.inside).contributions).toEqual([
       {
         source: levBaseline,
@@ -439,16 +430,7 @@ describe("hold family word traces", () => {
         witness: AMBIENT_WITNESS
       }
     ]);
-    expect(effProfile(kev.state, kevBoundary.inside).contributions).toEqual([
-      {
-        source: kevBaseline,
-        target: kevKafHold,
-        targetDistance: 0,
-        resolution: "resolved",
-        closer: kevKafHold,
-        witness: AMBIENT_WITNESS
-      }
-    ]);
+    expect(effProfile(kev.state, kevBoundary.inside).contributions).toEqual([]);
   });
 
   it("traces מֶלֶךְ with a mem enclosure, an interior ל step-past chain, and final ך sealing the exterior", () => {
@@ -578,15 +560,6 @@ describe("hold family word traces", () => {
       { nodeId: kafHold, distance: 4 },
       { nodeId: baseline, distance: 5 }
     ]);
-    expect(profile.contributions).toEqual([
-      {
-        source: baseline,
-        target: kafHold,
-        targetDistance: 4,
-        resolution: "resolved",
-        closer: kafHold,
-        witness: AMBIENT_WITNESS
-      }
-    ]);
+    expect(profile.contributions).toEqual([]);
   });
 });

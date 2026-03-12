@@ -1,5 +1,5 @@
 import { BOT_ID, createHandle } from "../state/handles";
-import { addCarry, addCont, addSupp } from "../state/relations";
+import { addCont, addSupp } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
 import { selectCurrentFocus } from "../vm/select";
@@ -27,7 +27,6 @@ export const kafOp: LetterOp = {
       })
     );
     addCont(S, source, holdId);
-    addCarry(S, source, holdId);
     addSupp(S, holdId, source);
     const cons: Construction = {
       base: source,

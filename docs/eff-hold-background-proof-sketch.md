@@ -44,13 +44,12 @@ Two consequences matter here:
 
 So backward visibility of a node in `cont` is weaker than direct access to that node as a handle.
 
-## 2. What `eff(h)` sees in כ
+## 2. What `eff(h)` sees in כ after the direct-support change
 
 Use the current `כ` candidate:
 
 ```text
 cont(F0, h)
-carry(F0, h)
 supp(h, F0)
 F := h
 ```
@@ -65,29 +64,21 @@ Backward `cont` walk from `h` visits:
 
 Incoming carries on visited nodes:
 
-- at `h`: `carry(F0, h)`
+- at `h`: none
 - at `F0`: any earlier carries into `F0`
 
-Resolution of `carry(F0, h)`:
-
-- the forward search starts at `h`
-- `supp(h, F0)` holds immediately
-- therefore `carry(F0, h)` is `resolved`
-
-So `eff(h)` includes:
-
-- `W(F0)` ranked at distance `0`, `resolved`
-- plus any earlier upstream witness bundles that land on earlier backward-visited nodes
+So `eff(h)` includes no immediate witness contribution from `F0`, because `כ` no longer opens `carry(F0, h)`. It can still include earlier upstream witness bundles only if some separate carry already lands on a visited predecessor.
 
 What is proved:
 
-- the predecessor context of the hold is available at the hold
+- the predecessor node remains backward-visible by `cont`
 
 What is not separately proved:
 
+- that the source witness bundle `W(F0)` is available at `h` through `eff()`
 - that `h` itself appears in the result as a selectable object
 
-`eff(h)` does not return `h`; it returns witness material flowing into visited nodes.
+So current `כ` is no longer evidence for carry-mediated hold visibility. `ל` has to be analyzed on its own carry-backed graph.
 
 ## 3. What `eff(o)` sees in ל
 

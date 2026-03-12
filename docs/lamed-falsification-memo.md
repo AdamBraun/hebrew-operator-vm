@@ -13,7 +13,6 @@ Resolved hold (`כ` candidate):
 ```text
 allocate H
 add cont(F0, H)
-add carry(F0, H)
 add supp(H, F0)
 F := H
 ```
@@ -52,7 +51,7 @@ With that edge, the two graphs differ:
 - `כ`: one new node, one resolved site, focus on that resolved site
 - `ל`: one resolved site plus one further continuation site, focus on the further site
 
-Without `X` and `cont(H, X)`, `ל` collapses back into `כ` plus a register-only focus rewrite. That would be hidden metadata, not topology.
+Without `X` and `cont(H, X)`, `ל` collapses back into a one-node hold plus a register-only focus rewrite. That would be hidden metadata, not topology.
 
 ### 2. Is ל mechanically distinct from ן?
 
@@ -122,10 +121,10 @@ It is recoverable from plain graph structure plus focus.
 But the proposal is only minimally sufficient. It is acceptable as a letter-level graph pattern, not as a new irreducible graph relation. Mechanically it factors as:
 
 ```text
-ל = כ followed by bare continuation
+ל = carry-backed resolved hold followed by bare continuation
 ```
 
-Equivalently, at the topology level it is `resolved hold + cont`.
+Equivalently, at the topology level it is `carry-backed resolved hold + cont`, not literally the current direct-supported `כ`.
 
 That means:
 

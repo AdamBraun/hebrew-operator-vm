@@ -28,7 +28,7 @@
 - `ט` rewrites the target envelope around a single sanctioned port and adds no graph edges.
 - `וּ` (shuruk) does not alter `ו` semantics beyond lexical host detection.
 - `ו` no longer performs grouping; it only advances the spine via `cont`.
-- `כ`, `ל`, and `מ` implement the resolved-hold family: hold, step-past, and open enclosure.
+- `כ` implements a direct supported hold; `ל` and `מ` keep the carry-backed hold family variants: step-past and open enclosure.
 - `נ`, `ס`, and `ע` implement unresolved continuation, nearest carry closure, and origin-exported continuation.
 - `י` creates an `entity` handle seeded from focus.
 - `ק`, `ר`, and `ש` implement bare head-with-leg, bare head, and three-point attachment.

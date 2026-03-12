@@ -98,14 +98,14 @@ describe("continuation family behavior", () => {
     expectNoExtraSemantics(yodSnapshot);
   });
 
-  it("כ allocates a single resolved hold and ends focus on it", () => {
+  it("כ allocates a single supported hold, emits no carry, and ends focus on it", () => {
     const [snapshot] = tokenExitSnapshots("כ");
     const start = baselineId(snapshot);
     const [holdId] = familyNodeIds(snapshot, "כ");
 
     expect(familyNodeIds(snapshot, "כ")).toEqual(["כ:1:1"]);
     expect(snapshot.cont ?? []).toEqual([`${start}->${holdId}`]);
-    expect(snapshot.carry ?? []).toEqual([`${start}->${holdId}`]);
+    expect(snapshot.carry ?? []).toEqual([]);
     expect(snapshot.supp ?? []).toEqual([`${holdId}->${start}`]);
     expect(snapshot.vm?.F).toBe(holdId);
     expectNoExtraSemantics(snapshot);

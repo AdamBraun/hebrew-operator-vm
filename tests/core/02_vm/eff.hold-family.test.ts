@@ -207,7 +207,7 @@ function contSuccessors(state: TestState, nodeId: string): string[] {
 }
 
 describe("eff hold family", () => {
-  it("keeps kaf on the resolved hold with the source witness attached at distance 0", () => {
+  it("keeps kaf on the supported hold without adding a carry-ledger contribution", () => {
     const state = createHarnessState();
     const { cons, h: holdId } = executeLetterOp(state, kafOp);
     const { source } = cons.meta as { source: string };
@@ -216,26 +216,17 @@ describe("eff hold family", () => {
 
     expect(source).toBe(FOCUS_ID);
     expect(state.vm.F).toBe(holdId);
-    expect(profile.bundle).toEqual(FOCUS_WITNESS);
+    expect(profile.bundle).toEqual({});
     expect(profile.visited).toEqual([
       { nodeId: holdId, distance: 0 },
       { nodeId: FOCUS_ID, distance: 1 },
       { nodeId: PRE_FOCUS_ID, distance: 2 }
     ]);
-    expect(profile.contributions).toEqual([
-      {
-        source: FOCUS_ID,
-        target: holdId,
-        targetDistance: 0,
-        resolution: "resolved",
-        closer: holdId,
-        witness: FOCUS_WITNESS
-      }
-    ]);
+    expect(profile.contributions).toEqual([]);
     expect(contSuccessors(state, holdId)).toEqual([]);
   });
 
-  it("distinguishes kaf from lamed and mem by target distance, while leaving lamed and mem bundle-identical", () => {
+  it("distinguishes kaf from lamed and mem by carry-ledger participation, while leaving lamed and mem bundle-identical", () => {
     const kafState = createHarnessState();
     const kafResult = executeLetterOp(kafState, kafOp);
     const kafMeta = kafResult.cons.meta as { holdId: string };
@@ -260,16 +251,8 @@ describe("eff hold family", () => {
     seedWitness(memState, memMeta.holdId, HOLD_WITNESS);
     const memProfile = effProfile(memState, memMeta.interiorId);
 
-    expect(kafProfile.contributions).toEqual([
-      {
-        source: FOCUS_ID,
-        target: kafMeta.holdId,
-        targetDistance: 0,
-        resolution: "resolved",
-        closer: kafMeta.holdId,
-        witness: FOCUS_WITNESS
-      }
-    ]);
+    expect(kafProfile.bundle).toEqual({});
+    expect(kafProfile.contributions).toEqual([]);
 
     expect(lamedProfile.bundle).toEqual(FOCUS_WITNESS);
     expect(lamedProfile.visited).toEqual([

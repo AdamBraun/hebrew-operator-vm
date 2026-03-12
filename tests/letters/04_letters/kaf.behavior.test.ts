@@ -22,7 +22,7 @@ function executeLetterOp(state: ReturnType<typeof createInitialState>, op: Lette
 }
 
 describe("kaf behavior", () => {
-  it("holds the current focus, lands on the held node, and allocates no successor", () => {
+  it("holds the current focus, lands on the held node, and emits only cont plus supp", () => {
     const state = createInitialState();
     const stackNode = "stackNode";
     state.handles.set(stackNode, createHandle(stackNode, "scope"));
@@ -39,11 +39,11 @@ describe("kaf behavior", () => {
     expect(newHandles).toEqual([holdId]);
     expect(state.vm.F).toBe(holdId);
     expect(state.cont).toEqual(new Set([`${source}->${holdId}`]));
-    expect(state.carry).toEqual(new Set([`${source}->${holdId}`]));
+    expect(state.carry).toEqual(new Set());
     expect(state.supp).toEqual(new Set([`${holdId}->${source}`]));
   });
 
-  it("makes the source witness visible at the held node as a resolved carry", () => {
+  it("does not add the hold to the carry ledger", () => {
     const state = createInitialState();
     const omega = state.handles.get(OMEGA_ID);
     omega!.meta = { ...(omega?.meta ?? {}), witness: { ambient: 1 } };
@@ -51,11 +51,12 @@ describe("kaf behavior", () => {
     const { cons } = executeLetterOp(state, kafOp);
     const { source, holdId } = cons.meta as { source: string; holdId: string };
 
+    expect(state.carry.has(`${source}->${holdId}`)).toBe(false);
     expect(resolveCarry(state, source, holdId, { focusNodeId: holdId })).toEqual({
-      status: "resolved",
-      closer: holdId
+      status: "unresolved",
+      closer: null
     });
-    expect(eff(state, holdId, { focusNodeId: holdId })).toEqual({ ambient: 1 });
+    expect(eff(state, holdId, { focusNodeId: holdId })).toEqual({});
   });
 
   it("creates no boundary records after כ alone", () => {
@@ -95,9 +96,7 @@ describe("kaf behavior", () => {
     expect(state.cont).toEqual(
       new Set([`${firstSource}->${firstHoldId}`, `${firstHoldId}->${secondHoldId}`])
     );
-    expect(state.carry).toEqual(
-      new Set([`${firstSource}->${firstHoldId}`, `${firstHoldId}->${secondHoldId}`])
-    );
+    expect(state.carry).toEqual(new Set());
     expect(state.supp).toEqual(
       new Set([`${firstHoldId}->${firstSource}`, `${secondHoldId}->${firstHoldId}`])
     );

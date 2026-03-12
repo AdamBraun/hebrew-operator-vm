@@ -14,11 +14,19 @@ It also uses one existing topological device when needed:
 
 No new edge label is introduced here.
 
-## Base pattern: resolved hold
+## Base patterns
 
 Let `F0` be the current focus before the letter runs.
 
-A **resolved hold** is the minimal graph:
+A direct supported hold, now used by `כ`, is:
+
+```text
+allocate H
+add cont(F0, H)
+add supp(H, F0)
+```
+
+A carry-backed resolved hold, still used by `ל` and `מ`, is:
 
 ```text
 allocate H
@@ -27,7 +35,7 @@ add carry(F0, H)
 add supp(H, F0)
 ```
 
-`H` is the held node. Topologically, it is a resolved successor of `F0`: the line advances to `H`, inherits from `F0`, and is stabilized there.
+`H` is the held node. Topologically, both forms are resolved successors of `F0`: the line advances to `H` and is stabilized there. The difference is whether the hold also enters the carry ledger.
 
 ## Letter definitions
 
@@ -40,7 +48,6 @@ Allocate:
 Edges added:
 
 - `cont(F0, H)`
-- `carry(F0, H)`
 - `supp(H, F0)`
 
 Focus ends:
@@ -49,7 +56,7 @@ Focus ends:
 
 Topological shape:
 
-- `כ` is exactly the resolved hold and nothing more.
+- `כ` is exactly the direct supported hold and nothing more.
 - The thread terminates locally at the held node.
 - There is no second continuation site beyond the hold.
 
