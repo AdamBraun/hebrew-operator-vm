@@ -50,6 +50,9 @@ Policy allowlists:
 - `config/guardrails-allowlist.json`
 - `config/mjs-policy-allowlist.json`
 
+Touched-legacy exceptions, when unavoidable, must stay path-scoped and carry an
+explicit rationale in the allowlist config.
+
 ## Torah Corpus (Optional)
 
 The repo includes helper scripts to download the Torah and iterate it through the interpreter.

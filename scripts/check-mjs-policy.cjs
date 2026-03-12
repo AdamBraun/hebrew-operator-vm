@@ -8,8 +8,10 @@ const DEFAULT_MODE = "warn";
 const DEFAULT_ALLOWLIST_PATH = path.resolve(process.cwd(), "config", "mjs-policy-allowlist.json");
 const DEFAULT_REPORT_PATH = path.resolve(process.cwd(), "reports", "mjs_policy_violations.md");
 const DEFAULT_BASE_SHA = String(process.env.GUARDRAILS_BASE_SHA ?? "").trim();
-const DEFAULT_HEAD_SHA = String(process.env.GUARDRAILS_HEAD_SHA ?? process.env.GITHUB_SHA ?? "").trim();
-const IGNORED_DIRS = new Set([".git", "node_modules", "dist"]);
+const DEFAULT_HEAD_SHA = String(
+  process.env.GUARDRAILS_HEAD_SHA ?? process.env.GITHUB_SHA ?? ""
+).trim();
+const IGNORED_DIRS = new Set([".git", "node_modules", "dist", ".tmp"]);
 const execFileAsync = util.promisify(childProcess.execFile);
 
 function toPortablePath(value) {
@@ -151,8 +153,21 @@ async function collectTouchedFiles(opts) {
 
   if (baseSha) {
     const rangePaths =
-      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", `${baseSha}...${headSha}`])) ??
-      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", baseSha, headSha]));
+      (await tryTouchedFromDiff([
+        "diff",
+        "--name-only",
+        "--diff-filter=ACMR",
+        "-z",
+        `${baseSha}...${headSha}`
+      ])) ??
+      (await tryTouchedFromDiff([
+        "diff",
+        "--name-only",
+        "--diff-filter=ACMR",
+        "-z",
+        baseSha,
+        headSha
+      ]));
     if (rangePaths) {
       for (const filePath of rangePaths) {
         touched.add(filePath);
@@ -164,8 +179,14 @@ async function collectTouchedFiles(opts) {
   if (source === "working_tree") {
     if (String(process.env.CI ?? "").toLowerCase() === "true") {
       const ciFallbackPaths =
-        (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "-z", "HEAD~1", "HEAD"])) ??
-        [];
+        (await tryTouchedFromDiff([
+          "diff",
+          "--name-only",
+          "--diff-filter=ACMR",
+          "-z",
+          "HEAD~1",
+          "HEAD"
+        ])) ?? [];
       for (const filePath of ciFallbackPaths) {
         touched.add(filePath);
       }
@@ -178,8 +199,14 @@ async function collectTouchedFiles(opts) {
     }
 
     const stagedPaths =
-      (await tryTouchedFromDiff(["diff", "--name-only", "--diff-filter=ACMR", "--cached", "-z", "HEAD"])) ??
-      [];
+      (await tryTouchedFromDiff([
+        "diff",
+        "--name-only",
+        "--diff-filter=ACMR",
+        "--cached",
+        "-z",
+        "HEAD"
+      ])) ?? [];
     for (const filePath of stagedPaths) {
       touched.add(filePath);
     }
@@ -221,14 +248,23 @@ async function loadAllowlist(allowlistPath) {
     const raw = await fs.readFile(allowlistPath, "utf8");
     const parsed = JSON.parse(raw);
     return {
-      legacyBusinessLogic: new Set((parsed?.legacy_business_logic ?? []).map((item) => String(item))),
-      wrapperAllowlist: new Set((parsed?.wrapper_allowlist ?? []).map((item) => String(item)))
+      legacyBusinessLogic: new Set(
+        (parsed?.legacy_business_logic ?? []).map((item) => String(item))
+      ),
+      wrapperAllowlist: new Set((parsed?.wrapper_allowlist ?? []).map((item) => String(item))),
+      touchedLegacyExceptions: new Map(
+        Object.entries(parsed?.touched_legacy_exceptions ?? {}).map(([filePath, reason]) => [
+          String(filePath),
+          String(reason)
+        ])
+      )
     };
   } catch (err) {
     if (err && err.code === "ENOENT") {
       return {
         legacyBusinessLogic: new Set(),
-        wrapperAllowlist: new Set()
+        wrapperAllowlist: new Set(),
+        touchedLegacyExceptions: new Map()
       };
     }
     throw err;
@@ -296,17 +332,20 @@ function renderReport({ opts, rows, counts, touched }) {
     `- wrappers_detected: ${counts.wrappers}`,
     `- legacy_business_logic: ${counts.legacy}`,
     `- touched_legacy_business_logic: ${counts.touchedLegacy}`,
+    `- touched_legacy_exceptions: ${counts.touchedException}`,
     `- new_business_logic: ${counts.new}`,
     `- blocking_violations: ${counts.blocking}`,
     "",
     "## Classification",
     "",
-    "| file | touched | classification |",
-    "|---|---|---|"
+    "| file | touched | classification | touched_legacy_reason |",
+    "|---|---|---|---|"
   ];
 
   for (const row of rows) {
-    lines.push(`| ${row.file} | ${row.touched ? "yes" : "no"} | ${row.classification} |`);
+    lines.push(
+      `| ${row.file} | ${row.touched ? "yes" : "no"} | ${row.classification} | ${row.touched_legacy_reason || ""} |`
+    );
   }
 
   return lines.join("\n") + "\n";
@@ -322,6 +361,7 @@ async function run() {
   let wrappers = 0;
   let legacy = 0;
   let touchedLegacy = 0;
+  let touchedLegacyExceptions = 0;
   let newlyIntroduced = 0;
   let blockingViolations = 0;
   const touched = await collectTouchedFiles(opts);
@@ -330,13 +370,20 @@ async function run() {
     const relativePath = workspaceRelativePath(filePath);
     const content = await fs.readFile(filePath, "utf8");
     const isTouched = touched.files.has(relativePath);
+    const touchedLegacyReason = allowlist.touchedLegacyExceptions.get(relativePath) ?? "";
 
     let classification = "";
     if (allowlist.wrapperAllowlist.has(relativePath)) {
       classification = "wrapper_allowlisted";
       wrappers += 1;
     } else if (allowlist.legacyBusinessLogic.has(relativePath)) {
-      if (isTouched) {
+      if (isTouched && allowlist.touchedLegacyExceptions.has(relativePath)) {
+        classification = "touched_legacy_exception";
+        touchedLegacyExceptions += 1;
+        console.warn(
+          `[mjs-policy:touched-legacy-exception] ${relativePath} reason=${touchedLegacyReason}`
+        );
+      } else if (isTouched) {
         classification = "touched_legacy_business_logic";
         touchedLegacy += 1;
         blockingViolations += 1;
@@ -359,7 +406,8 @@ async function run() {
     rows.push({
       file: relativePath,
       classification,
-      touched: isTouched
+      touched: isTouched,
+      touched_legacy_reason: touchedLegacyReason
     });
   }
 
@@ -370,6 +418,7 @@ async function run() {
       wrappers,
       legacy,
       touchedLegacy,
+      touchedException: touchedLegacyExceptions,
       new: newlyIntroduced,
       blocking: blockingViolations
     },
@@ -384,7 +433,7 @@ async function run() {
 
   const reportRel = workspaceRelativePath(opts.reportPath);
   console.log(
-    `mjs-policy: mode=${opts.mode} files=${rows.length} touched=${touched.files.size} wrappers=${wrappers} legacy=${legacy} touchedLegacy=${touchedLegacy} new=${newlyIntroduced} blocking=${blockingViolations} report=${reportRel}`
+    `mjs-policy: mode=${opts.mode} files=${rows.length} touched=${touched.files.size} wrappers=${wrappers} legacy=${legacy} touchedLegacy=${touchedLegacy} touchedException=${touchedLegacyExceptions} new=${newlyIntroduced} blocking=${blockingViolations} report=${reportRel}`
   );
 
   if (opts.mode === "fail" && blockingViolations > 0) {

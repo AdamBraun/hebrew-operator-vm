@@ -297,20 +297,34 @@ async function loadAllowlist(allowlistPath) {
       max_bytes: new Set((parsed?.max_bytes ?? []).map((entry) => String(entry))),
       max_complexity_score: new Set(
         (parsed?.max_complexity_score ?? []).map((entry) => String(entry))
+      ),
+      touched_legacy_exceptions: new Map(
+        Object.entries(parsed?.touched_legacy_exceptions ?? {}).map(([filePath, reason]) => [
+          String(filePath),
+          String(reason)
+        ])
       )
     };
   } catch (err) {
     if (err && err.code === "ENOENT") {
       return {
         max_bytes: new Set(),
-        max_complexity_score: new Set()
+        max_complexity_score: new Set(),
+        touched_legacy_exceptions: new Map()
       };
     }
     throw err;
   }
 }
 
-function evaluateMetric(value, threshold, allowlist, filePath, touchedFiles) {
+function evaluateMetric(
+  value,
+  threshold,
+  allowlist,
+  filePath,
+  touchedFiles,
+  touchedLegacyExceptions
+) {
   if (value <= threshold) {
     return "pass";
   }
@@ -318,6 +332,9 @@ function evaluateMetric(value, threshold, allowlist, filePath, touchedFiles) {
     return "new_violation";
   }
   if (touchedFiles.has(filePath)) {
+    if (touchedLegacyExceptions.has(filePath)) {
+      return "touched_legacy_exception";
+    }
     return "touched_legacy_violation";
   }
   return "legacy_allowlisted";
@@ -336,18 +353,19 @@ function renderReport({ opts, rows, counts, touched }) {
     `- files_scanned: ${rows.length}`,
     `- legacy_allowlisted_violations: ${counts.legacy}`,
     `- touched_legacy_violations: ${counts.touchedLegacy}`,
+    `- touched_legacy_exceptions: ${counts.touchedException}`,
     `- new_violations: ${counts.new}`,
     `- blocking_violations: ${counts.blocking}`,
     "",
     "## File Metrics",
     "",
-    "| file | touched | bytes | complexity_score | bytes_status | complexity_status |",
-    "|---|---|---:|---:|---|---|"
+    "| file | touched | bytes | complexity_score | bytes_status | complexity_status | touched_legacy_reason |",
+    "|---|---|---:|---:|---|---|---|"
   ];
 
   for (const row of rows) {
     lines.push(
-      `| ${row.file} | ${row.touched ? "yes" : "no"} | ${row.bytes} | ${row.complexity_score} | ${row.bytes_status} | ${row.complexity_status} |`
+      `| ${row.file} | ${row.touched ? "yes" : "no"} | ${row.bytes} | ${row.complexity_score} | ${row.bytes_status} | ${row.complexity_status} | ${row.touched_legacy_reason || ""} |`
     );
   }
 
@@ -365,6 +383,7 @@ async function run() {
   let newViolations = 0;
   let legacyViolations = 0;
   let touchedLegacyViolations = 0;
+  let touchedLegacyExceptions = 0;
   let blockingViolations = 0;
   const touched = await collectTouchedFiles(opts);
 
@@ -379,27 +398,37 @@ async function run() {
       THRESHOLDS.max_bytes,
       allowlist.max_bytes,
       relativePath,
-      touched.files
+      touched.files,
+      allowlist.touched_legacy_exceptions
     );
     const complexityStatus = evaluateMetric(
       complexityScore,
       THRESHOLDS.max_complexity_score,
       allowlist.max_complexity_score,
       relativePath,
-      touched.files
+      touched.files,
+      allowlist.touched_legacy_exceptions
     );
 
     const hasNew = bytesStatus === "new_violation" || complexityStatus === "new_violation";
+    const hasTouchedException =
+      bytesStatus === "touched_legacy_exception" || complexityStatus === "touched_legacy_exception";
     const hasTouchedLegacy =
       bytesStatus === "touched_legacy_violation" || complexityStatus === "touched_legacy_violation";
     const hasLegacy =
       bytesStatus === "legacy_allowlisted" || complexityStatus === "legacy_allowlisted";
+    const touchedLegacyReason = allowlist.touched_legacy_exceptions.get(relativePath) ?? "";
 
     if (hasNew) {
       newViolations += 1;
       blockingViolations += 1;
       console.warn(
         `[guardrails:new] ${relativePath} bytes=${bytes} complexity=${complexityScore} (bytes:${bytesStatus}, complexity:${complexityStatus})`
+      );
+    } else if (hasTouchedException) {
+      touchedLegacyExceptions += 1;
+      console.warn(
+        `[guardrails:touched-legacy-exception] ${relativePath} bytes=${bytes} complexity=${complexityScore} (bytes:${bytesStatus}, complexity:${complexityStatus}) reason=${touchedLegacyReason}`
       );
     } else if (hasTouchedLegacy) {
       touchedLegacyViolations += 1;
@@ -420,7 +449,8 @@ async function run() {
       complexity_score: complexityScore,
       bytes_status: bytesStatus,
       complexity_status: complexityStatus,
-      touched: touched.files.has(relativePath)
+      touched: touched.files.has(relativePath),
+      touched_legacy_reason: touchedLegacyReason
     });
   }
 
@@ -433,6 +463,7 @@ async function run() {
     counts: {
       legacy: legacyViolations,
       touchedLegacy: touchedLegacyViolations,
+      touchedException: touchedLegacyExceptions,
       new: newViolations,
       blocking: blockingViolations
     },
@@ -447,7 +478,7 @@ async function run() {
 
   const reportRel = workspaceRelativePath(opts.reportPath);
   console.log(
-    `guardrails: mode=${opts.mode} files=${rows.length} touched=${touched.files.size} legacy=${legacyViolations} touchedLegacy=${touchedLegacyViolations} new=${newViolations} blocking=${blockingViolations} report=${reportRel}`
+    `guardrails: mode=${opts.mode} files=${rows.length} touched=${touched.files.size} legacy=${legacyViolations} touchedLegacy=${touchedLegacyViolations} touchedException=${touchedLegacyExceptions} new=${newViolations} blocking=${blockingViolations} report=${reportRel}`
   );
 
   if (opts.mode === "fail" && blockingViolations > 0) {
