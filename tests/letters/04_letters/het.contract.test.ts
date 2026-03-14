@@ -18,5 +18,8 @@ describe("het contract", () => {
     expect(h).toBe(cons.meta.interfaceId);
     expect(state.handles.has(h)).toBe(true);
     expect(state.handles.has(r) || r === "⊥").toBe(true);
+    expect(state.cont.size).toBe(2);
+    expect(state.carry.size).toBe(0);
+    expect(state.supp.size).toBe(2);
   });
 });
