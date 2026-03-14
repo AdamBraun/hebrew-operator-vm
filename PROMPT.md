@@ -264,8 +264,8 @@ Continuation-family lattice:
 - י = cont, focus stays
 - ו = cont, focus advances
 - נ = cont + carry, focus advances
-- ן = cont + carry + supp, focus advances
-- ז = cont + carry + supp, focus stays
+- ן = cont + supp, focus advances
+- ז = cont + supp, focus stays
 
 The ה-leg is not another family member; it is a detached adjunct whose topology strictly contains י as a subset: cont(h, ℓ) plus carry(h, ℓ) + supp(ℓ, h) + sub(h, ℓ).
 
@@ -275,15 +275,14 @@ The ה-leg is not another family member; it is a detached adjunct whose topology
 
 # ז — Exported resolved port (focus stays)
 
-Unary. Same materialized graph edges as ן (cont+carry+supp), but focus stays and the resolved port is exported.
+Unary. Same materialized graph edges as ן (cont+supp), but focus stays and the resolved port is exported.
 
 - **Select:** current focus (F).
 - **Bound:** allocate port (`p := alloc()`).
 - **Graph edges emitted:**
   1. `cont(F, p)`
-  2. `carry(F, p)`
-  3. `supp(p, F)`
-- **Other state changes:** export `p` to `K`.
+  2. `supp(p, F)`
+- **Other state changes:** mark `p` as a committed resolved port and export `p` to `K`.
 - **Seal:** keep focus unchanged (`F` stays).
 
 ---
@@ -292,12 +291,12 @@ Unary. Same materialized graph edges as ן (cont+carry+supp), but focus stays an
 
 - **Select:** `inside` (the operand / current focus) and `outside` (derived from the current frame or ambient).
 - **Bound:**
-  1. create `p_in` as a committed resolved port of `inside`
-  2. create `p_out` as a committed resolved port of `outside`
+  1. create `p_in` as a committed resolved port of `inside` with `cont(inside, p_in)` and `supp(p_in, inside)`
+  2. create `p_out` as a committed resolved port of `outside` with `cont(outside, p_out)` and `supp(p_out, outside)`
   3. allocate interface object `I`
   4. bridge `p_in` and `p_out` through `I`, so `inside` and `outside` relate only via `I`
 - **Seal:** set `F := I`.
-- **Note:** ח is operationally two ז's bridged into a single interface object.
+- **Note:** ח is operationally two direct-support ז-style resolved ports bridged into a single interface object. No port-level `carry` is introduced.
 
 ---
 
@@ -349,8 +348,7 @@ Allocate resolved hold `h`.
 Exact graph edges emitted:
 
 1. `cont(F, h)`
-2. `carry(F, h)`
-3. `supp(h, F)`
+2. `supp(h, F)`
 
 Other state changes:
 
@@ -377,8 +375,7 @@ None.
 - **כ Bound:** allocate resolved hold `h`.
 - **כ Graph edges emitted:**
   1. `cont(F, h)`
-  2. `carry(F, h)`
-  3. `supp(h, F)`
+  2. `supp(h, F)`
 - **כ Seal:** set `F := h`.
 - **ך:** same graph edges as `כ`, plus `policy(h) := final`.
 
@@ -463,14 +460,13 @@ No new graph edges are emitted in Bound.
 
 # ן — Final nun (immediately resolved continuation)
 
-Unary. Same materialized graph edges as ז (cont+carry+supp), but focus advances and nothing is exported.
+Unary. Same materialized graph edges as ז (cont+supp), but focus advances and nothing is exported.
 
 - **Select:** current focus (F).
 - **Bound:** allocate successor (`F^{+} := alloc()`).
 - **Graph edges emitted:**
   1. `cont(F, F^{+})`
-  2. `carry(F, F^{+})`
-  3. `supp(F^{+}, F)`
+  2. `supp(F^{+}, F)`
 - **Seal:** set `F := F^{+}`.
 
 ---
