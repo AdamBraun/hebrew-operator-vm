@@ -1,4 +1,4 @@
-// trace_file_sha256: efbb7bee2ee1742930f606e076f2cb14629c639e6e948f7da789974602fea9c6
+// trace_file_sha256: c6bfea18228b0f686c55d00fce014f44463af3d4c6576c8076051bf045d1bc6a
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
 // graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
@@ -219,9 +219,48 @@ digraph Genesis_13_2_Boot {
   "ו:8:2" -> "ב:8:7" [xlabel="boundary"];
   "כ:2:1" -> "ב:2:2" [xlabel="boundary"];
   "מ:3:4" -> "ד:2:1" [xlabel="transport"];
+  "C:1:1" -> "ו:1:1" [xlabel="cont"];
+  "C:2:2" -> "כ:2:1" [xlabel="cont"];
+  "C:3:3" -> "מ:3:3" [xlabel="cont"];
+  "C:8:6" -> "ו:8:2" [xlabel="cont"];
+  "ב:1:1" -> "ר:1:1" [xlabel="cont"];
+  "ב:2:2" -> "ד:2:1" [xlabel="cont"];
+  "ב:5:4" -> "מ:5:5" [xlabel="cont"];
+  "ב:7:6" -> "כ:7:2" [xlabel="cont"];
   "ב:8:7" -> "ה:8:3" [xlabel="cont"];
+  "ב:8:7" -> "ז:8:1" [xlabel="cont"];
+  "ה:5:1" -> "ה:5:2" [xlabel="cont"];
+  "ה:8:3" -> "ה:8:4" [xlabel="cont"];
+  "מ:1:1" -> "מ:1:2" [xlabel="cont"];
+  "מ:1:2" -> "ם:1:1" [xlabel="cont"];
+  "מ:3:3" -> "מ:3:4" [xlabel="cont"];
+  "מ:3:4" -> "ד:3:2" [xlabel="cont"];
+  "מ:5:5" -> "מ:5:6" [xlabel="cont"];
+  "מ:5:6" -> "ק:5:1" [xlabel="cont"];
   "נ:5:1" -> "ה:5:1" [xlabel="cont"];
+  "ק:5:1" -> "נ:5:1" [xlabel="cont"];
+  "ק:5:1" -> "ק:5:2" [xlabel="cont"];
+  "ר:1:1" -> "מ:1:1" [xlabel="cont"];
+  "ב:1:1" -> "ר:1:1" [xlabel="carry"];
   "מ:5:6" -> "ק:5:1" [xlabel="carry"];
+  "ק:5:1" -> "נ:5:1" [xlabel="carry"];
+  "ק:5:1" -> "ק:5:2" [xlabel="carry"];
+  "ד:2:1" -> "ב:2:2" [xlabel="supp"];
+  "ד:3:2" -> "מ:3:4" [xlabel="supp"];
+  "ה:5:1" -> "מ:5:6" [xlabel="supp"];
+  "ה:5:1" -> "נ:5:1" [xlabel="supp"];
+  "ה:5:1" -> "ק:5:1" [xlabel="supp"];
+  "ה:5:2" -> "ה:5:1" [xlabel="supp"];
+  "ה:8:3" -> "ב:8:7" [xlabel="supp"];
+  "ה:8:4" -> "ה:8:3" [xlabel="supp"];
+  "ז:8:1" -> "ב:8:7" [xlabel="supp"];
+  "כ:2:1" -> "C:2:2" [xlabel="supp"];
+  "כ:7:2" -> "ב:7:6" [xlabel="supp"];
+  "ם:1:1" -> "ב:1:1" [xlabel="supp"];
+  "ם:1:1" -> "מ:1:2" [xlabel="supp"];
+  "מ:1:1" -> "ר:1:1" [xlabel="supp"];
+  "מ:3:3" -> "C:3:3" [xlabel="supp"];
+  "מ:5:5" -> "ב:5:4" [xlabel="supp"];
   "ה:5:1" -> "ה:5:2" [xlabel="sub", style="dashed", color="#6A8E4E"];
   "ה:8:3" -> "ה:8:4" [xlabel="sub", style="dashed", color="#6A8E4E"];
   "ק:5:1" -> "ק:5:2" [xlabel="sub", style="dashed", color="#6A8E4E"];

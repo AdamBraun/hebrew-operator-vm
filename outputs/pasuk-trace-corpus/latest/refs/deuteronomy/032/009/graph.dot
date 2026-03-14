@@ -1,4 +1,4 @@
-// trace_file_sha256: 718dfc1331905466178c867d495c61c52368fa3d26d1bce9548f5dab54ff822c
+// trace_file_sha256: be32cda9d661ca9ae3b4603c02264d66b080eeff02b566d457b362f77bc134a5
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
 // graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
@@ -216,10 +216,61 @@ digraph Deuteronomy_32_9_Boot {
   "ל:8:6" -> "ת:8:2" [xlabel="finalize"];
   "ק:6:3" -> "ב:6:1" [xlabel="boundary"];
   "ת:8:2" -> "ת:8:3" [xlabel="residue"];
+  "C:1:1" -> "כ:1:1" [xlabel="cont"];
+  "C:2:2" -> "ז:2:1" [xlabel="cont"];
   "C:3:3" -> "ה:3:1" [xlabel="cont"];
+  "C:3:3" -> "י:3:2" [xlabel="cont"];
+  "C:4:4" -> "ע:4:1" [xlabel="cont"];
+  "C:6:5" -> "י:6:3" [xlabel="cont"];
+  "C:6:5" -> "ע:6:3" [xlabel="cont"];
+  "C:7:6" -> "ז:7:3" [xlabel="cont"];
+  "C:8:7" -> "נ:8:1" [xlabel="cont"];
+  "Ω" -> "ז:2:2" [xlabel="cont"];
+  "Ω" -> "ז:7:4" [xlabel="cont"];
+  "Ω" -> "ז:8:6" [xlabel="cont"];
+  "ב:7:2" -> "ל:7:3" [xlabel="cont"];
+  "ה:3:1" -> "ה:3:2" [xlabel="cont"];
+  "ה:3:1" -> "ו:3:1" [xlabel="cont"];
+  "ה:3:3" -> "ה:3:4" [xlabel="cont"];
   "ו:3:1" -> "ה:3:3" [xlabel="cont"];
+  "ח:2:1" -> "ל:2:1" [xlabel="cont"];
+  "ח:8:3" -> "ל:8:5" [xlabel="cont"];
+  "כ:1:1" -> "י:1:1" [xlabel="cont"];
+  "ל:2:1" -> "ל:2:2" [xlabel="cont"];
+  "ל:2:2" -> "ק:2:1" [xlabel="cont"];
+  "ל:7:3" -> "ל:7:4" [xlabel="cont"];
+  "ל:8:5" -> "ל:8:6" [xlabel="cont"];
+  "מ:4:1" -> "מ:4:2" [xlabel="cont"];
+  "מ:4:2" -> "ו:4:2" [xlabel="cont"];
+  "נ:8:1" -> "ז:8:5" [xlabel="cont"];
+  "ע:4:1" -> "מ:4:1" [xlabel="cont"];
+  "ע:6:3" -> "ק:6:3" [xlabel="cont"];
+  "ק:2:1" -> "ק:2:2" [xlabel="cont"];
+  "ק:6:3" -> "ק:6:4" [xlabel="cont"];
+  "ת:8:3" -> "ו:8:3" [xlabel="cont"];
+  "C:4:4" -> "ע:4:1" [xlabel="carry"];
+  "C:6:5" -> "ע:6:3" [xlabel="carry"];
+  "C:8:7" -> "נ:8:1" [xlabel="carry"];
   "ל:2:2" -> "ק:2:1" [xlabel="carry"];
   "ע:6:3" -> "ק:6:3" [xlabel="carry"];
+  "ק:2:1" -> "ק:2:2" [xlabel="carry"];
+  "ק:6:3" -> "ק:6:4" [xlabel="carry"];
+  "ה:3:1" -> "C:3:3" [xlabel="supp"];
+  "ה:3:2" -> "ה:3:1" [xlabel="supp"];
+  "ה:3:3" -> "ו:3:1" [xlabel="supp"];
+  "ה:3:4" -> "ה:3:3" [xlabel="supp"];
+  "ו:4:2" -> "C:4:4" [xlabel="supp"];
+  "ז:2:1" -> "C:2:2" [xlabel="supp"];
+  "ז:2:2" -> "Ω" [xlabel="supp"];
+  "ז:7:3" -> "C:7:6" [xlabel="supp"];
+  "ז:7:4" -> "Ω" [xlabel="supp"];
+  "ז:8:5" -> "נ:8:1" [xlabel="supp"];
+  "ז:8:6" -> "Ω" [xlabel="supp"];
+  "כ:1:1" -> "C:1:1" [xlabel="supp"];
+  "ל:2:1" -> "ח:2:1" [xlabel="supp"];
+  "ל:7:3" -> "ב:7:2" [xlabel="supp"];
+  "ל:8:5" -> "ח:8:3" [xlabel="supp"];
+  "מ:4:1" -> "ע:4:1" [xlabel="supp"];
   "ה:3:1" -> "ה:3:2" [xlabel="sub", style="dashed", color="#6A8E4E"];
   "ה:3:3" -> "ה:3:4" [xlabel="sub", style="dashed", color="#6A8E4E"];
   "ק:2:1" -> "ק:2:2" [xlabel="sub", style="dashed", color="#6A8E4E"];

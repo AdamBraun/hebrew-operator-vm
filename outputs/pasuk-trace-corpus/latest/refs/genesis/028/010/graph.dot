@@ -1,4 +1,4 @@
-// trace_file_sha256: 6f2704c30d856b46a96b42d329b98a4ab9f5726199e41ebab946310f27e4cc6b
+// trace_file_sha256: f8c73a53a95894942ec482bd278e979e0379595fffe2cb83cbe02b69559448dd
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
 // graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
@@ -173,8 +173,44 @@ digraph Genesis_28_10_Boot {
   "מ:3:2" -> "ב:3:2" [xlabel="boundary"];
   "צ:1:1" -> "Ω" [xlabel="transport"];
   "ק:2:1" -> "ב:2:1" [xlabel="boundary"];
+  "C:1:1" -> "ו:1:1" [xlabel="cont"];
+  "C:2:2" -> "י:2:2" [xlabel="cont"];
+  "C:2:2" -> "ע:2:1" [xlabel="cont"];
+  "C:3:3" -> "מ:3:1" [xlabel="cont"];
+  "C:6:5" -> "ו:6:2" [xlabel="cont"];
+  "C:7:6" -> "ז:7:1" [xlabel="cont"];
+  "Ω" -> "ז:7:2" [xlabel="cont"];
+  "ב:3:2" -> "ר:3:1" [xlabel="cont"];
+  "ב:4:3" -> "ע:4:3" [xlabel="cont"];
+  "ה:7:1" -> "ה:7:2" [xlabel="cont"];
+  "ו:1:1" -> "י:1:1" [xlabel="cont"];
+  "ו:6:2" -> "י:6:3" [xlabel="cont"];
+  "ו:6:2" -> "ל:6:1" [xlabel="cont"];
+  "ח:7:1" -> "ר:7:2" [xlabel="cont"];
+  "ל:6:1" -> "ל:6:2" [xlabel="cont"];
+  "ל:6:2" -> "ך:6:1" [xlabel="cont"];
+  "מ:3:1" -> "מ:3:2" [xlabel="cont"];
   "נ:7:1" -> "ה:7:1" [xlabel="cont"];
+  "ע:2:1" -> "ק:2:1" [xlabel="cont"];
+  "ק:2:1" -> "ק:2:2" [xlabel="cont"];
+  "ר:7:2" -> "נ:7:1" [xlabel="cont"];
+  "C:2:2" -> "ע:2:1" [xlabel="carry"];
+  "ב:3:2" -> "ר:3:1" [xlabel="carry"];
+  "ב:4:3" -> "ע:4:3" [xlabel="carry"];
+  "ח:7:1" -> "ר:7:2" [xlabel="carry"];
   "ע:2:1" -> "ק:2:1" [xlabel="carry"];
+  "ק:2:1" -> "ק:2:2" [xlabel="carry"];
+  "ר:7:2" -> "נ:7:1" [xlabel="carry"];
+  "ה:7:1" -> "ח:7:1" [xlabel="supp"];
+  "ה:7:1" -> "נ:7:1" [xlabel="supp"];
+  "ה:7:1" -> "ר:7:2" [xlabel="supp"];
+  "ה:7:2" -> "ה:7:1" [xlabel="supp"];
+  "ז:7:1" -> "C:7:6" [xlabel="supp"];
+  "ז:7:2" -> "Ω" [xlabel="supp"];
+  "ך:6:1" -> "ל:6:2" [xlabel="supp"];
+  "ל:6:1" -> "ו:6:2" [xlabel="supp"];
+  "מ:3:1" -> "C:3:3" [xlabel="supp"];
+  "ע:4:3" -> "ב:4:3" [xlabel="supp"];
   "ה:7:1" -> "ה:7:2" [xlabel="sub", style="dashed", color="#6A8E4E"];
   "ק:2:1" -> "ק:2:2" [xlabel="sub", style="dashed", color="#6A8E4E"];
   legend -> "Ω" [style=invis];

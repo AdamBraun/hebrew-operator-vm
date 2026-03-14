@@ -1,4 +1,4 @@
-// trace_file_sha256: e57e09a0934b9463181c828322d51f071535eec4bc03cd0846600778545debf4
+// trace_file_sha256: 5141a84d02cfab0d0c8413b3138953af3168ae567497abe0c3e12199069d0e8b
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
 // graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
@@ -102,7 +102,21 @@ digraph Genesis_43_1_Boot {
   "כ:2:1" -> "ב:2:2" [xlabel="boundary"];
   "ע:1:1" -> "ב:1:1" [xlabel="boundary"];
   "ר:3:2" -> "ץ:3:1" [xlabel="align"];
+  "C:1:1" -> "ו:1:1" [xlabel="cont"];
+  "C:2:2" -> "כ:2:1" [xlabel="cont"];
+  "ב:2:2" -> "ד:2:1" [xlabel="cont"];
+  "ב:3:3" -> "ר:3:2" [xlabel="cont"];
+  "ה:1:1" -> "ה:1:2" [xlabel="cont"];
+  "ה:1:1" -> "ר:1:1" [xlabel="cont"];
   "ו:1:1" -> "ה:1:1" [xlabel="cont"];
+  "ר:1:1" -> "ע:1:1" [xlabel="cont"];
+  "ב:3:3" -> "ר:3:2" [xlabel="carry"];
+  "ה:1:1" -> "ר:1:1" [xlabel="carry"];
+  "ר:1:1" -> "ע:1:1" [xlabel="carry"];
+  "ד:2:1" -> "ב:2:2" [xlabel="supp"];
+  "ה:1:1" -> "ו:1:1" [xlabel="supp"];
+  "ה:1:2" -> "ה:1:1" [xlabel="supp"];
+  "כ:2:1" -> "C:2:2" [xlabel="supp"];
   "ה:1:1" -> "ה:1:2" [xlabel="sub", style="dashed", color="#6A8E4E"];
   legend -> "Ω" [style=invis];
 }

@@ -1,4 +1,4 @@
-// trace_file_sha256: ad3867381b8bae915a770732a00b0c2489c9fcf5f8159fff0be37f6ce3b39228
+// trace_file_sha256: e84a46759af729d7989cda3832d361e38d258c630fcccd36e2e7a4c9af1dbe2e
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
 // graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
@@ -224,8 +224,42 @@ digraph Genesis_30_11_Boot {
   "ת:6:5" -> "C:7:6" [xlabel="transport"];
   "ת:6:5" -> "ת:6:6" [xlabel="residue"];
   "ת:7:8" -> "ת:7:9" [xlabel="residue"];
+  "C:1:1" -> "ו:1:1" [xlabel="cont"];
+  "C:2:2" -> "ל:2:1" [xlabel="cont"];
+  "C:4:4" -> "ג:4:1" [xlabel="cont"];
+  "C:6:5" -> "ו:6:2" [xlabel="cont"];
+  "C:8:7" -> "מ:8:3" [xlabel="cont"];
+  "C:9:8" -> "ג:9:3" [xlabel="cont"];
+  "ג:4:1" -> "ג:4:2" [xlabel="cont"];
+  "ג:4:2" -> "ד:4:1" [xlabel="cont"];
+  "ג:9:3" -> "ג:9:4" [xlabel="cont"];
+  "ג:9:4" -> "ד:9:2" [xlabel="cont"];
+  "ה:2:1" -> "ה:2:2" [xlabel="cont"];
+  "ל:2:1" -> "ל:2:2" [xlabel="cont"];
   "ל:2:2" -> "ה:2:1" [xlabel="cont"];
+  "מ:1:1" -> "מ:1:2" [xlabel="cont"];
+  "מ:1:2" -> "ר:1:1" [xlabel="cont"];
+  "מ:8:3" -> "מ:8:4" [xlabel="cont"];
+  "מ:8:4" -> "ו:8:3" [xlabel="cont"];
+  "ק:6:1" -> "ק:6:2" [xlabel="cont"];
+  "ק:6:1" -> "ר:6:2" [xlabel="cont"];
+  "ת:1:3" -> "מ:1:1" [xlabel="cont"];
+  "ת:6:6" -> "ק:6:1" [xlabel="cont"];
+  "C:4:4" -> "ג:4:1" [xlabel="carry"];
+  "C:9:8" -> "ג:9:3" [xlabel="carry"];
+  "מ:1:2" -> "ר:1:1" [xlabel="carry"];
+  "ק:6:1" -> "ק:6:2" [xlabel="carry"];
+  "ק:6:1" -> "ר:6:2" [xlabel="carry"];
   "ת:6:6" -> "ק:6:1" [xlabel="carry"];
+  "ד:4:1" -> "C:4:4" [xlabel="supp"];
+  "ד:4:1" -> "ג:4:2" [xlabel="supp"];
+  "ד:9:2" -> "C:9:8" [xlabel="supp"];
+  "ד:9:2" -> "ג:9:4" [xlabel="supp"];
+  "ה:2:1" -> "ל:2:2" [xlabel="supp"];
+  "ה:2:2" -> "ה:2:1" [xlabel="supp"];
+  "ל:2:1" -> "C:2:2" [xlabel="supp"];
+  "מ:1:1" -> "ת:1:3" [xlabel="supp"];
+  "מ:8:3" -> "C:8:7" [xlabel="supp"];
   "ה:2:1" -> "ה:2:2" [xlabel="sub", style="dashed", color="#6A8E4E"];
   "ק:6:1" -> "ק:6:2" [xlabel="sub", style="dashed", color="#6A8E4E"];
   legend -> "Ω" [style=invis];

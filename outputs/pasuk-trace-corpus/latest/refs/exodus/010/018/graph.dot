@@ -1,4 +1,4 @@
-// trace_file_sha256: eac89722a8404891e8e73044ef974eed1d3988d941ec949998eec8100add61c7
+// trace_file_sha256: e812173160312b2ecc854fc20bbc9d90a1bcef737ebf7909311d1eea8f3c3cad
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
 // graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
@@ -153,9 +153,45 @@ digraph Exodus_10_18_Boot {
   "ע:5:5" -> "ת:5:2" [xlabel="finalize"];
   "צ:1:1" -> "Ω" [xlabel="transport"];
   "ת:5:2" -> "ת:5:3" [xlabel="residue"];
+  "C:1:1" -> "ו:1:1" [xlabel="cont"];
+  "C:2:2" -> "מ:2:1" [xlabel="cont"];
+  "C:5:4" -> "ו:5:2" [xlabel="cont"];
+  "C:6:5" -> "ל:6:1" [xlabel="cont"];
   "C:7:6" -> "ה:7:3" [xlabel="cont"];
+  "C:7:6" -> "י:7:3" [xlabel="cont"];
+  "ה:3:1" -> "ה:3:2" [xlabel="cont"];
+  "ה:7:3" -> "ה:7:4" [xlabel="cont"];
+  "ה:7:3" -> "ו:7:3" [xlabel="cont"];
+  "ה:7:5" -> "ה:7:6" [xlabel="cont"];
+  "ו:1:1" -> "י:1:1" [xlabel="cont"];
+  "ו:5:2" -> "י:5:2" [xlabel="cont"];
+  "ו:5:2" -> "ע:5:5" [xlabel="cont"];
   "ו:7:3" -> "ה:7:5" [xlabel="cont"];
+  "ל:6:1" -> "ל:6:2" [xlabel="cont"];
+  "מ:2:1" -> "מ:2:2" [xlabel="cont"];
+  "מ:2:2" -> "ע:2:1" [xlabel="cont"];
+  "ע:2:1" -> "ם:2:1" [xlabel="cont"];
   "ע:3:3" -> "ה:3:1" [xlabel="cont"];
+  "פ:3:1" -> "ר:3:1" [xlabel="cont"];
+  "ר:3:1" -> "ע:3:3" [xlabel="cont"];
+  "ת:5:3" -> "ר:5:2" [xlabel="cont"];
+  "ו:5:2" -> "ע:5:5" [xlabel="carry"];
+  "מ:2:2" -> "ע:2:1" [xlabel="carry"];
+  "פ:3:1" -> "ר:3:1" [xlabel="carry"];
+  "ר:3:1" -> "ע:3:3" [xlabel="carry"];
+  "ת:5:3" -> "ר:5:2" [xlabel="carry"];
+  "ה:3:1" -> "ע:3:3" [xlabel="supp"];
+  "ה:3:1" -> "פ:3:1" [xlabel="supp"];
+  "ה:3:1" -> "ר:3:1" [xlabel="supp"];
+  "ה:3:2" -> "ה:3:1" [xlabel="supp"];
+  "ה:7:3" -> "C:7:6" [xlabel="supp"];
+  "ה:7:4" -> "ה:7:3" [xlabel="supp"];
+  "ה:7:5" -> "ו:7:3" [xlabel="supp"];
+  "ה:7:6" -> "ה:7:5" [xlabel="supp"];
+  "ל:6:1" -> "C:6:5" [xlabel="supp"];
+  "ם:2:1" -> "ע:2:1" [xlabel="supp"];
+  "מ:2:1" -> "C:2:2" [xlabel="supp"];
+  "ר:5:2" -> "ת:5:3" [xlabel="supp"];
   "ה:3:1" -> "ה:3:2" [xlabel="sub", style="dashed", color="#6A8E4E"];
   "ה:7:3" -> "ה:7:4" [xlabel="sub", style="dashed", color="#6A8E4E"];
   "ה:7:5" -> "ה:7:6" [xlabel="sub", style="dashed", color="#6A8E4E"];

@@ -1,4 +1,4 @@
-// trace_file_sha256: 38cb44f60ea7c84b87d3a247c1a582a912d2eea4ea2e0d9c6b266b042b0637c2
+// trace_file_sha256: ef9635f63b6eaf9da05e2bdc62cfcc77e530a58f89f50616ee1cce68e2b78969
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
 // graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
@@ -118,8 +118,38 @@ digraph Exodus_1_2_Boot {
   "ל:4:1" -> "C:4:3" [xlabel="supp"];
   "ל:4:1" -> "ל:4:2" [xlabel="cont"];
   "ר:1:1" -> "Ω" [xlabel="transport"];
+  "C:2:2" -> "מ:2:1" [xlabel="cont"];
+  "C:4:3" -> "ל:4:1" [xlabel="cont"];
+  "C:5:4" -> "ו:5:4" [xlabel="cont"];
+  "Ω" -> "ר:1:1" [xlabel="cont"];
+  "ב:1:1" -> "ן:1:1" [xlabel="cont"];
   "ד:5:1" -> "ה:5:3" [xlabel="cont"];
+  "ה:5:1" -> "ה:5:2" [xlabel="cont"];
+  "ה:5:1" -> "ו:5:5" [xlabel="cont"];
+  "ה:5:3" -> "ה:5:4" [xlabel="cont"];
+  "ו:2:2" -> "ן:2:2" [xlabel="cont"];
+  "ו:4:3" -> "י:4:1" [xlabel="cont"];
   "ו:5:4" -> "ה:5:1" [xlabel="cont"];
+  "ו:5:4" -> "י:5:2" [xlabel="cont"];
+  "ו:5:5" -> "ד:5:1" [xlabel="cont"];
+  "ל:4:1" -> "ל:4:2" [xlabel="cont"];
+  "ל:4:2" -> "ו:4:3" [xlabel="cont"];
+  "מ:2:1" -> "מ:2:2" [xlabel="cont"];
+  "מ:2:2" -> "ע:2:1" [xlabel="cont"];
+  "ע:2:1" -> "ו:2:2" [xlabel="cont"];
+  "ר:1:1" -> "ו:1:1" [xlabel="cont"];
+  "Ω" -> "ר:1:1" [xlabel="carry"];
+  "מ:2:2" -> "ע:2:1" [xlabel="carry"];
+  "ד:5:1" -> "ו:5:5" [xlabel="supp"];
+  "ה:5:1" -> "ו:5:4" [xlabel="supp"];
+  "ה:5:2" -> "ה:5:1" [xlabel="supp"];
+  "ה:5:3" -> "ד:5:1" [xlabel="supp"];
+  "ה:5:4" -> "ה:5:3" [xlabel="supp"];
+  "ל:4:1" -> "C:4:3" [xlabel="supp"];
+  "מ:2:1" -> "C:2:2" [xlabel="supp"];
+  "ן:1:1" -> "ב:1:1" [xlabel="supp"];
+  "ן:2:2" -> "ו:2:2" [xlabel="supp"];
+  "ן:2:2" -> "מ:2:2" [xlabel="supp"];
   "ה:5:1" -> "ה:5:2" [xlabel="sub", style="dashed", color="#6A8E4E"];
   "ה:5:3" -> "ה:5:4" [xlabel="sub", style="dashed", color="#6A8E4E"];
   legend -> "Ω" [style=invis];
