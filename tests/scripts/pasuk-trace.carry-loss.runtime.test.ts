@@ -39,12 +39,39 @@ function formatCarryLayers(layers: Record<string, string[]>): string {
   return JSON.stringify(layers, null, 2);
 }
 
+function diffEdges(expected: string[], actual: string[]): { missing: string[]; extra: string[] } {
+  return {
+    missing: expected.filter((edge) => !actual.includes(edge)),
+    extra: actual.filter((edge) => !expected.includes(edge))
+  };
+}
+
 type CarryLayers = {
   deep_trace: string[];
   final_in_memory: string[];
   trace_json: string[];
   graph_dot: string[];
 };
+
+function assertCarryLayersEqual(label: string, layers: CarryLayers, expectedEdges: string[]): void {
+  const mismatches = Object.entries(layers)
+    .map(([layer, edges]) => ({
+      layer,
+      ...diffEdges(expectedEdges, edges)
+    }))
+    .filter(({ missing, extra }) => missing.length > 0 || extra.length > 0);
+
+  if (mismatches.length > 0) {
+    throw new Error(
+      [
+        `${label} carry layers diverged`,
+        `expected_edges: ${JSON.stringify(expectedEdges)}`,
+        `layer_mismatches: ${JSON.stringify(mismatches, null, 2)}`,
+        `carry_layers: ${formatCarryLayers(layers)}`
+      ].join("\n")
+    );
+  }
+}
 
 async function runOneLetterCarryLayers(letter: string): Promise<CarryLayers> {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-carry-loss-"));
@@ -120,24 +147,13 @@ describe("pasuk trace carry serialization controls", () => {
     const layers = await runOneLetterCarryLayers("נ");
     const expectedCarry = ["C:1:1->נ:1:1"];
 
-    expect(layers.deep_trace).toEqual(expectedCarry);
-    expect(layers.final_in_memory).toEqual(expectedCarry);
-    expect(layers.trace_json).toEqual(expectedCarry);
-
-    const missingFromGraphDot = layers.deep_trace.filter(
-      (edge) => !layers.graph_dot.includes(edge)
-    );
-    if (missingFromGraphDot.length > 0) {
-      throw new Error(
-        [
-          "carry lost before/during graph.dot serialization",
-          `missing_from_graph_dot: ${JSON.stringify(missingFromGraphDot)}`,
-          `carry_layers: ${formatCarryLayers(layers)}`
-        ].join("\n")
-      );
-    }
-
-    expect(layers.graph_dot).toEqual(expectedCarry);
+    assertCarryLayersEqual("one-letter נ", layers, expectedCarry);
+    expect(layers).toEqual({
+      deep_trace: expectedCarry,
+      final_in_memory: expectedCarry,
+      trace_json: expectedCarry,
+      graph_dot: expectedCarry
+    });
   });
 
   it("keeps a direct-support final nun carry-free across deep trace, final state, trace.json, and graph.dot", async () => {
