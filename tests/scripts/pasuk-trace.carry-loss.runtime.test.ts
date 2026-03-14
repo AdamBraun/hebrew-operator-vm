@@ -39,90 +39,94 @@ function formatCarryLayers(layers: Record<string, string[]>): string {
   return JSON.stringify(layers, null, 2);
 }
 
-describe("pasuk trace carry loss reproduction", () => {
-  it("reproduces graph serialization dropping live carry on a one-letter nun input", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-carry-loss-"));
-    const inputPath = path.join(tmpDir, "torah.json");
-    const outDir = path.join(tmpDir, "out");
+type CarryLayers = {
+  deep_trace: string[];
+  final_in_memory: string[];
+  trace_json: string[];
+  graph_dot: string[];
+};
 
-    await fs.writeFile(
-      inputPath,
-      JSON.stringify(
-        {
-          books: [
-            {
-              name: "Genesis",
-              chapters: [
-                {
-                  n: 1,
-                  verses: [{ n: 1, he: "נ" }]
-                }
-              ]
-            }
-          ]
-        },
-        null,
-        2
-      ),
-      "utf8"
-    );
+async function runOneLetterCarryLayers(letter: string): Promise<CarryLayers> {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pasuk-trace-carry-loss-"));
+  const inputPath = path.join(tmpDir, "torah.json");
+  const outDir = path.join(tmpDir, "out");
 
-    const runtimeResult = await runPasukTrace({
-      input: inputPath,
-      ref: "Genesis/1/1",
-      text: "",
-      lang: "he",
-      normalizeFinals: false,
-      keepTeamim: false,
-      allowRuntimeErrors: false,
-      includeSnapshots: true,
-      outJson: path.join(tmpDir, "trace.json"),
-      outReport: path.join(tmpDir, "trace.txt"),
-      printReport: false
-    });
-
-    const { renderDotFromTraceJson } = await import("../../scripts/render/pasukGraph.mjs");
-
-    await runPasukTraceCorpus(
-      parseArgs([
-        `--input=${inputPath}`,
-        `--out-dir=${outDir}`,
-        "--limit=1",
-        "--no-print-progress"
-      ]),
+  await fs.writeFile(
+    inputPath,
+    JSON.stringify(
       {
-        renderDotFromTraceJson,
-        traceExecutionMode: "in-process"
-      }
+        books: [
+          {
+            name: "Genesis",
+            chapters: [
+              {
+                n: 1,
+                verses: [{ n: 1, he: letter }]
+              }
+            ]
+          }
+        ]
+      },
+      null,
+      2
+    ),
+    "utf8"
+  );
+
+  const runtimeResult = await runPasukTrace({
+    input: inputPath,
+    ref: "Genesis/1/1",
+    text: "",
+    lang: "he",
+    normalizeFinals: false,
+    keepTeamim: false,
+    allowRuntimeErrors: false,
+    includeSnapshots: true,
+    outJson: path.join(tmpDir, "trace.json"),
+    outReport: path.join(tmpDir, "trace.txt"),
+    printReport: false
+  });
+
+  const { renderDotFromTraceJson } = await import("../../scripts/render/pasukGraph.mjs");
+
+  await runPasukTraceCorpus(
+    parseArgs([`--input=${inputPath}`, `--out-dir=${outDir}`, "--limit=1", "--no-print-progress"]),
+    {
+      renderDotFromTraceJson,
+      traceExecutionMode: "in-process"
+    }
+  );
+
+  const traceJsonPath = path.join(outDir, "refs", "genesis", "001", "001", "trace.json");
+  const dotPath = path.join(outDir, "refs", "genesis", "001", "001", "graph.dot");
+  const [traceJsonText, dotText] = await Promise.all([
+    fs.readFile(traceJsonPath, "utf8"),
+    fs.readFile(dotPath, "utf8")
+  ]);
+  const tracePayload = JSON.parse(traceJsonText) as {
+    final_state?: { carry?: string[] };
+  };
+
+  return {
+    deep_trace: collectDeepTraceCarry(runtimeResult.trace),
+    final_in_memory: sortEdges(runtimeResult.final_state.carry ?? []),
+    trace_json: sortEdges(tracePayload.final_state?.carry ?? []),
+    graph_dot: collectDotCarry(dotText)
+  };
+}
+
+describe("pasuk trace carry serialization controls", () => {
+  it("keeps a live carry visible through graph.dot on a one-letter nun input", async () => {
+    const layers = await runOneLetterCarryLayers("נ");
+    const expectedCarry = ["C:1:1->נ:1:1"];
+
+    expect(layers.deep_trace).toEqual(expectedCarry);
+    expect(layers.final_in_memory).toEqual(expectedCarry);
+    expect(layers.trace_json).toEqual(expectedCarry);
+
+    const missingFromGraphDot = layers.deep_trace.filter(
+      (edge) => !layers.graph_dot.includes(edge)
     );
-
-    const traceJsonPath = path.join(outDir, "refs", "genesis", "001", "001", "trace.json");
-    const dotPath = path.join(outDir, "refs", "genesis", "001", "001", "graph.dot");
-    const [traceJsonText, dotText] = await Promise.all([
-      fs.readFile(traceJsonPath, "utf8"),
-      fs.readFile(dotPath, "utf8")
-    ]);
-    const tracePayload = JSON.parse(traceJsonText) as {
-      final_state?: { carry?: string[] };
-    };
-
-    const deepTraceCarry = collectDeepTraceCarry(runtimeResult.trace);
-    const finalInMemoryCarry = sortEdges(runtimeResult.final_state.carry ?? []);
-    const traceJsonCarry = sortEdges(tracePayload.final_state?.carry ?? []);
-    const graphDotCarry = collectDotCarry(dotText);
-
-    const layers = {
-      deep_trace: deepTraceCarry,
-      final_in_memory: finalInMemoryCarry,
-      trace_json: traceJsonCarry,
-      graph_dot: graphDotCarry
-    };
-
-    expect(deepTraceCarry).toEqual(["C:1:1->נ:1:1"]);
-    expect(finalInMemoryCarry).toEqual(["C:1:1->נ:1:1"]);
-    expect(traceJsonCarry).toEqual(["C:1:1->נ:1:1"]);
-
-    const missingFromGraphDot = deepTraceCarry.filter((edge) => !graphDotCarry.includes(edge));
     if (missingFromGraphDot.length > 0) {
       throw new Error(
         [
@@ -133,6 +137,31 @@ describe("pasuk trace carry loss reproduction", () => {
       );
     }
 
-    expect(graphDotCarry).toEqual(["C:1:1->נ:1:1"]);
+    expect(layers.graph_dot).toEqual(expectedCarry);
+  });
+
+  it("keeps a direct-support final nun carry-free across deep trace, final state, trace.json, and graph.dot", async () => {
+    const layers = await runOneLetterCarryLayers("ן");
+
+    const phantomCarryLayers = Object.entries(layers)
+      .filter(([, edges]) => edges.length > 0)
+      .map(([layer, edges]) => ({ layer, edges }));
+    if (phantomCarryLayers.length > 0) {
+      throw new Error(
+        [
+          "direct-support letter emitted phantom carry",
+          `letter: ן`,
+          `phantom_carry_layers: ${JSON.stringify(phantomCarryLayers, null, 2)}`,
+          `carry_layers: ${formatCarryLayers(layers)}`
+        ].join("\n")
+      );
+    }
+
+    expect(layers).toEqual({
+      deep_trace: [],
+      final_in_memory: [],
+      trace_json: [],
+      graph_dot: []
+    });
   });
 });
