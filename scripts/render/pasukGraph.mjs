@@ -564,6 +564,12 @@ export const THEMES = {
   }
 };
 
+// Serializer invariant: DOT is a direct projection of the authoritative VM
+// relation sets. If a relation is present in final_state/vm, DOT must render
+// it after generic endpoint pruning only; the renderer must not reinterpret,
+// resolve away, or suppress carry based on matching supp or other semantics.
+// Guarded by tests/scripts/pasuk-trace.relation-parity.runtime.test.ts and
+// tests/scripts/pasuk-trace.carry-loss.runtime.test.ts.
 export function renderDotFromTraceJson(rootJson, opts = {}) {
   const vm = pickVm(rootJson);
   if (!vm) {

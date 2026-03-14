@@ -143,6 +143,8 @@ async function runOneLetterCarryLayers(letter: string): Promise<CarryLayers> {
 }
 
 describe("pasuk trace carry serialization controls", () => {
+  // End-to-end positive control for the serializer invariant: runtime trace,
+  // in-memory final_state, trace.json, and graph.dot must carry the same live edge.
   it("keeps a live carry visible through graph.dot on a one-letter nun input", async () => {
     const layers = await runOneLetterCarryLayers("נ");
     const expectedCarry = ["C:1:1->נ:1:1"];
@@ -156,6 +158,7 @@ describe("pasuk trace carry serialization controls", () => {
     });
   });
 
+  // End-to-end negative control for the same invariant on a direct-support letter.
   it("keeps a direct-support final nun carry-free across deep trace, final state, trace.json, and graph.dot", async () => {
     const layers = await runOneLetterCarryLayers("ן");
 

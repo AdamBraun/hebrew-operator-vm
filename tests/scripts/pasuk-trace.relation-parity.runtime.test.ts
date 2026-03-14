@@ -158,6 +158,8 @@ async function runOneLetterRelationArtifacts(letter: string): Promise<{
 }
 
 describe("pasuk trace JSON vs DOT relation parity", () => {
+  // Renderer contract from scripts/render/pasukGraph.mjs: DOT relation presence
+  // must match authoritative final_state relation presence without class loss.
   it("keeps live-carry relations present in graph.dot whenever they exist in trace.json", async () => {
     const { jsonRelations, dotRelations, missingRelations, jsonCounts, dotCounts } =
       await runOneLetterRelationArtifacts("נ");
@@ -204,6 +206,8 @@ describe("pasuk trace JSON vs DOT relation parity", () => {
     });
   });
 
+  // Direct-support negative control for the same invariant: DOT must not invent
+  // carry when the authoritative graph contains only cont + supp.
   it("keeps a one-letter final nun carry-free in DOT relation counts", async () => {
     const { jsonRelations, dotRelations, missingRelations, jsonCounts, dotCounts } =
       await runOneLetterRelationArtifacts("ן");
