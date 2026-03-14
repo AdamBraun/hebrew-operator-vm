@@ -707,7 +707,7 @@ export function renderVmDot(vm, opts = {}) {
   const subEdges = normalizeEdgeSet(vm?.sub);
   const contEdges = normalizeEdgeSet(vm?.cont);
   const carryEdges = normalizeEdgeSet(vm?.carry);
-  const carryEdgeKeys = new Set(carryEdges.map((edge) => `${edge.from}->${edge.to}`));
+  const suppEdges = normalizeEdgeSet(vm?.supp);
   const directSubChildren = new Map();
   const addDirectSub = (parent, child) => {
     if (!directSubChildren.has(parent)) {
@@ -754,7 +754,7 @@ export function renderVmDot(vm, opts = {}) {
       handles: keptHandles,
       links,
       boundaries,
-      interiorEdges: [...subEdges, ...contEdges, ...carryEdges],
+      interiorEdges: [...subEdges, ...contEdges, ...carryEdges, ...suppEdges],
       keepIds: ["Ω", "⊥", ...Array.from(forcedPointerIds), ...requestedKeepIds],
       keepKinds: parseCsvList(pruneKeepKinds),
       countBoundaryEdges: Boolean(pruneCountBoundaryEdges)
@@ -1131,26 +1131,35 @@ export function renderVmDot(vm, opts = {}) {
     })}];\n`;
   }
 
-  // Edges (cont/carry): render branch lines and fan-in targets explicitly.
+  // Edges (cont): render the authoritative cont relation set directly.
   for (const edge of contEdges) {
-    if (carryEdgeKeys.has(`${edge.from}->${edge.to}`)) {
-      continue;
-    }
     if (!keptIdSet.has(edge.from) || !keptIdSet.has(edge.to)) {
       continue;
     }
 
     const toCompartment = isCompartmentId(edge.to);
-    const toFanInParent = hasDirectSubChildren(edge.to);
     const branchEdge = isStructuredBranchTarget(edge.from, edge.to);
-    if (!toCompartment && !toFanInParent && !branchEdge) {
+    dot += `  ${edgeRef(edge.from, null)} -> ${edgeRef(edge.to, null)} [${attrs({
+      ...edgeLabelAttrs("cont"),
+      style: toCompartment ? dotId("dashed") : undefined,
+      color: branchEdge ? dotId(t.structuredBorder) : undefined
+    })}];\n`;
+  }
+
+  // Helper edges: keep branch lines explicit for structured targets.
+  for (const edge of contEdges) {
+    if (!keptIdSet.has(edge.from) || !keptIdSet.has(edge.to)) {
+      continue;
+    }
+
+    const branchEdge = isStructuredBranchTarget(edge.from, edge.to);
+    if (!branchEdge) {
       continue;
     }
 
     dot += `  ${edgeRef(edge.from, null)} -> ${edgeRef(edge.to, null)} [${attrs({
-      ...edgeLabelAttrs(branchEdge ? "branch" : "cont"),
-      style: toCompartment ? dotId("dashed") : undefined,
-      color: branchEdge ? dotId(t.structuredBorder) : undefined
+      ...edgeLabelAttrs("branch"),
+      color: dotId(t.structuredBorder)
     })}];\n`;
   }
 
@@ -1162,6 +1171,15 @@ export function renderVmDot(vm, opts = {}) {
     dot += `  ${edgeRef(edge.from, null)} -> ${edgeRef(edge.to, null)} [${attrs({
       ...edgeLabelAttrs("carry"),
       style: toCompartment ? dotId("dashed") : undefined
+    })}];\n`;
+  }
+
+  for (const edge of suppEdges) {
+    if (!keptIdSet.has(edge.from) || !keptIdSet.has(edge.to)) {
+      continue;
+    }
+    dot += `  ${edgeRef(edge.from, null)} -> ${edgeRef(edge.to, null)} [${attrs({
+      ...edgeLabelAttrs("supp")
     })}];\n`;
   }
 
