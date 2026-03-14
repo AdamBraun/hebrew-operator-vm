@@ -33,6 +33,8 @@ describe("het behavior", () => {
     expect(outside.length).toBeGreaterThan(0);
     expect(pInHandle?.meta.portOf).toBe(inside);
     expect(pOutHandle?.meta.portOf).toBe(outside);
+    expect(pInHandle?.meta.handle_label).toBe("resolved_port");
+    expect(pOutHandle?.meta.handle_label).toBe("resolved_port");
 
     expect(pInHandle?.edge_mode).toBe("committed");
     expect(pOutHandle?.edge_mode).toBe("committed");

@@ -30,6 +30,7 @@ type NormalizedHetGraph = {
       kind: string;
       edge_mode: string;
       portOf: string;
+      handle_label: string;
       envelope: {
         data_flow: string;
         edit_flow: string;
@@ -146,6 +147,7 @@ function currentHetEmittedGraph(): NormalizedHetGraph {
           kind: handle.kind,
           edge_mode: handle.edge_mode,
           portOf: ids[String(handle.meta?.portOf ?? "")] ?? String(handle.meta?.portOf ?? ""),
+          handle_label: String(handle.meta?.handle_label ?? ""),
           envelope: {
             data_flow: handle.envelope.data_flow,
             edit_flow: handle.envelope.edit_flow,
@@ -175,6 +177,10 @@ describe("het emitted graph fixture", () => {
 
     expect(graph).toEqual(fixture);
     expect(graph.handles.ports).toHaveLength(2);
+    expect(graph.handles.ports.map((port) => port.handle_label)).toEqual([
+      "resolved_port",
+      "resolved_port"
+    ]);
     expect(graph.edges.cont).toEqual(["INSIDE->P_IN", "OUTSIDE->P_OUT"]);
     expect(graph.edges.carry).toEqual([]);
     expect(graph.edges.carry).not.toContain("INSIDE->P_IN");

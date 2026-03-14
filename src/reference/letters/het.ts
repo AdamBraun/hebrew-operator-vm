@@ -4,7 +4,7 @@ import { State } from "../state/state";
 import { nextId } from "../vm/ids";
 import { selectCurrentFocus } from "../vm/select";
 import { Construction, LetterMeta, LetterOp, defaultEnvelope } from "./types";
-import { spawnResolvedPort } from "./ports";
+import * as portBuilders from "./ports";
 
 const meta: LetterMeta = {
   letter: "ח",
@@ -22,12 +22,12 @@ export const hetOp: LetterOp = {
     const inside = ops.args[0];
     const frame = S.vm.E[S.vm.E.length - 1];
     const outside = S.vm.R !== BOT_ID ? S.vm.R : frame?.D_frame ? frame.D_frame : S.vm.D;
-    const { portId: p_in } = spawnResolvedPort(S, {
+    const { portId: p_in } = portBuilders.spawnResolvedPort(S, {
       portOf: inside,
       prefix: "ז",
       exportToK: false
     });
-    const { portId: p_out } = spawnResolvedPort(S, {
+    const { portId: p_out } = portBuilders.spawnResolvedPort(S, {
       portOf: outside,
       prefix: "ז",
       exportToK: false
