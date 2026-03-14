@@ -593,4 +593,53 @@ describe("pasuk graph renderer", () => {
 
     expect(hasCarryEdge).toBe(true);
   });
+
+  it("renders carry from the authoritative graph even when a matching supp also exists", async () => {
+    const { renderVmDot } = await import("../../scripts/render/pasukGraph.mjs");
+
+    const vm = {
+      tau: 1,
+      D: "Ω",
+      F: "Ω",
+      handles: [
+        { id: "Ω", kind: "scope", meta: {} },
+        { id: "⊥", kind: "empty", meta: {} },
+        { id: "carry-src:1", kind: "scope", meta: {} },
+        { id: "carry-dst:1", kind: "scope", meta: {} }
+      ],
+      links: [],
+      boundaries: [],
+      cont: ["carry-src:1->carry-dst:1"],
+      carry: ["carry-src:1->carry-dst:1"],
+      supp: ["carry-dst:1->carry-src:1"],
+      sub: []
+    };
+
+    const dot = renderVmDot(vm, {
+      graphName: "CarryAndSuppSerializerOnly",
+      layout: "plain",
+      prune: "none",
+      legend: false,
+      prettyIds: false
+    });
+
+    const carryEdge = "carry-src:1->carry-dst:1";
+    const suppEdge = "carry-dst:1->carry-src:1";
+    const hasCarryEdge = dotHasLabeledEdge(dot, "carry-src:1", "carry-dst:1", "carry");
+    const hasSuppEdge = dotHasLabeledEdge(dot, "carry-dst:1", "carry-src:1", "supp");
+
+    if (!hasCarryEdge || !hasSuppEdge) {
+      throw new Error(
+        [
+          "DOT serializer must render authoritative carry and supp edges without suppressing carry as resolved.",
+          `missing_carry_edge: ${hasCarryEdge ? "none" : carryEdge}`,
+          `missing_supp_edge: ${hasSuppEdge ? "none" : suppEdge}`,
+          `dot_output:\n${dot}`
+        ].join("\n")
+      );
+    }
+
+    expect(hasCarryEdge).toBe(true);
+    expect(hasSuppEdge).toBe(true);
+  });
 });

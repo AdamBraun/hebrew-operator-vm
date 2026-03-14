@@ -1163,6 +1163,9 @@ export function renderVmDot(vm, opts = {}) {
     })}];\n`;
   }
 
+  // Edges (carry): render the authoritative carry relation set directly.
+  // Presence in vm.carry controls visibility; matching supp/resolution elsewhere
+  // must not suppress the carry edge in DOT.
   for (const edge of carryEdges) {
     if (!keptIdSet.has(edge.from) || !keptIdSet.has(edge.to)) {
       continue;
