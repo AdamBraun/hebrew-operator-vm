@@ -1,0 +1,69 @@
+{
+  "scenario": "minimal_direct_state",
+  "letter": "ח",
+  "focus": "I",
+  "edges": {
+    "cont": ["INSIDE->P_IN", "OUTSIDE->P_OUT"],
+    "carry": [],
+    "supp": ["P_IN->INSIDE", "P_OUT->OUTSIDE"],
+    "links": [
+      {
+        "from": "P_IN",
+        "to": "I",
+        "label": "bridge"
+      },
+      {
+        "from": "P_OUT",
+        "to": "I",
+        "label": "bridge"
+      }
+    ]
+  },
+  "handles": {
+    "interface": {
+      "id": "I",
+      "kind": "gate",
+      "formedBy": "ז+ז",
+      "inside": "INSIDE",
+      "outside": "OUTSIDE",
+      "p_in": "P_IN",
+      "p_out": "P_OUT"
+    },
+    "ports": [
+      {
+        "id": "P_IN",
+        "kind": "scope",
+        "edge_mode": "committed",
+        "portOf": "INSIDE",
+        "envelope": {
+          "data_flow": "SNAPSHOT",
+          "edit_flow": "TIGHT",
+          "x_flow": "EXPLICIT_ONLY",
+          "coupling": "CopyNoBacklink"
+        }
+      },
+      {
+        "id": "P_OUT",
+        "kind": "scope",
+        "edge_mode": "committed",
+        "portOf": "OUTSIDE",
+        "envelope": {
+          "data_flow": "SNAPSHOT",
+          "edit_flow": "TIGHT",
+          "x_flow": "EXPLICIT_ONLY",
+          "coupling": "CopyNoBacklink"
+        }
+      }
+    ]
+  },
+  "event": {
+    "type": "interface",
+    "data": {
+      "id": "I",
+      "inside": "INSIDE",
+      "outside": "OUTSIDE",
+      "p_in": "P_IN",
+      "p_out": "P_OUT"
+    }
+  }
+}
