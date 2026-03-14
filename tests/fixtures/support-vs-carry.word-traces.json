@@ -1,0 +1,263 @@
+{
+  "scenario": "token_exit_word_trace",
+  "cases": [
+    {
+      "word": "ד",
+      "targetTokenRaw": "ד",
+      "focus": {
+        "before": "BASE",
+        "after": "FOCUS"
+      },
+      "emitted": {
+        "cont": ["OMEGA->FOCUS"],
+        "carry": [],
+        "supp": ["FOCUS->OMEGA"],
+        "head_of": ["FOCUS->OMEGA"],
+        "sub": [],
+        "links": [],
+        "createdHandles": [
+          {
+            "id": "FOCUS",
+            "kind": "scope",
+            "policy": "soft",
+            "edge_mode": "free",
+            "meta": {
+              "backed_head": 1,
+              "exposedBy": "ד",
+              "headOf": "OMEGA"
+            }
+          }
+        ]
+      },
+      "carryLedger": {
+        "before": [],
+        "after": [],
+        "newEntries": [],
+        "unresolvedAfter": []
+      }
+    },
+    {
+      "word": "ה",
+      "targetTokenRaw": "ה",
+      "focus": {
+        "before": "BASE",
+        "after": "FOCUS"
+      },
+      "emitted": {
+        "cont": ["FOCUS->LEG", "OMEGA->FOCUS"],
+        "carry": [],
+        "supp": ["FOCUS->OMEGA", "LEG->FOCUS"],
+        "head_of": ["FOCUS->OMEGA"],
+        "sub": ["FOCUS->LEG"],
+        "links": [],
+        "createdHandles": [
+          {
+            "id": "FOCUS",
+            "kind": "scope",
+            "policy": "soft",
+            "edge_mode": "free",
+            "meta": {
+              "backed_head": 1,
+              "detached_leg": "LEG",
+              "exposedBy": "ה",
+              "headOf": "OMEGA"
+            }
+          },
+          {
+            "id": "LEG",
+            "kind": "scope",
+            "policy": "soft",
+            "edge_mode": "free",
+            "meta": {
+              "detached_leg": 1,
+              "exposedBy": "ה",
+              "handle_label": "detached_adjunct_leg"
+            }
+          }
+        ]
+      },
+      "carryLedger": {
+        "before": [],
+        "after": [],
+        "newEntries": [],
+        "unresolvedAfter": []
+      }
+    },
+    {
+      "word": "ן",
+      "targetTokenRaw": "ן",
+      "focus": {
+        "before": "BASE",
+        "after": "FOCUS"
+      },
+      "emitted": {
+        "cont": ["BASE->FOCUS"],
+        "carry": [],
+        "supp": ["FOCUS->BASE"],
+        "head_of": [],
+        "sub": [],
+        "links": [],
+        "createdHandles": [
+          {
+            "id": "FOCUS",
+            "kind": "scope",
+            "policy": "soft",
+            "edge_mode": "committed",
+            "meta": {}
+          }
+        ]
+      },
+      "carryLedger": {
+        "before": [],
+        "after": [],
+        "newEntries": [],
+        "unresolvedAfter": []
+      }
+    },
+    {
+      "word": "כ",
+      "targetTokenRaw": "כ",
+      "focus": {
+        "before": "BASE",
+        "after": "FOCUS"
+      },
+      "emitted": {
+        "cont": ["BASE->FOCUS"],
+        "carry": [],
+        "supp": ["FOCUS->BASE"],
+        "head_of": [],
+        "sub": [],
+        "links": [],
+        "createdHandles": [
+          {
+            "id": "FOCUS",
+            "kind": "scope",
+            "policy": "soft",
+            "edge_mode": "free",
+            "meta": {
+              "heldFrom": "BASE"
+            }
+          }
+        ]
+      },
+      "carryLedger": {
+        "before": [],
+        "after": [],
+        "newEntries": [],
+        "unresolvedAfter": []
+      }
+    },
+    {
+      "word": "נ",
+      "targetTokenRaw": "נ",
+      "focus": {
+        "before": "BASE",
+        "after": "FOCUS"
+      },
+      "emitted": {
+        "cont": ["BASE->FOCUS"],
+        "carry": ["BASE->FOCUS"],
+        "supp": [],
+        "head_of": [],
+        "sub": [],
+        "links": [],
+        "createdHandles": [
+          {
+            "id": "FOCUS",
+            "kind": "scope",
+            "policy": "soft",
+            "edge_mode": "free",
+            "meta": {
+              "succOf": "BASE"
+            }
+          }
+        ]
+      },
+      "carryLedger": {
+        "before": [],
+        "after": ["BASE->FOCUS"],
+        "newEntries": ["BASE->FOCUS"],
+        "unresolvedAfter": ["BASE->FOCUS"]
+      }
+    },
+    {
+      "word": "ע",
+      "targetTokenRaw": "ע",
+      "focus": {
+        "before": "BASE",
+        "after": "FOCUS"
+      },
+      "emitted": {
+        "cont": ["BASE->FOCUS"],
+        "carry": ["BASE->FOCUS"],
+        "supp": [],
+        "head_of": [],
+        "sub": [],
+        "links": [],
+        "createdHandles": [
+          {
+            "id": "ALIAS",
+            "kind": "alias",
+            "policy": "soft",
+            "edge_mode": "free",
+            "meta": {
+              "export_origin": true,
+              "handle_label": "alias_handle",
+              "target": "BASE"
+            }
+          },
+          {
+            "id": "FOCUS",
+            "kind": "scope",
+            "policy": "soft",
+            "edge_mode": "free",
+            "meta": {
+              "succOf": "BASE"
+            }
+          }
+        ]
+      },
+      "carryLedger": {
+        "before": [],
+        "after": ["BASE->FOCUS"],
+        "newEntries": ["BASE->FOCUS"],
+        "unresolvedAfter": ["BASE->FOCUS"]
+      }
+    },
+    {
+      "word": "ר",
+      "targetTokenRaw": "ר",
+      "focus": {
+        "before": "BASE",
+        "after": "FOCUS"
+      },
+      "emitted": {
+        "cont": ["OMEGA->FOCUS"],
+        "carry": ["OMEGA->FOCUS"],
+        "supp": [],
+        "head_of": ["FOCUS->OMEGA"],
+        "sub": [],
+        "links": [],
+        "createdHandles": [
+          {
+            "id": "FOCUS",
+            "kind": "scope",
+            "policy": "soft",
+            "edge_mode": "free",
+            "meta": {
+              "bare_head": 1,
+              "exposedBy": "ר",
+              "headOf": "OMEGA"
+            }
+          }
+        ]
+      },
+      "carryLedger": {
+        "before": [],
+        "after": ["OMEGA->FOCUS"],
+        "newEntries": ["OMEGA->FOCUS"],
+        "unresolvedAfter": ["OMEGA->FOCUS"]
+      }
+    }
+  ]
+}
