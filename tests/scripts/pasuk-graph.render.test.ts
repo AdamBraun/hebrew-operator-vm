@@ -33,6 +33,18 @@ function expectDomainAndFocusEdges(dot: string): void {
   expect(focusEdge).toBeTruthy();
 }
 
+function escapeRegex(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+}
+
+function dotHasLabeledEdge(dot: string, from: string, to: string, label: string): boolean {
+  const pattern = new RegExp(
+    `^\\s*"${escapeRegex(from)}"\\s*->\\s*"${escapeRegex(to)}"\\s*\\[[^\\]]*xlabel="${escapeRegex(label)}"`,
+    "mu"
+  );
+  return pattern.test(dot);
+}
+
 describe("pasuk graph renderer", () => {
   it("always renders thick domain and focus edges and reports D/F in legend", async () => {
     const { renderDotFromTraceJson } = await import("../../scripts/render/pasukGraph.mjs");
@@ -531,5 +543,54 @@ describe("pasuk graph renderer", () => {
     expect(dot).toContain('"נ:2:1" -> "ש:2:1" [xlabel="carry", style="dashed"]');
     expect(dot).toContain('"ב:2:1" -> "ש:2:1" [xlabel="boundary", style="dashed"]');
     expect(dot).toContain('"כ:2:1" -> "פ:2:1" [xlabel="branch"');
+  });
+
+  it("renders a live carry edge from a serializer-only fixture", async () => {
+    const { renderVmDot } = await import("../../scripts/render/pasukGraph.mjs");
+
+    const vm = {
+      tau: 1,
+      D: "Ω",
+      F: "Ω",
+      handles: [
+        { id: "Ω", kind: "scope", meta: {} },
+        { id: "⊥", kind: "empty", meta: {} },
+        { id: "src:1", kind: "scope", meta: {} },
+        { id: "fanin:1", kind: "scope", meta: {} },
+        { id: "fanin-child:1", kind: "scope", meta: {} },
+        { id: "carry-src:1", kind: "scope", meta: {} },
+        { id: "carry-dst:1", kind: "scope", meta: {} }
+      ],
+      links: [],
+      boundaries: [],
+      cont: ["src:1->fanin:1"],
+      carry: ["carry-src:1->carry-dst:1"],
+      supp: [],
+      sub: ["fanin:1->fanin-child:1"]
+    };
+
+    const dot = renderVmDot(vm, {
+      graphName: "CarrySerializerOnly",
+      layout: "plain",
+      prune: "none",
+      legend: false,
+      prettyIds: false
+    });
+
+    expect(dotHasLabeledEdge(dot, "src:1", "fanin:1", "cont")).toBe(true);
+
+    const missingCarryEdge = "carry-src:1->carry-dst:1";
+    const hasCarryEdge = dotHasLabeledEdge(dot, "carry-src:1", "carry-dst:1", "carry");
+    if (!hasCarryEdge) {
+      throw new Error(
+        [
+          "DOT serializer omitted a live carry edge from a manual in-memory graph.",
+          `missing_carry_edge: ${missingCarryEdge}`,
+          `dot_output:\n${dot}`
+        ].join("\n")
+      );
+    }
+
+    expect(hasCarryEdge).toBe(true);
   });
 });
