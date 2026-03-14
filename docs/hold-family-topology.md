@@ -1,4 +1,4 @@
-# Hold Family Topology: כ, ל, מ, ם
+# Hold Family Topology: כ, ך, ל, מ, ם
 
 This note restates the current hold-family proposal in graph terms.
 
@@ -25,6 +25,8 @@ allocate H
 add cont(F0, H)
 add supp(H, F0)
 ```
+
+Final `ך` reuses that exact graph and adds only `policy(H) := final`.
 
 A direct supported overstep hold, now used by `ל`, is:
 
@@ -67,6 +69,31 @@ Topological shape:
 - `כ` is exactly the direct supported hold and nothing more.
 - The thread terminates locally at the held node.
 - There is no second continuation site beyond the hold.
+
+### ך
+
+Allocate:
+
+- `H` = held node
+
+Edges added:
+
+- `cont(F0, H)`
+- `supp(H, F0)`
+
+Additional effect:
+
+- set `policy(H) := final`
+
+Focus ends:
+
+- `F := H`
+
+Topological shape:
+
+- `ך` is graph-identical to `כ`.
+- The only extra effect is that the held node is marked final.
+- It still emits no local `carry` and no second continuation site.
 
 ### ל
 

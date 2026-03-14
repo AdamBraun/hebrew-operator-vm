@@ -2,9 +2,10 @@
 
 Status: implemented.
 
-This note documents the shared topology of `כ`, `ל`, `מ`, and `ם`.
-All four are unary. `כ`, `ל`, and `מ` now use a direct supported hold;
-`מ` is the interior variant marked by boundary state, and `ם` seals the interior path.
+This note documents the shared topology of `כ`, `ך`, `ל`, `מ`, and `ם`.
+All five are unary. `כ`, `ך`, `ל`, and `מ` now use a direct supported hold;
+`ך` is the final-policy specialization of `כ`, `מ` is the interior variant marked by boundary state,
+and `ם` seals the interior path.
 
 ## 1. Family overview
 
@@ -15,6 +16,8 @@ h := alloc()
 add cont(F, h)
 add supp(h, F)
 ```
+
+`ך` uses the same graph and adds only `policy(h) := final`.
 
 `ל` hold base:
 
@@ -38,6 +41,7 @@ Family split:
 | Letter | After hold                      | Focus | Extra structure                                  |
 | ------ | ------------------------------- | ----- | ------------------------------------------------ |
 | `כ`    | nothing                         | `h`   | none                                             |
+| `ך`    | nothing                         | `h`   | `policy(h) = final`                              |
 | `ל`    | bare `cont` to exterior `o`     | `o`   | none                                             |
 | `מ`    | `cont` to interior `i`          | `i`   | `BoundaryRecord(inside=i, outside=h, open=true)` |
 | `ם`    | resolve current interior to `s` | `s`   | close the open `BoundaryRecord`                  |
@@ -46,6 +50,7 @@ Normal forms:
 
 ```text
 כ: F -> h
+ך: F -> h        + policy(h) = final
 ל: F -> h -> o
 מ: F -> h -> i   + BoundaryRecord(i inside h)
 ם: i -> s        + close BoundaryRecord(i inside h)
@@ -54,6 +59,7 @@ Normal forms:
 Working rule:
 
 - `כ` is the bare resolved hold.
+- `ך` is the same resolved hold, marked final.
 - `ל` is the hold plus a bare exterior continuation.
 - `מ` is the hold plus an interior continuation.
 - `ם` is the resolved seal of interior work.
@@ -182,6 +188,7 @@ Intentionally absent:
 `eff()` from focus:
 
 - `eff(h)` adds no immediate carry-ledger contribution, because `כ` emits no `carry(F, h)`.
+- `ך` has the same carry-ledger profile; its only extra runtime effect is `policy(h) = final`.
 
 ### `ל` — hold and step past
 
