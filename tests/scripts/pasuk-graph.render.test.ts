@@ -547,7 +547,6 @@ describe("pasuk graph renderer", () => {
 
   it("renders a live carry edge from a serializer-only fixture", async () => {
     const { renderVmDot } = await import("../../scripts/render/pasukGraph.mjs");
-    const carryDebug: Array<Record<string, unknown>> = [];
 
     const vm = {
       tau: 1,
@@ -575,58 +574,18 @@ describe("pasuk graph renderer", () => {
       layout: "plain",
       prune: "none",
       legend: false,
-      prettyIds: false,
-      debugCarry: (record: Record<string, unknown>) => {
-        carryDebug.push(record);
-      }
+      prettyIds: false
     });
 
     expect(dotHasLabeledEdge(dot, "src:1", "fanin:1", "cont")).toBe(true);
-    expect(carryDebug).toEqual([
-      {
-        phase: "renderVmDot:input",
-        count: 1,
-        edges: ["carry-src:1->carry-dst:1"]
-      },
-      {
-        phase: "renderVmDot:kept-endpoints",
-        count: 1,
-        edges: ["carry-src:1->carry-dst:1"],
-        dropped: []
-      },
-      {
-        phase: "renderVmDot:render-gate",
-        count: 0,
-        edges: [],
-        dropped: [
-          {
-            edge: "carry-src:1->carry-dst:1",
-            toCompartment: false,
-            toFanInParent: false
-          }
-        ]
-      },
-      {
-        phase: "renderVmDot:emitted",
-        count: 0,
-        edges: []
-      }
-    ]);
 
     const missingCarryEdge = "carry-src:1->carry-dst:1";
     const hasCarryEdge = dotHasLabeledEdge(dot, "carry-src:1", "carry-dst:1", "carry");
-    const firstCarryPhaseDroppedToZero =
-      carryDebug.find(
-        (record, index) =>
-          Number(record.count ?? 0) === 0 && Number(carryDebug[index - 1]?.count ?? 0) > 0
-      )?.phase ?? null;
     if (!hasCarryEdge) {
       throw new Error(
         [
           "DOT serializer omitted a live carry edge from a manual in-memory graph.",
           `missing_carry_edge: ${missingCarryEdge}`,
-          `first_phase_with_zero_carry: ${String(firstCarryPhaseDroppedToZero)}`,
-          `carry_debug: ${JSON.stringify(carryDebug, null, 2)}`,
           `dot_output:\n${dot}`
         ].join("\n")
       );

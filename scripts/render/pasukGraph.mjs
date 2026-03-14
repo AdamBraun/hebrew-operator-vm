@@ -693,25 +693,8 @@ export function renderVmDot(vm, opts = {}) {
     prune = "orphans", // orphans | none
     pruneKeepKinds = "",
     pruneKeepIds = "",
-    pruneCountBoundaryEdges = true,
-    debugCarry = null
+    pruneCountBoundaryEdges = true
   } = opts;
-
-  const debugCarryRecord = (phase, payload = {}) => {
-    if (!debugCarry) {
-      return;
-    }
-    const record = { phase, ...payload };
-    if (typeof debugCarry === "function") {
-      debugCarry(record);
-      return;
-    }
-    if (typeof debugCarry.record === "function") {
-      debugCarry.record(record);
-      return;
-    }
-    console.warn(`[pasukGraph:carry] ${JSON.stringify(record)}`);
-  };
 
   const t = THEMES[theme] ?? THEMES.light;
   const resolvedWordFill = wordFill ?? t.wordFill ?? "#f3e5f5";
@@ -724,10 +707,6 @@ export function renderVmDot(vm, opts = {}) {
   const subEdges = normalizeEdgeSet(vm?.sub);
   const contEdges = normalizeEdgeSet(vm?.cont);
   const carryEdges = normalizeEdgeSet(vm?.carry);
-  debugCarryRecord("renderVmDot:input", {
-    count: carryEdges.length,
-    edges: carryEdges.map((edge) => `${edge.from}->${edge.to}`)
-  });
   const carryEdgeKeys = new Set(carryEdges.map((edge) => `${edge.from}->${edge.to}`));
   const directSubChildren = new Map();
   const addDirectSub = (parent, child) => {
@@ -790,20 +769,6 @@ export function renderVmDot(vm, opts = {}) {
 
   const idSet = new Set(handles.map((handle) => handle.id));
   const keptIdSet = new Set(keptHandles.map((handle) => handle.id));
-  const carryAfterKeptEndpoints = carryEdges.filter(
-    (edge) => keptIdSet.has(edge.from) && keptIdSet.has(edge.to)
-  );
-  debugCarryRecord("renderVmDot:kept-endpoints", {
-    count: carryAfterKeptEndpoints.length,
-    edges: carryAfterKeptEndpoints.map((edge) => `${edge.from}->${edge.to}`),
-    dropped: carryEdges
-      .filter((edge) => !keptIdSet.has(edge.from) || !keptIdSet.has(edge.to))
-      .map((edge) => ({
-        edge: `${edge.from}->${edge.to}`,
-        kept_from: keptIdSet.has(edge.from),
-        kept_to: keptIdSet.has(edge.to)
-      }))
-  });
   const idMap = buildIdMap(Array.from(new Set(keptHandles.map((handle) => handle.id))), {
     prettyIds
   });
@@ -1189,37 +1154,16 @@ export function renderVmDot(vm, opts = {}) {
     })}];\n`;
   }
 
-  const emittedCarryEdges = [];
-  const carryDroppedByRenderGate = [];
   for (const edge of carryEdges) {
     if (!keptIdSet.has(edge.from) || !keptIdSet.has(edge.to)) {
       continue;
     }
     const toCompartment = isCompartmentId(edge.to);
-    const toFanInParent = hasDirectSubChildren(edge.to);
-    if (!toCompartment && !toFanInParent) {
-      carryDroppedByRenderGate.push({
-        edge: `${edge.from}->${edge.to}`,
-        toCompartment,
-        toFanInParent
-      });
-      continue;
-    }
-    emittedCarryEdges.push(`${edge.from}->${edge.to}`);
     dot += `  ${edgeRef(edge.from, null)} -> ${edgeRef(edge.to, null)} [${attrs({
       ...edgeLabelAttrs("carry"),
       style: toCompartment ? dotId("dashed") : undefined
     })}];\n`;
   }
-  debugCarryRecord("renderVmDot:render-gate", {
-    count: emittedCarryEdges.length,
-    edges: emittedCarryEdges,
-    dropped: carryDroppedByRenderGate
-  });
-  debugCarryRecord("renderVmDot:emitted", {
-    count: emittedCarryEdges.length,
-    edges: emittedCarryEdges
-  });
 
   // Edges (interior subdivision)
   for (const edge of subEdges) {
