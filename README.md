@@ -489,8 +489,14 @@ Recommended review artifacts to commit when semantics change:
 
 - `ו` emits `cont`
 - `נ` emits `cont + carry`
-- `ן` emits `cont + carry + supp`
-- `ז` emits `cont + carry + supp`, exports the port, and keeps focus in place
+- `ן` emits `cont + supp`
+- `ז` emits `cont + supp`, exports the port, and keeps focus in place
+
+Global carry rule:
+
+- `carry` is reserved for live unresolved transferred debt.
+- Direct-support letters emit `cont + supp` and do not emit local `carry`.
+- This applies not only to `ן/ז`, but also to the backed-head, hold-family, mem-close, and port/interface letters that were refactored onto direct support.
 
 This family is structural, not grouping-based.
 
@@ -498,12 +504,12 @@ This family is structural, not grouping-based.
 | ---------------- | -------------- | ----------- |
 | No carry         | ו              | —           |
 | Unresolved carry | נ              | —           |
-| Resolved carry   | ן              | ז           |
+| Direct support   | ן              | ז           |
 
 - `ו` — pure continuation.
 - `נ` — continuation with unresolved carry.
-- `ן` — continuation with immediately resolved carry.
-- `ז` — resolved export without cursor advance.
+- `ן` — continuation with direct support.
+- `ז` — exported direct-support port without cursor advance.
 
 ## Spaces Are Operators
 

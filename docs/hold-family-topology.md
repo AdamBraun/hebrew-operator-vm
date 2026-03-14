@@ -5,7 +5,7 @@ This note restates the current hold-family proposal in graph terms.
 It uses the existing edge vocabulary:
 
 - `cont(source, target)` = forward continuation
-- `carry(source, target)` = inherited context on that continuation
+- `carry(source, target)` = inherited context on that continuation when the transferred debt remains live
 - `supp(target, source)` = the target is resolved/stabilized against the source
 
 It also uses one existing topological device when needed:
@@ -13,6 +13,8 @@ It also uses one existing topological device when needed:
 - a boundary/enclosure relation that distinguishes `inside` from `outside`
 
 No new edge label is introduced here.
+
+For the current hold-family contracts, that means `כ/ך/ל/מ/ם` use direct support (`cont + supp`) and do not open local `carry`.
 
 ## Base patterns
 

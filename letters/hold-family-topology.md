@@ -7,6 +7,8 @@ All five are unary. `כ`, `ך`, `ל`, and `מ` now use a direct supported hold;
 `ך` is the final-policy specialization of `כ`, `מ` is the interior variant marked by boundary state,
 and `ם` seals the interior path.
 
+Carry discipline in this family is explicit: local support is encoded as `cont + supp`, so none of these letters opens a same-step local `carry`.
+
 ## 1. Family overview
 
 `כ` base:
