@@ -141,23 +141,6 @@ function diffEdges(
     .sort();
 }
 
-function normalizeLinks(
-  links: Array<{ from: string; to: string; label: string }> | undefined,
-  ids: Record<string, string>
-): Array<{ from: string; to: string; label: string }> {
-  return (links ?? [])
-    .map((link) => ({
-      from: ids[link.from] ?? link.from,
-      to: ids[link.to] ?? link.to,
-      label: link.label
-    }))
-    .sort((left, right) =>
-      `${left.from}:${left.to}:${left.label}`.localeCompare(
-        `${right.from}:${right.to}:${right.label}`
-      )
-    );
-}
-
 function diffLinks(
   after: Array<{ from: string; to: string; label: string }> | undefined,
   before: Array<{ from: string; to: string; label: string }> | undefined,
