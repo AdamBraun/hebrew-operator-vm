@@ -166,8 +166,8 @@ function verifyEdgeGradient(family: FamilyExecution): void {
   assert.deepStrictEqual(family.yod.edgeDelta.carry, []);
   assert.deepStrictEqual(family.vav.edgeDelta.carry, []);
   assert.deepStrictEqual(family.nun.edgeDelta.carry, ["F0->N1"]);
-  assert.deepStrictEqual(family.finalNun.edgeDelta.carry, family.nun.edgeDelta.carry);
-  assert.deepStrictEqual(family.zayin.edgeDelta.carry, family.nun.edgeDelta.carry);
+  assert.deepStrictEqual(family.finalNun.edgeDelta.carry, []);
+  assert.deepStrictEqual(family.zayin.edgeDelta.carry, []);
 
   assert.deepStrictEqual(family.yod.edgeDelta.supp, []);
   assert.deepStrictEqual(family.vav.edgeDelta.supp, []);
