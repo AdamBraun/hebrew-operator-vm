@@ -6,6 +6,7 @@ const CWD = process.cwd();
 const GIT_OUTPUT_MAX_BUFFER = 64 * 1024 * 1024;
 const LFS_POINTER_MAX_BYTES = 1024;
 const LFS_POINTER_HEADER = "version https://git-lfs.github.com/spec/v1\n";
+const OUTPUT_LFS_POLICY_PATHS = ["outputs/cache", ":(glob)outputs/**/*.jsonl"];
 
 function runGit(args, { allowFailure = false } = {}) {
   try {
@@ -86,7 +87,14 @@ function isCacheOutput(filePath) {
 
 function listStagedOutputFiles() {
   return parseNewlineOutput(
-    runGit(["diff", "--cached", "--name-only", "--diff-filter=ACM", "--", "outputs"])
+    runGit([
+      "diff",
+      "--cached",
+      "--name-only",
+      "--diff-filter=ACM",
+      "--",
+      ...OUTPUT_LFS_POLICY_PATHS
+    ])
   );
 }
 
@@ -118,7 +126,7 @@ function listChangedOutputsInCommit(commitOid) {
       "--diff-filter=ACM",
       commitOid,
       "--",
-      "outputs"
+      ...OUTPUT_LFS_POLICY_PATHS
     ])
   );
 }
