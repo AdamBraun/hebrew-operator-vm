@@ -207,7 +207,7 @@ function contSuccessors(state: TestState, nodeId: string): string[] {
 }
 
 describe("eff hold family", () => {
-  it("keeps kaf on the resolved hold with the source witness attached at distance 0", () => {
+  it("keeps kaf on the supported hold without adding a carry-ledger contribution", () => {
     const state = createHarnessState();
     const { cons, h: holdId } = executeLetterOp(state, kafOp);
     const { source } = cons.meta as { source: string };
@@ -216,26 +216,17 @@ describe("eff hold family", () => {
 
     expect(source).toBe(FOCUS_ID);
     expect(state.vm.F).toBe(holdId);
-    expect(profile.bundle).toEqual(FOCUS_WITNESS);
+    expect(profile.bundle).toEqual({});
     expect(profile.visited).toEqual([
       { nodeId: holdId, distance: 0 },
       { nodeId: FOCUS_ID, distance: 1 },
       { nodeId: PRE_FOCUS_ID, distance: 2 }
     ]);
-    expect(profile.contributions).toEqual([
-      {
-        source: FOCUS_ID,
-        target: holdId,
-        targetDistance: 0,
-        resolution: "resolved",
-        closer: holdId,
-        witness: FOCUS_WITNESS
-      }
-    ]);
+    expect(profile.contributions).toEqual([]);
     expect(contSuccessors(state, holdId)).toEqual([]);
   });
 
-  it("distinguishes kaf from lamed and mem by target distance, while leaving lamed and mem bundle-identical", () => {
+  it("distinguishes kaf, lamed, and mem by focus/topology while mem no longer differs by carry-ledger participation", () => {
     const kafState = createHarnessState();
     const kafResult = executeLetterOp(kafState, kafOp);
     const kafMeta = kafResult.cons.meta as { holdId: string };
@@ -260,56 +251,35 @@ describe("eff hold family", () => {
     seedWitness(memState, memMeta.holdId, HOLD_WITNESS);
     const memProfile = effProfile(memState, memMeta.interiorId);
 
-    expect(kafProfile.contributions).toEqual([
-      {
-        source: FOCUS_ID,
-        target: kafMeta.holdId,
-        targetDistance: 0,
-        resolution: "resolved",
-        closer: kafMeta.holdId,
-        witness: FOCUS_WITNESS
-      }
-    ]);
+    expect(kafProfile.bundle).toEqual({});
+    expect(kafProfile.contributions).toEqual([]);
 
-    expect(lamedProfile.bundle).toEqual(FOCUS_WITNESS);
+    expect(lamedProfile.bundle).toEqual({});
     expect(lamedProfile.visited).toEqual([
       { nodeId: lamedMeta.exteriorId, distance: 0 },
       { nodeId: lamedMeta.holdId, distance: 1 },
       { nodeId: FOCUS_ID, distance: 2 },
       { nodeId: PRE_FOCUS_ID, distance: 3 }
     ]);
-    expect(lamedProfile.contributions).toEqual([
-      {
-        source: FOCUS_ID,
-        target: lamedMeta.holdId,
-        targetDistance: 1,
-        resolution: "resolved",
-        closer: lamedMeta.holdId,
-        witness: FOCUS_WITNESS
-      }
-    ]);
+    expect(lamedProfile.contributions).toEqual([]);
     expect(lamedProfile.bundle).not.toHaveProperty("fromH");
     expect(lamedState.boundaries).toEqual([]);
 
-    expect(memProfile.bundle).toEqual(FOCUS_WITNESS);
+    expect(lamedProfile.bundle).toEqual(kafProfile.bundle);
+    expect(lamedProfile.contributions).toEqual(kafProfile.contributions);
+    expect(lamedProfile.visited).not.toEqual(kafProfile.visited);
+
+    expect(memProfile.bundle).toEqual({});
     expect(memProfile.visited).toEqual([
       { nodeId: memMeta.interiorId, distance: 0 },
       { nodeId: memMeta.holdId, distance: 1 },
       { nodeId: FOCUS_ID, distance: 2 },
       { nodeId: PRE_FOCUS_ID, distance: 3 }
     ]);
-    expect(memProfile.contributions).toEqual([
-      {
-        source: FOCUS_ID,
-        target: memMeta.holdId,
-        targetDistance: 1,
-        resolution: "resolved",
-        closer: memMeta.holdId,
-        witness: FOCUS_WITNESS
-      }
-    ]);
+    expect(memProfile.contributions).toEqual([]);
     expect(memProfile.bundle).not.toHaveProperty("fromH");
     expect(memProfile.bundle).toEqual(lamedProfile.bundle);
+    expect(memProfile.contributions).toEqual(lamedProfile.contributions);
     expect(memState.boundaries).toEqual([
       expect.objectContaining({
         id: memMeta.boundaryId,
@@ -322,7 +292,7 @@ describe("eff hold family", () => {
     ]);
   });
 
-  it("makes sealed interior work directly visible only after mem closes", () => {
+  it("closes mem without adding a carry-ledger contribution for the sealed successor", () => {
     const state = createHarnessState();
     const open = executeLetterOp(state, memOp);
     const { holdId, interiorId, boundaryId } = open.cons.meta as {
@@ -338,10 +308,7 @@ describe("eff hold family", () => {
     const profile = effProfile(state, sealedId);
 
     expect(state.vm.F).toBe(sealedId);
-    expect(profile.bundle).toEqual({
-      ...INTERIOR_WITNESS,
-      ...FOCUS_WITNESS
-    });
+    expect(profile.bundle).toEqual({});
     expect(profile.visited).toEqual([
       { nodeId: sealedId, distance: 0 },
       { nodeId: interiorId, distance: 1 },
@@ -349,24 +316,7 @@ describe("eff hold family", () => {
       { nodeId: FOCUS_ID, distance: 3 },
       { nodeId: PRE_FOCUS_ID, distance: 4 }
     ]);
-    expect(profile.contributions).toEqual([
-      {
-        source: interiorId,
-        target: sealedId,
-        targetDistance: 0,
-        resolution: "resolved",
-        closer: sealedId,
-        witness: INTERIOR_WITNESS
-      },
-      {
-        source: FOCUS_ID,
-        target: holdId,
-        targetDistance: 2,
-        resolution: "resolved",
-        closer: holdId,
-        witness: FOCUS_WITNESS
-      }
-    ]);
+    expect(profile.contributions).toEqual([]);
     expect(profile.bundle).not.toHaveProperty("fromH");
     expect(state.boundaries).toEqual([
       expect.objectContaining({

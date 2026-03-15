@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { ayinOp } from "@ref/letters/ayin";
+import { daletOp } from "@ref/letters/dalet";
 import { finalNunOp } from "@ref/letters/finalNun";
+import { kafOp } from "@ref/letters/kaf";
 import { nunOp } from "@ref/letters/nun";
+import { qofOp } from "@ref/letters/qof";
+import { reshOp } from "@ref/letters/resh";
 import { samekhOp } from "@ref/letters/samekh";
 import type { LetterOp } from "@ref/letters/types";
 import { zayinOp } from "@ref/letters/zayin";
@@ -27,7 +32,78 @@ function applyUnary(state: ReturnType<typeof createInitialState>, op: LetterOp):
   return { parent, child: sealed.h };
 }
 
+function reverseEdge(edge: string): string {
+  const [source = "", target = ""] = edge.split("->");
+  return `${target}->${source}`;
+}
+
 describe("carry gradient matrix", () => {
+  it("keeps directly supported letters off the live carry ledger", () => {
+    const cases = [
+      {
+        letter: "ד",
+        op: daletOp,
+        expectedSupp: ["ד:0:1->Ω"]
+      },
+      {
+        letter: "ן",
+        op: finalNunOp,
+        expectedSupp: ["ן:0:1->Ω"]
+      },
+      {
+        letter: "כ",
+        op: kafOp,
+        expectedSupp: ["כ:0:1->Ω"]
+      }
+    ] as const;
+
+    for (const testCase of cases) {
+      const state = createInitialState();
+      applyUnary(state, testCase.op);
+
+      expect(Array.from(state.carry), testCase.letter).toEqual([]);
+      expect(Array.from(state.supp).sort(), testCase.letter).toEqual(testCase.expectedSupp);
+    }
+  });
+
+  it("keeps live-carry letters as positive controls with no same-step self-closing supp", () => {
+    const cases = [
+      {
+        letter: "נ",
+        op: nunOp,
+        expectedCarry: ["Ω->נ:0:1"]
+      },
+      {
+        letter: "ע",
+        op: ayinOp,
+        expectedCarry: ["Ω->ע:0:1"]
+      },
+      {
+        letter: "ר",
+        op: reshOp,
+        expectedCarry: ["Ω->ר:0:1"]
+      },
+      {
+        letter: "ק",
+        op: qofOp,
+        expectedCarry: ["Ω->ק:0:1", "ק:0:1->ק:0:2"]
+      }
+    ] as const;
+
+    for (const testCase of cases) {
+      const state = createInitialState();
+      applyUnary(state, testCase.op);
+
+      // Positive controls: these letters are supposed to keep live carry debt.
+      expect(Array.from(state.carry).sort(), testCase.letter).toEqual(testCase.expectedCarry);
+      for (const carryEdge of testCase.expectedCarry) {
+        expect(state.supp.has(reverseEdge(carryEdge)), `${testCase.letter}:${carryEdge}`).toBe(
+          false
+        );
+      }
+    }
+  });
+
   it("נ alone creates unresolved carry and advances focus", () => {
     const state = createInitialState();
     const step = applyUnary(state, nunOp);
@@ -41,16 +117,15 @@ describe("carry gradient matrix", () => {
     );
   });
 
-  it("ן alone creates resolved carry with zayin-style sealed handle fields and advances focus", () => {
+  it("ן alone creates direct support without carry and advances focus", () => {
     const state = createInitialState();
     const step = applyUnary(state, finalNunOp);
     const handle = state.handles.get(step.child);
 
     expect(state.vm.F).toBe(step.child);
     expect(state.cont.has(`${step.parent}->${step.child}`)).toBe(true);
-    expect(state.carry.has(`${step.parent}->${step.child}`)).toBe(true);
+    expect(state.carry.has(`${step.parent}->${step.child}`)).toBe(false);
     expect(state.supp.has(`${step.child}->${step.parent}`)).toBe(true);
-    expect(isCarryResolved(state, step.parent, step.child, { focusNodeId: step.child })).toBe(true);
     expect(handle?.edge_mode).toBe("committed");
     expect(handle?.envelope.data_flow).toBe("SNAPSHOT");
     expect(handle?.envelope.edit_flow).toBe("TIGHT");
@@ -59,7 +134,7 @@ describe("carry gradient matrix", () => {
     expect(handle?.policy).toBe("soft");
   });
 
-  it("ז alone creates resolved carry, exports port, and keeps focus", () => {
+  it("ז alone creates direct support, exports port, and keeps focus", () => {
     const state = createInitialState();
     const focusBefore = state.vm.F;
     const step = applyUnary(state, zayinOp);
@@ -67,11 +142,31 @@ describe("carry gradient matrix", () => {
     expect(state.vm.F).toBe(focusBefore);
     expect(state.vm.K.includes(step.child)).toBe(true);
     expect(state.cont.has(`${step.parent}->${step.child}`)).toBe(true);
-    expect(state.carry.has(`${step.parent}->${step.child}`)).toBe(true);
+    expect(state.carry.has(`${step.parent}->${step.child}`)).toBe(false);
     expect(state.supp.has(`${step.child}->${step.parent}`)).toBe(true);
-    expect(isCarryResolved(state, step.parent, step.child, { focusNodeId: step.child })).toBe(true);
     expect(state.handles.get(step.child)?.edge_mode).toBe("committed");
     expect(state.handles.get(step.child)?.policy).toBe("soft");
+  });
+
+  it("נ then ן leaves the nun-opened carry unresolved until some other closer resolves it", () => {
+    const state = createInitialState();
+    const nunStep = applyUnary(state, nunOp);
+    const finalNunStep = applyUnary(state, finalNunOp);
+
+    expect(state.vm.F).toBe(finalNunStep.child);
+    expect(state.cont.has(`${finalNunStep.parent}->${finalNunStep.child}`)).toBe(true);
+    expect(state.carry.has(`${finalNunStep.parent}->${finalNunStep.child}`)).toBe(false);
+    expect(state.supp.has(`${finalNunStep.child}->${finalNunStep.parent}`)).toBe(true);
+    expect(
+      isCarryUnresolved(state, nunStep.parent, nunStep.child, { focusNodeId: finalNunStep.child })
+    ).toBe(true);
+
+    const samekhStep = applyUnary(state, samekhOp);
+    expect(samekhStep.child).toBe(finalNunStep.child);
+    expect(state.supp.has(`${samekhStep.child}->${nunStep.parent}`)).toBe(true);
+    expect(
+      isCarryResolved(state, nunStep.parent, nunStep.child, { focusNodeId: samekhStep.child })
+    ).toBe(true);
   });
 
   it("נ then ס resolves nun carry at current focus", () => {

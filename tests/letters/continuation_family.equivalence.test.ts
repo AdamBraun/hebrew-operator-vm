@@ -99,7 +99,7 @@ function executeFamily(): FamilyExecution {
 }
 
 describe("continuation family edge-delta equivalence", () => {
-  it("י ו נ ן ז share the same continuation spine and only add carry/supp by family rank", () => {
+  it("י ו נ ן ז share the same continuation spine while carry and support split by operator", () => {
     const family = executeFamily();
 
     expect(family["י"].edgeDelta.cont).toEqual(["F0->N1"]);
@@ -112,14 +112,14 @@ describe("continuation family edge-delta equivalence", () => {
     expect(family["י"].edgeDelta.carry).toEqual([]);
     expect(family["ו"].edgeDelta.carry).toEqual([]);
     expect(family["נ"].edgeDelta.carry).toEqual(["F0->N1"]);
-    expect(family["ן"].edgeDelta.carry).toEqual(family["נ"].edgeDelta.carry);
-    expect(family["ז"].edgeDelta.carry).toEqual(family["נ"].edgeDelta.carry);
+    expect(family["ן"].edgeDelta.carry).toEqual([]);
+    expect(family["ז"].edgeDelta.carry).toEqual([]);
 
     expect(family["י"].edgeDelta.supp).toEqual([]);
     expect(family["ו"].edgeDelta.supp).toEqual([]);
     expect(family["נ"].edgeDelta.supp).toEqual([]);
     expect(family["ן"].edgeDelta.supp).toEqual(["N1->F0"]);
-    expect(family["ז"].edgeDelta.supp).toEqual(family["ן"].edgeDelta.supp);
+    expect(family["ז"].edgeDelta.supp).toEqual(["N1->F0"]);
   });
 
   it("י and ו stay edge-equivalent while differing only in focus/export behavior", () => {
@@ -142,8 +142,9 @@ describe("continuation family edge-delta equivalence", () => {
     const family = executeFamily();
 
     expect(family["ז"].edgeDelta.cont).toEqual(family["ן"].edgeDelta.cont);
-    expect(family["ז"].edgeDelta.carry).toEqual(family["ן"].edgeDelta.carry);
     expect(family["ז"].edgeDelta.supp).toEqual(family["ן"].edgeDelta.supp);
+    expect(family["ז"].edgeDelta.carry).toEqual([]);
+    expect(family["ן"].edgeDelta.carry).toEqual([]);
 
     expect(family["ז"].focusAfter).toBe(family["ז"].focusBefore);
     expect(family["ן"].focusAfter).toBe(family["ן"].nodeId);

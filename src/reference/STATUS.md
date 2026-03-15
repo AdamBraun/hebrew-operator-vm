@@ -21,14 +21,14 @@
 - Diacritic wrappers are parsed; `dagesh` hardens the envelope and `shuruk` remains lexical-only.
 - Selection policy uses deterministic sourcing with per-bucket distinctness; type checks are still minimal.
 - `ב` creates an anchored boundary handle for “inside-of” and updates the ambient world.
-- `ד` exposes a resolved head via `head_of`, `carry`, and `supp` (with materialized `cont`).
+- `ד` exposes a supported head via `head_of`, `cont`, and `supp` (without `carry`).
 - `ג` emits a shoulder continuation: `cont(F, M)`, `carry(F, M)`, `cont(M, F⁺)`.
 - `ה` seals a resolved head and exports a detached adjunct leg via `sub` while keeping focus on the head.
-- `ז` creates a resolved export port via `cont`/`carry`/`supp` and keeps focus in place.
+- `ז` creates an exported supported projection via `cont`/`supp` and keeps focus in place.
 - `ט` rewrites the target envelope around a single sanctioned port and adds no graph edges.
 - `וּ` (shuruk) does not alter `ו` semantics beyond lexical host detection.
 - `ו` no longer performs grouping; it only advances the spine via `cont`.
-- `כ`, `ל`, and `מ` implement the resolved-hold family: hold, step-past, and open enclosure.
+- `כ`, `ל`, and `מ` implement the direct-supported hold family variants: hold, step-past, and open-enclosure; `מ` is distinguished by boundary state rather than local `carry`.
 - `נ`, `ס`, and `ע` implement unresolved continuation, nearest carry closure, and origin-exported continuation.
 - `י` creates an `entity` handle seeded from focus.
 - `ק`, `ר`, and `ש` implement bare head-with-leg, bare head, and three-point attachment.

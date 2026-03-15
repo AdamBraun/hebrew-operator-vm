@@ -141,7 +141,7 @@ describe("he public/global layer removal", () => {
     expect(topology).toEqual({
       focus: "h",
       head_of: ["h->X"],
-      carry: ["X->h", "h->ℓ"],
+      carry: [],
       cont: ["X->h", "h->ℓ"],
       supp: ["h->X", "ℓ->h"],
       sub: ["h->ℓ"]

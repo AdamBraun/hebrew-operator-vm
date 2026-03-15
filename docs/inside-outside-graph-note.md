@@ -51,18 +51,11 @@ This is enough for `ל`.
 
 ## 3. Why `inside` requires extra enclosure structure
 
-Using only `cont/carry/supp`, these two graphs are identical in shape:
+Using only `cont` and `supp`, these two graphs can still look identical in shape:
 
 ```text
 F0 -> h -> o
 F0 -> h -> i
-```
-
-with the same resolved hold:
-
-```text
-carry(F0, h)
-supp(h, F0)
 ```
 
 Nothing in `cont`, `carry`, or `supp` marks one successor of `h` as interior and the other as exterior.
@@ -104,12 +97,11 @@ But for the current question, bare continuation plus absence of an interior boun
 
 ## 5. Minimum graph difference between `מ` and `ל`
 
-Both letters share the same resolved hold:
+Both letters share the same forward hold path:
 
 ```text
 allocate h
 add cont(F0, h)
-add carry(F0, h)
 add supp(h, F0)
 ```
 

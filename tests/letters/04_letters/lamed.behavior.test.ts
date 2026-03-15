@@ -22,7 +22,7 @@ function executeLetterOp(state: ReturnType<typeof createInitialState>, op: Lette
 }
 
 describe("lamed behavior", () => {
-  it("resolves a hold, steps past it, and leaves no boundary or obligation state", () => {
+  it("creates a supported hold, steps past it, and leaves no boundary or obligation state", () => {
     const state = createInitialState();
     const handlesBefore = new Set(state.handles.keys());
 
@@ -35,7 +35,7 @@ describe("lamed behavior", () => {
     expect(source).toBe(OMEGA_ID);
     expect(state.vm.F).toBe(exteriorId);
     expect(state.cont.has(`${source}->${holdId}`)).toBe(true);
-    expect(state.carry.has(`${source}->${holdId}`)).toBe(true);
+    expect(state.carry.has(`${source}->${holdId}`)).toBe(false);
     expect(state.supp.has(`${holdId}->${source}`)).toBe(true);
     expect(state.cont.has(`${holdId}->${exteriorId}`)).toBe(true);
 
@@ -43,7 +43,7 @@ describe("lamed behavior", () => {
     expect(state.supp.has(`${exteriorId}->${holdId}`)).toBe(false);
     expect(state.boundaries).toHaveLength(0);
     expect(state.vm.OStack_word).toHaveLength(0);
-    expect(state.cont.size + state.carry.size + state.supp.size).toBe(4);
+    expect(state.cont.size + state.carry.size + state.supp.size).toBe(3);
     expect(state.vm.H).toContainEqual({
       type: "lamed_step_past",
       tau: state.vm.tau,
@@ -51,7 +51,17 @@ describe("lamed behavior", () => {
     });
   });
 
-  it("keeps the resolved hold in background for eff without forwarding the hold bundle itself", () => {
+  it("emits no carry for the hold or the exterior step", () => {
+    const state = createInitialState();
+
+    const { cons, h: exteriorId } = executeLetterOp(state, lamedOp);
+    const { holdId } = cons.meta as { holdId: string };
+
+    expect(state.carry.has(`${OMEGA_ID}->${holdId}`)).toBe(false);
+    expect(state.carry.has(`${holdId}->${exteriorId}`)).toBe(false);
+  });
+
+  it("does not forward source witness through eff once the hold is direct-supported", () => {
     const state = createInitialState();
     const omega = state.handles.get(OMEGA_ID);
     omega!.meta = { ...(omega?.meta ?? {}), witness: { ambient: 1 } };
@@ -61,7 +71,7 @@ describe("lamed behavior", () => {
     const hold = state.handles.get(holdId);
     hold!.meta = { ...(hold?.meta ?? {}), witness: { holdSelf: 1 } };
 
-    expect(eff(state, exteriorId, { focusNodeId: exteriorId })).toEqual({ ambient: 1 });
+    expect(eff(state, exteriorId, { focusNodeId: exteriorId })).toEqual({});
   });
 
   it("hands the exterior successor to the next letter, not the resolved hold", () => {

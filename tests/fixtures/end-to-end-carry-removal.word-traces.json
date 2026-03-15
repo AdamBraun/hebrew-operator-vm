@@ -1,0 +1,116 @@
+{
+  "scenario": "token_exit_word_trace",
+  "cases": [
+    {
+      "word": "נח",
+      "targetTokenRaw": "ח",
+      "focus": {
+        "before": "N",
+        "after": "I"
+      },
+      "emitted": {
+        "cont": ["N->P_IN", "OMEGA->P_OUT"],
+        "carry": [],
+        "supp": ["P_IN->N", "P_OUT->OMEGA"],
+        "links": [
+          {
+            "from": "P_IN",
+            "to": "I",
+            "label": "bridge"
+          },
+          {
+            "from": "P_OUT",
+            "to": "I",
+            "label": "bridge"
+          }
+        ],
+        "createdHandles": [
+          {
+            "id": "I",
+            "kind": "gate",
+            "policy": "soft",
+            "edge_mode": "free",
+            "meta": {
+              "formedBy": "ז+ז",
+              "inside": "N",
+              "outside": "OMEGA",
+              "p_in": "P_IN",
+              "p_out": "P_OUT"
+            }
+          },
+          {
+            "id": "P_IN",
+            "kind": "scope",
+            "policy": "soft",
+            "edge_mode": "committed",
+            "meta": {
+              "handle_label": "resolved_port",
+              "portOf": "N"
+            }
+          },
+          {
+            "id": "P_OUT",
+            "kind": "scope",
+            "policy": "soft",
+            "edge_mode": "committed",
+            "meta": {
+              "handle_label": "resolved_port",
+              "portOf": "OMEGA"
+            }
+          }
+        ],
+        "boundariesAdded": []
+      },
+      "boundariesAfter": [],
+      "carryLedger": {
+        "before": ["BASE->N"],
+        "after": ["BASE->N"],
+        "newEntries": [],
+        "unresolvedAfter": ["BASE->N"]
+      }
+    },
+    {
+      "word": "מלך",
+      "targetTokenRaw": "ך",
+      "focus": {
+        "before": "L_OUT",
+        "after": "FINAL"
+      },
+      "emitted": {
+        "cont": ["L_OUT->FINAL"],
+        "carry": [],
+        "supp": ["FINAL->L_OUT"],
+        "links": [],
+        "createdHandles": [
+          {
+            "id": "FINAL",
+            "kind": "scope",
+            "policy": "final",
+            "edge_mode": "free",
+            "meta": {
+              "final": 1,
+              "heldFrom": "L_OUT"
+            }
+          }
+        ],
+        "boundariesAdded": []
+      },
+      "boundariesAfter": [
+        {
+          "id": "MEM_B",
+          "inside": "MEM_I",
+          "outside": "MEM_H",
+          "kind": "mem_enclosure",
+          "open": true,
+          "closed": false
+        }
+      ],
+      "carryLedger": {
+        "before": [],
+        "after": [],
+        "newEntries": [],
+        "unresolvedAfter": []
+      }
+    }
+  ]
+}

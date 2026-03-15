@@ -89,8 +89,8 @@ Boundary selection for the space after a word:
 Edge/record types used by the current runtime:
 
 - `cont(source, target)`: continuation spine edge.
-- `carry(source, target)`: witness-carry edge; used when context is threaded forward.
-- `supp(closer, origin)`: back-edge that closes a carry-origin into a cycle.
+- `carry(source, target)`: witness-carry edge; reserved for live unresolved transferred debt.
+- `supp(closer, origin)`: back-edge that closes a carry-origin into a cycle, and the backing edge used by direct-support steps.
 - `head_of(head, whole)`: exposed-head relation.
 - `sub(parent, child)`: structural child/adjunct/fork attachment.
 - `BoundaryRecord { id, inside, outside, ... }`: enclosure topology record; this is not an edge.
@@ -104,6 +104,11 @@ Carry resolution is **derived**:
 - A carry `carry(s, t)` is resolved iff some node `c` on the forward `cont*` chain from `t`
   has `supp(c, s)`.
 - Otherwise it is unresolved.
+
+Carry discipline:
+
+- Use `carry` only when the transferred burden remains live after the same letter step.
+- If a letter directly backs/supports its own target in the same step, encode that as `cont + supp` with no local `carry`.
 
 `eff(node, Φ)`:
 
@@ -221,8 +226,7 @@ Operational rule:
 - **Graph edges emitted:**
   1. `head_of(h, X)`
   2. `cont(X, h)`
-  3. `carry(X, h)`
-  4. `supp(h, X)`
+  3. `supp(h, X)`
 - **Seal:** set `F := h`.
 
 ---
@@ -234,18 +238,16 @@ Operational rule:
 - **Graph edges emitted:**
   1. `head_of(h, X)`
   2. `cont(X, h)`
-  3. `carry(X, h)`
-  4. `supp(h, X)`
-  5. `cont(h, ℓ)`
-  6. `carry(h, ℓ)`
-  7. `supp(ℓ, h)`
-  8. `sub(h, ℓ)`
+  3. `supp(h, X)`
+  4. `cont(h, ℓ)`
+  5. `supp(ℓ, h)`
+  6. `sub(h, ℓ)`
 - **Other state changes:** export `ℓ` as an adjunct of `h`.
 - **Seal:** set `F := h`.
 
 Note: under this graph model, ה’s leg is not mechanically identical to י.
 
-The leg contains י’s topology as a subset because it includes cont(h, ℓ), but it adds carry(h, ℓ) + supp(ℓ, h) + sub(h, ℓ). The traditional statement that the leg is a י identifies the shared attachment primitive, not full operator identity.
+The leg contains י’s topology as a subset because it includes `cont(h, ℓ)`, but it adds `supp(ℓ, h) + sub(h, ℓ)`. The traditional statement that the leg is a י identifies the shared attachment primitive, not full operator identity.
 
 ---
 
@@ -264,26 +266,27 @@ Continuation-family lattice:
 - י = cont, focus stays
 - ו = cont, focus advances
 - נ = cont + carry, focus advances
-- ן = cont + carry + supp, focus advances
-- ז = cont + carry + supp, focus stays
+- ן = cont + supp, focus advances
+- ז = cont + supp, focus stays
 
-The ה-leg is not another family member; it is a detached adjunct whose topology strictly contains י as a subset: cont(h, ℓ) plus carry(h, ℓ) + supp(ℓ, h) + sub(h, ℓ).
+Within that lattice, `carry` is reserved for the live-debt branch (`נ`). `ן` and `ז` are the direct-support forms: they add `supp` without opening local `carry`.
+
+The ה-leg is not another family member; it is a detached adjunct whose topology strictly contains י as a subset: `cont(h, ℓ)` plus `supp(ℓ, h) + sub(h, ℓ)`.
 
 - **Non-effects:** `ו` does not create `carry`, does not create `supp`, and does not group, partition, or connect two pre-existing operands.
 
 ---
 
-# ז — Exported resolved port (focus stays)
+# ז — Exported supported port (focus stays)
 
-Unary. Same materialized graph edges as ן (cont+carry+supp), but focus stays and the resolved port is exported.
+Unary. Same materialized graph edges as ן (`cont + supp`), but focus stays and the supported port is exported.
 
 - **Select:** current focus (F).
 - **Bound:** allocate port (`p := alloc()`).
 - **Graph edges emitted:**
   1. `cont(F, p)`
-  2. `carry(F, p)`
-  3. `supp(p, F)`
-- **Other state changes:** export `p` to `K`.
+  2. `supp(p, F)`
+- **Other state changes:** mark `p` as a committed supported port and export `p` to `K`.
 - **Seal:** keep focus unchanged (`F` stays).
 
 ---
@@ -292,12 +295,12 @@ Unary. Same materialized graph edges as ן (cont+carry+supp), but focus stays an
 
 - **Select:** `inside` (the operand / current focus) and `outside` (derived from the current frame or ambient).
 - **Bound:**
-  1. create `p_in` as a committed resolved port of `inside`
-  2. create `p_out` as a committed resolved port of `outside`
+  1. create `p_in` as a committed supported port of `inside` with `cont(inside, p_in)` and `supp(p_in, inside)`
+  2. create `p_out` as a committed supported port of `outside` with `cont(outside, p_out)` and `supp(p_out, outside)`
   3. allocate interface object `I`
   4. bridge `p_in` and `p_out` through `I`, so `inside` and `outside` relate only via `I`
 - **Seal:** set `F := I`.
-- **Note:** ח is operationally two ז's bridged into a single interface object.
+- **Note:** ח is operationally two direct-support ז-style ports bridged into a single interface object. No port-level `carry` is introduced.
 
 ---
 
@@ -349,8 +352,7 @@ Allocate resolved hold `h`.
 Exact graph edges emitted:
 
 1. `cont(F, h)`
-2. `carry(F, h)`
-3. `supp(h, F)`
+2. `supp(h, F)`
 
 Other state changes:
 
@@ -377,8 +379,7 @@ None.
 - **כ Bound:** allocate resolved hold `h`.
 - **כ Graph edges emitted:**
   1. `cont(F, h)`
-  2. `carry(F, h)`
-  3. `supp(h, F)`
+  2. `supp(h, F)`
 - **כ Seal:** set `F := h`.
 - **ך:** same graph edges as `כ`, plus `policy(h) := final`.
 
@@ -390,12 +391,11 @@ None.
 - **Bound:** allocate resolved hold `(h := alloc())` and exterior successor `(o := alloc())`.
 - **Graph edges emitted:**
   1. `cont(F, h)`
-  2. `carry(F, h)`
-  3. `supp(h, F)`
-  4. `cont(h, o)`
+  2. `supp(h, F)`
+  3. `cont(h, o)`
 - **Seal:** set `F := o`.
 - **Non-effects:** do **not** add `carry(h, o)`, `supp(o, h)`, or a boundary record.
-- **Note:** ל is the “step past the resolved hold” variant of the כ-based hold family.
+- **Note:** ל is the “step past the direct-supported hold” variant of the כ-based hold family.
 
 ---
 
@@ -420,8 +420,7 @@ No new graph edges are emitted in Bound.
 
 - If `F` is inside the nearest open mem enclosure, allocate sealed node `s` and emit:
   1. `cont(F, s)`
-  2. `carry(F, s)`
-  3. `supp(s, F)`
+  2. `supp(s, F)`
 - Then close that enclosure's `BoundaryRecord`.
 - If no open mem enclosure exists, synthesize the minimal `מ` shape first and then close it.
 
@@ -443,9 +442,8 @@ No new graph edges are emitted in Bound.
 - **Bound:** allocate resolved hold `h`, interior successor `i`, and boundary record `B`.
 - **Graph edges emitted:**
   1. `cont(F, h)`
-  2. `carry(F, h)`
-  3. `supp(h, F)`
-  4. `cont(h, i)`
+  2. `supp(h, F)`
+  3. `cont(h, i)`
 - **Other state changes:** add `BoundaryRecord(B)` with `inside=i`, `outside=h`, `kind=mem_enclosure`, `open=true`, `closed=false`.
 - **Seal:** set `F := i`.
 
@@ -454,23 +452,21 @@ No new graph edges are emitted in Bound.
 - **Select:** current focus `F`.
 - **Graph edges emitted on close:**
   1. `cont(F, s)`
-  2. `carry(F, s)`
-  3. `supp(s, F)`
+  2. `supp(s, F)`
 - **Other state changes:** close the nearest open mem `BoundaryRecord` containing `F`; if none exists, synthesize `מ` first and then close it.
 - **Seal:** set `F := s`.
 
 ---
 
-# ן — Final nun (immediately resolved continuation)
+# ן — Final nun (directly supported continuation)
 
-Unary. Same materialized graph edges as ז (cont+carry+supp), but focus advances and nothing is exported.
+Unary. Same materialized graph edges as ז (`cont + supp`), but focus advances and nothing is exported.
 
 - **Select:** current focus (F).
 - **Bound:** allocate successor (`F^{+} := alloc()`).
 - **Graph edges emitted:**
   1. `cont(F, F^{+})`
-  2. `carry(F, F^{+})`
-  3. `supp(F^{+}, F)`
+  2. `supp(F^{+}, F)`
 - **Seal:** set `F := F^{+}`.
 
 ---

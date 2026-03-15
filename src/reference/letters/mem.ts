@@ -1,5 +1,5 @@
 import { BOT_ID, createHandle } from "../state/handles";
-import { addBoundary, addCarry, addCont, addSupp } from "../state/relations";
+import { addBoundary, addCont, addSupp } from "../state/relations";
 import { State } from "../state/state";
 import { nextId } from "../vm/ids";
 import { selectCurrentFocus } from "../vm/select";
@@ -30,7 +30,6 @@ export const memOp: LetterOp = {
       })
     );
     addCont(S, source, holdId);
-    addCarry(S, source, holdId);
     addSupp(S, holdId, source);
     addCont(S, holdId, interiorId);
     addBoundary(S, boundaryId, interiorId, holdId, 1, {

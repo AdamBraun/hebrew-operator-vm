@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { tokenize } from "@ref/compile/tokenizer";
+import { BOT_ID, createHandle } from "@ref/state/handles";
 import { createInitialState } from "@ref/state/state";
-import { runProgram, runProgramWithDeepTrace } from "@ref/vm/vm";
+import { selectCurrentFocus, selectExportedAdjunctsOfCurrentFocus } from "@ref/vm/select";
+import { executeLetterForTest, runProgram, runProgramWithDeepTrace } from "@ref/vm/vm";
 
 type SnapshotState = {
   vm?: { F?: string };
@@ -39,6 +42,29 @@ function heExitSnapshot(
   };
 }
 
+function executeHeOnOrdinaryFocus() {
+  const state = createInitialState();
+  const [token] = tokenize("ה");
+  if (!token) {
+    throw new Error("Missing token for ה");
+  }
+
+  state.handles.set("X", createHandle("X", "scope"));
+  state.vm.F = "X";
+  state.vm.K = ["X", BOT_ID];
+  state.vm.R = BOT_ID;
+  state.vm.wordHasContent = true;
+  state.vm.activeConstruct = "C:mid";
+
+  executeLetterForTest(state, token, {
+    wordText: "אה",
+    isWordFinal: false,
+    prevBoundaryMode: "hard"
+  });
+
+  return state;
+}
+
 describe("he behavior", () => {
   it("at word start builds a resolved head with a detached exported leg from the ambient", () => {
     const { state, snapshot, selectArgs, events } = heExitSnapshot("ה");
@@ -53,8 +79,7 @@ describe("he behavior", () => {
     expect(source).toBe("Ω");
     expect(leg.length).toBeGreaterThan(0);
     expect(snapshot.head_of).toEqual([`${head}->Ω`]);
-    expect(snapshot.carry).toContain(`Ω->${head}`);
-    expect(snapshot.carry).toContain(`${head}->${leg}`);
+    expect(snapshot.carry).toEqual([]);
     expect(snapshot.cont).toContain(`Ω->${head}`);
     expect(snapshot.cont).toContain(`${head}->${leg}`);
     expect(snapshot.supp).toEqual([`${head}->Ω`, `${leg}->${head}`]);
@@ -79,10 +104,9 @@ describe("he behavior", () => {
     });
     expect(headEvent?.data?.edges).toEqual([
       { kind: "head_of", from: head, to: "Ω" },
-      { kind: "carry", from: "Ω", to: head },
+      { kind: "cont", from: "Ω", to: head },
       { kind: "supp", from: head, to: "Ω" },
       { kind: "cont", from: head, to: leg },
-      { kind: "carry", from: head, to: leg },
       { kind: "supp", from: leg, to: head }
     ]);
   });
@@ -97,8 +121,10 @@ describe("he behavior", () => {
 
     expect(selectArgs).toEqual(["נ:1:1"]);
     expect(source).toBe("נ:1:1");
-    expect(snapshot.carry).toContain(`נ:1:1->${head}`);
-    expect(snapshot.carry).toContain(`${head}->${leg}`);
+    expect(snapshot.carry ?? []).not.toContain(`${head}->${leg}`);
+    expect(snapshot.carry ?? []).not.toContain(`נ:1:1->${head}`);
+    expect(snapshot.cont).toContain(`נ:1:1->${head}`);
+    expect(snapshot.cont).toContain(`${head}->${leg}`);
     expect(snapshot.supp).toContain(`${head}->נ:1:1`);
     expect(snapshot.supp).toContain(`${leg}->${head}`);
     expect(snapshot.sub).toContain(`${head}->${leg}`);
@@ -111,6 +137,23 @@ describe("he behavior", () => {
       adjunct: leg,
       adjunct_label: "detached_adjunct_leg"
     });
+  });
+
+  it("keeps the exported leg selectable without introducing any carry edge", () => {
+    const state = executeHeOnOrdinaryFocus();
+    const head = state.vm.F;
+    const [leg = ""] = state.adjuncts[head] ?? [];
+    const focusSelect = selectCurrentFocus(state);
+    const adjunctSelect = selectExportedAdjunctsOfCurrentFocus(state);
+
+    expect(leg.length).toBeGreaterThan(0);
+    expect(Array.from(state.carry)).toEqual([]);
+    expect(focusSelect.ops.args).toEqual([head]);
+    expect(focusSelect.ops.prefs.exported_adjuncts).toEqual([leg]);
+    expect(focusSelect.ops.prefs.selection_targets).toContain(leg);
+    expect(adjunctSelect.ops.args).toEqual([leg]);
+    expect(adjunctSelect.ops.prefs.exported_adjuncts).toEqual([leg]);
+    expect(adjunctSelect.ops.prefs.selection_targets).toContain(leg);
   });
 
   it("never allocates declaration handles, even word-final", () => {

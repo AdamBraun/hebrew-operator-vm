@@ -76,7 +76,7 @@ describe("mem behavior", () => {
     expect(state.vm.F).toBe(interiorId);
     expect(state.vm.F).not.toBe(holdId);
     expect(state.cont).toEqual(new Set([`${source}->${holdId}`, `${holdId}->${interiorId}`]));
-    expect(state.carry).toEqual(new Set([`${source}->${holdId}`]));
+    expect(state.carry).toEqual(new Set());
     expect(state.supp).toEqual(new Set([`${holdId}->${source}`]));
     expect(boundary).toMatchObject({
       id: boundaryId,
@@ -89,7 +89,7 @@ describe("mem behavior", () => {
     expect(state.vm.OStack_word).toHaveLength(0);
   });
 
-  it("eff at the interior sees the source witness through a resolved carry", () => {
+  it("eff at the interior does not inherit source witness without a carry edge", () => {
     const state = createInitialState();
     const omega = state.handles.get(OMEGA_ID);
     omega!.meta = { ...(omega?.meta ?? {}), witness: { ambient: 1 } };
@@ -104,16 +104,18 @@ describe("mem behavior", () => {
     hold!.meta = { ...(hold?.meta ?? {}), witness: { holdSelf: 1 } };
 
     expect(resolveCarry(state, source, holdId, { focusNodeId: interiorId })).toEqual({
-      status: "resolved",
-      closer: holdId
+      status: "unresolved",
+      closer: null
     });
-    expect(eff(state, interiorId, { focusNodeId: interiorId })).toEqual({ ambient: 1 });
+    expect(eff(state, interiorId, { focusNodeId: interiorId })).toEqual({});
   });
 
   it("ם closes the current enclosure and lands on a sealed resolved successor", () => {
     const state = createInitialState();
     const open = executeLetterOp(state, memOp);
-    const { interiorId, boundaryId } = open.cons.meta as {
+    const { source, holdId, interiorId, boundaryId } = open.cons.meta as {
+      source: string;
+      holdId: string;
       interiorId: string;
       boundaryId: string;
     };
@@ -123,9 +125,11 @@ describe("mem behavior", () => {
     const boundary = state.boundaries.find((entry) => entry.id === boundaryId);
 
     expect(state.vm.F).toBe(sealedId);
-    expect(state.cont.has(`${interiorId}->${sealedId}`)).toBe(true);
-    expect(state.carry.has(`${interiorId}->${sealedId}`)).toBe(true);
-    expect(state.supp.has(`${sealedId}->${interiorId}`)).toBe(true);
+    expect(state.cont).toEqual(
+      new Set([`${source}->${holdId}`, `${holdId}->${interiorId}`, `${interiorId}->${sealedId}`])
+    );
+    expect(state.carry).toEqual(new Set());
+    expect(state.supp).toEqual(new Set([`${holdId}->${source}`, `${sealedId}->${interiorId}`]));
     expect(boundary?.open).toBe(false);
     expect(boundary?.closed).toBe(true);
     expect(boundary?.close_mode).toBe("explicit");
@@ -139,9 +143,24 @@ describe("mem behavior", () => {
     const { h } = executeLetterOp(state, finalMemOp);
     const newHandles = [...state.handles.keys()].filter((id) => !handlesBefore.has(id)).sort();
     const boundary = state.boundaries[0];
+    const [holdId = ""] =
+      Array.from(state.handles.entries()).find(
+        ([, handle]) => handle.meta?.heldFrom === OMEGA_ID
+      ) ?? [];
+    const [interiorId = ""] =
+      Array.from(state.handles.entries()).find(
+        ([, handle]) => handle.meta?.interiorOf === holdId
+      ) ?? [];
 
     expect(newHandles).toHaveLength(3);
     expect(state.vm.F).toBe(h);
+    expect(holdId).not.toBe("");
+    expect(interiorId).not.toBe("");
+    expect(state.cont).toEqual(
+      new Set([`${OMEGA_ID}->${holdId}`, `${holdId}->${interiorId}`, `${interiorId}->${h}`])
+    );
+    expect(state.carry).toEqual(new Set());
+    expect(state.supp).toEqual(new Set([`${holdId}->${OMEGA_ID}`, `${h}->${interiorId}`]));
     expect(boundary).toMatchObject({
       kind: "mem_enclosure",
       open: false,
@@ -178,7 +197,7 @@ describe("mem behavior", () => {
     });
   });
 
-  it("מ differs from ל only by the enclosure boundary record", () => {
+  it("מ keeps the same forward path as ל, but differs only by boundary state and focus landing", () => {
     const memSnapshot = tokenExitSnapshot("מ");
     const lamedSnapshot = tokenExitSnapshot("ל");
     const memBoundary = memSnapshot.boundaries?.[0];
@@ -208,13 +227,13 @@ describe("mem behavior", () => {
         [memStart]: "F0",
         [memHold]: "H"
       })
-    ).toEqual(["F0->H"]);
+    ).toEqual([]);
     expect(
       normalizeEdges(lamedSnapshot.carry, {
         [lamedStart]: "F0",
         [lamedHold]: "H"
       })
-    ).toEqual(["F0->H"]);
+    ).toEqual([]);
     expect(
       normalizeEdges(memSnapshot.supp, {
         [memHold]: "H",

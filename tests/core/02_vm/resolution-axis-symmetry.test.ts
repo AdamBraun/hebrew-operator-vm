@@ -33,31 +33,39 @@ function inspectResolution(word: string, token: string): ResolutionShape {
 }
 
 describe("resolved/unresolved symmetry across nun/final-nun and resh/dalet", () => {
-  it("uses the same carry-plus-supp mechanism in both pairs", () => {
+  it("keeps only nun/resh on the carry axis while final nun/dalet/kaf/final kaf stay direct-supported", () => {
     const matrix = {
       נ: inspectResolution("קנ", "נ"),
       ן: inspectResolution("קן", "ן"),
       ר: inspectResolution("קר", "ר"),
-      ד: inspectResolution("קד", "ד")
+      ד: inspectResolution("קד", "ד"),
+      כ: inspectResolution("נכ", "כ"),
+      ך: inspectResolution("נך", "ך")
     };
 
-    expect(new Set(Object.values(matrix).map((shape) => shape.operand))).toEqual(
-      new Set(["ק:1:1"])
-    );
+    expect(
+      new Set([matrix["נ"].operand, matrix["ן"].operand, matrix["ר"].operand, matrix["ד"].operand])
+    ).toEqual(new Set(["ק:1:1"]));
+    expect(matrix["כ"].operand).toBe("נ:1:1");
+    expect(matrix["ך"].operand).toBe("נ:1:1");
 
     expect(matrix["נ"]).toMatchObject({ carry: true, supp: false });
-    expect(matrix["ן"]).toMatchObject({ carry: true, supp: true });
+    expect(matrix["ן"]).toMatchObject({ carry: false, supp: true });
     expect(matrix["ר"]).toMatchObject({ carry: true, supp: false });
-    expect(matrix["ד"]).toMatchObject({ carry: true, supp: true });
+    expect(matrix["ד"]).toMatchObject({ carry: false, supp: true });
+    expect(matrix["כ"]).toMatchObject({ carry: false, supp: true });
+    expect(matrix["ך"]).toMatchObject({ carry: false, supp: true });
 
-    expect(matrix["נ"].carry && matrix["ן"].carry && matrix["ר"].carry && matrix["ד"].carry).toBe(
-      true
-    );
-    expect(matrix["ן"].supp && matrix["ד"].supp).toBe(true);
+    expect(matrix["נ"].carry && matrix["ר"].carry).toBe(true);
+    expect(matrix["ן"].carry).toBe(false);
+    expect(matrix["ד"].carry).toBe(false);
+    expect(matrix["כ"].carry).toBe(false);
+    expect(matrix["ך"].carry).toBe(false);
+    expect(matrix["ן"].supp && matrix["ד"].supp && matrix["כ"].supp && matrix["ך"].supp).toBe(true);
     expect(matrix["נ"].supp || matrix["ר"].supp).toBe(false);
   });
 
-  it("uses the same carry-plus-supp distinction in the detached-leg pair", () => {
+  it("keeps the resolved head side direct-backed across the detached-leg pair", () => {
     const matrix = {
       ק: inspectResolution("רק", "ק"),
       ה: inspectResolution("רה", "ה")
@@ -68,6 +76,6 @@ describe("resolved/unresolved symmetry across nun/final-nun and resh/dalet", () 
     );
 
     expect(matrix["ק"]).toMatchObject({ carry: true, supp: false });
-    expect(matrix["ה"]).toMatchObject({ carry: true, supp: true });
+    expect(matrix["ה"]).toMatchObject({ carry: false, supp: true });
   });
 });

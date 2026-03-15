@@ -1,11 +1,11 @@
-# Hold Family Topology: כ, ל, מ, ם
+# Hold Family Topology: כ, ך, ל, מ, ם
 
 This note restates the current hold-family proposal in graph terms.
 
 It uses the existing edge vocabulary:
 
 - `cont(source, target)` = forward continuation
-- `carry(source, target)` = inherited context on that continuation
+- `carry(source, target)` = inherited context on that continuation when the transferred debt remains live
 - `supp(target, source)` = the target is resolved/stabilized against the source
 
 It also uses one existing topological device when needed:
@@ -14,20 +14,40 @@ It also uses one existing topological device when needed:
 
 No new edge label is introduced here.
 
-## Base pattern: resolved hold
+For the current hold-family contracts, that means `כ/ך/ל/מ/ם` use direct support (`cont + supp`) and do not open local `carry`.
+
+## Base patterns
 
 Let `F0` be the current focus before the letter runs.
 
-A **resolved hold** is the minimal graph:
+A direct supported hold, now used by `כ`, is:
 
 ```text
 allocate H
 add cont(F0, H)
-add carry(F0, H)
 add supp(H, F0)
 ```
 
-`H` is the held node. Topologically, it is a resolved successor of `F0`: the line advances to `H`, inherits from `F0`, and is stabilized there.
+Final `ך` reuses that exact graph and adds only `policy(H) := final`.
+
+A direct supported overstep hold, now used by `ל`, is:
+
+```text
+allocate H
+add cont(F0, H)
+add supp(H, F0)
+add cont(H, X)
+```
+
+The open-enclosure variant used by `מ` shares the same direct supported hold base:
+
+```text
+allocate H
+add cont(F0, H)
+add supp(H, F0)
+```
+
+`H` is the held node. Topologically, both forms are resolved successors of `F0`: the line advances to `H` and is stabilized there. `מ` differs from `כ` and `ל` by what continuation it opens relative to that hold, not by adding a local carry edge.
 
 ## Letter definitions
 
@@ -40,7 +60,6 @@ Allocate:
 Edges added:
 
 - `cont(F0, H)`
-- `carry(F0, H)`
 - `supp(H, F0)`
 
 Focus ends:
@@ -49,9 +68,34 @@ Focus ends:
 
 Topological shape:
 
-- `כ` is exactly the resolved hold and nothing more.
+- `כ` is exactly the direct supported hold and nothing more.
 - The thread terminates locally at the held node.
 - There is no second continuation site beyond the hold.
+
+### ך
+
+Allocate:
+
+- `H` = held node
+
+Edges added:
+
+- `cont(F0, H)`
+- `supp(H, F0)`
+
+Additional effect:
+
+- set `policy(H) := final`
+
+Focus ends:
+
+- `F := H`
+
+Topological shape:
+
+- `ך` is graph-identical to `כ`.
+- The only extra effect is that the held node is marked final.
+- It still emits no local `carry` and no second continuation site.
 
 ### ל
 
@@ -63,7 +107,6 @@ Allocate:
 Edges added:
 
 - `cont(F0, H)`
-- `carry(F0, H)`
 - `supp(H, F0)`
 - `cont(H, X)`
 
@@ -78,7 +121,7 @@ Focus ends:
 
 Topological shape:
 
-- `ל` is a resolved hold with one additional forward ray leaving the hold.
+- `ל` is a direct supported hold with one additional forward ray leaving the hold.
 - `X` is beyond the hold, not another resolved version of it.
 - The held node remains behind the focus as the immediately previous resolved site.
 
@@ -100,7 +143,6 @@ Allocate:
 Edges added:
 
 - `cont(F0, H)`
-- `carry(F0, H)`
 - `supp(H, F0)`
 - `cont(H, I)`
 
@@ -121,10 +163,8 @@ Focus ends:
 
 Topological shape:
 
-- At the level of `cont/carry/supp` alone, `מ` looks the same as `ל`: both are `F0 -> H -> successor`.
-- The actual difference is not a different continuation edge. The difference is placement:
-  `X` in `ל` is outside the hold, while `I` in `מ` is inside an open enclosure.
-- Therefore `מ` requires an enclosure/boundary distinction somewhere in the state model. Without that, `ל` and `מ` are graph-isomorphic and cannot be told apart.
+- `מ` differs from `ל` by enclosure placement alone:
+  `X` in `ל` is outside the hold, while `I` in `מ` is inside an open enclosure rooted at that same hold.
 
 ### ם
 
@@ -139,8 +179,11 @@ Allocate:
 Edges added:
 
 - `cont(I, S)`
-- `carry(I, S)`
 - `supp(S, I)`
+
+Edges not added in the current candidate:
+
+- no `carry(I, S)`
 
 Additional topological update:
 
@@ -174,7 +217,7 @@ Topological shape:
 
 - Also a plain forward successor of the resolved hold.
 - Path shape: `F0 -> H -> I`, but `I` lies inside an open enclosure.
-- The difference from `ל` is topological placement, not a different edge label.
+- The difference from `ל` is topological placement: `I` is marked as interior by the enclosure record.
 
 ### Sealed continuation in ם
 
@@ -190,7 +233,7 @@ Topological shape:
 - the minimal “continue beyond the hold” form (`ל`)
 - the sealing step that turns an open interior into a resolved result (`ם`)
 
-`cont/carry/supp` are not sufficient by themselves to distinguish `ל` from `מ`, because both reduce to the same directed path if inside/outside is not represented.
+Boundary state distinguishes `ל` from `מ`: the graph edges can match while the enclosure record places `מ`'s successor on the interior side of the hold.
 
 So the current model does **not** need a new edge type, but it **does** need one existing enclosure-level distinction:
 

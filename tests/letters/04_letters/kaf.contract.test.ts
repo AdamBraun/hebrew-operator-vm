@@ -22,13 +22,20 @@ describe("kaf contract", () => {
     const { h, r } = kafOp.seal(state, cons);
     expect(state.handles.has(h)).toBe(true);
     expect(state.handles.has(r)).toBe(true);
+    expect(state.cont.size).toBe(1);
+    expect(state.carry.size).toBe(0);
+    expect(state.supp.size).toBe(1);
   });
 
-  it("final kaf returns valid handles", () => {
+  it("final kaf returns valid handles and keeps the final hold direct-supported", () => {
     const state = createInitialState();
     const { cons } = finalKafOp.bound(state, { args: [state.vm.F], prefs: {} });
     const { h, r } = finalKafOp.seal(state, cons);
     expect(state.handles.has(h)).toBe(true);
     expect(state.handles.has(r)).toBe(true);
+    expect(state.handles.get(h)?.policy).toBe("final");
+    expect(state.cont.size).toBe(1);
+    expect(state.carry.size).toBe(0);
+    expect(state.supp.size).toBe(1);
   });
 });

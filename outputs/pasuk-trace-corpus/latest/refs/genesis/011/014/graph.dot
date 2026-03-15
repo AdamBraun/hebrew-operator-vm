@@ -1,8 +1,8 @@
-// trace_file_sha256: 351ed6cdc283367c173d6e2aad56c6bae1b0415a260c68926c1539835b99fbed
+// trace_file_sha256: 2792e8f9fc12c548e6f7458e22f3931b0a36a1e989a2b71832f73ab1d128ef4f
 // graph_opts_sha256: 3545e6ab41c223401ba1433828dbad3ef03dcb5d8f3a15fd769ac9990a6cce07
 // graph_renderer_id: hebrew-operator-vm@0.1.1/pasuk-graph
 // dot_schema: 2
-// trace_semantic_sha256: 77966fd7b1b39840c18ddb726d1abcf1b60cbf6a7c8e8f51df35d9d9f43af202
+// trace_semantic_sha256: 94aae951b9485bd33f67d2b488e3bc81672c18d0a52e7bcbf25e6a3d89183942
 
 digraph Genesis_11_14_Boot {
   rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
@@ -13,35 +13,42 @@ digraph Genesis_11_14_Boot {
 
   legend [label="Genesis/11/14\nHebrew Calculus VM - Final State\nτ=11 | D=Ω | F=Ω", shape=plaintext, fillcolor="#F2E6C8", fontcolor="#1C1B16", fontsize=14];
 
+  "C:1:1" [label="C:1:1\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
   "C:2:2" [label="C:2:2\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
   "C:3:3" [label="C:3:3\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
-  "C:4:4" [label="C:4:4\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "C:4:4" [label="C:4:4\nscope | atomic", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "C:6:5" [label="C:6:5\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
   "C:7:6" [label="C:7:6\nscope | convergent", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
-  "support_debt:6:1" [label="support_debt:6:1\nstructured", shape=ellipse, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
+  "C:8:7" [label="C:8:7\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
   "Ω" [label="Ω\nscope", shape=doublecircle, style="filled,rounded,bold", fillcolor="#B08D57", fontcolor="#1C1B16", color="#8C6A3D"];
   "ב:8:1" [label="ב:8:1\nboundary | convergent", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
-  "ד:6:1" [label="ד:6:1\nboundary", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
-  "ו:1:1" [label="ו:1:1\nstructured", shape=parallelogram, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
-  "ו:6:3" [label="ו:6:3\nstructured | gated", shape=parallelogram, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
-  "ו:6:5" [label="ו:6:5\nstructured", shape=parallelogram, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
-  "ח:1:1" [label="ח:1:1\nboundary", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
-  "ח:1:2" [label="ח:1:2\ncompartment", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
-  "ח:2:3" [label="ח:2:3\nboundary", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
-  "ח:2:4" [label="ח:2:4\ncompartment | gated", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
-  "י:6:3" [label="י:6:3\nentity | hard", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
-  "ל:1:1" [label="ל:1:1\nboundary", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
-  "ל:1:2" [label="ל:1:2\nendpoint | gated", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
-  "ל:3:3" [label="ל:3:3\nboundary", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
-  "ל:3:4" [label="ל:3:4\nendpoint", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
-  "ל:6:5" [label="ל:6:5\nboundary", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
-  "ל:6:6" [label="ל:6:6\nendpoint | convergent", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ד:6:1" [label="ד:6:1\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ה:4:1" [label="ה:4:1\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ה:4:2" [label="ה:4:2\ndetached_adjunct_leg | scope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ו:1:1" [label="ו:1:1\nscope | convergent", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ו:6:2" [label="ו:6:2\nscope | gated", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ו:6:3" [label="ו:6:3\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ז:1:1" [label="ז:1:1\nresolved_port | scope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ז:1:2" [label="ז:1:2\nresolved_port | scope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ז:2:3" [label="ז:2:3\nresolved_port | scope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ז:2:4" [label="ז:2:4\nresolved_port | scope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ח:1:1" [label="ח:1:1\ngate", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ח:2:2" [label="ח:2:2\ngate | gated", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "י:2:1" [label="י:2:1\npin | scope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "י:3:2" [label="י:3:2\npin | scope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "י:6:3" [label="י:6:3\npin | scope | hard", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ל:1:1" [label="ל:1:1\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ל:1:2" [label="ל:1:2\nscope | gated", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ל:3:3" [label="ל:3:3\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ל:3:4" [label="ל:3:4\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ל:6:5" [label="ל:6:5\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ל:6:6" [label="ל:6:6\nscope | convergent", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ם:3:1" [label="ם:3:1\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "מ:3:1" [label="מ:3:1\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "מ:3:2" [label="מ:3:2\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
   "נ:4:1" [label="נ:4:1\nscope | atomic", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
-  "ע:8:1" [label="ע:8:1\nwatch | stabilized", shape=ellipse, style="filled", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
-  "ר:8:1" [label="ר:8:1\nboundary", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
-  "ש:1:4" [label="{<sp>spine|<l>left|<r>right}", shape=record, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
-  "ש:3:12" [label="{<sp>spine|<l>left|<r>right}", shape=record, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
-  "ש:3:8" [label="{<sp>spine|<l>left|<r>right}", shape=record, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
-  "ש:4:16" [label="{<sp>spine|<l>left|<r>right}", shape=record, style="filled", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455"];
+  "ע:8:1" [label="ע:8:1\nscope | stabilized", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "ר:8:1" [label="ר:8:1\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
   "ת:7:1" [label="ת:7:1\nboundary", shape=box, style="filled", fillcolor="#E6D2A9", fontcolor="#1C1B16", color="#9B7A4F"];
   "ת:7:2" [label="ת:7:2\nartifact", shape=octagon, style="filled", fillcolor="#EAD7AF", fontcolor="#1C1B16", color="#7B1E16"];
   "ת:7:3" [label="ת:7:3\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
@@ -52,12 +59,13 @@ digraph Genesis_11_14_Boot {
     style="filled";
     fillcolor="#E6D2A9";
     color="#9B7A4F";
+    "C:1:1";
     "ו:1:1";
+    "ז:1:1";
+    "ז:1:2";
     "ח:1:1";
-    "ח:1:2";
     "ל:1:1";
     "ל:1:2";
-    "ש:1:4";
   }
 
   subgraph cluster_word_1 {
@@ -66,8 +74,10 @@ digraph Genesis_11_14_Boot {
     fillcolor="#E6D2A9";
     color="#9B7A4F";
     "C:2:2";
-    "ח:2:3";
-    "ח:2:4";
+    "ז:2:3";
+    "ז:2:4";
+    "ח:2:2";
+    "י:2:1";
   }
 
   subgraph cluster_word_2 {
@@ -76,10 +86,12 @@ digraph Genesis_11_14_Boot {
     fillcolor="#E6D2A9";
     color="#9B7A4F";
     "C:3:3";
+    "י:3:2";
     "ל:3:3";
     "ל:3:4";
-    "ש:3:12";
-    "ש:3:8";
+    "ם:3:1";
+    "מ:3:1";
+    "מ:3:2";
   }
 
   subgraph cluster_word_3 {
@@ -88,8 +100,9 @@ digraph Genesis_11_14_Boot {
     fillcolor="#E6D2A9";
     color="#9B7A4F";
     "C:4:4";
+    "ה:4:1";
+    "ה:4:2";
     "נ:4:1";
-    "ש:4:16";
   }
 
   subgraph cluster_word_4 {
@@ -97,10 +110,10 @@ digraph Genesis_11_14_Boot {
     style="filled";
     fillcolor="#E6D2A9";
     color="#9B7A4F";
-    "support_debt:6:1";
+    "C:6:5";
     "ד:6:1";
+    "ו:6:2";
     "ו:6:3";
-    "ו:6:5";
     "י:6:3";
     "ל:6:5";
     "ל:6:6";
@@ -122,6 +135,7 @@ digraph Genesis_11_14_Boot {
     style="filled";
     fillcolor="#E6D2A9";
     color="#9B7A4F";
+    "C:8:7";
     "ב:8:1";
     "ע:8:1";
     "ר:8:1";
@@ -138,61 +152,15 @@ digraph Genesis_11_14_Boot {
     color="#9B7A4F";
     "ע:8:1";
   }
-  subgraph cluster_6_1_1 {
-    label="Boundary ד:6:1";
+  subgraph cluster_b_3_1_1 {
+    label="Boundary מb:3:1";
     style="filled";
     fillcolor="#E6D2A9";
     color="#9B7A4F";
-    "ל:6:6";
+    "מ:3:2";
+    "ם:3:1";
   }
-  subgraph cluster_1_1_2 {
-    label="Boundary ח:1:1";
-    style="filled";
-    fillcolor="#E6D2A9";
-    color="#9B7A4F";
-    "ל:1:2";
-    "ח:1:2";
-  }
-  subgraph cluster_2_3_3 {
-    label="Boundary ח:2:3";
-    style="filled";
-    fillcolor="#E6D2A9";
-    color="#9B7A4F";
-    "C:2:2";
-    "ח:2:4";
-  }
-  subgraph cluster_1_1_4 {
-    label="Boundary ל:1:1";
-    style="filled";
-    fillcolor="#E6D2A9";
-    color="#9B7A4F";
-    "ש:1:4";
-    "ל:1:2";
-  }
-  subgraph cluster_3_3_5 {
-    label="Boundary ל:3:3";
-    style="filled";
-    fillcolor="#E6D2A9";
-    color="#9B7A4F";
-    "ש:3:8";
-    "ל:3:4";
-  }
-  subgraph cluster_6_5_6 {
-    label="Boundary ל:6:5";
-    style="filled";
-    fillcolor="#E6D2A9";
-    color="#9B7A4F";
-    "ו:6:5";
-    "ל:6:6";
-  }
-  subgraph cluster_8_1_7 {
-    label="Boundary ר:8:1";
-    style="filled";
-    fillcolor="#E6D2A9";
-    color="#9B7A4F";
-    "ב:8:1";
-  }
-  subgraph cluster_7_1_8 {
+  subgraph cluster_7_1_2 {
     label="Boundary ת:7:1";
     style="filled";
     fillcolor="#E6D2A9";
@@ -201,29 +169,67 @@ digraph Genesis_11_14_Boot {
     "ת:7:2";
   }
 
-  "C:2:2" -> "ח:2:4" [xlabel="compartment"];
-  "C:3:3" -> "ש:3:8" [xlabel="construct"];
-  "C:4:4" -> "ש:4:16" [xlabel="construct"];
+  "C:3:3" -> "ל:3:3" [xlabel="cont"];
   "C:7:6" -> "Ω" [xlabel="transport"];
   "C:7:6" -> "ת:7:2" [xlabel="finalize"];
-  "support_debt:6:1" -> "נ:4:1" [xlabel="support_debt"];
   "Ω" -> "C:7:6" [xlabel="transport"];
   "ב:8:1" -> "ע:8:1" [xlabel="boundary"];
-  "ב:8:1" -> "ר:8:1" [xlabel="boundary"];
-  "ד:6:1" -> "Ω" [xlabel="boundary"];
-  "ו:1:1" -> "ש:1:4" [xlabel="construct"];
-  "ו:6:5" -> "ל:6:6" [xlabel="endpoint"];
-  "י:6:3" -> "ו:6:3" [xlabel="vav"];
-  "ל:1:2" -> "ח:1:2" [xlabel="compartment"];
-  "ל:3:4" -> "ש:3:12" [xlabel="construct"];
-  "ל:6:6" -> "ד:6:1" [xlabel="boundary"];
+  "ו:1:1" -> "ל:1:1" [xlabel="cont"];
+  "ו:6:3" -> "ל:6:5" [xlabel="cont"];
+  "ז:1:1" -> "ח:1:1" [xlabel="bridge"];
+  "ז:1:2" -> "ח:1:1" [xlabel="bridge"];
+  "ז:2:3" -> "ח:2:2" [xlabel="bridge"];
+  "ז:2:4" -> "ח:2:2" [xlabel="bridge"];
+  "ל:1:1" -> "ו:1:1" [xlabel="supp"];
+  "ל:1:1" -> "ל:1:2" [xlabel="cont"];
+  "ל:3:3" -> "C:3:3" [xlabel="supp"];
+  "ל:3:3" -> "ל:3:4" [xlabel="cont"];
+  "ל:6:5" -> "ו:6:3" [xlabel="supp"];
+  "ל:6:5" -> "ל:6:6" [xlabel="cont"];
   "ע:8:1" -> "ב:8:1" [xlabel="boundary"];
-  "ר:8:1" -> "Ω" [xlabel="boundary"];
-  "ש:1:4" -> "ל:1:2" [xlabel="endpoint"];
-  "ש:3:8" -> "ל:3:4" [xlabel="endpoint"];
-  "ש:4:16" -> "support_debt:6:1" [xlabel="support_debt"];
   "ת:7:2" -> "ת:7:3" [xlabel="residue"];
-  "⊥" -> "Ω" [xlabel="vav"];
-  "⊥" -> "Ω" [xlabel="vav"];
+  "C:1:1" -> "ו:1:1" [xlabel="cont"];
+  "C:2:2" -> "ז:2:3" [xlabel="cont"];
+  "C:3:3" -> "ל:3:3" [xlabel="cont"];
+  "C:4:4" -> "נ:4:1" [xlabel="cont"];
+  "C:6:5" -> "ו:6:2" [xlabel="cont"];
+  "C:8:7" -> "ע:8:1" [xlabel="cont"];
+  "Ω" -> "ז:1:2" [xlabel="cont"];
+  "Ω" -> "ז:2:4" [xlabel="cont"];
+  "ב:8:1" -> "ר:8:1" [xlabel="cont"];
+  "ה:4:1" -> "ה:4:2" [xlabel="cont"];
+  "ו:1:1" -> "ל:1:1" [xlabel="cont"];
+  "ו:6:2" -> "ו:6:3" [xlabel="cont"];
+  "ו:6:2" -> "י:6:3" [xlabel="cont"];
+  "ו:6:3" -> "ל:6:5" [xlabel="cont"];
+  "ח:2:2" -> "י:2:1" [xlabel="cont"];
+  "ל:1:1" -> "ל:1:2" [xlabel="cont"];
+  "ל:1:2" -> "ז:1:1" [xlabel="cont"];
+  "ל:3:3" -> "ל:3:4" [xlabel="cont"];
+  "ל:3:4" -> "י:3:2" [xlabel="cont"];
+  "ל:3:4" -> "מ:3:1" [xlabel="cont"];
+  "ל:6:5" -> "ל:6:6" [xlabel="cont"];
+  "ל:6:6" -> "ד:6:1" [xlabel="cont"];
+  "מ:3:1" -> "מ:3:2" [xlabel="cont"];
+  "מ:3:2" -> "ם:3:1" [xlabel="cont"];
+  "נ:4:1" -> "ה:4:1" [xlabel="cont"];
+  "C:4:4" -> "נ:4:1" [xlabel="carry"];
+  "C:8:7" -> "ע:8:1" [xlabel="carry"];
+  "ב:8:1" -> "ר:8:1" [xlabel="carry"];
+  "ד:6:1" -> "ל:6:6" [xlabel="supp"];
+  "ה:4:1" -> "C:4:4" [xlabel="supp"];
+  "ה:4:1" -> "נ:4:1" [xlabel="supp"];
+  "ה:4:2" -> "ה:4:1" [xlabel="supp"];
+  "ז:1:1" -> "ל:1:2" [xlabel="supp"];
+  "ז:1:2" -> "Ω" [xlabel="supp"];
+  "ז:2:3" -> "C:2:2" [xlabel="supp"];
+  "ז:2:4" -> "Ω" [xlabel="supp"];
+  "ל:1:1" -> "ו:1:1" [xlabel="supp"];
+  "ל:3:3" -> "C:3:3" [xlabel="supp"];
+  "ל:6:5" -> "ו:6:3" [xlabel="supp"];
+  "ם:3:1" -> "מ:3:2" [xlabel="supp"];
+  "מ:3:1" -> "ל:3:4" [xlabel="supp"];
+  "ר:8:1" -> "ב:8:1" [xlabel="supp"];
+  "ה:4:1" -> "ה:4:2" [xlabel="sub", style="dashed", color="#6A8E4E"];
   legend -> "Ω" [style=invis];
 }

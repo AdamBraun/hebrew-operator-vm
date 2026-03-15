@@ -101,7 +101,7 @@ describe("head-family topology", () => {
     expect(topology).toEqual({
       focus: "h",
       head_of: ["h->X"],
-      carry: ["X->h", "h->ℓ"],
+      carry: [],
       cont: ["X->h", "h->ℓ"],
       supp: ["h->X", "ℓ->h"],
       sub: ["h->ℓ"],
@@ -150,7 +150,7 @@ describe("head-family topology", () => {
     expect(family["ד"]).toEqual({
       focus: "h",
       head_of: ["h->X"],
-      carry: ["X->h"],
+      carry: [],
       cont: ["X->h"],
       supp: ["h->X"],
       sub: [],
@@ -168,7 +168,7 @@ describe("head-family topology", () => {
     expect(family["ה"]).toEqual({
       focus: "h",
       head_of: ["h->X"],
-      carry: ["X->h", "h->ℓ"],
+      carry: [],
       cont: ["X->h", "h->ℓ"],
       supp: ["h->X", "ℓ->h"],
       sub: ["h->ℓ"],

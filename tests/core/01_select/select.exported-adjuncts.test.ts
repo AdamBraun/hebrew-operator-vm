@@ -57,6 +57,17 @@ describe("exported adjunct selection", () => {
     }
   );
 
+  it("keeps the exported he leg selectable even though he emits no carry edges", () => {
+    const state = executeSingleLetter("ה");
+    const head = state.vm.F;
+    const [leg = ""] = resolveExportedAdjunctsOfCurrentFocus(state);
+
+    expect(Array.from(state.carry)).toEqual([]);
+    expect(state.adjuncts[head]).toEqual([leg]);
+    expect(selectCurrentFocus(state).ops.prefs.selection_targets).toContain(leg);
+    expect(selectExportedAdjunctsOfCurrentFocus(state).ops.args).toEqual([leg]);
+  });
+
   it("supports deterministic most-recent adjunct selection when multiple adjuncts are exported", () => {
     const state = executeSingleLetter("ד", { exported_adjuncts: 2 });
     const [first = "", second = ""] = resolveExportedAdjunctsOfCurrentFocus(state);

@@ -1,0 +1,33 @@
+digraph Genesis_1_1_Boot {
+  rankdir=TB; splines=ortho; nodesep=0.5; ranksep=0.9;
+  bgcolor="#F7EED6";
+  fontname="Helvetica";
+  node [fontname="Helvetica"];
+  edge [fontname="Helvetica", color="#3A352B"];
+
+  legend [label="Genesis/1/1\nHebrew Calculus VM - Final State\nτ=2 | D=Ω | F=Ω", shape=plaintext, fillcolor="#F2E6C8", fontcolor="#1C1B16", fontsize=14];
+
+  "C:1:1" [label="C:1:1\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "Ω" [label="Ω\nscope", shape=doublecircle, style="filled,rounded,bold", fillcolor="#B08D57", fontcolor="#1C1B16", color="#8C6A3D"];
+  "נ:1:1" [label="נ:1:1\nscope", shape=box, style="filled,rounded", fillcolor="#F2E6C8", fontcolor="#1C1B16", color="#9B7A4F"];
+  "⊥" [label="⊥\nempty", shape=circle, style="filled", fillcolor="#D7C08F", fontcolor="#1C1B16", color="#5A3C22"];
+
+  subgraph cluster_word_0 {
+    label="נ";
+    style="filled";
+    fillcolor="#E6D2A9";
+    color="#9B7A4F";
+    "C:1:1";
+    "נ:1:1";
+  }
+
+  F_marker [label="F", shape=circle, style="filled,bold", fillcolor="#FAF2DA", fontcolor="#1C1B16", color="#A88455", width=0.24, height=0.24, fixedsize=true, fontsize=10];
+  "Ω" -> "Ω" [xlabel="domain", color="#8C6A3D", penwidth=4, fontsize=10];
+  F_marker -> "Ω" [xlabel="focus", color="#A88455", penwidth=4, fontsize=10];
+
+
+  "C:1:1" -> "נ:1:1" [xlabel="cont"];
+  "C:1:1" -> "נ:1:1" [xlabel="carry"];
+  "נ:1:1" -> "C:1:1" [xlabel="supp"];
+  legend -> "Ω" [style=invis];
+}

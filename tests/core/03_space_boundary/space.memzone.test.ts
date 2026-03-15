@@ -24,6 +24,7 @@ describe("space boundary mem enclosure resolution", () => {
     expect(sealed.length).toBe(1);
     const wordOut = state.vm.A[state.vm.A.length - 1];
     expect(wordOut).toBe(sealed[0][0]);
+    expect(Array.from(state.carry)).toEqual([]);
     expect(state.boundaries[0]?.closed).toBe(true);
     expect(state.vm.OStack_word.length).toBe(0);
   });
@@ -37,6 +38,7 @@ describe("space boundary mem enclosure resolution", () => {
     expect(state.boundaries).toHaveLength(2);
     expect(state.boundaries[0]?.close_mode).toBe("word_boundary");
     expect(state.boundaries[1]?.close_mode).toBe("synthetic");
+    expect(Array.from(state.carry)).toEqual([]);
     expect(state.vm.OStack_word.length).toBe(0);
   });
 });

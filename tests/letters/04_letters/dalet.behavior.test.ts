@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { eff, isCarryResolved } from "@ref/state/eff";
+import { eff } from "@ref/state/eff";
 import { createInitialState } from "@ref/state/state";
 import { runProgramWithDeepTrace } from "@ref/vm/vm";
 
@@ -37,7 +37,7 @@ function daletExitSnapshot(
 }
 
 describe("dalet behavior", () => {
-  it("at word start exposes a backed head from the word-entry ambient", () => {
+  it("at word start exposes a backed head from the word-entry ambient without opening carry", () => {
     const state = createInitialState();
     const omega = state.handles.get("Ω");
     omega!.meta = { ...omega!.meta, witness: { ambient: 1 } };
@@ -47,15 +47,14 @@ describe("dalet behavior", () => {
 
     expect(selectArgs).toEqual(["Ω"]);
     expect(snapshot.head_of).toEqual([`${head}->Ω`]);
-    expect(snapshot.carry).toEqual([`Ω->${head}`]);
     expect(snapshot.cont).toEqual([`Ω->${head}`]);
+    expect(snapshot.carry).toEqual([]);
     expect(snapshot.supp).toEqual([`${head}->Ω`]);
     expect(snapshot.boundaries).toEqual([]);
-    expect(eff(finalState, head, { focusNodeId: head })).toEqual({ ambient: 1 });
-    expect(isCarryResolved(finalState, "Ω", head, { focusNodeId: head })).toBe(true);
+    expect(eff(finalState, head, { focusNodeId: head })).toEqual({});
   });
 
-  it("mid-word exposes a backed head from the current focus and advances focus to that head", () => {
+  it("mid-word exposes a backed head from the current focus and does not add a new carry edge", () => {
     const { snapshot, selectArgs } = daletExitSnapshot("נד");
     const head = String(snapshot.vm?.F ?? "");
     const [headOfEdge = "->"] = snapshot.head_of ?? [];
@@ -64,7 +63,8 @@ describe("dalet behavior", () => {
     expect(selectArgs).toEqual(["נ:1:1"]);
     expect(body.length).toBeGreaterThan(0);
     expect(snapshot.head_of).toEqual([`${head}->${body}`]);
-    expect(snapshot.carry).toContain(`${body}->${head}`);
+    expect(snapshot.cont).toContain(`${body}->${head}`);
+    expect(snapshot.carry ?? []).not.toContain(`${body}->${head}`);
     expect(snapshot.supp).toEqual([`${head}->${body}`]);
     expect(snapshot.vm?.F).toBe(head);
   });

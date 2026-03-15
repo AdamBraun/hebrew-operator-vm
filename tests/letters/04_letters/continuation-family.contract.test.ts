@@ -165,20 +165,20 @@ describe("continuation family contract distinctions", () => {
     });
   });
 
-  it("Case D: ז adds carry+supp on the same continuation step and keeps focus unchanged", () => {
+  it("Case D: ז adds supp on the same continuation step, exports the node, and keeps focus unchanged", () => {
     const { effect } = continuationEffect("ז");
 
     expect(effect).toEqual({
       nodeCount: 1,
       cont: ["F->P"],
-      carry: ["F->P"],
+      carry: [],
       supp: ["P->F"],
       focus: "F",
       exportedTop: "P"
     });
   });
 
-  it("Case E: ה-leg has cont+carry+supp+sub and is not identical to explicit י", () => {
+  it("Case E: ה-leg has cont+supp+sub without carry and is not identical to explicit י", () => {
     const heLeg = heLegEffect().effect;
     const explicitYod = continuationEffect("י").effect;
     const normalizedYod: LegEffect = {
@@ -190,7 +190,7 @@ describe("continuation family contract distinctions", () => {
 
     expect(heLeg).toEqual({
       cont: ["S->T"],
-      carry: ["S->T"],
+      carry: [],
       supp: ["T->S"],
       sub: ["S->T"]
     });

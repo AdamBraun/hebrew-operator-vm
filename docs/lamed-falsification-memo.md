@@ -13,7 +13,6 @@ Resolved hold (`כ` candidate):
 ```text
 allocate H
 add cont(F0, H)
-add carry(F0, H)
 add supp(H, F0)
 F := H
 ```
@@ -23,7 +22,6 @@ Lamed candidate:
 ```text
 allocate H
 add cont(F0, H)
-add carry(F0, H)
 add supp(H, F0)
 allocate X
 add cont(H, X)
@@ -35,12 +33,11 @@ Final nun (`ן`, topology only):
 ```text
 allocate N
 add cont(F0, N)
-add carry(F0, N)
 add supp(N, F0)
 F := N
 ```
 
-The reference runtime confirms that `addCarry(source, target)` already inserts the corresponding `cont(source, target)` edge, while `ן` adds `carry` and `supp` to a single child and then only hardens policy afterward; the policy step is not a new graph relation ([src/reference/state/relations.ts](/Users/adambraun/projects/letters/src/reference/state/relations.ts#L63), [src/reference/letters/finalNun.ts](/Users/adambraun/projects/letters/src/reference/letters/finalNun.ts#L21), [src/reference/state/policies.ts](/Users/adambraun/projects/letters/src/reference/state/policies.ts#L54)).
+The reference runtime now gives `ן` a directly supported successor: it emits `cont` plus `supp` on a single child and then hardens policy afterward; the policy step is not a new graph relation ([src/reference/state/relations.ts](/Users/adambraun/projects/letters/src/reference/state/relations.ts#L48), [src/reference/letters/finalNun.ts](/Users/adambraun/projects/letters/src/reference/letters/finalNun.ts#L21), [src/reference/state/policies.ts](/Users/adambraun/projects/letters/src/reference/state/policies.ts#L54)).
 
 ## Result
 
@@ -53,7 +50,7 @@ With that edge, the two graphs differ:
 - `כ`: one new node, one resolved site, focus on that resolved site
 - `ל`: one resolved site plus one further continuation site, focus on the further site
 
-Without `X` and `cont(H, X)`, `ל` collapses back into `כ` plus a register-only focus rewrite. That would be hidden metadata, not topology.
+Without `X` and `cont(H, X)`, `ל` collapses back into a one-node hold plus a register-only focus rewrite. That would be hidden metadata, not topology.
 
 ### 2. Is ל mechanically distinct from ן?
 
@@ -63,7 +60,6 @@ Yes, topologically.
 
 ```text
 F0 -> N
-carry(F0, N)
 supp(N, F0)
 ```
 
@@ -71,7 +67,6 @@ supp(N, F0)
 
 ```text
 F0 -> H -> X
-carry(F0, H)
 supp(H, F0)
 ```
 
@@ -100,12 +95,12 @@ Those stronger edges would change the shape:
 
 The current lamed proposal needs neither. Its claim is only that execution continues beyond the resolved hold.
 
-The `eff()` code makes this testable. `eff(nodeId)` walks backward through `cont` predecessors, then gathers witness contributions from incoming `carry` edges on the visited nodes ([src/reference/state/eff.ts](/Users/adambraun/projects/letters/src/reference/state/eff.ts#L223), [src/reference/state/eff.ts](/Users/adambraun/projects/letters/src/reference/state/eff.ts#L323)). Therefore:
+The `eff()` code still makes the topology testable. `eff(nodeId)` walks backward through `cont` predecessors, then gathers witness contributions from incoming `carry` edges on the visited nodes ([src/reference/state/eff.ts](/Users/adambraun/projects/letters/src/reference/state/eff.ts#L223), [src/reference/state/eff.ts](/Users/adambraun/projects/letters/src/reference/state/eff.ts#L323)). Therefore:
 
 - from focus `X`, `eff()` can still visit `H` if and only if `cont(H, X)` exists
-- once `H` is visited, the existing `carry(F0, H)` remains visible through the ordinary graph walk
+- but no source witness is inherited through `ל` unless some other carry already lands on that backward cone
 
-So the backward visibility claim does not need hidden metadata, but it **does** need the explicit continuation edge from `H` to `X`.
+So the backward visibility claim does not need hidden metadata, but it **does** need the explicit continuation edge from `H` to `X`. What changed is the witness-flow claim: current `ל` no longer proves that through `eff()`.
 
 ### 4. Is the proposal acceptable without new metadata?
 
@@ -124,10 +119,10 @@ It is recoverable from plain graph structure plus focus.
 But the proposal is only minimally sufficient. It is acceptable as a letter-level graph pattern, not as a new irreducible graph relation. Mechanically it factors as:
 
 ```text
-ל = כ followed by bare continuation
+ל = direct-supported hold followed by bare continuation
 ```
 
-Equivalently, at the topology level it is `resolved hold + cont`.
+Equivalently, at the topology level it is `direct-supported hold + cont`, which now matches current `כ` on hold edges and differs only by the extra successor and focus landing.
 
 That means:
 

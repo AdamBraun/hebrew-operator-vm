@@ -4,6 +4,7 @@ import { runProgramWithDeepTrace } from "@ref/vm/vm";
 
 type SnapshotHandle = {
   id: string;
+  policy?: string;
   edge_mode?: string;
   envelope?: {
     data_flow?: string;
@@ -69,6 +70,65 @@ function normalizeEdges(edges: string[] | undefined, names: Record<string, strin
   });
 }
 
+function normalizeNodeId(nodeId: string | undefined, names: Record<string, string>): string {
+  if (!nodeId) {
+    return "";
+  }
+  return names[nodeId] ?? nodeId;
+}
+
+function sortEdges(edges: string[]): string[] {
+  return [...edges].sort((left, right) => left.localeCompare(right));
+}
+
+type HoldGraphArtifact = {
+  edges: {
+    cont: string[];
+    carry: string[];
+    supp: string[];
+  };
+  focus: string;
+  holdPolicy?: string;
+  heldFrom?: string;
+};
+
+function holdGraphArtifact(snapshot: TokenExitSnapshot, prefix: string): HoldGraphArtifact {
+  const start = baselineId(snapshot);
+  const [holdId] = familyNodeIds(snapshot, prefix);
+  if (!holdId) {
+    throw new Error(`Missing ${prefix} hold node`);
+  }
+  const hold = snapshot.handles?.find((handle) => handle.id === holdId);
+  const names = { [start]: "F0", [holdId]: "H" };
+
+  return {
+    edges: {
+      cont: sortEdges(normalizeEdges(snapshot.cont, names)),
+      carry: sortEdges(normalizeEdges(snapshot.carry, names)),
+      supp: sortEdges(normalizeEdges(snapshot.supp, names))
+    },
+    focus: normalizeNodeId(snapshot.vm?.F, names),
+    holdPolicy: hold?.policy,
+    heldFrom:
+      typeof hold?.meta?.heldFrom === "string"
+        ? normalizeNodeId(hold.meta.heldFrom as string, names)
+        : undefined
+  };
+}
+
+function diffEdgeLists(
+  left: string[],
+  right: string[]
+): {
+  onlyInLeft: string[];
+  onlyInRight: string[];
+} {
+  return {
+    onlyInLeft: left.filter((edge) => !right.includes(edge)),
+    onlyInRight: right.filter((edge) => !left.includes(edge))
+  };
+}
+
 function expectNoExtraSemantics(snapshot: TokenExitSnapshot): void {
   expect(snapshot.head_of ?? []).toEqual([]);
   expect(snapshot.sub ?? []).toEqual([]);
@@ -98,17 +158,55 @@ describe("continuation family behavior", () => {
     expectNoExtraSemantics(yodSnapshot);
   });
 
-  it("כ allocates a single resolved hold and ends focus on it", () => {
+  it("כ allocates a single supported hold, emits no carry, and ends focus on it", () => {
     const [snapshot] = tokenExitSnapshots("כ");
     const start = baselineId(snapshot);
     const [holdId] = familyNodeIds(snapshot, "כ");
 
     expect(familyNodeIds(snapshot, "כ")).toEqual(["כ:1:1"]);
     expect(snapshot.cont ?? []).toEqual([`${start}->${holdId}`]);
-    expect(snapshot.carry ?? []).toEqual([`${start}->${holdId}`]);
+    expect(snapshot.carry ?? []).toEqual([]);
     expect(snapshot.supp ?? []).toEqual([`${holdId}->${start}`]);
     expect(snapshot.vm?.F).toBe(holdId);
     expectNoExtraSemantics(snapshot);
+  });
+
+  it("keeps ך graph-identical to כ and changes only the hold policy to final", () => {
+    const [kafSnapshot] = tokenExitSnapshots("כ");
+    const [finalKafSnapshot] = tokenExitSnapshots("ך");
+    const kaf = holdGraphArtifact(kafSnapshot, "כ");
+    const finalKaf = holdGraphArtifact(finalKafSnapshot, "ך");
+
+    expect(kaf.edges).toEqual({
+      cont: ["F0->H"],
+      carry: [],
+      supp: ["H->F0"]
+    });
+    expect(finalKaf.edges).toEqual(kaf.edges);
+    expect(kaf.focus).toBe("H");
+    expect(finalKaf.focus).toBe(kaf.focus);
+    expect(kaf.heldFrom).toBe("F0");
+    expect(finalKaf.heldFrom).toBe(kaf.heldFrom);
+    expect(kaf.holdPolicy).not.toBe("final");
+    expect(finalKaf.holdPolicy).toBe("final");
+    expectNoExtraSemantics(finalKafSnapshot);
+  });
+
+  it("keeps כ and ך emitted edge lists in lockstep", () => {
+    const [kafSnapshot] = tokenExitSnapshots("כ");
+    const [finalKafSnapshot] = tokenExitSnapshots("ך");
+    const kaf = holdGraphArtifact(kafSnapshot, "כ");
+    const finalKaf = holdGraphArtifact(finalKafSnapshot, "ך");
+
+    expect({
+      cont: diffEdgeLists(kaf.edges.cont, finalKaf.edges.cont),
+      carry: diffEdgeLists(kaf.edges.carry, finalKaf.edges.carry),
+      supp: diffEdgeLists(kaf.edges.supp, finalKaf.edges.supp)
+    }).toEqual({
+      cont: { onlyInLeft: [], onlyInRight: [] },
+      carry: { onlyInLeft: [], onlyInRight: [] },
+      supp: { onlyInLeft: [], onlyInRight: [] }
+    });
   });
 
   it("ו allocates one fresh continuation node and advances focus with no carry or supp", () => {
@@ -196,7 +294,7 @@ describe("continuation family behavior", () => {
     expectNoExtraSemantics(snapshot);
   });
 
-  it("ן keeps the same forward continuation shape as ו and adds both carry and supp", () => {
+  it("ן keeps the same forward continuation shape as ו, adds supp, and emits no carry", () => {
     const [vavSnapshot] = tokenExitSnapshots("ו");
     const [finalNunSnapshot] = tokenExitSnapshots("ן");
     const finalNunStart = baselineId(finalNunSnapshot);
@@ -209,7 +307,7 @@ describe("continuation family behavior", () => {
     expect(
       normalizeEdges(finalNunSnapshot.cont, { [finalNunStart]: "F0", [finalNunNode]: "F1" })
     ).toEqual(["F0->F1"]);
-    expect(finalNunSnapshot.carry ?? []).toEqual([`${finalNunStart}->${finalNunNode}`]);
+    expect(finalNunSnapshot.carry ?? []).toEqual([]);
     expect(finalNunSnapshot.supp ?? []).toEqual([`${finalNunNode}->${finalNunStart}`]);
     expect(finalNunHandle?.edge_mode).toBe("committed");
     expect(finalNunHandle?.envelope?.data_flow).toBe("SNAPSHOT");
@@ -220,7 +318,7 @@ describe("continuation family behavior", () => {
     expectNoExtraSemantics(finalNunSnapshot);
   });
 
-  it("ז exports a committed resolved port on the same forward shape but keeps focus at the source", () => {
+  it("ז exports a committed supported projection on the same forward shape, with no carry, and keeps focus at the source", () => {
     const [vavSnapshot] = tokenExitSnapshots("ו");
     const [zayinSnapshot] = tokenExitSnapshots("ז");
     const start = baselineId(zayinSnapshot);
@@ -233,7 +331,7 @@ describe("continuation family behavior", () => {
     expect(normalizeEdges(zayinSnapshot.cont, { [start]: "F0", [portId]: "F1" })).toEqual([
       "F0->F1"
     ]);
-    expect(zayinSnapshot.carry ?? []).toEqual([`${start}->${portId}`]);
+    expect(zayinSnapshot.carry ?? []).toEqual([]);
     expect(zayinSnapshot.supp ?? []).toEqual([`${portId}->${start}`]);
     expect(port?.meta?.portOf).toBe(start);
     expect(port?.meta?.handle_label).toBe("resolved_port");

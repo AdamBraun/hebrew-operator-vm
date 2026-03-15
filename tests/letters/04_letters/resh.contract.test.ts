@@ -21,4 +21,20 @@ describe("resh contract", () => {
     expect(state.head_of.size).toBe(1);
     expect(state.carry.size).toBe(1);
   });
+
+  it("keeps the exposed head carry live without same-step support", () => {
+    const state = createInitialState();
+    const { S, ops } = reshOp.select(state);
+    const { cons } = reshOp.bound(S, ops);
+    reshOp.seal(state, cons);
+
+    const [headOfEdge = "->"] = Array.from(state.head_of);
+    const [head = "", whole = ""] = headOfEdge.split("->");
+
+    expect(head).not.toBe("");
+    expect(whole).not.toBe("");
+    // Positive control: ר is meant to keep the exposed-head carry live.
+    expect(state.carry.has(`${whole}->${head}`)).toBe(true);
+    expect(state.supp.has(`${head}->${whole}`)).toBe(false);
+  });
 });

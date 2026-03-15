@@ -564,6 +564,12 @@ export const THEMES = {
   }
 };
 
+// Serializer invariant: DOT is a direct projection of the authoritative VM
+// relation sets. If a relation is present in final_state/vm, DOT must render
+// it after generic endpoint pruning only; the renderer must not reinterpret,
+// resolve away, or suppress carry based on matching supp or other semantics.
+// Guarded by tests/scripts/pasuk-trace.relation-parity.runtime.test.ts and
+// tests/scripts/pasuk-trace.carry-loss.runtime.test.ts.
 export function renderDotFromTraceJson(rootJson, opts = {}) {
   const vm = pickVm(rootJson);
   if (!vm) {
@@ -707,7 +713,7 @@ export function renderVmDot(vm, opts = {}) {
   const subEdges = normalizeEdgeSet(vm?.sub);
   const contEdges = normalizeEdgeSet(vm?.cont);
   const carryEdges = normalizeEdgeSet(vm?.carry);
-  const carryEdgeKeys = new Set(carryEdges.map((edge) => `${edge.from}->${edge.to}`));
+  const suppEdges = normalizeEdgeSet(vm?.supp);
   const directSubChildren = new Map();
   const addDirectSub = (parent, child) => {
     if (!directSubChildren.has(parent)) {
@@ -754,7 +760,7 @@ export function renderVmDot(vm, opts = {}) {
       handles: keptHandles,
       links,
       boundaries,
-      interiorEdges: [...subEdges, ...contEdges, ...carryEdges],
+      interiorEdges: [...subEdges, ...contEdges, ...carryEdges, ...suppEdges],
       keepIds: ["Ω", "⊥", ...Array.from(forcedPointerIds), ...requestedKeepIds],
       keepKinds: parseCsvList(pruneKeepKinds),
       countBoundaryEdges: Boolean(pruneCountBoundaryEdges)
@@ -1131,41 +1137,58 @@ export function renderVmDot(vm, opts = {}) {
     })}];\n`;
   }
 
-  // Edges (cont/carry): render branch lines and fan-in targets explicitly.
+  // Edges (cont): render the authoritative cont relation set directly.
   for (const edge of contEdges) {
-    if (carryEdgeKeys.has(`${edge.from}->${edge.to}`)) {
-      continue;
-    }
     if (!keptIdSet.has(edge.from) || !keptIdSet.has(edge.to)) {
       continue;
     }
 
     const toCompartment = isCompartmentId(edge.to);
-    const toFanInParent = hasDirectSubChildren(edge.to);
     const branchEdge = isStructuredBranchTarget(edge.from, edge.to);
-    if (!toCompartment && !toFanInParent && !branchEdge) {
-      continue;
-    }
-
     dot += `  ${edgeRef(edge.from, null)} -> ${edgeRef(edge.to, null)} [${attrs({
-      ...edgeLabelAttrs(branchEdge ? "branch" : "cont"),
+      ...edgeLabelAttrs("cont"),
       style: toCompartment ? dotId("dashed") : undefined,
       color: branchEdge ? dotId(t.structuredBorder) : undefined
     })}];\n`;
   }
 
+  // Helper edges: keep branch lines explicit for structured targets.
+  for (const edge of contEdges) {
+    if (!keptIdSet.has(edge.from) || !keptIdSet.has(edge.to)) {
+      continue;
+    }
+
+    const branchEdge = isStructuredBranchTarget(edge.from, edge.to);
+    if (!branchEdge) {
+      continue;
+    }
+
+    dot += `  ${edgeRef(edge.from, null)} -> ${edgeRef(edge.to, null)} [${attrs({
+      ...edgeLabelAttrs("branch"),
+      color: dotId(t.structuredBorder)
+    })}];\n`;
+  }
+
+  // Edges (carry): render the authoritative carry relation set directly.
+  // Presence in vm.carry controls visibility; matching supp/resolution elsewhere
+  // must not suppress the carry edge in DOT.
   for (const edge of carryEdges) {
     if (!keptIdSet.has(edge.from) || !keptIdSet.has(edge.to)) {
       continue;
     }
     const toCompartment = isCompartmentId(edge.to);
-    const toFanInParent = hasDirectSubChildren(edge.to);
-    if (!toCompartment && !toFanInParent) {
-      continue;
-    }
     dot += `  ${edgeRef(edge.from, null)} -> ${edgeRef(edge.to, null)} [${attrs({
       ...edgeLabelAttrs("carry"),
       style: toCompartment ? dotId("dashed") : undefined
+    })}];\n`;
+  }
+
+  for (const edge of suppEdges) {
+    if (!keptIdSet.has(edge.from) || !keptIdSet.has(edge.to)) {
+      continue;
+    }
+    dot += `  ${edgeRef(edge.from, null)} -> ${edgeRef(edge.to, null)} [${attrs({
+      ...edgeLabelAttrs("supp")
     })}];\n`;
   }
 
